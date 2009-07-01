@@ -14,10 +14,14 @@
 /* SUPPRESS 287 on yaccpar_sccsid *//* Unusd static variable */
 /* SUPPRESS 288 on yyerrlab *//* Label unused */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef __GNUC__
 #define alloca __builtin_alloca
 #else
-#ifdef sparc
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
 #else
 #ifdef _AIX /* for Bison */
@@ -67,7 +71,7 @@ struct timeb {
 
 #endif	/* defined(USG) && !defined(HAVE_FTIME) */
 
-#if	defined(BSD4_2) || defined(BSD4_1C)
+#if	defined(BSD4_2) || defined(BSD4_1C) || (defined (hp9000) && !defined (hpux))
 #include <sys/time.h>
 #else
 #if defined(_AIX)
@@ -366,7 +370,7 @@ o_merid	: /* NULL */ {
 %%
 
 /* Month and day table. */
-static TABLE	MonthDayTable[] = {
+static TABLE const MonthDayTable[] = {
     { "january",	tMONTH,  1 },
     { "february",	tMONTH,  2 },
     { "march",		tMONTH,  3 },
@@ -395,7 +399,7 @@ static TABLE	MonthDayTable[] = {
 };
 
 /* Time units table. */
-static TABLE	UnitsTable[] = {
+static TABLE const UnitsTable[] = {
     { "year",		tMONTH_UNIT,	12 },
     { "month",		tMONTH_UNIT,	1 },
     { "fortnight",	tMINUTE_UNIT,	14 * 24 * 60 },
@@ -410,7 +414,7 @@ static TABLE	UnitsTable[] = {
 };
 
 /* Assorted relative-time words. */
-static TABLE	OtherTable[] = {
+static TABLE const OtherTable[] = {
     { "tomorrow",	tMINUTE_UNIT,	1 * 24 * 60 },
     { "yesterday",	tMINUTE_UNIT,	-1 * 24 * 60 },
     { "today",		tMINUTE_UNIT,	0 },
@@ -436,7 +440,7 @@ static TABLE	OtherTable[] = {
 
 /* The timezone table. */
 /* Some of these are commented out because a time_t can't store a float. */
-static TABLE	TimezoneTable[] = {
+static TABLE const TimezoneTable[] = {
     { "gmt",	tZONE,     HOUR( 0) },	/* Greenwich Mean */
     { "ut",	tZONE,     HOUR( 0) },	/* Universal (Coordinated) */
     { "utc",	tZONE,     HOUR( 0) },
@@ -520,7 +524,7 @@ static TABLE	TimezoneTable[] = {
 };
 
 /* Military timezone table. */
-static TABLE	MilitaryTable[] = {
+static TABLE const MilitaryTable[] = {
     { "a",	tZONE,	HOUR(  1) },
     { "b",	tZONE,	HOUR(  2) },
     { "c",	tZONE,	HOUR(  3) },
@@ -553,7 +557,7 @@ static TABLE	MilitaryTable[] = {
 
 
 /* ARGSUSED */
-int
+static int
 yyerror(s)
     char	*s;
 {
@@ -599,7 +603,7 @@ Convert(Month, Day, Year, Hours, Minutes, Seconds, Meridian, DSTmode)
     MERIDIAN	Meridian;
     DSTMODE	DSTmode;
 {
-    static int	DaysInMonth[12] = {
+    static int DaysInMonth[12] = {
 	31, 0, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
     };
     time_t	tod;
@@ -693,7 +697,7 @@ LookupWord(buff)
 {
     register char	*p;
     register char	*q;
-    register TABLE	*tp;
+    register const TABLE	*tp;
     int			i;
     int			abbrev;
 
@@ -794,7 +798,7 @@ LookupWord(buff)
 }
 
 
-int
+static int
 yylex()
 {
     register char	c;

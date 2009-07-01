@@ -16,14 +16,10 @@ not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
 #include <errno.h>
-#include "fnmatch.h"
+#include <fnmatch.h>
 
 #if !defined(__GNU_LIBRARY__) && !defined(STDC_HEADERS)
 extern int errno;
-#endif
-
-#if !__STDC__
-#define const
 #endif
 
 /* Match STRING against the filename pattern PATTERN, returning zero if
@@ -166,7 +162,11 @@ fnmatch (pattern, string, flags)
       ++n;
     }
 
-  if (*n == '\0' || ((flags & FNM_TARPATH) && *n == '/'))
+  if (*n == '\0')
+    return 0;
+
+  if ((flags & FNM_LEADING_DIR) && *n == '/')
+    /* The FNM_LEADING_DIR flag says that "foo*" matches "foobar/frobozz".  */
     return 0;
 
   return FNM_NOMATCH;

@@ -6,7 +6,11 @@
 
 #ifndef HAVE_GETPAGESIZE
 
-#ifdef _POSIX_VERSION
+#ifdef VMS
+#define getpagesize() 512
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 

@@ -38,7 +38,7 @@
 #endif
 
 /* Don't include sys/param.h if it already has been.  */
-#if !defined(PATH_MAX) && !defined(MAXPATHLEN)
+#if !defined(PATH_MAX) && !defined(MAXPATHLEN) && !defined(__MSDOS__)
 #include <sys/param.h>
 #endif
 

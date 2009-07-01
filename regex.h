@@ -1,5 +1,5 @@
 /* Definitions for data structures and routines for the regular
-   expression library, version 0.10a.
+   expression library, version 0.11.
 
    Copyright (C) 1985, 89, 90, 91, 92 Free Software Foundation, Inc.
 
@@ -20,7 +20,15 @@
 #ifndef __REGEXP_LIBRARY_H__
 #define __REGEXP_LIBRARY_H__
 
-/* POSIX says that <sys/types.h> must be included before <regex.h>.  */
+/* POSIX says that <sys/types.h> must be included (by the caller) before
+   <regex.h>.  */
+
+#ifdef VMS
+/* VMS doesn't have `size_t' in <sys/types.h>, even though POSIX says it
+   should be there.  */
+#include <stddef.h>
+#endif
+
 
 /* The following bits are used to determine the regexp syntax we
    recognize.  The set/not-set meanings are chosen so that Emacs syntax
@@ -95,14 +103,10 @@ typedef unsigned reg_syntax_t;
    If not set, newline is literal.  */
 #define RE_NEWLINE_ALT (RE_LIMITED_OPS << 1)
 
-/* If this bit is set, newline in the pattern is an ordinary character.
-   If not set, a ^ after a newline or $ before might be an anchor.  */
-#define RE_NEWLINE_ORDINARY (RE_NEWLINE_ALT << 1)
-
 /* If this bit is set, then `{...}' defines an interval, and \{ and \}
      are literals.
   If not set, then `\{...\}' defines an interval.  */
-#define RE_NO_BK_BRACES (RE_NEWLINE_ORDINARY << 1)
+#define RE_NO_BK_BRACES (RE_NEWLINE_ALT << 1)
 
 /* If this bit is set, (...) defines a group, and \( and \) are literals.
    If not set, \(...\) defines a group, and ( and ) are literals.  */
@@ -116,25 +120,15 @@ typedef unsigned reg_syntax_t;
    If not set, then \| is an alternation operator, and | is literal.  */
 #define RE_NO_BK_VBAR (RE_NO_BK_REFS << 1)
 
-/* If this bit is set, then you can't have empty groups.
-   If not set, then you can.  */
-#define RE_NO_EMPTY_GROUPS (RE_NO_BK_VBAR << 1)
-
 /* If this bit is set, then an ending range point collating higher
      than the starting range point, as in [z-a], is invalid.
    If not set, then when ending range point collates higher than the
      starting range point, the range is ignored.  */
-#define RE_NO_EMPTY_RANGES (RE_NO_EMPTY_GROUPS << 1)
-
-/* If this bit is set, then \<digit> where the pattern has no preceding
-     <digit>th subexpression is invalid.
-   If not set, then a back reference to a nonexistent subexpression is
-     treated as literal characters.  */ 
-#define RE_NO_MISSING_BK_REF (RE_NO_EMPTY_RANGES << 1)
+#define RE_NO_EMPTY_RANGES (RE_NO_BK_VBAR << 1)
 
 /* If this bit is set, then an unmatched ) is ordinary.
    If not set, then an unmatched ) is invalid.  */
-#define RE_UNMATCHED_RIGHT_PAREN_ORD (RE_NO_MISSING_BK_REF << 1)
+#define RE_UNMATCHED_RIGHT_PAREN_ORD (RE_NO_EMPTY_RANGES << 1)
 
 /* This global variable defines the particular regexp syntax to use (for
    some interfaces).  When a regexp is compiled, the syntax used is
@@ -150,9 +144,9 @@ extern reg_syntax_t re_syntax_options;
 
 #define RE_SYNTAX_AWK							\
   (RE_BACKSLASH_ESCAPE_IN_LISTS | RE_DOT_NOT_NULL			\
-   | RE_NEWLINE_ORDINARY        | RE_NO_BK_PARENS			\
-   | RE_NO_BK_REFS              | RE_NO_BK_VAR				\
-   | RE_NO_EMPTY_RANGES         | RE_UNMATCHED_RIGHT_PAREN_ORD)
+   | RE_NO_BK_PARENS            | RE_NO_BK_REFS				\
+   | RE_NO_BK_VBAR               | RE_NO_EMPTY_RANGES			\
+   | RE_UNMATCHED_RIGHT_PAREN_ORD)
 
 #define RE_SYNTAX_POSIX_AWK 						\
   (RE_SYNTAX_POSIX_EXTENDED | RE_BACKSLASH_ESCAPE_IN_LISTS)
@@ -171,25 +165,30 @@ extern reg_syntax_t re_syntax_options;
 #define RE_SYNTAX_POSIX_EGREP						\
   (RE_SYNTAX_EGREP | RE_INTERVALS | RE_NO_BK_BRACES)
 
+/* P1003.2/D11.2, section 4.20.7.1, lines 5078ff.  */
+#define RE_SYNTAX_ED RE_SYNTAX_POSIX_BASIC
+
+#define RE_SYNTAX_SED RE_SYNTAX_POSIX_BASIC
+
 /* Syntax bits common to both basic and extended POSIX regex syntax.  */
 #define _RE_SYNTAX_POSIX_COMMON						\
   (RE_CHAR_CLASSES | RE_DOT_NEWLINE      | RE_DOT_NOT_NULL		\
-   | RE_INTERVALS  | RE_NEWLINE_ORDINARY | RE_NO_EMPTY_RANGES)
+   | RE_INTERVALS  | RE_NO_EMPTY_RANGES)
 
 #define RE_SYNTAX_POSIX_BASIC						\
-  (_RE_SYNTAX_POSIX_COMMON | RE_BK_PLUS_QM | RE_NO_MISSING_BK_REF)
+  (_RE_SYNTAX_POSIX_COMMON | RE_BK_PLUS_QM)
 
 /* Differs from ..._POSIX_BASIC only in that RE_BK_PLUS_QM becomes
    RE_LIMITED_OPS, i.e., \? \+ \| are not recognized.  Actually, this
    isn't minimal, since other operators, such as \`, aren't disabled.  */
 #define RE_SYNTAX_POSIX_MINIMAL_BASIC					\
-  (_RE_SYNTAX_POSIX_COMMON | RE_LIMITED_OPS | RE_NO_MISSING_BK_REF)
+  (_RE_SYNTAX_POSIX_COMMON | RE_LIMITED_OPS)
 
 #define RE_SYNTAX_POSIX_EXTENDED					\
   (_RE_SYNTAX_POSIX_COMMON | RE_CONTEXT_INDEP_ANCHORS			\
    | RE_CONTEXT_INDEP_OPS  | RE_NO_BK_BRACES				\
    | RE_NO_BK_PARENS       | RE_NO_BK_VBAR				\
-   | RE_NO_EMPTY_GROUPS    | RE_UNMATCHED_RIGHT_PAREN_ORD)
+   | RE_UNMATCHED_RIGHT_PAREN_ORD)
 
 /* Differs from ..._POSIX_EXTENDED in that RE_CONTEXT_INVALID_OPS
    replaces RE_CONTEXT_INDEP_OPS and RE_NO_BK_REFS is added.  */
@@ -197,8 +196,7 @@ extern reg_syntax_t re_syntax_options;
   (_RE_SYNTAX_POSIX_COMMON  | RE_CONTEXT_INDEP_ANCHORS			\
    | RE_CONTEXT_INVALID_OPS | RE_NO_BK_BRACES				\
    | RE_NO_BK_PARENS        | RE_NO_BK_REFS				\
-   | RE_NO_BK_VBAR	    | RE_NO_EMPTY_GROUPS			\
-   | RE_UNMATCHED_RIGHT_PAREN_ORD)
+   | RE_NO_BK_VBAR	    | RE_UNMATCHED_RIGHT_PAREN_ORD)
 /* [[[end syntaxes]]] */
 
 /* Maximum number of duplicates an interval can allow.  Some systems
@@ -324,12 +322,12 @@ struct re_pattern_buffer
 #define REGS_FIXED 2
   unsigned regs_allocated : 2;
 
-        /* Set to zero when regex_compile compiles a pattern; set to one
-           by re_compile_fastmap when it updates the fastmap, if any.  */
+        /* Set to zero when `regex_compile' compiles a pattern; set to one
+           by `re_compile_fastmap' if it updates the fastmap.  */
   unsigned fastmap_accurate : 1;
 
-        /* If set, regexec reports only success or failure and does not
-           return anything in pmatch.  */
+        /* If set, `re_match_2' does not return information about
+           subexpressions.  */
   unsigned no_sub : 1;
 
         /* If set, a beginning-of-line anchor doesn't match at the
@@ -389,16 +387,17 @@ typedef struct
    prototype (if we are ANSI), and once without (if we aren't) -- we
    use the following macro to declare argument types.  This
    unfortunately clutters up the declarations a bit, but I think it's
-   worth it.
-   
-   We also have to undo `const' if we are not ANSI.  */
+   worth it.  */
 
 #if __STDC__
+
 #define _RE_ARGS(args) args
-#else
+
+#else /* not __STDC__ */
+
 #define _RE_ARGS(args) ()
-#define const
-#endif
+
+#endif /* not __STDC__ */
 
 /* Sets the current default syntax to SYNTAX, and return the old syntax.
    You can also simply assign to the `re_syntax_options' variable.  */

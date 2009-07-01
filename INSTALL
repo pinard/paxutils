@@ -22,8 +22,8 @@ see the messages, run `configure' with its standard output redirected
 to `/dev/null'; for example, `./configure >/dev/null'.
 
 To compile the package in a different directory from the one
-containing the source code, you must use a version of make that
-supports the VPATH variable, such as GNU make.  `cd' to the directory
+containing the source code, you must use a version of `make' that
+supports the VPATH variable, such as GNU `make'.  `cd' to the directory
 where you want the object files and executables to go and run
 `configure'.  `configure' automatically checks for the source code in
 the directory that `configure' is in and in `..'.  If for some reason
@@ -35,27 +35,31 @@ DIR is the directory that contains the source code.
 By default, `make install' will install the package's files in
 /usr/local/bin, /usr/local/lib, /usr/local/man, etc.  You can specify
 an installation prefix other than /usr/local by giving `configure' the
-option `--prefix=PATH'.  Alternately, you can do so by changing the
-`prefix' variable in the Makefile that `configure' creates (the
-Makefile in the top-level directory, if the package contains
-subdirectories).
+option `--prefix=PATH'.  Alternately, you can do so by giving a value
+for the `prefix' variable when you run `make', e.g.,
+	make prefix=/usr/gnu
 
 You can specify separate installation prefixes for
 architecture-specific files and architecture-independent files.  If
-you give `configure' the option `--exec_prefix=PATH', the package will
-use PATH as the prefix for installing programs and libraries.  Data
-files and documentation will still use the regular prefix.  Normally,
-all files are installed using the regular prefix.
+you give `configure' the option `--exec-prefix=PATH' or set the
+`make' variable `exec_prefix' to PATH, the package will use PATH as
+the prefix for installing programs and libraries.  Data files and
+documentation will still use the regular prefix.  Normally, all files
+are installed using the regular prefix.
 
-You can tell `configure' to figure out the configuration for your
-system, and record it in `config.status', without actually configuring
-the package (creating `Makefile's and perhaps a configuration header
-file).  To do this, give `configure' the `--no-create' option.  Later,
-you can run `./config.status' to actually configure the package.  This
-option is useful mainly in `Makefile' rules for updating `config.status'
-and `Makefile'.  You can also give `config.status' the `--recheck'
-option, which makes it re-run `configure' with the same arguments you
-used before.  This is useful if you change `configure'.
+Another `configure' option is useful mainly in `Makefile' rules for
+updating `config.status' and `Makefile'.  The `--no-create' option
+figures out the configuration for your system and records it in
+`config.status', without actually configuring the package (creating
+`Makefile's and perhaps a configuration header file).  Later, you can
+run `./config.status' to actually configure the package.  You can also
+give `config.status' the `--recheck' option, which makes it re-run
+`configure' with the same arguments you used before.  This option is
+useful if you change `configure'.
+
+Some packages pay attention to `--with-PACKAGE' options to `configure',
+where PACKAGE is something like `gnu-libc' or `x' (for the X Window System).
+The README should mention any --with- options that the package recognizes.
 
 `configure' ignores any other arguments that you give it.
 
@@ -79,6 +83,8 @@ INSTALL		Program to use to install files.
 (For these variables, any value given in the environment is added to
 the value that `configure' chooses:)
 DEFS		Configuration options, in the form `-Dfoo -Dbar ...'
+		Do not use this variable in packages that create a
+		configuration header file.
 LIBS		Libraries to link with, in the form `-lfoo -lbar ...'
 
 If you need to do unusual things to compile the package, we encourage

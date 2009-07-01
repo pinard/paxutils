@@ -15,17 +15,25 @@
    along with this program; if not, write to the Free Software
    Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "getopt.h"
 
-#ifndef __STDC__
+#if !__STDC__ && !defined(const) && IN_GCC
 #define const
 #endif
 
-#if defined(STDC_HEADERS) || defined(__GNU_LIBRARY__) || defined (LIBC)
+#include <stdio.h>
+
+/* This needs to come after some library #include
+   to get __GNU_LIBRARY__ defined.  */
+#ifdef __GNU_LIBRARY__
 #include <stdlib.h>
-#else /* STDC_HEADERS or __GNU_LIBRARY__ */
+#else
 char *getenv ();
-#endif /* STDC_HEADERS or __GNU_LIBRARY__ */
+#endif
 
 #ifndef	NULL
 #define NULL 0

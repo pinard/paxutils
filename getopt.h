@@ -86,12 +86,9 @@ struct option
 
 /* Names for the values of the `has_arg' field of `struct option'.  */
 
-enum _argtype
-{
-  no_argument,
-  required_argument,
-  optional_argument
-};
+#define	no_argument		0
+#define required_argument	1
+#define optional_argument	2
 
 #if __STDC__
 #if defined(__GNU_LIBRARY__)
