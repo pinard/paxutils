@@ -27,6 +27,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <sys/types.h>		/* Needed for typedefs in tar.h */
 #include "getopt.h"
 #include "regex.h"
+#include "fnmatch.h"
 
 /*
  * The following causes "tar.h" to produce definitions of all the
@@ -103,7 +104,6 @@ void	name_add();
 void	name_init();
 void	options();
 char	*un_quote_string();
-int	wildmat();
 
 #ifndef S_ISLNK
 #define lstat stat
@@ -280,7 +280,7 @@ main(argc, argv)
 		break;
 	case CMD_NONE:
 		msg("you must specify exactly one of the r, c, t, x, or d options\n");
- 		fprintf(stderr,"For more information, type ``%s +help''.\n",tar);
+ 		fprintf(stderr,"For more information, type ``%s --help''.\n",tar);
 		exit(EX_ARGSBAD);
 	}
 	if (f_volno_file)
@@ -616,7 +616,7 @@ options(argc, argv)
 
 		case '?':
 		badopt:
-			msg("Unknown option.  Use '%s +help' for a complete list of options.", tar);
+			msg("Unknown option.  Use '%s --help' for a complete list of options.", tar);
 			exit(EX_ARGSBAD);
 
 		}
@@ -973,9 +973,10 @@ addname(name)
 		if(chdir_name[0]!='/') {
 			char *path = ck_malloc(PATH_MAX);
 #if defined(__MSDOS__) || defined(USG) || defined(_POSIX_VERSION)
-			if(!getcwd(path,PATH_MAX))
+			if(!getcwd(path,PATH_MAX)) {
 				msg("Couldn't get current directory.");
 				exit(EX_SYSTEM);
+			}
 #else
 			char *getwd();
 
@@ -1062,7 +1063,7 @@ again:
 
 		/* Regular expressions (shell globbing, actually). */
 		if (nlp->regexp) {
-			if (wildmat(p, nlp->name)) {
+			if (fnmatch(nlp->name, p, FNM_TARPATH) == 0) {
 				nlp->found = 1;	/* Remember it matched */
 				if(f_startfile) {
 					free((void *)namelist);
@@ -1172,7 +1173,7 @@ again:
 
 		/* Regular expressions */
 		if (nlp->regexp) {
-			if (wildmat(p, nlp->name))
+			if (fnmatch(nlp->name, p, FNM_TARPATH) == 0)
 				return nlp;	/* We got a match */
 			continue;
 		}
@@ -1340,7 +1341,6 @@ char *file;
 {
 	FILE *fp;
 	char buf[1024];
-	extern char *rindex();
 
 	if(strcmp(file, "-"))
 		fp=fopen(file,"r");
@@ -1384,7 +1384,7 @@ char *name;
 	extern char *strstr();
 
 	for(n=0;n<size_re_exclude;n++) {
-		if(wildmat(name,re_exclude[n]))
+		if(fnmatch(re_exclude[n], name, FNM_TARPATH) == 0)
 			return 1;
 	}
 	for(n=0;n<size_exclude;n++) {

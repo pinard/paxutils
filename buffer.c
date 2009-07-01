@@ -73,7 +73,7 @@ FILE *msg_file = stdout;
 				   it can't exec.  We hope compress/sh
 				   never return this status! */
 
-char *valloc();
+void *valloc();
 
 void writeerror();
 void readerror();
@@ -1259,7 +1259,6 @@ int	type;
 	static FILE *read_file = 0;
 	extern int now_verifying;
 	extern char TTY_NAME[];
-	char *getenv();
 	static int looped = 0;
 
 	if(!read_file && !f_run_script_at_end)
@@ -1337,9 +1336,9 @@ int	type;
 			    break;
 
 		    case '!':
-    #ifdef __MSDOS__
+#ifdef __MSDOS__
 			    spawnl(P_WAIT,getenv("COMSPEC"),"-",0);
-    #else
+#else
 				    /* JF this needs work! */
 			    switch(fork()) {
 			    case -1:
@@ -1355,7 +1354,7 @@ int	type;
 				    wait(0);
 				    break;
 			    }
-    #endif
+#endif
 			    break;
 		  }
 		  }

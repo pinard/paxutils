@@ -6,6 +6,14 @@
 
 #ifndef HAVE_GETPAGESIZE
 
+#ifdef _POSIX_VERSION
+#include <unistd.h>
+#endif
+
+#ifdef _SC_PAGESIZE
+#define getpagesize() sysconf(_SC_PAGESIZE)
+#else
+
 #include <sys/param.h>
 
 #ifdef EXEC_PAGESIZE
@@ -20,6 +28,7 @@
 #define getpagesize() NBPC
 #endif /* no NBPG */
 #endif /* no EXEC_PAGESIZE */
+#endif /* no _SC_PAGESIZE */
 
 #endif /* not HAVE_GETPAGESIZE */
 

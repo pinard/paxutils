@@ -1,7 +1,7 @@
 # site-specific parameters for file system backup.
 
 # User name of administrator of backups.
-ADMINISTRATOR=backup-reports
+ADMINISTRATOR=friedman
 
 # Hour at which backups are normally done.
 # This should be a number from 0 to 23.
@@ -41,7 +41,7 @@ BACKUP_DIRS="
 	apple-gunkies:/gd
 	albert:/fs/gd2
 	nutrimat:/fs/gp
-	kropotkin:/fs/gp2
+	nutrimat:/fs/gp2
 	albert:/fs/mailer
 	albert:/
 	albert:/usr
@@ -56,10 +56,7 @@ BACKUP_DIRS="
 	gnu:/
 	gnu:/usr
 	ernst:/usr1
-	wookumz:/usr/gnu/emacs-tape
-	wookumz:/usr/gnu/lang-tape
-	geech:/usr/gnu/util-tape
-	churchy:/usr/gnu/exper-tape"
+        nutrimat:/fs/dist"
 
 # List of individual files to be dumped.
 # These should be accesible from the machine on which the dump is run.

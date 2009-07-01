@@ -609,9 +609,9 @@ rm -f conftest*
 fi
 
 echo checking for BSD
-test -f /vmunix && DEFS="$DEFS -DBSD42=1"
+( test -f /vmunix || test -f /sdmach || test -f /../../mach ) && DEFS="$DEFS -DBSD42=1"
 echo checking for HP-UX
-test -f /hp-ux && test -f /vmunix || MALLOC=malloc.o
+test -f /hp-ux && test ! -f /vmunix && MALLOC=malloc.o
 
 echo checking for Xenix
 cat <<EOF > conftest.c
@@ -635,6 +635,10 @@ if test -n "$XENIX"; then
   *) LIBS="-ldir $LIBS" ;; # Make sure -ldir precedes any -lx.
   esac
 fi
+
+echo checking for Solaris libraries
+test -f /lib/libsocket.a && LIBS="$LIBS -lsocket"
+test -f /lib/libnsl.a && LIBS="$LIBS -lnsl"
 
 if test -n "$prefix"; then
   test -z "$exec_prefix" && exec_prefix='$(prefix)'

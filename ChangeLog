@@ -1,3 +1,86 @@
+Tue Sep 15 14:49:48 1992  Michael I Bushnell  (mib@geech.gnu.ai.mit.edu)
+
+	* version.c: Released version 1.11.1.
+
+	* Makefile (AUX): Added NEWS.
+
+	* Makefile.in (rmt): Added $(LIBS).
+	* configure.in: Added tests for libraries needed on Solaris.
+
+	* mangle.c (extract_mangle): Null terminate link name for
+	losing archives missing it.
+
+	* Makefile.in: added target and rule for getdate.c: getdate.y;
+	some makes don't have one built in.
+
+Mon Sep 14 16:23:15 1992  Michael I Bushnell  (mib@geech.gnu.ai.mit.edu)
+
+	* tar.c (options, main): Advise use of --help rather than
+	+help.
+
+	* create.c (write_long): Using hstat here is a Bad Idea, and
+	totally unnecessary at that.
+
+	* list.c (read_header): Compute both signed and normal
+	checksums.
+
+	* configure.in: Define BSD in the presence of /sdmach or 
+	/../../mach.
+
+	* diffarch.c, buffer.c: Declare valloc as void* rather than
+	char*.
+
+	* Makefile.in: Don't install info files.
+
+	* configure.in: Check for malloc was scrambled.
+
+	* port.h: Undefine index and rindex if necessary; some
+	string.h's define them for us.
+
+	* tar.c (addname): Missing braces after if.
+	* gnu.c (read_dir_file): Missing braces after if.
+
+	* names.c: Add include of <stdio.h>,
+
+	* create.c (start_header): Set current_file_name so that 
+	print_header (used for verbose create) works properly.
+	(dump_file): Set current_link_name when setting up symlink
+	and hardlink records.
+
+Fri Sep 11 01:05:52 1992  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
+
+	* fnmatch.[ch]: New files.
+	* wildmat.c: File removed.
+	* tar.c: Include fnmatch.h and use fnmatch instead of wildmat.
+	* Makefile.in, makefile.pc: Replace wildmat.o(bj) with fnmatch.
+
+Thu Sep 10 23:19:30 1992  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
+
+	* buffer.c, tar.c: Remove redundant decls of getenv, rindex.
+
+	* Makefile.in: Add uninstall target.
+	Define libdir instead of hardcoding /etc for installing rmt.
+
+Thu Sep 10 13:06:03 1992  Michael I Bushnell  (mib@geech.gnu.ai.mit.edu)
+
+	* list.c (read_header): On second thought, that doesn't work
+	either, so just store the names in malloced areas.  Sigh.
+
+	* NEWS: New file.
+	* README: Removed things that belong in NEWS; point to it.
+
+	* list.c (read_header): current_file_name and
+	current_link_name need to be set to the arrays in head rather
+	than header; header is the actual read buffer and will change.
+
+	* extract.c (extract_archive):
+	* buffer.c (new_volume): `#' directives need to start in
+	column 1.
+
+Thu Sep 10 06:09:18 1992  Noah Friedman  (friedman@nutrimat.gnu.ai.mit.edu)
+
+        * level-0, level-1 (TAR_PART1): put --atime-preserve inside quotes.
+
 Wed Sep  9 13:34:26 1992  Michael I Bushnell  (mib@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (AUX): Add getpagesize.h.

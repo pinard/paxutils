@@ -289,7 +289,7 @@ int
 read_header()
 {
 	register int	i;
-	register long	sum, recsum;
+	register long	sum, signed_sum, recsum;
 	register char	*p;
 	register union record *header;
 	long	from_oct();
@@ -297,6 +297,7 @@ read_header()
 	char *bp, *data;
 	int size, written;
 	static char *next_long_name, *next_long_link;
+	char *name;
 
       recurse:
 	
@@ -314,13 +315,18 @@ read_header()
 		 * We can't use unsigned char here because of old compilers,
 		 * e.g. V7.
 		 */
+	  	signed_sum += *p;
 		sum += 0xFF & *p++;
 	}
 
 	/* Adjust checksum to count the "chksum" field as blanks. */
 	for (i = sizeof(header->header.chksum); --i >= 0;)
+	  {
 		sum -= 0xFF & header->header.chksum[i];
+		signed_sum -= (char) header->header.chksum[i];
+	  }
 	sum += ' '* sizeof header->header.chksum;	
+	signed_sum += ' ' * sizeof header->header.chksum;
 
 	if (sum == 8*' ') {
 		/*
@@ -330,7 +336,7 @@ read_header()
 		return 2;
 	}
 
-	if (sum != recsum) 
+	if (sum != recsum && signed_sum != recsum) 
 	  return 0;
 	
 	/*
@@ -376,12 +382,22 @@ read_header()
 	  }
 	else
 	  {
-	    current_file_name = (next_long_name
-				 ? next_long_name
-				 : header->header.arch_name);
-	    current_link_name = (next_long_link
-				 ? next_long_link
-				 : header->header.arch_linkname);
+	    name = (next_long_name
+		    ? next_long_name
+		    : head->header.arch_name);
+	    if (current_file_name)
+	      free (current_file_name);
+	    current_file_name = malloc (strlen (name) + 1);
+	    strcpy (current_file_name, name);
+
+	    name = (next_long_link
+		    ? next_long_link
+		    : head->header.arch_linkname);
+	    if (current_link_name)
+	      free (current_link_name);
+	    current_link_name = malloc (strlen (name) + 1);
+	    strcpy (current_link_name, name);
+	    
 	    next_long_link = next_long_name = 0;
 	    return 1;
 	  }

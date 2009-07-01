@@ -1,5 +1,5 @@
 /* Look up user and/or group names.
-   Copyright (C) 1988 Free Software Foundation
+   Copyright (C) 1988, 1992 Free Software Foundation
 
 This file is part of GNU Tar.
 
@@ -30,6 +30,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #ifndef NONAMES
 /* Whole module goes away if NONAMES defined.  Otherwise... */
+#include <stdio.h>
 #include <pwd.h>
 #include <grp.h>
 
@@ -58,7 +59,9 @@ finduname(uname, uid)
 	int	uid;
 {
 	struct passwd	*pw;
+#ifndef HAVE_GETPWUID
 	extern struct passwd *getpwuid ();
+#endif
 
 	if (uid != saveuid) {
 		saveuid = uid;
@@ -97,7 +100,9 @@ findgname(gname, gid)
 	int	gid;
 {
 	struct group	*gr;
+#ifndef HAVE_GETGRGID
 	extern struct group *getgrgid ();
+#endif
 
 	if (gid != savegid) {
 		savegid = gid;
