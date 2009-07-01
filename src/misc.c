@@ -1,5 +1,5 @@
-/* Miscellaneous functions, not really specific to GNU tar.
-   Copyright (C) 1988, 92, 94, 95, 96, 97 Free Software Foundation, Inc.
+/* Miscellaneous functions, not really specific to tar.
+   Copyright (C) 1988, 92, 94, 95, 96, 97, 98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,11 +17,42 @@
 
 #include "system.h"
 
-#include "backupfile.h"
 #include "rmt.h"
 
 /* The following inclusion for crosschecking prototypes, only.  */
 #include "common.h"
+
+/* Various integer arithmetic.  */
+
+#if DOSWIN
+
+/*--------------------------------------------------------------------------.
+| Compare file modification times.  Returns less than zero, zero or greater |
+| than zero if the timestamp of the first argument is respectively older,   |
+| equal or later than that of the second.                                   |
+`--------------------------------------------------------------------------*/
+
+/* The comparisons are up to a time granularity of 2 seconds, because so are
+   DOS file times.  */
+
+int
+time_compare (time_t mt1, time_t mt2)
+{
+  double tdiff;
+
+  /* Optimize the (hopefully) usual case.  */
+  if (mt1 == mt2)
+    return 0;
+
+  /* MS-DOS or MS-Windows FAT filesystems round file timestamps to the nearest
+     multiple of 2 seconds.  Don't report differences unless file times differ
+     by more than 1 second.  */
+  tdiff = difftime (mt1, mt2);
+  return (tdiff > 1) ? 1 : (tdiff < -1) ? -1 : 0;
+}
+
+#endif /* DOSWIN */
+
 
 /* Handling strings.  */
 
@@ -57,7 +88,7 @@ quote_copy_string (const char *string)
   const char *source = string;
   char *destination = NULL;
   char *buffer = NULL;
-  int copying = 0;
+  bool copying = false;
 
   while (*source)
     {
@@ -67,11 +98,11 @@ quote_copy_string (const char *string)
 	{
 	  if (!copying)
 	    {
-	      int length = (source - string) - 1;
+	      size_t length = (source - string) - 1;
 
-	      copying = 1;
+	      copying = true;
 	      buffer = (char *) xmalloc (length + 5 + strlen (source) * 4);
-	      memcpy (buffer, string, (size_t) length);
+	      memcpy (buffer, string, length);
 	      destination = buffer + length;
 	    }
 	  *destination++ = '\\';
@@ -86,11 +117,11 @@ quote_copy_string (const char *string)
 	{
 	  if (!copying)
 	    {
-	      int length = (source - string) - 1;
+	      size_t length = (source - string) - 1;
 
-	      copying = 1;
+	      copying = true;
 	      buffer = (char *) xmalloc (length + 5 + strlen (source) * 4);
-	      memcpy (buffer, string, (size_t) length);
+	      memcpy (buffer, string, length);
 	      destination = buffer + length;
 	    }
 	  *destination++ = '\\';
@@ -138,20 +169,20 @@ quote_copy_string (const char *string)
 
 /*-------------------------------------------------------------------------.
 | Takes a quoted C string (like those produced by quote_copy_string) and   |
-| turns it back into the un-quoted original.  This is done in place.	   |
-| Returns 0 only if the string was not properly quoted, but completes the  |
-| unquoting anyway.							   |
-| 									   |
+| turns it back into the un-quoted original.  This is done in place.       |
+| Returns false only if the string was not properly quoted, but completes  |
+| the unquoting anyway (FIXME: the returned result is never checked).      |
+|                                                                          |
 | This is used for reading the saved directory file in incremental dumps.  |
 | It is used for decoding old `N' records (demangling names).  But also,   |
 | it is used for decoding file arguments, would they come from the shell   |
-| or a -T file, and for decoding the --exclude argument.		   |
+| or a -T file, and for decoding the --exclude argument.                   |
 `-------------------------------------------------------------------------*/
 
-int
+bool
 unquote_string (char *string)
 {
-  int result = 1;
+  bool result = true;
   char *source = string;
   char *destination = string;
 
@@ -222,7 +253,7 @@ unquote_string (char *string)
 	  }
 
 	default:
-	  result = 0;
+	  result = false;
 	  *destination++ = '\\';
 	  if (*source)
 	    *destination++ = *source++;
@@ -236,6 +267,47 @@ unquote_string (char *string)
   if (source != destination)
     *destination = '\0';
   return result;
+}
+
+/*-------------------------------------------------------------------------.
+| Allocate a new string, made up of concatenating PATH and NAME.  Abort if |
+| result overflows PATH_MAX.                                               |
+`-------------------------------------------------------------------------*/
+
+char *
+concat_no_slash (const char *path, const char *name)
+{
+  size_t length = strlen (path) + strlen (name);
+  char *buffer;
+
+  if (length > PATH_MAX)
+    ERROR ((TAREXIT_FAILURE, 0, _("File name %s%s too long"), path, name));
+
+  buffer = (char *) xmalloc (length + 1);
+  strcpy (stpcpy (buffer, path), name);
+  return buffer;
+}
+
+/*---------------------------------------------------------------------------.
+| Allocate a new string, made up of concatenating PATH and NAME with a slash |
+| in between.  Abort if result overflows PATH_MAX.                           |
+`---------------------------------------------------------------------------*/
+
+char *
+concat_with_slash (const char *path, const char *name)
+{
+  size_t length = strlen (path) + strlen (name) + 1;
+  char *buffer;
+  char *cursor;
+
+  if (length > PATH_MAX)
+    ERROR ((TAREXIT_FAILURE, 0, _("File name %s/%s too long"), path, name));
+
+  buffer = (char *) xmalloc (length + 1);
+  cursor = stpcpy (buffer, path);
+  *cursor++ = '/';
+  strcpy (cursor, name);
+  return buffer;
 }
 
 /* Sorting lists.  */
@@ -316,18 +388,19 @@ merge_sort (char *list, int length, int offset, int (*compare) (char *, char *))
 /* File handling.  */
 
 /* Saved names in case backup needs to be undone.  */
+enum backup_type backup_type;
 static char *before_backup_name = NULL;
 static char *after_backup_name = NULL;
 
-/*------------------------------------------------------------------------.
-| Returns nonzero if p is `.' or `..'.  This could be a macro for speed.  |
-`------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------.
+| Returns true if p is `.' or `..'.  This could be a macro for speed.  |
+`---------------------------------------------------------------------*/
 
 /* Early Solaris 2.4 readdir may return d->d_name as `' in NFS-mounted
-   directories.  The workaround here skips `' just like `.'.  Without it,
-   GNU tar would then treat `' much like `.' and loop endlessly.  */
+   directories.  The workaround here skips `' just like `.'.  Without it, tar
+   would then treat `' much like `.' and loop endlessly.  */
 
-int
+bool
 is_dot_or_dotdot (const char *p)
 {
   return (p[0] == '\0'
@@ -337,43 +410,44 @@ is_dot_or_dotdot (const char *p)
 
 /*-------------------------------------------------------------------------.
 | Delete PATH, whatever it might be.  If RECURSE, first recursively delete |
-| the contents of PATH when it is a directory.  Return zero on any error,  |
-| with errno set.  As a special case, if we fail to delete a directory	   |
-| when not RECURSE, do not set errno (just be tolerant to this error).	   |
+| the contents of PATH when it is a directory.  Return false on any error, |
+| with errno set.  As a special case, if we fail to delete a directory     |
+| when not RECURSE, do not set errno (just be tolerant to this error).     |
 `-------------------------------------------------------------------------*/
 
-int
-remove_any_file (const char *path, int recurse)
+bool
+remove_any_file (const char *path, bool recurse)
 {
-  struct stat stat_buffer;
+  struct stat stat_info;
 
-  if (lstat (path, &stat_buffer) < 0)
-    return 0;
+  if (lstat (path, &stat_info) < 0)
+    return false;
 
-  if (S_ISDIR (stat_buffer.st_mode))
+  if (S_ISDIR (stat_info.st_mode))
     if (recurse)
       {
 	DIR *dirp = opendir (path);
 	struct dirent *dp;
 
 	if (dirp == NULL)
-	  return 0;
+	  return false;
 
-	while (dp = readdir (dirp), dp && !is_dot_or_dotdot (dp->d_name))
-	  {
-	    char *path_buffer = new_name (path, dp->d_name);
+	while (dp = readdir (dirp), dp)
+	  if (!is_dot_or_dotdot (dp->d_name))
+	    {
+	      char *path_buffer = concat_with_slash (path, dp->d_name);
 
-	    if (!remove_any_file (path_buffer, 1))
-	      {
-		int saved_errno = errno;
+	      if (!remove_any_file (path_buffer, true))
+		{
+		  int saved_errno = errno;
 
-		free (path_buffer);
-		closedir (dirp);
-		errno = saved_errno; /* FIXME: errno should be read-only */
-		return 0;
-	      }
-	    free (path_buffer);
-	  }
+		  free (path_buffer);
+		  closedir (dirp);
+		  errno = saved_errno; /* FIXME: errno should be read-only */
+		  return false;
+		}
+	      free (path_buffer);
+	    }
 	closedir (dirp);
 	return rmdir (path) >= 0;
       }
@@ -384,9 +458,9 @@ remove_any_file (const char *path, int recurse)
 	int saved_errno = errno;
 
 	if (rmdir (path) >= 0)
-	  return 1;
+	  return true;
 	errno = saved_errno;	/* FIXME: errno should be read-only */
-	return 0;
+	return false;
       }
 
   return unlink (path) >= 0;
@@ -394,70 +468,82 @@ remove_any_file (const char *path, int recurse)
 
 /*-------------------------------------------------------------------------.
 | Check if PATH already exists and make a backup of it right now.  Return  |
-| success (nonzero) only if the backup in either unneeded, or successful.  |
-| 									   |
-| For now, directories are considered to never need backup.  If ARCHIVE is |
-| nonzero, this is the archive and so, we do not have to backup block or   |
-| character devices, nor remote entities.				   |
+| true only if the backup in either unneeded, or successful.               |
+|                                                                          |
+| For now, directories are never considered as needing backup.  If         |
+| IS_ARCHIVE is true, this is the archive and so, we do not have to backup |
+| block or character devices, nor remote entities.                         |
 `-------------------------------------------------------------------------*/
 
-int
-maybe_backup_file (const char *path, int archive)
+bool
+maybe_backup_file (const char *path, bool is_archive)
 {
   struct stat file_stat;
 
   /* Check if we really need to backup the file.  */
 
-  if (archive && _remdev (path))
-    return 1;
+  if (is_archive && _remdev (path))
+    return true;
 
   if (stat (path, &file_stat))
     {
       if (errno == ENOENT)
-	return 1;
+	return true;
 
       ERROR ((0, errno, "%s", path));
-      return 0;
+      return false;
     }
 
   if (S_ISDIR (file_stat.st_mode))
-    return 1;
+    return true;
+
+#if DOSWIN
+  /* Backing up non-regular files will never work on DOSWIN, and we change the
+     names of files which are special to DOSWIN anyway.  So just pretend we
+     succeeded.  */
+  if (!S_ISREG (file_stat.st_mode))
+    return true;
+#endif
 
 #ifdef S_ISBLK
-  if (archive && S_ISBLK (file_stat.st_mode))
-    return 1;
+  if (is_archive && S_ISBLK (file_stat.st_mode))
+    return true;
 #endif
 
 #ifdef S_ISCHR
-  if (archive && S_ISCHR (file_stat.st_mode))
-    return 1;
+  if (is_archive && S_ISCHR (file_stat.st_mode))
+    return true;
 #endif
 
   assign_string (&before_backup_name, path);
 
-  /* A run situation may exist between Emacs or other GNU programs trying to
-     make a backup for the same file simultaneously.  If theoretically
-     possible, real problems are unlikely.  Doing any better would require a
-     convention, GNU-wide, for all programs doing backups.  */
+  /* A run situation may exist between Emacs or other programs trying to make
+     a backup for the same file simultaneously.  If theoretically possible,
+     real problems are unlikely.  Doing any better would require a convention,
+     system-wide, for all programs doing backups.  */
 
   assign_string (&after_backup_name, NULL);
-  after_backup_name = find_backup_file_name (path);
+  after_backup_name = find_backup_file_name (path, backup_type);
   if (after_backup_name == NULL)
     FATAL_ERROR ((0, 0, "Virtual memory exhausted"));
 
   if (rename (before_backup_name, after_backup_name) == 0)
     {
       if (verbose_option)
-	fprintf (stdlis, _("Renaming previous `%s' to `%s'\n"),
-		 before_backup_name, after_backup_name);
-      return 1;
+	{
+	  if (checkpoint_option)
+	    flush_checkpoint_line ();
+	  fprintf (stdlis, _("Renaming previous `%s' to `%s'\n"),
+		   before_backup_name, after_backup_name);
+	}
+      return true;
     }
 
   /* The backup operation failed.  */
 
   ERROR ((0, errno, _("%s: Cannot rename for backup"), before_backup_name));
   assign_string (&after_backup_name, NULL);
-  return 0;
+  return false;
 }
 
 /*-----------------------------------------------------------------------.
@@ -474,8 +560,12 @@ undo_last_backup (void)
 	ERROR ((0, errno, _("%s: Cannot rename from backup"),
 		before_backup_name));
       if (verbose_option)
-	fprintf (stdlis, _("Renaming `%s' back to `%s'\n"),
-		 after_backup_name, before_backup_name);
+	{
+	  if (checkpoint_option)
+	    flush_checkpoint_line ();
+	  fprintf (stdlis, _("Renaming `%s' back to `%s'\n"),
+		   after_backup_name, before_backup_name);
+	}
       assign_string (&after_backup_name, NULL);
     }
 }

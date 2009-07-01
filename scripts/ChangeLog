@@ -29,7 +29,7 @@
 
 	* Makefile.in: Distribute the ChangeLog, now recovered!
 	Reported by Andreas Schwab.
-
+
 1995-06-17  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Release 1.11.8.
@@ -95,7 +95,7 @@
 
 	* backup-specs (TAR): New variable.
 
-	* level-0, level-1 (TAR_PART1): Get path of GNU tar from `TAR'
+	* level-0, level-1 (TAR_PART1): Get path of tar from `TAR'
 	variable, don't hardcode it.
 
 1993-03-20  Noah Friedman  <friedman@nutrimat.gnu.ai.mit.edu>

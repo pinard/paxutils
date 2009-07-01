@@ -2,6 +2,11 @@
 # Volume labels are checked on read by fnmatch.
 
 . ./preset
+
+# Skip test when /dev/null is not available.
+# Hmph!  Seems it was only for DOS, where DJGPP now supports it.
+#test -r /dev/null && exit 77
+
 . $srcdir/before
 
 tar cfVT archive label /dev/null || exit 1

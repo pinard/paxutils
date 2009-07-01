@@ -1,5 +1,5 @@
 /* basename.c -- return the last element in a path
-   Copyright (C) 1990 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,24 +15,30 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-/* Return NAME with any leading path stripped off.
-   Don't use strrchr/rindex.  */
+#ifndef FILESYSTEM_PREFIX_LEN
+# define FILESYSTEM_PREFIX_LEN(Filename) 0
+#endif
+
+#ifndef ISSLASH
+# define ISSLASH(C) ((C) == '/')
+#endif
+
+/* In general, we can't use the builtin `basename' function if available,
+   since it has different meanings in different environments.
+   In some environments the builtin `basename' modifies its argument.  */
 
 char *
-basename (name)
-     const char *name;
+base_name (char const *name)
 {
-  const char *base = name;
+  char const *base = name += FILESYSTEM_PREFIX_LEN (name);
 
-  while (*name)
-    {
-      if (*name == '/')
-	base = name + 1;
-      ++name;
-    }
+  for (; *name; name++)
+    if (ISSLASH (*name))
+      base = name + 1;
+
   return (char *) base;
 }

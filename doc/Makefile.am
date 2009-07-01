@@ -1,5 +1,5 @@
-# Makefile for GNU tar documentation.
-# Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+# Makefile for tar documentation.
+# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,9 +16,13 @@
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 AUTOMAKE_OPTIONS = gnits
-info_TEXINFOS = tar.texi
+info_TEXINFOS = paxutils.texi
+man_MANS = cpio.1 mt.1 tar.1
 
-EXTRA_DIST = convtexi.pl getdate.texi header.texi
+EXTRA_DIST = convtexi.pl getdate.texi header.texi help2man \
+helptoman.pl $(MANS)
+
+PERL = perl
 
 CLEANFILES = tmp-*
 
@@ -26,28 +30,41 @@ CLEANFILES = tmp-*
 # Just call `make dvi RENDITION=PROOF' if you want PROOF rendition.
 RENDITION = DISTRIB
 
-tar.info: tar.texi getdate.texi header.texi version.texi
+paxutils.info: paxutils.texi getdate.texi header.texi version.texi
 	@echo "WARNING: \`makeinfo' will not preprocess Texinfo input properly"
 	@echo "         for expanding Texinfo macros, if it comes from a"
 	@echo "         Texinfo distribution which is earlier than version 3.7."
-	cd $(srcdir) && $(MAKEINFO) -D$(RENDITION) tar.texi
+	cd $(srcdir) && $(MAKEINFO) -D$(RENDITION) paxutils.texi \
+	  || ( rm $@ && exit 1 )
 
-tar.dvi: tar.texi getdate.texi header.texi version.texi
+paxutils.dvi: paxutils.texi getdate.texi header.texi version.texi
 	@echo "WARNING: \`makeinfo' will not preprocess Texinfo input properly"
 	@echo "         for expanding Texinfo macros, if it comes from a"
 	@echo "         Texinfo distribution which is earlier than version 3.7."
-	$(MAKEINFO) -D$(RENDITION) -Etmp-tar.tmp -otmp-tar.info \
-	  -I$(srcdir) tar.texi
-	rm -f tmp-tar.sed tmp-tar.info*
+	$(MAKEINFO) -D$(RENDITION) -Etmp-paxutils.tmp -otmp-paxutils.info \
+	  -I$(srcdir) paxutils.texi
+	rm -f tmp-paxutils.sed tmp-paxutils.info*
 	test $(RENDITION) = DISTRIB \
-	  || echo >>tmp-tar.sed 's/^@set DISTRIB/@set $(RENDITION)/'
+	  || echo >>tmp-paxutils.sed 's/^@set DISTRIB/@set $(RENDITION)/'
 	test $(RENDITION) = PUBLISH \
-	  || echo >>tmp-tar.sed '/^@smallbook/d'
-	sed -f tmp-tar.sed tmp-tar.tmp > tmp-tar.texi
-	rm -f tmp-tar.sed tmp-tar.tmp
-	TEXINPUTS=$(srcdir):$$TEXINPUTS $(TEXI2DVI) tmp-tar.texi
-	mv tmp-tar.dvi $@
+	  || echo >>tmp-paxutils.sed '/^@smallbook/d'
+	sed -f tmp-paxutils.sed tmp-paxutils.tmp > tmp-paxutils.texi
+	rm -f tmp-paxutils.sed tmp-paxutils.tmp
+	TEXINPUTS=$(srcdir):$$TEXINPUTS $(TEXI2DVI) tmp-paxutils.texi
+	mv tmp-paxutils.dvi $@
 
 header.texi: $(top_srcdir)/src/tar.h
-	sed -n '/Archive Format/,/End of Format/p' $(top_srcdir)/src/tar.h \
+	sed -n '/archive format/,/End of format/p' $(top_srcdir)/src/tar.h \
 	  | expand | sed 's/\([{}]\)/@\1/g' > $(srcdir)/header.texi
+
+# Removing the `LANGUAGE=C...' line produces a translated man page!!
+tar.1: helptoman.pl $(top_srcdir)/src/tar.c
+	@if test -f ../src/tar; then \
+	  echo "Updating the \`man' page"; \
+	    LANGUAGE=C \
+	      $(PERL) $(srcdir)/helptoman.pl ../src/tar > tar.1-tmp; \
+	  mv tar.1-tmp $(srcdir)/tar.1; \
+	else \
+	  echo "WARNING: The \`man' page cannot be updated yet."; \
+	  echo "         Retry once the program executable will be ready."; \
+	fi

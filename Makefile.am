@@ -1,5 +1,5 @@
-# Main Makefile for GNU tar.
-# Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+# Main Makefile for paxutils.
+# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,18 +17,23 @@
 # 02111-1307, USA.
 
 AUTOMAKE_OPTIONS = gnits dist-shar
+ACLOCAL_AMFLAGS = -I m4
 
-BABYL = rmail/* admin/*/RMAIL
-EXTRA_DIST = AC-PATCHES AM-PATCHES BI-PATCHES PORTS rebox.el
-SUBDIRS = doc lib intl src scripts po tests
+BABYL = ../rmail/* ../admin/*/RMAIL
+EXTRA_DIST = PATCHES-AC PATCHES-AM PATCHES-BI README.dos config.bat \
+rebox.el stamp-pot
 
-all-local: $(CONFIG_HEADER)
+SUBDIRS = m4 doc i18n lib src scripts tests contrib
 
-id: ID
+POTFILES = src/common.h src/buffer.c src/create.c src/compare.c	\
+src/delete.c src/extract.c src/incremen.c src/list.c src/mangle.c \
+src/names.c src/rmt.c src/rtapelib.c src/tar.c src/update.c \
+tests/genfile.c
 
-ID:
-	cd lib && $(MAKE) $@
-	cd src && $(MAKE) $@
+all-local: $(srcdir)/stamp-pot
+
+$(srcdir)/stamp-pot: $(POTFILES)
+	@echo "$(POTFILES)" > $@
 
 dist-zoo: $(DISTFILES)
 	rm -rf $(distdir)
@@ -58,3 +63,13 @@ dist-zoo: $(DISTFILES)
 	mv $(distdir) $(PACKAGE)
 	find $(PACKAGE) -type f | zoo ahIq $(PACKAGE).zoo
 	rm -rf $(PACKAGE)
+
+## ## Check our path lengths.
+## path-check: distdir
+## 	   (cd $(distdir) && \
+## ## FIXME there's got to be a better way!  pathchk should take the list
+## ## of files on stdin, at least.
+## 	     find . -print | xargs pathchk -p); \
+## 	     status=$$?; \
+## 	     rm -rf $(distdir); \
+## 	     exit $$status

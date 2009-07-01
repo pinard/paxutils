@@ -1,0 +1,1295 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Scripted restoration,  Prev: Scripted backups,  Up: Backups
+
+Using the restore script
+========================
+
+     *Warning:* The `tar' distribution does *not* provide any such
+     `restore' script yet.  This section is only listed here for
+     documentation maintenance purposes.  In any case, all contents are
+     subject to change as things develop.
+
+   To restore files that were archived using a scripted backup, use the
+`restore' script.  The syntax for the script is:
+
+   where ***** are the file systems to restore from, and ***** is a
+regular expression which specifies which files to restore.  If you
+specify `--all', the script restores all the files in the file system.
+
+   You should start the restore script with the media containing the
+first volume of the archive mounted.  The script will prompt for other
+volumes as they are needed.  If the archive is on tape, you don't need
+to rewind the tape to its beginning--if the tape head is positioned
+past the beginning of the archive, the script will rewind the tape as
+needed.  *Note Media::, for a discussion of tape positioning.
+
+   If you specify `--all' as the FILES argument, the `restore' script
+extracts all the files in the archived file system into the active file
+system.
+
+     *Warning:* The script will delete files from the active file
+     system if they were not in the file system when the archive was
+     made.
+
+   *Note incremental::, and *Note listed-incremental::, for an
+explanation of how the script makes that determination.
+
+
+File: paxutils.info,  Node: All options,  Next: Date input formats,  Prev: Backups,  Up: Top
+
+All `tar' options
+*****************
+
+   This appendix contain an alphabetical listing of all `tar'
+subcommands and options, with brief descriptions and cross-references
+to more in-depth explanations in the body of the manual.  It also
+contains an alphabetically arranged table of the short option forms
+with their corresponding long option.  You can use this table as a
+reference for deciphering `tar' commands in scripts.
+
+* Menu:
+
+* Subcommand summary::          Subcommands
+* Option summary::              `tar' options
+* Short option summary::        Short options cross-reference
+
+
+File: paxutils.info,  Node: Subcommand summary,  Next: Option summary,  Prev: All options,  Up: All options
+
+Subcommands
+===========
+
+   Any particular division of all options into subcommands and
+fine-tuning options is debatable, and surely subject to change.  The
+following table gives a particular view, which may help users to
+acquire a better grasp of the main operating modes for `tar'.
+
+`--append' (`-r')
+     Appends files to the end of the archive.  *Note append::.
+
+`--catenate'
+     Same as `--concatenate'.  *Note concatenate::.
+
+`--compare' (`--diff', `-d')
+     Compares archive members with their counterparts in the file
+     system, and reports differences in file size, mode, owner,
+     modification date and contents.  *Note compare::.
+
+`--concatenate' (`--catenate', `-A')
+     Appends other `tar' archives to the end of the archive.  *Note
+     concatenate::.
+
+`--create' (`-c')
+     Creates a new `tar' archive.  *Note create::.
+
+`--delete'
+     Deletes members from the archive.  Don't try this on an archive on
+     a magnetic tape!  *Note delete::.
+
+`--diff'
+     Same as `--compare'.  *Note compare::.
+
+`--extract' (`--get', `-x')
+     Extracts members from the archive into the file system.  *Note
+     extract::.
+
+`--get'
+     Same as `--extract'.   *Note extract::.
+
+`--list' (`-t')
+     Lists the members in an archive.  *Note list::.
+
+`--update' (`-u')
+     Adds files to the end of the archive, but only if they are newer
+     than their counterparts already in the archive, or if they do not
+     already exist in the archive.  *Note update::.
+
+
+File: paxutils.info,  Node: Option summary,  Next: Short option summary,  Prev: Subcommand summary,  Up: All options
+
+`tar' options
+=============
+
+   Here is an alphabetical listing of all options accepted by `tar',
+whether they appear or not in the summary of subcommands (*note
+Subcommand summary::..  Each option is accompanied by a reference to
+where it is more fully explained.
+
+`-[0-7][lmh]'
+     Specify drive and density.  *Note lmh::.
+
+`--absolute-names' (`-P')
+     Normally when creating an archive, `tar' converts absolute file
+     names to relative, by stripping an initial `/' from member names
+     (on MS-DOS and MS-Windows, `tar' also strips the drive letter and
+     the colon that follows it).  This option disables that behavior.
+     *Note absolute-names::.
+
+`--absolute-paths'
+     This obsolete option has been replaced with `--absolute-names'.
+
+`--after-date=DATE' (`--newer=DATE', `-N DATE')
+     When creating an archive, `tar' will only add files that have
+     changed since DATE.  *Note after-date::.
+
+`--append' (`-r')
+     Appends files to the end of the archive.  *Note append::.
+
+`--atime-preserve'
+     Tells `tar' to preserve the access time field in a file's inode
+     when dumping it.  *Note atime-preserve::.
+
+`--backup'[=METHOD]
+     Rather than deleting files from the file system, `tar' will back
+     them up using simple or numbered backups, depending upon METHOD.
+     *Note backup::.
+
+`--block-compress'
+     This obsolete option has been deleted, as `tar' now decides
+     automatically about when to reblock the output of the compression
+     filter.
+
+`--block-number' (`-R')
+     With this option present, `tar' prints error messages for read
+     errors with the block number in the archive file.  *Note
+     block-number::.
+
+`--block-size'
+     This obsolete option has been replaced by `--blocking-factor'.
+
+`--blocking-factor=BLOCKS' (`-b BLOCKS')
+     Sets the blocking factor `tar' uses to BLOCKING x 512 bytes per
+     record.  *Note blocking-factor::.
+
+`--catenate'
+     Same as `--concatenate'.  *Note concatenate::.
+
+`--checkpoint'
+     This option directs `tar' to print periodic checkpoint messages as
+     it reads through the archive.  *Note checkpoint::.
+
+`--compare' (`--diff', `-d')
+     Compares archive members with their counterparts in the file
+     system, and reports differences in file size, mode, owner,
+     modification date, and contents.  *Note compare::.
+
+`--compress' (`-Z')
+     `tar' will use the `compress' program when reading or writing the
+     archive.  This allows you to act directly on archives while saving
+     space.  *Note compress::.
+
+`--concatenate' (`--catenate', `-A')
+     Appends other `tar' archives to the end of the archive.  *Note
+     concatenate::.
+
+`--confirmation'
+     Same as `--interactive'.  *Note interactive::.
+
+`--create' (`-c')
+     Creates a new `tar' archive.  *Note create::.
+
+`--delete'
+     Deletes members from the archive.  Don't try this on an archive on
+     a magnetic tape!  *Note delete::.
+
+`--dereference' (`-h')
+     When creating a `tar' archive, `tar' will archive the file that a
+     symbolic link points to, rather than archiving the symlink.  *Note
+     dereference::.
+
+`--diff'
+     Same as `--compare'.  *Note compare::.
+
+`--directory=DIRECTORY' (`-C DIRECTORY')
+     When this option is specified, `tar' will change its current
+     directory to DIR before performing any subcommands.  When this
+     option is used during archive creation, it is order-sensitive.
+     *Note directory::.
+
+`--exclude=PATTERN'
+     When performing subcommands, `tar' will skip files that match
+     PATTERN.  *Note exclude::.
+
+`--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS')
+     Similar to `--exclude', except that `tar' will use the list of
+     patterns in the file FILE.  *Note exclude-from::.
+
+`--extract' (`--get', `-x')
+     Extracts members from the archive into the file system.  *Note
+     extract::.
+
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME')
+     `tar' will use the file ARCHIVE as the `tar' archive it performs
+     subcommands on, rather than `tar''s compilation-dependent default.
+     *Note file::.
+
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES')
+     `tar' will use the contents of FILE as a list of archive members
+     or files to operate on, in addition to those specified on the
+     command line.  *Note files-from::.
+
+`--force-local'
+     Forces `tar' to interpret the filename given to
+     `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') as a local file, even if
+     it looks like a remote tape drive name.  *Note force-local::.
+
+`--get'
+     Same as `--extract'.   *Note extract::.
+
+`--group=GROUP'
+     Files added to the `tar' archive will have a group id of GROUP,
+     rather than the group from the source file.  *Note group::.
+
+`--gunzip'
+     This obsolete option has been replaced by `--gzip'.
+
+`--gzip' (`-z')
+     This option tells `tar' to read or write archives through `gzip',
+     allowing `tar' to directly operate on several kinds of compressed
+     archives transparently.  *Note gzip::.
+
+`--help'
+     `tar' will print out a short message summarizing the subcommands
+     and options to `tar' and exit.  *Note help::.
+
+`--ignore-failed-read'
+     Instructs `tar' to exit successfully if it encounters an
+     unreadable file.  *Note ignore-failed-read::.
+
+`--ignore-zeros' (`-i')
+     With this option, `tar' will ignore zeroed blocks in the archive,
+     which normally signals the end of the archive file.  *Note
+     ignore-zeros::.
+
+`--incremental' (`-G')
+     Used to inform `tar' that it is working with an old extended format
+     incremental backup archive.  It is intended primarily for backward
+     compatibility.  *Note incremental::.
+
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F SCRIPT-NAME')
+     When `tar' is performing multi-tape backups, SCRIPT-NAME is run at
+     the end of each tape.  *Note info-script::.
+
+`--interactive' (`--confirmation', `-w')
+     Specifies that `tar' should ask the user for confirmation before
+     performing potentially destructive operations, such as overwriting
+     files.  *Note interactive::.
+
+`--keep-old-files' (`-k')
+     When extracting files from an archive, `tar' will not overwrite
+     existing files if this option is present.  *Note keep-old-files::.
+
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL')
+     When creating an archive, instructs `tar' to write NAME as a name
+     record in the archive.  When extracting or listing archives, `tar'
+     will only operate on archives that have a label matching the
+     pattern specified in NAME.  *Note label::.
+
+`--list' (`-t')
+     Lists the members in an archive.  *Note list::.
+
+`--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE')
+     During a `--create' (`-c') subcommand, specifies that the archive
+     that `tar' creates is a new extended format incremental backup,
+     using SNAPSHOT-FILE to determine which files to backup.  With other
+     subcommands, informs `tar' that the archive is in incremental
+     format.  *Note listed-incremental::.
+
+`--mode=PERMISSIONS'
+     When adding files to an archive, `tar' will use PERMISSIONS for
+     the archive members, rather than the permissions from the files.
+     *Note mode::.
+
+`--modification-time'
+     This obsolete option has been replaced by `--touch'.
+
+`--multi-volume' (`-M')
+     Informs `tar' that it should create or otherwise operate on a
+     multi-volume `tar' archive.  *Note multi-volume::.
+
+`--name-prefix=PREFIX'
+     To prepend the given prefix to each archive file name as it is
+     gathered into the archive.  This prefix won't show in any
+     `--verbose' (`-v') progress message, but it will if you list the
+     archive.  *Note name-prefix::.
+
+`--new-volume-script'
+     Same as `--info-script'.  *Note info-script::.
+
+`--newer'
+     Same as `--after-date'.  *Note after-date::.
+
+`--newer-mtime=DATE'
+     `tar' will only add files whose contents have changed (as opposed
+     to just `--after-date', which will also back up files for which
+     any status information has changed).  On MS-DOS, where there is
+     only one time stamp for a file, `--after-date' and `--newer-mtime'
+     have identical effect.  *Note newer-mtime::.
+
+`--no-attributes'
+     `tar' will not try restoring any file attribute while extracting
+     files.  This option might disappear in some later version.  *Note
+     no-attributes::.
+
+`--no-recursion'
+     With this option, `tar' will not recurse into directories unless a
+     directory is explicitly named as an argument to `tar'.  *Note
+     no-recursion::.
+
+`--null'
+     When `tar' is using the `--files-from=FILE-OF-NAMES' (`-T
+     FILE-OF-NAMES') option, this option instructs `tar' to expect
+     filenames terminated with `NUL', so `tar' can correctly work with
+     file names that contain newlines.  *Note null::.
+
+`--numeric-owner'
+     This option will notify `tar' that it should use numeric user and
+     group IDs when creating a `tar' file, rather than names.  *Note
+     numeric-owner::.
+
+`--old-archive' (`-o')
+     Tells `tar' to create an archive that is compatible with Unix V7
+     `tar'.  *Note old-archive::.
+
+`--one-file-system' (`-l')
+     Used when creating an archive.  Prevents `tar' from recursing into
+     directories that are on different file systems from the current
+     directory.  *Note one-file-system::.
+
+`--owner=USER'
+     Specifies that `tar' should use USER as the owner of members when
+     creating archives, instead of the user associated with the source
+     file.  *Note owner::.
+
+`--portability'
+     Same as `--old-archive'.  *Note old-archive::.
+
+`--posix'
+     Instructs `tar' to create a POSIX compliant `tar' archive.  *Note
+     posix::.
+
+`--preserve'
+     Synonymous with specifying both `--same-permissions' and
+     `--same-order'.  *Note preserve::.
+
+`--preserve-order'
+     Same as `--same-order'.  *Note same-order::.
+
+`--preserve-permissions'
+     Same as `--same-permissions'.  *Note same-permissions::.
+
+`--read-full-blocks'
+     This obsolete option has been replaced by `--read-full-records'.
+
+`--read-full-records' (`-B')
+     Specifies that `tar' should reblock its input, for reading from
+     pipes on systems with buggy implementations.  *Note
+     read-full-records::.
+
+`--record-number'
+     This obsolete option has been replaced by `--block-number'.
+
+`--record-size=SIZE'
+     Instructs `tar' to use SIZE bytes per record when accessing the
+     archive.  *Note record-size::.
+
+`--recursive-unlink'
+     Similar to the `--unlink-first' (`-U') option, removing existing
+     directory hierarchies before extracting directories of the same
+     name from the archive.  *Note recursive-unlink::.
+
+`--remove-files'
+     Directs `tar' to remove the source file from the file system after
+     appending it to an archive.  *Note remove-files::.
+
+`rsh-command=COMMAND'
+     Notifies `tar' that is should use CMD to communicate with remote
+     devices.  *Note rsh-command::.
+
+`--same-order' (`--preserve-order', `-s')
+     This option is an optimization for `tar' when running on machines
+     with small amounts of memory.  It informs `tar' that the list of
+     file arguments has already been sorted to match the order of files
+     in the archive.  *Note same-order::.
+
+`--same-owner'
+     When extracting an archive, `tar' will attempt to preserve the
+     owner specified in the `tar' archive with this option present.
+     *Note same-owner::.
+
+`--same-permissions' (`--preserve-permissions', `-p')
+     When `tar' is extracting an archive, it normally subtracts the
+     user's umask from the permissions specified in the archive and
+     uses that number as the permissions to create the destination
+     file.  Specifying this option instructs `tar' that it should use
+     the permissions directly from the archive.  *Note
+     same-permissions::.
+
+`--show-omitted-dirs'
+     Instructs `tar' to mention directories it's skipping over when
+     operating on a `tar' archive.  *Note show-omitted-dirs::.
+
+`--sparse' (`-S')
+     Invokes an extended format when adding files to an archive that
+     handles sparse files efficiently.  *Note sparse::.
+
+`--starting-file=NAME' (`-K NAME')
+     This option affects extraction only; `tar' will skip extracting
+     files in the archive until it finds one that matches NAME.  *Note
+     starting-file::.
+
+`--suffix=SUFFIX'
+     Alters the suffix `tar' uses when backing up files from the default
+     `~'.  *Note suffix::.
+
+`--tape-length=KBYTES' (`-L KBYTES')
+     Specifies the length of tapes that `tar' is writing as NUM x 1024
+     bytes long.  *Note tape-length::.
+
+`--to-stdout' (`-O')
+     During extraction, `tar' will extract files to stdout rather than
+     to the file system.  *Note to-stdout::.
+
+`--totals'
+     Displays the total number of bytes written after creating an
+     archive.  *Note totals::.
+
+`--touch' (`-m')
+     Sets the modification time of extracted files to the extraction
+     time, rather than the modification time stored in the archive.
+     *Note touch::.
+
+`--uncompress'
+     This obsolete option has been replaced with `--compress'.
+
+`--ungzip'
+     This obsolete option has been replaced with `--gzip'.
+
+`--unlink-first' (`-U')
+     Directs `tar' to remove the corresponding file from the file system
+     before extracting it from the archive.  *Note unlink-first::.
+
+`--update' (`-u')
+     Adds files to the end of the archive, but only if they are newer
+     than their counterparts already in the archive, or if they do not
+     already exist in the archive.  *Note update::.
+
+`--use-compress-program=PROGRAM'
+     Instructs `tar' to access the archive through PROG, which is
+     presumed to be a compression program of some sort.  *Note
+     use-compress-program::.
+
+`--verbose' (`-v')
+     Specifies that `tar' should be more verbose about the subcommands
+     it is performing.  This option can be specified multiple times for
+     some subcommands to increase the amount of information displayed.
+     *Note verbose::.
+
+`--verify' (`-W')
+     Verifies that the archive was correctly written when creating an
+     archive.  *Note verify::.
+
+`--version'
+     `tar' will print an informational message about what version it is,
+     a copyright message, and some credits, and then exit.  *Note
+     version::.
+
+`--version-control'
+     This obsolete option has been replaced with `--backup'.
+
+`--volno-file=FILE-OF-NUMBER'
+     Used in conjunction with `--multi-volume' (`-M').  `tar' will keep
+     track of which volume of a multi-volume archive it is working on in
+     FILE.  *Note volno-file::.
+
+
+File: paxutils.info,  Node: Short option summary,  Prev: Option summary,  Up: All options
+
+Short options cross-reference
+=============================
+
+   Here is an alphabetized list of all of the short option forms,
+matching them with the equivalent long option.
+
+     -A     --concatenate
+     -B     --read-full-records
+     -C     --directory
+     -F     --info-script
+     -G     --incremental
+     -K     --starting-file
+     -L     --tape-length
+     -M     --multi-volume
+     -N     --newer
+     -O     --to-stdout
+     -P     --absolute-names
+     -R     --block-number
+     -S     --sparse
+     -T     --files-from
+     -U     --unlink-first
+     -V     --label
+     -W     --verify
+     -X     --exclude-from
+     -Z     --compress
+     -b     --blocking-factor
+     -c     --create
+     -d     --compare
+     -f     --file
+     -g     --listed-incremental
+     -h     --dereference
+     -i     --ignore-zeros
+     -k     --keep-old-files
+     -l     --one-file-system
+     -m     --touch
+     -o     --portability
+     -p     --same-permissions
+     -r     --append
+     -s     --same-order
+     -t     --list
+     -u     --update
+     -v     --verbose
+     -w     --interactive
+     -x     --extract
+     -z     --gzip
+
+
+File: paxutils.info,  Node: Date input formats,  Next: Archive format,  Prev: All options,  Up: Top
+
+Date input formats
+******************
+
+     Our units of temporal measurement, from seconds on up to months,
+     are so complicated, asymmetrical and disjunctive so as to make
+     coherent mental reckoning in time all but impossible.  Indeed, had
+     some tyrannical god contrived to enslave our minds to time, to
+     make it all but impossible for us to escape subjection to sodden
+     routines and unpleasant surprises, he could hardly have done
+     better than handing down our present system.  It is like a set of
+     trapezoidal building blocks, with no vertical or horizontal
+     surfaces, like a language in which the simplest thought demands
+     ornate constructions, useless particles and lengthy
+     circumlocutions.  Unlike the more successful patterns of language
+     and science, which enable us to face experience boldly or at least
+     level-headedly, our system of temporal calculation silently and
+     persistently encourages our terror of time. ...
+
+     It is as though architects had to measure length in feet, width in
+     meters and height in ells; as though basic instruction manuals
+     demanded a knowledge of five different languages.  It is no wonder
+     then that we often look into our own immediate past or future,
+     last Tuesday or a week from Sunday, with feelings of helpless
+     confusion.
+
+     -- Robert Grudin, `Time and the Art of Living'.
+
+   This section describes the textual date representations that some
+free programs accept.  These are the strings you, as a user, can supply
+as arguments to the various programs.  The C interface (via the
+`getdate' function) is not described here.
+
+   Although the date syntax here can represent any possible time since
+zero A.D., computer integers are not big enough for such a
+(comparatively) long time.  The earliest date semantically allowed on
+Unix systems is midnight, 1970-01-01 UCT.
+
+* Menu:
+
+* General date syntax::         General date syntax
+* Calendar date item::          Calendar date item
+* Time of day item::            Time of day item
+* Timezone item::               Timezone item
+* Day of week item::            Day of week item
+* Relative item in date strings::  Relative item in date strings
+* Pure numbers in date strings::  Pure numbers in date strings
+* Authors of getdate::          Authors of `getdate'
+
+
+File: paxutils.info,  Node: General date syntax,  Next: Calendar date item,  Prev: Date input formats,  Up: Date input formats
+
+General date syntax
+===================
+
+   A "date" is a string, possibly empty, containing many items
+separated by whitespace.  The whitespace may be omitted when no
+ambiguity arises.  The empty string means the beginning of today (that
+is, midnight).  Order of the items is immaterial.  A date string may
+contain many flavors of items:
+
+   * calendar date items
+
+   * time of the day items
+
+   * time zone items
+
+   * day of the week items
+
+   * relative items
+
+   * pure numbers.
+
+We describe each of these item types in turn, below.
+
+   A few numbers may be written out in words in most contexts.  This is
+most useful for specifying day of the week items or relative items (see
+below).  Here is the list: `first' for 1, `next' for 2, `third' for 3,
+`fourth' for 4, `fifth' for 5, `sixth' for 6, `seventh' for 7, `eighth'
+for 8, `ninth' for 9, `tenth' for 10, `eleventh' for 11, and `twelfth'
+for 12.  Also, `last' means exactly -1.
+
+   When a month is written this way, it is still considered to be
+written numerically, instead of being "spelled in full"; this changes
+the allowed strings.
+
+   Alphabetic case is completely ignored in dates.  Comments may be
+introduced between round parentheses, as long as included parentheses
+are properly nested.  Hyphens not followed by a digit are currently
+ignored.  Leading zeros on numbers are ignored.
+
+
+File: paxutils.info,  Node: Calendar date item,  Next: Time of day item,  Prev: General date syntax,  Up: Date input formats
+
+Calendar date item
+==================
+
+   A "calendar date item" specifies a day of the year.  It is specified
+differently, depending on whether the month is specified numerically or
+literally.  All these strings specify the same calendar date:
+
+     1970-09-17           # ISO 8601.
+     70-9-17              # This century assumed by default.
+     70-09-17             # Leading zeros are ignored.
+     9/17/72              # Common U.S. writing.
+     24 September 1972
+     24 Sept 72           # September has a special abbreviation.
+     24 Sep 72            # Three-letter abbreviations always allowed.
+     Sep 24, 1972
+     24-sep-72
+     24sep72
+
+   The year can also be omitted.  In this case, the last specified year
+is used, or the current year if none.  For example:
+
+     9/17
+     sep 17
+
+   Here are the rules.
+
+   For numeric months, the ISO 8601 format `YEAR-MONTH-DAY' is allowed,
+where YEAR is any positive number, MONTH is a number between 01 and 12,
+and DAY is a number between 01 and 31.  A leading zero must be present
+if a number is less than ten.  If YEAR is less than 100, then 1900 is
+added to it to force a date in this century.  The construct
+`MONTH/DAY/YEAR', popular in the United States, is accepted.  Also
+`MONTH/DAY', omitting the year.
+
+   Literal months may be spelled out in full: `January', `February',
+`March', `April', `May', `June', `July', `August', `September',
+`October', `November', or `December'.  Literal months may be abbreviated
+to their first three letters, possibly followed by an abbreviating dot.
+It is also permitted to write `Sept' instead of `September'.
+
+   When months are written literally, the calendar date may be given as
+any of the following:
+
+     DAY MONTH YEAR
+     DAY MONTH
+     MONTH DAY YEAR
+     DAY-MONTH-YEAR
+
+   Or, omitting the year:
+
+     MONTH DAY
+
+
+File: paxutils.info,  Node: Time of day item,  Next: Timezone item,  Prev: Calendar date item,  Up: Date input formats
+
+Time of day item
+================
+
+   A "time of day item" in date strings specifies the time on a given
+day.  Here are some examples, all of which represent the same time:
+
+     20:02:0
+     20:02
+     8:02pm
+     20:02-0500      # In EST (Eastern U.S. Standard Time).
+
+   More generally, the time of the day may be given as
+`HOUR:MINUTE:SECOND', where HOUR is a number between 0 and 23, MINUTE
+is a number between 0 and 59, and SECOND is a number between 0 and 59.
+Alternatively, `:SECOND' can be omitted, in which case it is taken to
+be zero.
+
+   If the time is followed by `am' or `pm' (or `a.m.'  or `p.m.'), HOUR
+is restricted to run from 1 to 12, and `:MINUTE' may be omitted (taken
+to be zero).  `am' indicates the first half of the day, `pm' indicates
+the second half of the day.  In this notation, 12 is the predecessor of
+1: midnight is `12am' while noon is `12pm'.
+
+   The time may alternatively be followed by a timezone correction,
+expressed as `SHHMM', where S is `+' or `-', HH is a number of zone
+hours, and MM is a number of zone minutes.  When a timezone correction
+is given this way, it forces interpretation of the time in UTC,
+overriding any previous specification for the timezone or the local
+timezone.  The MINUTE part of the time of the day may not be elided
+when a timezone correction is used.  This is the only way to specify a
+timezone correction by fractional parts of an hour.
+
+   Either `am'/`pm' or a timezone correction may be specified, but not
+both.
+
+
+File: paxutils.info,  Node: Timezone item,  Next: Day of week item,  Prev: Time of day item,  Up: Date input formats
+
+Timezone item
+=============
+
+   A "timezone item" specifies an international timezone, indicated by
+a small set of letters.  Any included period is ignored.  Military
+timezone designations use a single letter.  Currently, only integral
+zone hours may be represented in a timezone item.  See the previous
+section for a finer control over the timezone correction.
+
+   Here are many non-daylight-savings-time timezones, indexed by the
+zone hour value.
+
+`+000'
+     `GMT' for Greenwich Mean, `UT' or `UTC' for Universal
+     (Coordinated), `WET' for Western European and `Z' for military.
+
+`+100'
+     `WAT' for West Africa and `A' for military.
+
+`+200'
+     `AT' for Azores and `B' for military.
+
+`+300'
+     `C' for military.
+
+`+400'
+     `AST' for Atlantic Standard and `D' for military.
+
+`+500'
+     `E' for military and `EST' for Eastern Standard.
+
+`+600'
+     `CST' for Central Standard and `F' for military.
+
+`+700'
+     `G' for military and `MST' for Mountain Standard.
+
+`+800'
+     `H' for military and `PST' for Pacific Standard.
+
+`+900'
+     `I' for military and `YST' for Yukon Standard.
+
+`+1000'
+     `AHST' for Alaska-Hawaii Standard, `CAT' for Central Alaska, `HST'
+     for Hawaii Standard and `K' for military.
+
+`+1100'
+     `L' for military and `NT' for Nome.
+
+`+1200'
+     `IDLW' for International Date Line West and `M' for military.
+
+`-100'
+     `CET' for Central European, `FWT' for French Winter, `MET' for
+     Middle European, `MEWT' for Middle European Winter, `N' for
+     military and `SWT' for Swedish Winter.
+
+`-200'
+     `EET' for Eastern European, USSR Zone 1 and `O' for military.
+
+`-300'
+     `BT' for Baghdad, USSR Zone 2 and `P' for military.
+
+`-400'
+     `Q' for military and `ZP4' for USSR Zone 3.
+
+`-500'
+     `R' for military and `ZP5' for USSR Zone 4.
+
+`-600'
+     `S' for military and `ZP6' for USSR Zone 5.
+
+`-700'
+     `T' for military and `WAST' for West Australian Standard.
+
+`-800'
+     `CCT' for China Coast, USSR Zone 7 and `U' for military.
+
+`-900'
+     `JST' for Japan Standard, USSR Zone 8 and `V' for military.
+
+`-1000'
+     `EAST' for East Australian Standard, `GST' for Guam Standard, USSR
+     Zone 9 and `W' for military.
+
+`-1100'
+     `X' for military.
+
+`-1200'
+     `IDLE' for International Date Line East, `NZST' for New Zealand
+     Standard, `NZT' for New Zealand and `Y' for military.
+
+   Here are many DST timezones, indexed by the zone hour value.  Also,
+by following a non-DST timezone by the string `DST' in a separate word
+(that is, separated by some whitespace), the corresponding DST timezone
+may be specified.
+
+`0'
+     `BST' for British Summer.
+
+`+400'
+     `ADT' for Atlantic Daylight.
+
+`+500'
+     `EDT' for Eastern Daylight.
+
+`+600'
+     `CDT' for Central Daylight.
+
+`+700'
+     `MDT' for Mountain Daylight.
+
+`+800'
+     `PDT' for Pacific Daylight.
+
+`+900'
+     `YDT' for Yukon Daylight.
+
+`+1000'
+     `HDT' for Hawaii Daylight.
+
+`-100'
+     `MEST' for Middle European Summer, `MESZ' for Middle European
+     Summer, `SST' for Swedish Summer and `FST' for French Summer.
+
+`-700'
+     `WADT' for West Australian Daylight.
+
+`-1000'
+     `EADT' for Eastern Australian Daylight.
+
+`-1200'
+     `NZDT' for New Zealand Daylight.
+
+
+File: paxutils.info,  Node: Day of week item,  Next: Relative item in date strings,  Prev: Timezone item,  Up: Date input formats
+
+Day of week item
+================
+
+   The explicit mention of a day of the week will forward the date
+(only if necessary) to reach that day of the week in the future.
+
+   Days of the week may be spelled out in full: `Sunday', `Monday',
+`Tuesday', `Wednesday', `Thursday', `Friday', or `Saturday'.  Days may
+be abbreviated to their first three letters, optionally followed by a
+period.  The special abbreviations `Tues' for `Tuesday', `Wednes' for
+`Wednesday', and `Thur' or `Thurs' for `Thursday' are also allowed.
+
+   A number may precede a day of the week item to move forward
+supplementary weeks.  It is best used in an expression like `third
+monday'.  In this context, `last DAY' or `next DAY' is also acceptable;
+they move one week before or after the day that DAY by itself would
+represent.
+
+   A comma following a day of the week item is ignored.
+
+
+File: paxutils.info,  Node: Relative item in date strings,  Next: Pure numbers in date strings,  Prev: Day of week item,  Up: Date input formats
+
+Relative item in date strings
+=============================
+
+   "Relative items" adjust a date (or the current date if none) forward
+or backward.  The effect of relative items accumulate.  Here are some
+examples:
+
+     1 year
+     1 year ago
+     3 years
+     2 days
+
+   The unit of time displacement may be selected by the string `year'
+or `month' for moving by whole years or months.  These are fuzzy units,
+as years and months are not all of equal duration.  More precise units
+are `fortnight' (14 days), `week' (7 days), `day' (24 hours), `hour'
+(60 minutes), `minute' or `min' (60 seconds), and `second' or `sec'
+(one second).  An `s' suffix on these units is accepted and ignored.
+
+   The unit of time may be preceded by a multiplier, given as an
+optionally signed number.  Unsigned numbers are taken as positively
+signed.  No number at all implies 1 for a multiplier.  Following a
+relative item by the string `ago' is equivalent to preceding the unit
+by a multiplier with value -1.
+
+   The string `tomorrow' equates to one day in the future (equivalent
+to `day'), the string `yesterday' equates to one day in the past
+(equivalent to `day ago').
+
+   The strings `now' and `today' are relative items corresponding to
+zero-valued time displacement.  These strings come from the fact a
+zero-valued time displacement represents the current time when not
+altered by previous items.  They may be used to stress other items, as
+in `12:00 today'.  The string `this' also has the meaning of a
+zero-valued time displacement, but is preferred in date strings like
+`this thursday'.
+
+   When a relative item causes the resulting date to cross the boundary
+between DST and non-DST (or vice-versa), the hour is adjusted according
+to the local time.
+
+
+File: paxutils.info,  Node: Pure numbers in date strings,  Next: Authors of getdate,  Prev: Relative item in date strings,  Up: Date input formats
+
+Pure numbers in date strings
+============================
+
+   The precise interpretation of a pure decimal number is dependent on
+the context in the date string.
+
+   If the decimal number is of the form YYYYMMDD and no other calendar
+date item (*note Calendar date item::.) appears before it in the date
+string, then YYYY is read as the year, MM as the month number, and DD
+as the day of the month for the specified calendar date.
+
+   If the decimal number is of the form HHMM and no other time of day
+item appears before it in the date string, then HH is read as the hour
+of the day and MM as the minute of the hour for the specified time of
+the day.  MM can also be omitted.
+
+   If both a calendar date and a time of day appear to the left of a
+number in the date string, but no relative item, then the number
+overrides the year.
+
+
+File: paxutils.info,  Node: Authors of getdate,  Prev: Pure numbers in date strings,  Up: Date input formats
+
+Authors of `getdate'
+====================
+
+   `getdate' was originally implemented by Steven M. Bellovin
+(<smb@research.att.com>) while at the University of North Carolina at
+Chapel Hill.  The code was later tweaked by a couple of people on
+Usenet, then completely overhauled by Rich $alz (<rsalz@bbn.com>) and
+Jim Berets (<jberets@bbn.com>) in 1990-08.  Various revisions for the
+GNU system were made by David MacKenzie, Jim Meyering, and others.
+
+   Franc,ois Pinard (<pinard@iro.umontreal.ca>) wrote the above
+description out of the `getdate.y' source code.  K. Berry
+(<kb@cs.umb.edu>) later edited it.
+
+
+File: paxutils.info,  Node: Archive format,  Next: Index,  Prev: Date input formats,  Up: Top
+
+Format of archive files
+***********************
+
+   While an archive may contain many files, the archive itself is a
+single ordinary file.  Like any other file, an archive file can be
+written to a storage device such as a tape or disk, sent through a pipe
+or over a network, saved on the active file system, or even stored in
+another archive.  An archive file is not easy to read or manipulate
+without using the `tar' utility or other special tools, such as `tar'
+mode in GNU Emacs.
+
+   Physically, an archive consists of a series of file entries
+terminated by an end-of-archive entry (which consists of a block of 512
+zero bytes).  A file entry usually describes one of the files in the
+archive (an "archive member") and consists of a file header and the
+contents of the file.  File headers contain file names and statistics,
+checksum information that `tar' uses to detect file corruption, and
+information about file types.
+
+   Archives are permitted to have more than one member with the same
+member name.  One way this situation can occur is if more than one
+version of a file has been stored in the archive.  For information
+about adding new versions of a file to an archive, see *Note update::,
+and to learn more about having more than one archive member with the
+same name, see *Note backup::.
+
+   In addition to entries describing archive members, an archive may
+contain entries which `tar' itself uses to store information.  *Note
+label::, for an example of such an archive entry.
+
+   The remainder of this appendix contains a long quote from `tar'
+sources, expressing the structure of a header block directly in the C
+language.  This description encompasses both POSIX and non-POSIX
+aspects of the format.  The two sections following the C description
+provide more explanations about the POSIX standard format, and then
+about the extensions to that format which `tar' uses.  These sections
+also refer to various constants or fields introduced in the C
+description.
+
+* Menu:
+
+* tar-h::                       The C description of a header block
+* Standard format::             The standard format
+* Extended format::             Extensions to the archive format
+
+
+File: paxutils.info,  Node: tar-h,  Next: Standard format,  Prev: Archive format,  Up: Archive format
+
+The C description of a header block
+===================================
+
+   The header block is defined in C as follows.  In the `tar'
+distribution, this is part of file `src/tar.h':
+
+     /* tar archive format description.  */
+     
+     /* If OLDGNU_COMPATIBILITY is set, tar produces archives which, by default,
+        are readable by older versions of tar.  This can be overridden by using
+        --posix; in this case, the environment variable POSIXLY_CORRECT can
+        be set to enforce stricter conformance.  If OLDGNU_COMPATIBILITY is zero or
+        undefined, tar will eventually produces archives which, by default,
+        will be POSIX compatible; then, either using --posix or defining
+        POSIXLY_CORRECT will enforce stricter conformance.
+     
+        This #define will disappear in a few years.  FP, June 1995.  */
+     #define OLDGNU_COMPATIBILITY 1
+     
+     /*---------------------------------------------.
+     | `tar' Header Block, from POSIX 1003.1-1990.  |
+     `---------------------------------------------*/
+     
+     /* POSIX header.  */
+     
+     struct posix_header
+     {                               /* byte offset */
+       char name[100];               /*   0 */
+       char mode[8];                 /* 100 */
+       char uid[8];                  /* 108 */
+       char gid[8];                  /* 116 */
+       char size[12];                /* 124 */
+       char mtime[12];               /* 136 */
+       char chksum[8];               /* 148 */
+       char typeflag;                /* 156 */
+       char linkname[100];           /* 157 */
+       char magic[6];                /* 257 */
+       char version[2];              /* 263 */
+       char uname[32];               /* 265 */
+       char gname[32];               /* 297 */
+       char devmajor[8];             /* 329 */
+       char devminor[8];             /* 337 */
+       char prefix[155];             /* 345 */
+                                     /* 500 */
+     };
+     
+     #define TMAGIC   "ustar"        /* ustar and a null */
+     #define TMAGLEN  6
+     #define TVERSION "00"           /* 00 and no null */
+     #define TVERSLEN 2
+     
+     /* Values used in typeflag field.  */
+     #define REGTYPE  '0'            /* regular file */
+     #define AREGTYPE '\0'           /* regular file */
+     #define LNKTYPE  '1'            /* link */
+     #define SYMTYPE  '2'            /* reserved */
+     #define CHRTYPE  '3'            /* character special */
+     #define BLKTYPE  '4'            /* block special */
+     #define DIRTYPE  '5'            /* directory */
+     #define FIFOTYPE '6'            /* FIFO special */
+     #define CONTTYPE '7'            /* reserved */
+     
+     /* Bits used in the mode field, values in octal.  */
+     #define TSUID    04000          /* set UID on execution */
+     #define TSGID    02000          /* set GID on execution */
+     #define TSVTX    01000          /* reserved */
+                                     /* file permissions */
+     #define TUREAD   00400          /* read by owner */
+     #define TUWRITE  00200          /* write by owner */
+     #define TUEXEC   00100          /* execute/search by owner */
+     #define TGREAD   00040          /* read by group */
+     #define TGWRITE  00020          /* write by group */
+     #define TGEXEC   00010          /* execute/search by group */
+     #define TOREAD   00004          /* read by other */
+     #define TOWRITE  00002          /* write by other */
+     #define TOEXEC   00001          /* execute/search by other */
+     
+     /*-----------------------------------------.
+     | `tar' Header Block, various extensions.  |
+     `-----------------------------------------*/
+     
+     /* In tar, SYMTYPE is for symbolic links, and CONTTYPE is for contiguous
+        files, thus possibly disobeying the `reserved' comment in the POSIX header
+        description.  I suspect these were meant to be used this way, and should
+        not really have been `reserved' in the published standards.  */
+     
+     /* *BEWARE* that the following information is still in flux, and may change.
+        Even if the OLDGNU format description should be accurate, the so-called GNU
+        format is not yet fully decided.  It is surely meant to use only extensions
+        allowed by POSIX, but the sketch below repeats some ugliness from the
+        OLDGNU format, which should rather go away.  Sparse files should be saved
+        in such a way that they do *not* require two passes at archive creation
+        time.  Huge files cause some POSIX fields to overflow; alternate solutions
+        have to be sought for this.  */
+     
+     /* Descriptor for a single file hole.  */
+     
+     struct sparse
+     {                               /* byte offset */
+       char offset[12];              /*   0 */
+       char numbytes[12];            /*  12 */
+                                     /*  24 */
+     };
+     
+     /* Sparse files are not supported in POSIX ustar format.  For sparse files
+        with a POSIX header, an extra header is provided which holds overall sparse
+        information and a few sparse descriptors.  When an old GNU header replaces
+        both the POSIX header and the extra header, it holds some sparse
+        descriptors too.  Whether POSIX or not, if more sparse descriptors are
+        still needed, they are put into as many successive sparse headers as
+        necessary.  The following constants tell how many sparse descriptors fit in
+        each kind of header able to hold them.  */
+     
+     #define SPARSES_IN_EXTRA_HEADER  16
+     #define SPARSES_IN_OLDGNU_HEADER 4
+     #define SPARSES_IN_SPARSE_HEADER 21
+     
+     /* The extra header contains some information needed by tar, but not foreseen
+        in POSIX header format.  It is only used after a POSIX header (and never
+        with old GNU headers), and immediately follows this POSIX header, when
+        typeflag is a letter rather than a digit, thus signaling an extension.  */
+     
+     struct extra_header
+     {                               /* byte offset */
+       char atime[12];               /*   0 */
+       char ctime[12];               /*  12 */
+       char offset[12];              /*  24 */
+       char realsize[12];            /*  36 */
+       char longnames[4];            /*  48 */
+       char unused_pad1[68];         /*  52 */
+       struct sparse sp[SPARSES_IN_EXTRA_HEADER];
+                                     /* 120 */
+       char isextended;              /* 504 */
+                                     /* 505 */
+     };
+     
+     /* Extension header for sparse files, used immediately after the extra header,
+        and used only if all sparse information cannot fit into that extra header.
+        There might even be many such extension headers, one after the other, until
+        all sparsity information has been recorded.  */
+     
+     struct sparse_header
+     {                               /* byte offset */
+       struct sparse sp[SPARSES_IN_SPARSE_HEADER];
+                                     /*   0 */
+       char isextended;              /* 504 */
+                                     /* 505 */
+     };
+     
+     /* The old GNU format header conflicts with POSIX format in such a way that
+        POSIX archives may fool old tars, and POSIX tars might well be fooled by
+        old tar archives.  An old GNU format header uses the space used by the
+        prefix field in a POSIX header, and accumulates information normally found
+        in an extra header.  With an old tar header, we never see any POSIX header
+        nor extra header.  Supplementary sparse headers are allowed, however.  */
+     
+     struct oldgnu_header
+     {                               /* byte offset */
+       char unused_pad1[345];        /*   0 */
+       char atime[12];               /* 345 */
+       char ctime[12];               /* 357 */
+       char offset[12];              /* 369 */
+       char longnames[4];            /* 381 */
+       char unused_pad2;             /* 385 */
+       struct sparse sp[SPARSES_IN_OLDGNU_HEADER];
+                                     /* 386 */
+       char isextended;              /* 482 */
+       char realsize[12];            /* 483 */
+                                     /* 495 */
+     };
+     
+     /* OLDGNU_MAGIC uses both magic and version fields, which are contiguous.
+        Found in an archive, it indicates an old GNU header format, which will
+        hopefully have become obsolescent.  With OLDGNU_MAGIC, uname and gname are
+        valid, though the header is not truly POSIX conformant.  */
+     #define OLDGNU_MAGIC "ustar  "  /* 7 chars and a null */
+     
+     /* The standards committee allows only capital A through capital Z for
+        user-defined expansion.  */
+     
+     /* This is a dir entry that contains the names of files that were in the dir
+        at the time the dump was made.  */
+     #define OLDGNU_DUMPDIR  'D'
+     
+     /* Identifies the *next* file on the tape as having a long linkname.  */
+     #define OLDGNU_LONGLINK 'K'
+     
+     /* Identifies the *next* file on the tape as having a long name.  */
+     #define OLDGNU_LONGNAME 'L'
+     
+     /* This is the continuation of a file that began on another volume.  */
+     #define OLDGNU_MULTIVOL 'M'
+     
+     /* For storing filenames that do not fit into the main header.  */
+     #define OLDGNU_NAMES 'N'
+     
+     /* This is for sparse files.  */
+     #define OLDGNU_SPARSE 'S'
+     
+     /* This file is a tape/volume header.  Ignore it on extraction.  */
+     #define OLDGNU_VOLHDR 'V'
+     
+     /*--------------------------------------.
+     | tar header block, overall structure.  |
+     `--------------------------------------*/
+     
+     /* tar files are made in basic blocks of this size.  */
+     #define BLOCKSIZE ((size_t) 512)
+     
+     enum archive_format
+     {
+       DEFAULT_FORMAT,               /* format to be decided later */
+       V7_FORMAT,                    /* old V7 tar format */
+       OLDGNU_FORMAT,                /* GNU format as per before tar 2.0 */
+       POSIX_FORMAT,                 /* restricted, pure POSIX format */
+       FREE_FORMAT                   /* POSIX format with extensions */
+     };
+     
+     union block
+     {
+       char buffer[BLOCKSIZE];
+       struct posix_header header;
+       struct extra_header extra_header;
+       struct oldgnu_header oldgnu_header;
+       struct sparse_header sparse_header;
+     };
+     
+     /* End of format description.  */
+

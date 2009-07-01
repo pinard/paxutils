@@ -1,5 +1,5 @@
 /* Remote connection server.
-   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -40,6 +40,10 @@
 # define EXIT_SUCCESS 0
 #endif
 
+/* File descriptors for standard input and standard output.  */
+#define INPUT 0
+#define OUTPUT 1
+
 /* Maximum size of a string from the requesting program.  */
 #define	STRING_SIZE 64
 
@@ -51,7 +55,7 @@ static int tape = -1;
 
 /* Buffer containing transferred data, and its allocated size.  */
 static char *record_buffer = NULL;
-static int allocated_size = -1;
+static size_t allocated_size = 0;
 
 /* Buffer for constructing the reply.  */
 static char reply_buffer[BUFSIZ];
@@ -78,7 +82,7 @@ static FILE *debug_file = NULL;
 char *strerror ();
 # endif
 #else
-static char *
+static const char *
 private_strerror (int errnum)
 {
   extern const char *const sys_errlist[];
@@ -96,12 +100,11 @@ private_strerror (int errnum)
 `---*/
 
 static void
-report_error_message (const char *string)
+return_response (int status)
 {
-  DEBUG1 ("rmtd: E 0 (%s)\n", string);
-
-  sprintf (reply_buffer, "E0\n%s\n", string);
-  write (1, reply_buffer, strlen (reply_buffer));
+  DEBUG1 ("rmtd: A %d\n", status);
+  sprintf (reply_buffer, "A%d\n", status);
+  full_write (OUTPUT, reply_buffer, strlen (reply_buffer));
 }
 
 /*---.
@@ -109,12 +112,23 @@ report_error_message (const char *string)
 `---*/
 
 static void
-report_numbered_error (int num)
+return_error_message (const char *string)
+{
+  DEBUG1 ("rmtd: E 0 (%s)\n", string);
+  sprintf (reply_buffer, "E0\n%s\n", string);
+  full_write (OUTPUT, reply_buffer, strlen (reply_buffer));
+}
+
+/*---.
+| ?  |
+`---*/
+
+static void
+return_numbered_error (int num)
 {
   DEBUG2 ("rmtd: E %d (%s)\n", num, strerror (num));
-
   sprintf (reply_buffer, "E%d\n%s\n", num, strerror (num));
-  write (1, reply_buffer, strlen (reply_buffer));
+  full_write (OUTPUT, reply_buffer, strlen (reply_buffer));
 }
 
 /*---.
@@ -128,7 +142,7 @@ get_string (char *string)
 
   for (counter = 0; counter < STRING_SIZE; counter++)
     {
-      if (read (0, string + counter, 1) != 1)
+      if (full_read (INPUT, string + counter, 1) != 1)
 	exit (EXIT_SUCCESS);
 
       if (string[counter] == '\n')
@@ -142,7 +156,7 @@ get_string (char *string)
 `---*/
 
 static void
-prepare_record_buffer (int size)
+prepare_record_buffer (size_t size)
 {
   if (size <= allocated_size)
     return;
@@ -150,21 +164,21 @@ prepare_record_buffer (int size)
   if (record_buffer)
     free (record_buffer);
 
-  record_buffer = malloc ((size_t) size);
+  record_buffer = malloc (size);
 
   if (record_buffer == NULL)
     {
-      DEBUG (_("rmtd: Cannot allocate buffer space\n"));
-
-      report_error_message (N_("Cannot allocate buffer space"));
-      exit (EXIT_FAILURE);      /* exit status used to be 4 */
+      return_error_message (N_("Cannot allocate buffer space"));
+      /* Exit status used to be 4.  */
+      exit (EXIT_FAILURE);
     }
 
   allocated_size = size;
 
 #ifdef SO_RCVBUF
+  /* FIXME: Should &size be (int *) ?  */
   while (size > 1024 &&
-   setsockopt (0, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof (size)) < 0)
+   setsockopt (INPUT, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof (size)) < 0)
     size -= 1024;
 #else
   /* FIXME: I do not see any purpose to the following line...  Sigh! */
@@ -180,7 +194,6 @@ int
 main (int argc, char *const *argv)
 {
   char command;
-  int status;
 
   /* FIXME: Localisation is meaningless, unless --help and --version are
      locally used.  Localisation would be best accomplished by the calling
@@ -191,7 +204,7 @@ main (int argc, char *const *argv)
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
 
-  /* FIXME: Implement --help and --version as for any other GNU program.  */
+  /* FIXME: Implement --help and --version as per GNU standards.  */
 
   argc--, argv++;
   if (argc > 0)
@@ -199,200 +212,218 @@ main (int argc, char *const *argv)
       debug_file = fopen (*argv, "w");
       if (debug_file == 0)
 	{
-	  report_numbered_error (errno);
+	  return_numbered_error (errno);
 	  exit (EXIT_FAILURE);
 	}
       setbuf (debug_file, NULL);
     }
 
-top:
-  errno = 0;			/* FIXME: errno should be read-only */
-  status = 0;
-  if (read (0, &command, 1) != 1)
-    exit (EXIT_SUCCESS);
-
-  switch (command)
+  while (full_read (INPUT, &command, 1) == 1)
     {
-      /* FIXME: Maybe 'H' and 'V' for --help and --version output?  */
+      errno = 0;		/* FIXME: errno should be read-only */
 
-    case 'O':
-      {
-	char device_string[STRING_SIZE];
-	char mode_string[STRING_SIZE];
+      switch (command)
+	{
+	  /* FIXME: Maybe 'H' and 'V' for --help and --version output?  */
 
-	get_string (device_string);
-	get_string (mode_string);
-	DEBUG2 ("rmtd: O %s %s\n", device_string, mode_string);
+	case 'O':
+	  {
+	    char device_string[STRING_SIZE];
+	    char mode_string[STRING_SIZE];
 
-	if (tape >= 0)
-	  close (tape);
+	    get_string (device_string);
+	    get_string (mode_string);
+	    DEBUG2 ("rmtd: O %s %s\n", device_string, mode_string);
+
+	    if (tape >= 0)
+	      close (tape);
 
 #if defined (i386) && defined (AIX)
 
-	/* This is alleged to fix a byte ordering problem.  I'm quite
-	   suspicious if it's right. -- mib.  */
+	    /* This is alleged to fix a byte ordering problem.  I'm quite
+	       suspicious if it's right. -- mib.  */
 
-	{
-	  int old_mode = atoi (mode_string);
-	  int new_mode = 0;
+	    {
+	      mode_t old_mode = atoi (mode_string);
+	      mode_t new_mode = 0;
 
-	  if ((old_mode & 3) == 0)
-	    new_mode |= O_RDONLY;
-	  if (old_mode & 1)
-	    new_mode |= O_WRONLY;
-	  if (old_mode & 2)
-	    new_mode |= O_RDWR;
-	  if (old_mode & 0x0008)
-	    new_mode |= O_APPEND;
-	  if (old_mode & 0x0200)
-	    new_mode |= O_CREAT;
-	  if (old_mode & 0x0400)
-	    new_mode |= O_TRUNC;
-	  if (old_mode & 0x0800)
-	    new_mode |= O_EXCL;
-	  tape = open (device_string, new_mode, 0666);
-	}
+	      if ((old_mode & 3) == 0)
+		new_mode |= O_RDONLY;
+	      if (old_mode & 1)
+		new_mode |= O_WRONLY;
+	      if (old_mode & 2)
+		new_mode |= O_RDWR;
+	      if (old_mode & 0x0008)
+		new_mode |= O_APPEND;
+	      if (old_mode & 0x0200)
+		new_mode |= O_CREAT;
+	      if (old_mode & 0x0400)
+		new_mode |= O_TRUNC;
+	      if (old_mode & 0x0800)
+		new_mode |= O_EXCL;
+	      tape = open (device_string, new_mode, 0666);
+	    }
 #else
-	tape = open (device_string, atoi (mode_string), 0666);
+	    tape = open (device_string, atoi (mode_string), 0666);
 #endif
-	if (tape < 0)
-	  goto ioerror;
-	goto respond;
-      }
-
-    case 'C':
-      {
-	char device_string[STRING_SIZE];
-
-	get_string (device_string); /* discard */
-	DEBUG ("rmtd: C\n");
-
-	if (close (tape) < 0)
-	  goto ioerror;
-	tape = -1;
-	goto respond;
-      }
-
-    case 'L':
-      {
-	char count_string[STRING_SIZE];
-	char position_string[STRING_SIZE];
-
-	get_string (count_string);
-	get_string (position_string);
-	DEBUG2 ("rmtd: L %s %s\n", count_string, position_string);
-
-	status
-	  = lseek (tape, (off_t) atol (count_string), atoi (position_string));
-	if (status < 0)
-	  goto ioerror;
-	goto respond;
-      }
-
-    case 'W':
-      {
-	char count_string[STRING_SIZE];
-	int size;
-	int counter;
-
-	get_string (count_string);
-	size = atoi (count_string);
-	DEBUG1 ("rmtd: W %s\n", count_string);
-
-	prepare_record_buffer (size);
-	for (counter = 0; counter < size; counter += status)
-	  {
-	    status = read (0, &record_buffer[counter], size - counter);
-	    if (status <= 0)
-	      {
-		DEBUG (_("rmtd: Premature eof\n"));
-
-		report_error_message (N_("Premature end of file"));
-		exit (EXIT_FAILURE); /* exit status used to be 2 */
-	      }
+	    if (tape < 0)
+	      return_numbered_error (errno);
+	    else
+	      return_response (0);
+	    break;
 	  }
-	status = write (tape, record_buffer, size);
-	if (status < 0)
-	  goto ioerror;
-	goto respond;
-      }
 
-    case 'R':
-      {
-	char count_string[STRING_SIZE];
-	int size;
+	case 'C':
+	  {
+	    char device_string[STRING_SIZE];
 
-	get_string (count_string);
-	DEBUG1 ("rmtd: R %s\n", count_string);
+	    get_string (device_string); /* discard */
+	    DEBUG ("rmtd: C\n");
 
-	size = atoi (count_string);
-	prepare_record_buffer (size);
-	status = read (tape, record_buffer, size);
-	if (status < 0)
-	  goto ioerror;
-	sprintf (reply_buffer, "A%d\n", status);
-	write (1, reply_buffer, strlen (reply_buffer));
-	write (1, record_buffer, status);
-	goto top;
-      }
+	    if (close (tape) < 0)
+	      return_numbered_error (errno);
+	    else
+	      {
+		tape = -1;
+		return_response (0);
+	      }
+	    break;
+	  }
 
-    case 'I':
-      {
-	char operation_string[STRING_SIZE];
-	char count_string[STRING_SIZE];
+	case 'L':
+	  {
+	    int status = 0;
+	    char count_string[STRING_SIZE];
+	    char position_string[STRING_SIZE];
 
-	get_string (operation_string);
-	get_string  (count_string);
-	DEBUG2 ("rmtd: I %s %s\n", operation_string, count_string);
+	    get_string (count_string);
+	    get_string (position_string);
+	    DEBUG2 ("rmtd: L %s %s\n", count_string, position_string);
+
+	    status = lseek (tape, (off_t) atol (count_string),
+			    atoi (position_string));
+	    if (status < 0)
+	      return_numbered_error (errno);
+	    else
+	      return_response (status);
+	    break;
+	  }
+
+	case 'W':
+	  {
+	    char count_string[STRING_SIZE];
+	    ssize_t size_read = 0;
+	    ssize_t size_written;
+	    size_t counter;
+	    int size;
+
+	    get_string (count_string);
+	    size = atoi (count_string);
+	    DEBUG1 ("rmtd: W %s\n", count_string);
+
+	    prepare_record_buffer (size);
+	    for (counter = 0; counter < size; counter += size_read)
+	      {
+		size_read
+		  = full_read (INPUT, record_buffer + counter, size - counter);
+		if (size_read <= 0)
+		  {
+		    return_error_message (N_("Premature end of file"));
+		    /* Exit status used to be 2.  */
+		    exit (EXIT_FAILURE);
+		  }
+	      }
+	    size_written = full_write (tape, record_buffer, size);
+	    if (size_written < 0)
+	      return_numbered_error (errno);
+	    else
+	      return_response (size_written);
+	    break;
+	  }
+
+	case 'R':
+	  {
+	    char count_string[STRING_SIZE];
+	    size_t size;
+	    ssize_t read_size;
+
+	    get_string (count_string);
+	    DEBUG1 ("rmtd: R %s\n", count_string);
+
+	    size = atoi (count_string);
+	    prepare_record_buffer (size);
+	    read_size = full_read (tape, record_buffer, size);
+	    if (read_size < 0)
+	      return_numbered_error (errno);
+	    else
+	      {
+		sprintf (reply_buffer, "A%d\n", read_size);
+		full_write (OUTPUT, reply_buffer, strlen (reply_buffer));
+		full_write (OUTPUT, record_buffer, read_size);
+	      }
+	    break;
+	  }
+
+	case 'I':
+	  {
+	    int status = 0;
+	    char operation_string[STRING_SIZE];
+	    char count_string[STRING_SIZE];
+
+	    get_string (operation_string);
+	    get_string  (count_string);
+	    DEBUG2 ("rmtd: I %s %s\n", operation_string, count_string);
 
 #ifdef MTIOCTOP
-	{
-	  struct mtop mtop;
+	    {
+	      struct mtop mtop;
 
-	  mtop.mt_op = atoi (operation_string);
-	  mtop.mt_count = atoi (count_string);
-	  if (ioctl (tape, MTIOCTOP, (char *) &mtop) < 0)
-	    goto ioerror;
-	  status = mtop.mt_count;
-	}
+	      mtop.mt_op = atoi (operation_string);
+	      mtop.mt_count = atoi (count_string);
+	      if (ioctl (tape, MTIOCTOP, (char *) &mtop) < 0)
+		{
+		  return_numbered_error (errno);
+		  break;
+		}
+	      status = mtop.mt_count;
+	    }
 #endif
-	goto respond;
-      }
+	    return_response (status);
+	    break;
+	  }
 
-    case 'S':			/* status */
-      {
-	DEBUG ("rmtd: S\n");
+	case 'S':
+	  {
+	    int status = 0;
+
+	    DEBUG ("rmtd: S\n");
 
 #ifdef MTIOCGET
-	{
-	  struct mtget operation;
+	    {
+	      struct mtget operation;
 
-	  if (ioctl (tape, MTIOCGET, (char *) &operation) < 0)
-	    goto ioerror;
-	  status = sizeof (operation);
-	  sprintf (reply_buffer, "A%d\n", status);
-	  write (1, reply_buffer, strlen (reply_buffer));
-	  write (1, (char *) &operation, sizeof (operation));
-	}
+	      if (ioctl (tape, MTIOCGET, (char *) &operation) < 0)
+		{
+		  return_numbered_error (errno);
+		  break;
+		}
+	      status = sizeof (operation);
+	      sprintf (reply_buffer, "A%d\n", status);
+	      full_write (OUTPUT, reply_buffer, strlen (reply_buffer));
+	      full_write (OUTPUT, (char *) &operation, sizeof (operation));
+	    }
 #endif
-	goto top;
-      }
+	    /* FIXME: No reply at all, here?  */
+	    break;
+	  }
 
-    default:
-      DEBUG1 (_("rmtd: Garbage command %c\n"), command);
-
-      report_error_message (N_("Garbage command"));
-      exit (EXIT_FAILURE);	/* exit status used to be 3 */
+	default:
+	  DEBUG1 (_("rmtd: Garbage command %c\n"), command);
+	  return_error_message (N_("Garbage command"));
+	  /* Exit status used to be 3.  */
+	  exit (EXIT_FAILURE);
+	}
     }
 
-respond:
-  DEBUG1 ("rmtd: A %d\n", status);
-
-  sprintf (reply_buffer, "A%d\n", status);
-  write (1, reply_buffer, strlen (reply_buffer));
-  goto top;
-
-ioerror:
-  report_numbered_error (errno);
-  goto top;
+  exit (EXIT_SUCCESS);
 }

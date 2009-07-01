@@ -1,18 +1,18 @@
-;;; Handling of comment boxes.
-;;; Copyright (C) 1991, 92, 93, 94, 95, 96, 97 Free Software Foundation, Inc.
+;;; Handling of comment boxes in various styles.
+;;; Copyright © 1991, 92, 93, 94, 95, 96, 97, 98 Progiciels Bourbeau-Pinard inc.
 ;;; François Pinard <pinard@iro.umontreal.ca>, April 1991.
 
 ;;; I first observed rounded corners, as in style 223 boxes, in code from
-;;; Warren Tucker <wht@n4hgf.mt-park.ga.us>, a previous shar maintainer.
+;;; Warren Tucker <wht@n4hgf.mt-park.ga.us>, a previous `shar' maintainer.
 
 ;;; Refilling paragraphs inside comments, stretching or shrinking the
 ;;; surrounding box as needed, is a pain to do "by hand".  This GNU Emacs
 ;;; LISP code eases my life on this and I find it fair, giving all sources
 ;;; for a package, to also give the means for nicely modifying comments.
 
-;;; The function rebox-comment discovers the extent of the boxed comments
+;;; The function `rebox-comment' discovers the extent of the boxed comments
 ;;; near the cursor, possibly refills the text, then adjusts the comment
-;;; box style.  The function rebox-region does the same, except that it
+;;; box style.  The function `rebox-region' does the same, except that it
 ;;; takes the current region as a boxed comment.  Numeric prefixes are
 ;;; used to add or remove a box, change its style (language, quality or
 ;;; type), or to prevent refilling of its text.  A minus sign alone as
@@ -476,7 +476,10 @@
 		  (cond ((= type REBOX_TYPE_OPEN)
 			 ;; ``open rounded'' is a special case
 			 (setq nw "") (setq sw "")
-			 (setq ww "   ") (setq ee ""))
+			 (setq ww "   ") (setq ee "")
+			 ;; Add `*/' now so it gets filled with the rest.
+			 (goto-char (1- (point-max)))
+			 (insert "  */"))
 			((= type REBOX_TYPE_HALF_SINGLE)
 			 (setq nw "/*") (setq nn ? ) (setq ne " .")
 			 (setq ww "| ")              (setq ee " |")
@@ -568,7 +571,7 @@
 		 (= quality REBOX_QUALITY_ROUNDED_THREE))
 	     (= type REBOX_TYPE_OPEN))
 	(progn
-	  ;; - construct an 33 style comment
+	  ;; - construct an 221 or 231 style comment
 
 	  (skip-chars-forward " " (+ (point) margin))
 	  (insert (make-string (- margin (current-column)) ? )
@@ -577,17 +580,16 @@
 	  (forward-char 1)
 	  (while (not (eobp))
 	    (skip-chars-forward " " (+ (point) margin))
-	    (insert (make-string (- margin (current-column)) ? )
-		    ww)
-	    (beginning-of-line)
-	    (forward-line 1))
-	  (backward-char 1)
-	  (insert "  */"))
+	    (or (= (char-after) ?\n)
+		(insert (make-string (- margin (current-column)) ? )
+			ww))
+	    ;; (beginning-of-line)
+	    (forward-line 1)))
 
       ;; - construct all other comment styles
 
-      ;; construct one top line
       (if (not (zerop (length nw)))
+	  ;; construct one top line
 	  (progn
 	    (indent-to margin)
 	    (insert nw)
@@ -596,8 +598,8 @@
 			ne))
 	    (insert "\n")))
 
-      ;; construct one middle line
       (while (not (eobp))
+	;; construct one middle line
 	(skip-chars-forward " " (+ (point) margin))
 	(insert (make-string (- margin (current-column)) ? )
 		ww)
@@ -609,8 +611,8 @@
 	(beginning-of-line)
 	(forward-line 1))
 
-      ;; construct one bottom line
       (if (not (zerop (length sw)))
+	  ;; construct one bottom line
 	  (progn
 	    (indent-to margin)
 	    (insert sw)
@@ -701,12 +703,12 @@
 
       (goto-char (point-max))
       (previous-line 1)
-      (if (looking-at "^ *[`\+\\]?*--+ *\n")
+      (if (looking-at "^ *[`\+\\]*--+ *\n")
 	  (progn
 	    (if (= type REBOX_TYPE_OPEN)
 		(setq type REBOX_TYPE_HALF_SINGLE))
 	    (replace-match "" t t))
-	(if (looking-at "^ *[`\+\\]?*\\(==+\\|##+\\|;;+\\) *\n")
+	(if (looking-at "^ *[`\+\\]*\\(==+\\|##+\\|;;+\\) *\n")
 	    (progn
 	      (if (= type REBOX_TYPE_OPEN)
 		  (setq type REBOX_TYPE_HALF_DOUBLE))

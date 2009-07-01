@@ -1,5 +1,5 @@
 #!/bin/sh
-# This file is included in the GNU tar distribution as an example.  It is
+# This file is included in the tar distribution as an example.  It is
 # not used by default unless the proper line is uncommented in backup-specs.
 # System administrators will probably want to customize this and
 # backup-specs for their site. 

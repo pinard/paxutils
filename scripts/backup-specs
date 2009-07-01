@@ -7,7 +7,7 @@ ADMINISTRATOR=backup-reports
 # This should be a number from 0 to 23.
 BACKUP_HOUR=1
 
-# Location of GNU tar.  This must be the same for all hosts.
+# Location of tar.  This must be the same for all hosts.
 TAR=/usr/local/gnubin/tar
 
 # Device to use for dumping.  It should be on the host
@@ -41,7 +41,7 @@ VOLNO_FILE=/home/gd2/dump/volnofile
 # other file systems, they are not included.
 # The host name specifies which host to run tar on.
 # It should normally be the host that actually has the file system.
-# If GNU tar is not installed on that machine, then you can specify some
+# If tar is not installed on that machine, then you can specify some
 # other host which can access the file system through NFS.
 # Although these are arranged one per line, that is not mandatory.
 # It does not work to use # for comments within the string.

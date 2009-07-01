@@ -1,0 +1,244 @@
+# Makefile.in generated automatically by automake 1.3b from Makefile.am
+
+# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+# Makefile for PO directories.
+# François Pinard <pinard@iro.umontreal.ca>, 1998.
+
+
+SHELL = /bin/sh
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+ALL_LINGUAS = @ALL_LINGUAS@
+CC = @CC@
+CPP = @CPP@
+ECHO_C = @ECHO_C@
+ECHO_N = @ECHO_N@
+LN_S = @LN_S@
+MAKEINFO = @MAKEINFO@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+RMT = @RMT@
+TEST_BOLDC = @TEST_BOLDC@
+TEST_CPIO = @TEST_CPIO@
+TEST_DEVFLAG = @TEST_DEVFLAG@
+TEST_GID = @TEST_GID@
+TEST_GID2 = @TEST_GID2@
+TEST_GID2NAME = @TEST_GID2NAME@
+TEST_GIDNAME = @TEST_GIDNAME@
+TEST_GNUTAR = @TEST_GNUTAR@
+TEST_ID = @TEST_ID@
+TEST_MKFIFO = @TEST_MKFIFO@
+TEST_TAR = @TEST_TAR@
+TEST_UID = @TEST_UID@
+TEST_UIDNAME = @TEST_UIDNAME@
+U = @U@
+VERSION = @VERSION@
+YACC = @YACC@
+extra_bin_progs = @extra_bin_progs@
+extra_libexec_progs = @extra_libexec_progs@
+
+AUTOMAKE_OPTIONS = gnits
+
+localedir = $(prefix)/share/locale
+
+ALL_POFILES = @ALL_POFILES@
+ALL_MOFILES = @ALL_MOFILES@
+MOFILES = @MOFILES@
+
+EXTRA_DIST = $(PACKAGE).pot $(ALL_POFILES) $(ALL_MOFILES)
+
+MSGFMT = msgfmt
+MSGMERGE = msgmerge
+XGETTEXT = xgettext
+
+SUFFIXES = .po .pox .mo
+
+MAINTAINER_CLEAN = $(PACKAGE).pot $(MOFILES)
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
+CONFIG_CLEAN_FILES = 
+DIST_COMMON =  ChangeLog Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = tar
+GZIP = --best
+all: Makefile
+
+.SUFFIXES:
+.SUFFIXES: .mo .po .pox
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && $(AUTOMAKE) --gnits --include-deps i18n/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+tags: TAGS
+TAGS:
+
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = i18n
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  test -f $(distdir)/$$file \
+	  || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	  || cp -p $$d/$$file $(distdir)/$$file; \
+	done
+info:
+dvi:
+check: all
+installcheck:
+install-exec: 
+	@$(NORMAL_INSTALL)
+
+install-data: install-data-local
+	@$(NORMAL_INSTALL)
+
+install: install-exec install-data all
+	@:
+
+uninstall: uninstall-local
+
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s' INSTALL_SCRIPT='$(INSTALL_PROGRAM)' install
+installdirs:
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean:  mostlyclean-generic
+
+clean:  clean-generic mostlyclean
+
+distclean:  distclean-generic clean
+	-rm -f config.status
+
+maintainer-clean:  maintainer-clean-generic distclean
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+.PHONY: tags distdir info dvi installcheck install-exec install-data \
+install uninstall all installdirs mostlyclean-generic distclean-generic \
+clean-generic maintainer-clean-generic clean mostlyclean distclean \
+maintainer-clean
+
+
+.po.pox:
+	$(MAKE) $(PACKAGE).pot
+	$(MSGMERGE) $< $(srcdir)/$(PACKAGE).pot -o $*.pox
+
+.po.mo:
+	file=$(srcdir)/`echo $* | sed 's,.*/,,'`.mo \
+	  && rm -f $$file && $(MSGFMT) -o $$file $<
+
+all: $(ALL_MOFILES)
+
+install-data-local: $(MOFILES)
+@USE_NLS_TRUE@	files='$(MOFILES)'; \
+@USE_NLS_TRUE@	for file in $$files; do \
+@USE_NLS_TRUE@	  base=`basename $$file`; \
+@USE_NLS_TRUE@	  langdir=$(localedir)/`echo $$base | sed 's/\.mo$$//'`/LC_MESSAGES; \
+@USE_NLS_TRUE@	  $(MKINSTALLDIRS) $$langdir; \
+@USE_NLS_TRUE@	  echo " $(INSTALL_DATA) $$file $$langdir/$(PACKAGE).mo"; \
+@USE_NLS_TRUE@	  $(INSTALL_DATA) $$file $$langdir/$(PACKAGE).mo; \
+@USE_NLS_TRUE@	done
+
+uninstall-local:
+@USE_NLS_TRUE@	files='$(MOFILES)'; \
+@USE_NLS_TRUE@	for file in $$files; do \
+@USE_NLS_TRUE@	  base=`basename $$file`; \
+@USE_NLS_TRUE@	  langdir=$(localedir)/`echo $$base | sed 's/\.mo$$//'`/LC_MESSAGES; \
+@USE_NLS_TRUE@	  rm -f $$langdir/$(PACKAGE).mo; \
+@USE_NLS_TRUE@	done
+
+$(srcdir)/$(PACKAGE).pot: $(top_srcdir)/stamp-pot
+	$(XGETTEXT) --default-domain=$(PACKAGE) --directory=$(top_srcdir) \
+	  --add-comments --keyword=_ --keyword=N_ `cat $(top_srcdir)/stamp-pot`
+	test ! -f $(PACKAGE).po || ( rm -f $@ && mv $(PACKAGE).po $@ )
+
+update-po: Makefile
+	$(MAKE) $(PACKAGE).pot
+	files='$(ALL_MOFILES)'; \
+	for file in $$files; do \
+	  base=`basename $$file`; \
+	  lang=`echo $$base | sed 's/\.mo$$//'`; \
+	  mv $(srcdir)/$$lang.po $(srcdir)/$$lang.old.po; \
+	  echo "$$lang:"; \
+	  cd $(srcdir) \
+	    && if $(MSGMERGE) $$lang.old.po $(PACKAGE).pot -o $$lang.po; then \
+	      rm -f $$lang.old.po; \
+	    else \
+	      echo "msgmerge for $$file failed!"; \
+	      rm -f $$lang.po; \
+	      mv $$lang.old.po $$lang.po; \
+	    fi; \
+	done
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

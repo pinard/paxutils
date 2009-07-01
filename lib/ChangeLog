@@ -1,10 +1,84 @@
+1998-06-22  François Pinard  <pinard@iro.umontreal.ca>
+
+	* dstring.h: Remove ds_ prefix to field names.
+	Remove protection about multiple inclusions, that's useless overkill.
+	Do not include <stdio.h>, it has to be done elsewhere.
+	(ds_strchr): New name for macro ds_index.
+	(ds_strrchr): New name for macro ds_rindex.
+	(struct dynamic_string):
+	* dstring.c: Adjusted.
+
+1998-05-24  François Pinard  <pinard@iro.umontreal.ca>
+
+	* dstring.c, dstring.h, filemode.c, filetypes.h, makepath.c,
+	makepath.h, octal.c, save-cwd.c, save-cwd.h, stripslash.c: New
+	files, from elsewhere.
+	* dstring.h: Protect definition of PARAMS.
+	* Makefile.am: Adjusted.  Prepare libpu.a instead of libtar.a.
+	* ChangeLog: Integrate entries from cpio.
+
+1998-04-22  François Pinard  <pinard@iro.umontreal.ca>
+
+	* gettext.c, gettext.h: New files, from elsewhere.
+	(localedir): Defined.
+	* Makefile.am: Adjusted.
+
+	* malloc.c, realloc.c, xalloc.h: New files, from elsewhere.
+	* Makefile.am: Adjusted.
+
+1998-04-01  François Pinard  <pinard@iro.umontreal.ca>
+
+	* hash.c, hash.h: New files, from elsewhere.
+	* Makefile.am: Adjusted.
+
+1998-03-13  François Pinard  <pinard@iro.umontreal.ca>
+
+	* popen.c: Replace MSDOS by DOSWIN.
+
+1998-03-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* addext.c: New file, from elsewhere.
+	* Makefile.am: Adjusted.  Also, unconditionally compile basename.c.
+
+1998-03-04  François Pinard  <pinard@iro.umontreal.ca>
+
+	* getdate.h: New file, to replace wrong getdate.h.
+	* Makefile.am: Adjusted.
+	Reported by Dieter Nützel, Ed DeRivas, Eli Zaretskii, Erick
+	Branderhorst, Greg Herman, Jim Meyering and John David Anglin.
+
+1998-02-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Prerelease tar 1.12a.
+
+	* getdate.y: New versions, to correct a few problems.
+	Reported by David Liu, Ishikawa Chiaki and William Bader.
+
+1997-06-06  François Pinard  <pinard@iro.umontreal.ca>
+
+	* full-read.c, full-write.c: New files, from elsewhere.
+	* Makefile.am: Adjusted.
+
+1997-06-03  François Pinard  <pinard@iro.umontreal.ca>
+
+	* stpncpy.c: New file, from elsewhere.
+	* Makefile.am: Adjusted.
+
+	* popen.c, popen.h: New files, adapted from an old GNU awk copy.
+	* Makefile.am: Adjusted.
+
+1997-06-02  François Pinard  <pinard@iro.umontreal.ca>
+
+	* userspec.c: New file, from elsewhere.
+	* Makefile.am (libtar_a_SOURCES): Adjusted.
+
 1997-04-25  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Release 1.12.
+	* Release tar 1.12.
 
 1997-04-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11p.
+	* Prerelease tar 1.11p.
 
 	The distribution did not have getdate.c updated:
 	* Makefile.am (libtar_a_SOURCES): Use getdate.y, not getdate.c.
@@ -19,7 +93,7 @@
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11o.
+	* Prerelease tar 1.11o.
 
 	* getdate.h: New file.
 	* Makefile.am: Adjusted.
@@ -33,15 +107,21 @@
 
 	* Makefile.am: Adapt library name to Automake 1.1l.
 
+1996-11-15  Tom Tromey  <tromey@cygnus.com>
+
+	* Makefile.am (noinst_LIBRARIES): Use libcpio.a.
+	(libcpio_a_SOURCES): Changed name.
+	(cpio_LIBADD): Ditto.
+
 1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.14.
+	* Prerelease tar 1.11.14.
 
 	* basename.c: New file.
 
 1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.13.
+	* Prerelease tar 1.11.13.
 
 	* Makefile.am: Use tar_DEPENDENCIES.  Avoid BUILT_SOURCES,
 	put getdate.c instead of getdate.y in tar_SOURCES and keep
@@ -67,7 +147,7 @@
 
 1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.12.
+	* Prerelease tar 1.11.12.
 
 	* execlp.c: Include stdio.h, not only stdio!
 
@@ -78,6 +158,10 @@
 	* Makefile.am: Adjusted.
 	Reported by Jim Meyering.
 
+1996-09-14  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* Makefile.am (cpio_SOURCES): Don't mention rx.h, regex.h.
+
 1996-08-24  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): $(BUILT_SOURCES) is no longer
@@ -85,14 +169,14 @@
 
 1996-07-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.11.
+	* Prerelease tar 1.11.11.
 
 	* Makefile.am (EXTRA_DIST): Move stpcpy.c there, from tar_SOURCES.
 	Reported by Ulrich Drepper.
 
 1996-04-17  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.10.
+	* Prerelease tar 1.11.10.
 
 	* Makefile.am (EXTRA_DIST): New name for DIST_OTHER.
 
@@ -104,6 +188,10 @@
 1996-02-12  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Remove CONFIG_HEADER, not required by Automake 0.29.
+
+1996-01-19  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* Makefile.am (noinst_HEADERS): Removed.
 
 1996-01-14  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -119,6 +207,12 @@
 	* Makefile.am: Add error.h to HEADERS.
 	Reported by Jim Meyering.
 
+1996-01-01  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* xmalloc.c: Use "error.h".
+	* makepath.c: Use "error.h".
+	* error.h: New file.
+
 1995-12-30  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (INCLUDES): Add -I../intl to get libintl.h.
@@ -127,14 +221,72 @@
 
 1995-12-29  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.9.
+	* Prerelease tar 1.11.9.
 
 	* Makefile.am: New file.
+
+1995-11-29  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.am (cpio_LIBADD): Defined.
 
 1995-11-22  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Distribute ChangeLog.
 	* ChangeLog: New, extracted from the top-level ChangeLog.
+
+1995-11-13  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.am: New file.
+
+1995-11-04  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* makepath.c: Include config.h.
+
+	* dstring.c: Include config.h.
+	* Makefile.in (INCLS): Change for config.h.
+
+	* strcasecmp.c: New file, from gettext 0.9.6.
+
+	* Makefile.in (OBJS): Include @FNMATCH@.
+	(.c.o): Copied from ../src/Makefile.in.
+
+1995-11-03  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.in (SRCS): Include safe-stat.h.
+
+	* safe-stat.h: New file.
+
+	* userspec.c: Merged with 2.3.910 version.
+
+	* makepath.c: Merged with 2.3.910 version.
+
+	* fnmatch.c: Merged with 2.3.910 version.
+
+1995-11-02  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.in (dist_topdir): Removed.
+
+	* regex.c (re_error_msgid): Use _() wrapper for all strings.
+	(_): New define.
+
+	* rx.c: Include <libintl.h> if possible.
+	(_): New define.
+	(re_error_msg): Use _() wrapper for all strings.
+	(rx_error_msg): Ditto.
+	(re_compile_pattern): Use gettext.
+	(re_comp): Ditto.
+	(regerror): Ditto.
+
+1995-10-31  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.in (dist_topdir): New macro.
+
+	* stpcpy.c: New file (from tar).
+
+	* Makefile.in: New file.
+
+	* Started ChangeLog; see ../src/ChangeLog for prior changes to
+	this source.
 
 1995-06-18  François Pinard  <pinard@iro.umontreal.ca>
 

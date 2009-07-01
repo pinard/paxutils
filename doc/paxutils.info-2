@@ -1,0 +1,1212 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: create tutorial,  Next: list tutorial,  Prev: file verbose help,  Up: tar Tutorial
+
+How to create archives
+======================
+
+   One of the basic subcommands of `tar' is `--create' (`-c'), which
+you use to create a `tar' archive.  We will explain `--create' (`-c')
+first because, in order to learn about the other subcommands, you will
+find it useful to have an archive available to practice on.
+
+   To make this as easy as possible, you will first create a directory
+containing three files (eventually you will create more practice files).
+Then, we will show you how to create an *archive* (inside the new
+directory).  Both the directory and the archive are specifically for
+you to practice on.  The rest of this chapter and the next chapter will
+show many examples using this directory and the files you will create:
+some of those files may be other directories and other archives.
+
+   The three files you will archive in this example are called `blues',
+`folk', and `jazz'.  The archive is called `genres.tar'.
+
+   This section will proceed slowly, detailing how to use `--create'
+(`-c') in `verbose' mode, and showing examples using both short and long
+forms.  In the rest of the tutorial, and in the examples in the next
+chapter, we will proceed at a slightly quicker pace.  This section moves
+slowly so that novice users can begin to understand how `tar' works.
+
+* Menu:
+
+* prepare for examples::        Preparing a practice directory for examples
+* Creating the archive tutorial::  Creating the archive
+* create verbose::              Running `--create' with `--verbose'
+* Short create::                Short forms with `--create'
+* create dir tutorial::         Archiving directories
+
+
+File: paxutils.info,  Node: prepare for examples,  Next: Creating the archive tutorial,  Prev: create tutorial,  Up: create tutorial
+
+Preparing a practice directory for examples
+-------------------------------------------
+
+   To follow along with this and future examples, create a new directory
+called `practice' containing files called `blues', `folk' and `jazz'.
+The files can contain any information you like: ideally, they should
+contain information which relates to their names, and be of different
+lengths.  Our examples assume that `practice' is a subdirectory of your
+home directory.
+
+   Now `cd' to the directory named `practice'; `practice' is now your
+"working directory".  (*Please note*: Although the full path name of
+this directory is `/HOMEDIR/practice', in our examples we will refer to
+this directory as `practice'; the HOMEDIR is presumed.)
+
+   In general, you should check that the files to be archived exist
+where you think they do (in the working directory) by running `ls'.  So
+let's do it:
+
+     $ ls
+     blues	folk	jazz
+
+   It is very important to make sure there isn't already a file in the
+working directory with the archive name you intend to use (in this
+case, `collection.tar'), or that you don't care about its contents.
+Whenever you use `create', `tar' will erase the current contents of the
+file named by `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') if it exists.
+`tar' will not tell you if you are about to overwrite a file unless you
+specify an option which does this *Note backup::.  To add files to an
+existing archive, you need to use a different option, such as
+`--append' (`-r'); see *Note append:: for information on how to do this.
+
+
+File: paxutils.info,  Node: Creating the archive tutorial,  Next: create verbose,  Prev: prepare for examples,  Up: create tutorial
+
+Creating the archive
+--------------------
+
+   To place the files `blues', `folk', and `jazz' into an archive named
+`collection.tar', use the following command:
+
+     $ tar --create --file=collection.tar blues folk jazz
+
+   The order of the arguments is not very important, *when using long
+option forms*.  You could also say:
+
+     $ tar blues --create folk --file=collection.tar jazz
+
+However, you can see that this order is harder to understand; this is
+why we will list the arguments in the order that makes the commands
+easiest to understand (and we encourage you to do the same when you use
+`tar', to avoid errors).
+
+   Note that the part of the command that says `--file=collection.tar'
+is considered to be *one* argument.  If you substituted any other
+string of characters for ``collection.tar'',  then that string would
+become the name of the archive file you create.
+
+   The order of the options becomes more important when you begin to use
+short forms.  With short forms, if you type commands in the wrong order
+(even if you type them correctly in all other ways), you may end up with
+results you don't expect.  For this reason, it is a good idea to get
+into the habit of typing options in the order that makes inherent sense.
+*Note Short create::, for more information on this.
+
+   In this example, you type the command as shown above: `--create'
+(`-c') is the subcommand which creates the new archive
+(`collection.tar'), and `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') is
+the option which lets you give it the name you chose.  The files
+`blues', `folk', and `jazz' are now members of the archive
+`collection.tar' (they are "file name arguments" to the `--create'
+(`-c') subcommand).    Now that they are are in the archive, they are
+called *archive members*, not files .
+
+   When you create an archive, you *must* specify which files you want
+placed in the archive.  If you do not specify any archive members,
+`tar' will complain.
+
+   If you now list the contents of the working directory (`ls'), you
+will find the archive file listed as well as the files you saw
+previously:
+
+     $ ls
+     blues	collection.tar	folk	jazz
+
+Creating the archive `collection.tar' did not destroy the copies of the
+files in the directory.
+
+   Keep in mind that if you don't indicate any subcommand, `tar' will
+not run and will prompt you for one.  If you don't name any files, `tar'
+will complain.  You must have write access to the working directory, or
+else you will not be able to create an archive in that directory.
+
+   *Caution*: Do not attempt to use `--create' (`-c') to add files to
+an existing archive; it will delete the archive and write a new one.
+Use `--append' (`-r') instead.  *Note append::.
+
+
+File: paxutils.info,  Node: create verbose,  Next: Short create,  Prev: Creating the archive tutorial,  Up: create tutorial
+
+Running `--create' with `--verbose'
+-----------------------------------
+
+   If you include the `--verbose' (`-v') option on the command line,
+`tar' will list the files it is acting on as it is working.  In verbose
+mode, the `create' example above would appear as:
+
+     $ tar --create --verbose --file=collection.tar blues folk jazz
+     blues
+     folk
+     jazz
+
+   This example is just like the example we showed which did not use
+`--verbose' (`-v'), except that `tar' generated the remaining lines.
+
+   In the rest of the examples in this chapter, we will frequently use
+`verbose' mode so we can show actions or `tar' responses that you would
+otherwise not see, and which are important for you to understand what
+`tar' does.
+
+
+File: paxutils.info,  Node: Short create,  Next: create dir tutorial,  Prev: create verbose,  Up: create tutorial
+
+Short forms with `--create'
+---------------------------
+
+   As we said before, the `--create' (`-c') subcommand is one of the
+most basic uses of `tar', and you will use it countless times.
+Eventually, you will probably want to use abbreviated (or "short")
+forms of options.  A full discussion of the three different forms that
+options can take appears in *Note Styles::; for now, here is what the
+previous example (including the `--verbose' (`-v') option) looks like
+using short option forms:
+
+     $ tar -cvf collection.tar blues folk jazz
+     blues
+     folk
+     jazz
+
+As you can see, the system responds the same no matter whether you use
+long or short option forms.
+
+   One difference between using short and long option forms is that,
+although the exact placement of arguments following options is no more
+specific when using short forms, it is easier to become confused and
+make a mistake when using short forms.  For example, suppose you
+attempted the above example in the following way:
+
+     $ tar -cfv collection.tar blues folk jazz
+     tar: Cannot add file collection.tar: No such file or directory
+     tar: Error exit delayed from previous errors
+     $ ls
+     blues   folk   jazz   v
+     $
+
+You got error messages and a file called `v'.  What happened is that
+`tar' tried to make an archive file called `v', containing the files
+`blues', `folk', and `jazz', because the `v' is the closest "file name"
+to the `-f' option, and is thus taken to be the chosen archive file
+name.  `tar' tried to add a file called `collection.tar' to the `v'
+archive file; if the file `collection.tar' did not already exist, `tar'
+will report an error indicating that this file does not exist.  If the
+file `collection.tar' does already exist (e.g., from a previous command
+you may have run), then `tar' will add this file to the archive.
+Because the `-v' option did not get registered, `tar' will not run
+under *verbose* mode, and will not report its progress.
+
+   The end result is that you may be quite confused about what happened,
+and possibly overwrite a file.  To illustrate this further, we will show
+you how an example we showed previously would look using short forms.
+
+   This example,
+
+     $ tar blues --create folk --file=collection.tar jazz
+
+is confusing as it is.  When shown using short forms, however, it
+becomes much more so:
+
+     $ tar blues -c folk -f collection.tar jazz
+
+It would be very easy to put the wrong string of characters immediately
+following the `-f', but doing that could sacrifice valuable data.
+
+   For this reason, we recommend that you pay very careful attention to
+the order of options and placement of file and archive names, especially
+when using short option forms.  Not having the option name written out
+mnemonically can affect how well you remember which option does what,
+and therefore where different names have to be placed.  (Placing
+options in an unusual order can also cause `tar' to report an error if
+you have set the shell environment variable, `POSIXLY_CORRECT'; *note
+posix::., for more information on this.)
+
+
+File: paxutils.info,  Node: create dir tutorial,  Prev: Short create,  Up: create tutorial
+
+Archiving directories
+---------------------
+
+   You can archive a directory by specifying its directory name as a
+file name argument to `tar'.  The files in the directory will be
+archived relative to the working directory, and the directory will be
+re-created along with its contents when the archive is extracted.
+
+   To archive a directory, first move to its superior directory.  If you
+have followed the previous instructions in this tutorial, you should
+type:
+
+     $ cd ..
+     $
+
+This will put you into the directory which contains `practice', that
+is, your home directory.  Once in the superior directory, you can
+specify the subdirectory, `practice', as a file name argument.  To
+store `practice' in the new archive file `music.tar', type:
+
+     $ tar --create --verbose --file=music.tar practice
+
+`tar' should output:
+
+     practice/
+     practice/blues
+     practice/folk
+     practice/jazz
+     practice/collection.tar
+
+   Note that the archive thus created is not in the subdirectory
+`practice', but rather in the current working directory--the directory
+from which `tar' was invoked.  Before trying to archive a directory
+from its superior directory, you should make sure you have write access
+to the superior directory itself, not only the directory you are trying
+archive with `tar'.  For example, you will probably not be able to
+store your home directory in an archive by invoking `tar' from the root
+directory; *Note absolute-names::.  (Note also that `collection.tar',
+the original archive file, has itself been archived.  `tar' will accept
+any file as a file to be archived, regardless of its content.  When
+`music.tar' is extracted, the archive file `collection.tar' will be
+rewritten into the file system).
+
+   If you give `tar' a command such as
+
+     $ tar --create --file=foo.tar .
+
+`tar' will report `tar: foo.tar is the archive; not dumped'.  This
+happens because `tar' creates the archive `foo.tar' in the current
+directory before putting any files into it.  Then, when `tar' attempts
+to add all the files in the directory `.' to the archive, it notices
+that the file `foo.tar' is the same as the archive, and skips it.  (It
+makes no sense to put an archive into itself.)  `tar' will continue in
+this case, and create the archive normally, except for the exclusion of
+that one file.  (*Please note:* Some other versions of `tar' are not so
+clever; they might enter an infinite loop when this happens.  It is
+safer, in general, not to depend on `tar' behavior, by making sure that
+the archive is not created inside a directory that is itself being
+dumped.)  Some MS-Windows file systems (notably, Windows 95 VFAT disks)
+don't support the feature which is used by `tar' to detect that the
+archive is included in itself, so the archive *will* be included on
+those file systems.
+
+
+File: paxutils.info,  Node: list tutorial,  Next: extract tutorial,  Prev: create tutorial,  Up: tar Tutorial
+
+How to list archives
+====================
+
+   Often, you will find yourself wanting to determine exactly what a
+particular archive contains.  You can use the `--list' (`-t') subcommand
+to get the member names as they currently appear in the archive, as well
+as various attributes of the files at the time they were archived.  For
+example, you can examine the archive `genres.tar' that you created in
+the last section with the command,
+
+     $ tar --list --file=genres.tar
+
+The output of `tar' would then be:
+
+     blues
+     folk
+     jazz
+
+   If you use the `--verbose' (`-v') option with `--list' (`-t'), then
+`tar' will print out a listing reminiscent of `ls -l', showing owner,
+file size, and so forth.
+
+   If you had used `verbose' mode, the example above would look like:
+
+     $ tar --list --verbose --file=genres.tar folk
+     -rw-rw-rw- myself users 62 1990-05-23 10:55 folk
+
+   You can specify one or more individual member names as arguments when
+using `list'.  In this case, `tar' will only list the names of members
+you identify.  For example, `tar --list --file=afiles.tar apple' would
+only print `apple'.
+
+* Menu:
+
+* absolute tutorial::           Specifying Member Names Correctly
+* Listing directories::         Listing the contents of a stored directory
+
+
+File: paxutils.info,  Node: absolute tutorial,  Next: Listing directories,  Prev: list tutorial,  Up: list tutorial
+
+Specifying member names correctly
+---------------------------------
+
+The archive `bfiles.tar' would list as follows:
+
+     ./birds
+     baboon
+     ./box
+
+Be sure to use a `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option just
+as with `--create' (`-c') to specify the name of the archive.
+
+   Because `tar' preserves paths, file names must be specified as they
+appear in the archive (that is, relative to the directory from which the
+archive was created).  Therefore, it is essential when specifying member
+names to `tar' that you give the exact member names.  For example,
+`tar --list --file=bfiles birds' would produce an error message
+something like `tar: birds: Not found in archive', because there is no
+member named `birds', only one named `./birds'.  While the names
+`birds' and `./birds' name the same file, *member* names are compared
+using a simplistic name comparison, in which an exact match is
+necessary.  *Note absolute-names::.
+
+   However, `tar --list --file=genres.tar folk' would respond with
+`folk', because `folk' is in the archive file `genres.tar'.  If you are
+not sure of the exact file name, try listing all the files in the
+archive and searching for the one you expect to find; remember that if
+you use `--list' (`-t') with no file names as arguments, `tar' will
+print the names of all the members stored in the specified archive.
+
+
+File: paxutils.info,  Node: Listing directories,  Prev: absolute tutorial,  Up: list tutorial
+
+Listing the contents of a stored directory
+------------------------------------------
+
+   To get information about the contents of an archived directory, use
+the directory name as a file name argument in conjunction with `--list'
+(`-t').  To determine file attributes, include the `--verbose' (`-v')
+option.
+
+   For example, to find out about files in the directory `practice' in
+the archive file `music.tar', type:
+
+     $ tar --list --verbose --file=music.tar practice
+
+   `tar' responds:
+
+     drwxrwxrwx myself users 0 1990-05-31 21:49 practice/
+     -rw-rw-rw- myself users 42 1990-05-21 13:29 practice/blues
+     -rw-rw-rw- myself users 62 1990-05-23 10:55 practice/folk
+     -rw-rw-rw- myself users 40 1990-05-21 13:30 practice/jazz
+     -rw-rw-rw- myself users 10240 1990-05-31 21:49 practice/collection.tar
+
+   When you use a directory name as a file name argument, `tar' acts on
+all the files (including subdirectories) in that directory.
+
+
+File: paxutils.info,  Node: extract tutorial,  Next: Looking ahead,  Prev: list tutorial,  Up: tar Tutorial
+
+How to extract members from an archive
+======================================
+
+   The act of retrieving members from an archive so they can be used and
+manipulated as unarchived files again is called "extraction".  To
+extract files from an archive, use the `--extract' (`--get', `-x')
+subcommand.  As with `--create' (`-c'), specify the name of the archive
+with `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').  Extracting an archive
+does not modify the archive in any way; you can extract it multiple
+times if you want or need to.
+
+   Using `--extract' (`--get', `-x'), you can extract an entire
+archive, or specific files.  The files can be directories containing
+other files, or not.  As with `--create' (`-c') and `--list' (`-t'),
+you may use the short or the long form of the subcommand without
+affecting the performance.
+
+   If you have files in the working directory with the same name as
+members that you are about to extract, the files will be overwritten by
+the newly extracted members.  `tar' has new options which will permit
+you to keep more than one copy of a file with the same name as an
+archive is extracted; for more information about this, consult *Note
+backup::.
+
+* Menu:
+
+* Extracting archives::         Extracting an entire archive
+* Extracting files::            Extracting specific files
+* Extracting directories::      Extracting files that are directories
+* Failing commands::            Commands that will fail
+* Two mistakes::                Two dangerous mistakes
+
+
+File: paxutils.info,  Node: Extracting archives,  Next: Extracting files,  Prev: extract tutorial,  Up: extract tutorial
+
+Extracting an entire archive
+----------------------------
+
+   To extract an entire archive, specify the archive file name only,
+with no individual file names as arguments.  For example,
+
+     $ tar -xvf collection.tar
+
+produces this:
+
+     -rw-rw-rw- myself users 28 1996-10-18 16:31 jazz
+     -rw-rw-rw- myself users 21 1996-09-23 16:44 blues
+     -rw-rw-rw- myself users 20 1996-09-23 16:44 folk
+
+
+File: paxutils.info,  Node: Extracting files,  Next: Extracting directories,  Prev: Extracting archives,  Up: extract tutorial
+
+Extracting specific files
+-------------------------
+
+   To extract specific archive members, give their exact member names as
+arguments, as printed by `--list' (`-t').  If you have mistakenly
+deleted one of the files you had placed in the archive `genres.tar'
+earlier (say, `blues'), you can extract it from the archive without
+changing the archive's structure.  It will be identical to the original
+file `blues' that you deleted.
+
+   First, make sure you are in the `practice' directory, and list the
+files in the directory.  Now, delete the file `blues' and list the
+files in the directory again.
+
+   You can now extract the member `blues' from the archive file
+`genres.tar' like this:
+
+     $ tar --extract --file=genres.tar blues
+
+If you list the files in the directory again, you will see that the file
+`blues' has been restored, with its original permissions, creation
+time, and owner.  These parameters will be identical to those which the
+file had when you originally placed it in the archive; any changes you
+may have made before deleting the file from the file system, however,
+will *not* have been made to the archive member.  (If the restoring
+user was not also the owner of the archived members, and if the current
+`umask' is compatible with original permissions, the various
+permissions would probably be different.)  The archive file
+`genres.tar' is the same as it was before you extracted `blues'.  You
+can confirm this by running `tar' with `--list' (`-t').
+
+   Remember that as with other subcommands, specifying the exact member
+name is important.  `tar --extract --file=bfiles.tar birds' will fail,
+because there is no member named `birds'.  To extract the member named
+`./birds', you must specify `tar --extract --file=bfiles.tar ./birds'.
+To find the exact member names of the members of an archive, use
+`--list' (`-t') (*note list::.).
+
+   If you give the `--verbose' (`-v') option, then `--extract'
+(`--get', `-x') will print the names of the archive members as it
+extracts them.
+
+
+File: paxutils.info,  Node: Extracting directories,  Next: Failing commands,  Prev: Extracting files,  Up: extract tutorial
+
+Extracting files that are directories
+-------------------------------------
+
+   Extracting directories which are members of an archive is similar to
+extracting other files.  The main difference to be aware of is that if
+the extracted directory has the same name as any directory already in
+the working directory, then files in the extracted directory will be
+placed into the directory of the same name.  Likewise, if there are
+files in the pre-existing directory with the same names as the members
+which you extract, the files from the extracted archive will overwrite
+the files already in the pre-existing directory (and possible
+subdirectories).  This will happen regardless of whether or not the
+files in the pre-existing directory were more recent than those
+extracted.
+
+   If a file was stored with a directory name as part of its file name,
+and that directory does not exist under the working directory when the
+file is extracted, `tar' will create the directory.
+
+   We can demonstrate how to use `--extract' (`--get', `-x') to extract
+a directory file with an example.  Change to the `practice' directory
+if you weren't there, and remove the files `folk' and `jazz'.  Then, go
+back to the parent directory and extract the archive `music.tar'.  You
+may either extract the entire archive, or only the files you just
+deleted.  To extract the entire archive, don't give any file names as
+arguments after the archive name `music.tar'.  To extract only the
+files you deleted, use the following command:
+
+     $ tar -xvf music.tar practice/folk practice/jazz
+
+Because you created the directory with `practice' as part of the file
+names of each of the files by archiving the `practice' directory as
+`practice', you must give `practice' as part of the file names when you
+extract those files from the archive.
+
+
+File: paxutils.info,  Node: Failing commands,  Next: Two mistakes,  Prev: Extracting directories,  Up: extract tutorial
+
+Commands that will fail
+-----------------------
+
+   Here are some sample commands you might try which will not work, and
+why they won't work.
+
+   If you try to use this command:
+
+     $ tar -xvf music.tar folk jazz
+
+you will get the following response:
+
+     tar: folk: Not found in archive
+     tar: jazz: Not found in archive
+     $
+
+This is because these files were not originally *in* the parent
+directory `..' where the archive is located; they were in the
+`practice' directory, and their file names reflect this:
+
+     $ tar -tvf music.tar
+     practice/folk
+     practice/jazz
+     practice/rock
+
+Likewise, if you try to use this command,
+
+     $ tar -tvf music.tar folk jazz
+
+you would get a similar response.  Members with those names are not in
+the archive.  You must use the correct member names in order to extract
+the files from the archive.
+
+   If you have forgotten the correct names of the files in the archive,
+use `tar --list --verbose' to list them correctly.
+
+
+File: paxutils.info,  Node: Two mistakes,  Prev: Failing commands,  Up: extract tutorial
+
+Two dangerous mistakes
+----------------------
+
+   Here are two dangerous mistakes you should try to avoid which can
+occur while using `--extract' (`--get', `-x'):
+
+  1. Do not mistakenly use `create' instead of `extract', when your
+     intent is to extract the contents of an archive.
+
+     This error can occur if you mistype the `c' key for the `x' key.
+     You might do this when you are tired, since the two keys, `c' and
+     `x', are next to each other on a QWERTY keyboard.  If you make
+     this mistake, instead of unpacking the archive, you will destroy
+     it.
+
+  2. Do not mistakenly forget to list the name of the file into which
+     you are archiving, especially when your intent is to create an
+     archive with just one file in it.
+
+     You might do this by force of habit, by inadvertently adding the
+     `f' key to your cluster of option letters while forgetting to name
+     the archive.  If you make this mistake, instead of archiving the
+     file, you will destroy it.
+
+
+File: paxutils.info,  Node: Looking ahead,  Prev: extract tutorial,  Up: tar Tutorial
+
+Looking ahead: The rest of this manual
+======================================
+
+   You have now seen how to use the main subcommands available to `tar',
+and a number of the possible options.  You should be able to take
+advantage of the `tar' program adequately to help yourself in many real
+situations.
+
+   The next two chapters review everything you have learned so far,
+while going in depth about every topic, most probably to a greater
+extent than you really need for simple day-to-day use.  The remaining
+chapters explain how to choose and change file and archive names, and
+how to use files to store names of other files which you can then call
+as arguments to `tar' (this can help you save time if you expect to
+archive the same list of files a number of times).
+
+   If there are too many files to list conveniently on the command line,
+you can list the names in a file, and `tar' will read that file.  *Note
+files-from::.
+
+   There are various ways of causing `tar' to skip over certain files
+and not archive them.  *Note Choosing::.
+
+
+File: paxutils.info,  Node: cpio invocation,  Next: pax invocation,  Prev: tar Tutorial,  Up: Top
+
+Invoking `cpio'
+***************
+
+* Menu:
+
+* Copy-out mode::               Copy-out mode
+* Copy-in mode::                Copy-in mode
+* Copy-pass mode::              Copy-pass mode
+* cpio Options::                Options for `cpio'
+
+
+File: paxutils.info,  Node: Copy-out mode,  Next: Copy-in mode,  Prev: cpio invocation,  Up: cpio invocation
+
+Copy-out mode
+=============
+
+   In copy-out mode, `cpio' copies files into an archive.  It reads a
+list of filenames, one per line, on the standard input, and writes the
+archive onto the standard output.  A typical way to generate the list
+of filenames is with the `find' command; you should give find the
+`-depth' option to minimize problems with permissions on directories
+that are unreadable.  *Note cpio Options::.
+
+     cpio {-o|--create} [-0acvABLV] [-C bytes] [-H format]
+     [-M message] [-O [[user@]host:]archive] [-F [[user@]host:]archive]
+     [--file=[[user@]host:]archive] [--format=format] [--sparse]
+     [--message=message][--null] [--reset-access-time] [--verbose]
+     [--dot] [--append] [--block-size=blocks] [--dereference]
+     [--io-size=bytes] [--help] [--version] < name-list [> archive]
+
+
+File: paxutils.info,  Node: Copy-in mode,  Next: Copy-pass mode,  Prev: Copy-out mode,  Up: cpio invocation
+
+Copy-in mode
+============
+
+   In copy-in mode, `cpio' copies files out of an archive or lists the
+archive contents.  It reads the archive from the standard input.  Any
+non-option command line arguments are shell globbing patterns; only
+files in the archive whose names match one or more of those patterns are
+copied from the archive.  Unlike in the shell, an initial `.' in a
+filename does match a wildcard at the start of a pattern, and a `/' in
+a filename can match wildcards.  If no patterns are given, all files
+are extracted.  *Note cpio Options::.
+
+     cpio {-i|--extract} [-bcdfmnrtsuvBSV] [-C bytes] [-E file]
+     [-H format] [-M message] [-R [user][:.][group]]
+     [-I [[user@]host:]archive] [-F [[user@]host:]archive]
+     [--file=[[user@]host:]archive] [--make-directories]
+     [--nonmatching] [--preserve-modification-time]
+     [--numeric-uid-gid] [--rename] [--list] [--swap-bytes] [--swap]
+     [--dot] [--unconditional] [--verbose] [--block-size=blocks]
+     [--swap-halfwords] [--io-size=bytes] [--pattern-file=file]
+     [--format=format] [--owner=[user][:.][group]]
+     [--no- preserve-owner] [--message=message] [--help] [--version]
+     [--no-absolute-filenames] [--only-verify-crc] [--quiet] [--silent]
+     [pattern...] [< archive]
+
+
+File: paxutils.info,  Node: Copy-pass mode,  Next: cpio Options,  Prev: Copy-in mode,  Up: cpio invocation
+
+Copy-pass mode
+==============
+
+   In copy-pass mode, `cpio' copies files from one directory tree to
+another, combining the copy-out and copy-in steps without actually using
+an archive.  It reads the list of files to copy from the standard input;
+the directory into which it will copy them is given as a non-option
+argument.  *Note cpio Options::.
+
+     cpio {-p|--pass-through} [-0adlmuvLV] [-R [user][:.][group]]
+     [--null] [--reset-access-time] [--make-directories] [--link]
+     [--preserve-modification-time] [--unconditional] [--verbose]
+     [--dot] [--dereference] [--owner=[user][:.][group]] [--sparse]
+     [--no-preserve-owner] [--help] [--version] destination-directory
+     < name-list
+
+
+File: paxutils.info,  Node: cpio Options,  Prev: Copy-pass mode,  Up: cpio invocation
+
+Options for `cpio'
+==================
+
+`--null'
+`-0'
+     Read a list of filenames terminated by a `<NUL>' character, instead
+     of a newline, so that files whose names contain newlines can be
+     archived.  GNU `find' is one way to produce a list of
+     null-terminated filenames.  This option may be used in copy-out
+     and copy-pass modes.
+
+`--reset-access-time'
+`-a'
+     Reset the access times of files after reading them, so that it
+     does not look like they have just been read.
+
+`--append'
+`-A'
+     Append to an existing archive.  Only works in copy-out mode.  The
+     archive must be a disk file specified with the `-O' or `-F'
+     (`--file') option.
+
+`--swap'
+`-b'
+     Swap both halfwords of words and bytes of halfwords in the data.
+     Equivalent to `-sS'.  This option may be used in copy-in mode.
+     Use this option to convert 32-bit integers between big-endian and
+     little-endian machines.
+
+`-B'
+     Set the I/O block size to 5120 bytes.  Initially the block size is
+     512 bytes.
+
+`--block-size=BLOCK-SIZE'
+     Set the I/O block size to BLOCK-SIZE * 512 bytes.
+
+`-c'
+     Use the old portable (ASCII) archive format.
+
+`--io-size=IO-SIZE'
+`-C IO-SIZE'
+     Set the I/O block size to IO-SIZE bytes.
+
+`--make-directories'
+`-d'
+     Create leading directories where needed.
+
+`--pattern-file=FILE'
+`-E FILE'
+     Read additional patterns specifying filenames to extract or list
+     from FILE.  The lines of FILE are treated as if they had been
+     non-option arguments to `cpio'.  This option is used in copy-in
+     mode.
+
+`--nonmatching'
+`-f'
+     Only copy files that do not match any of the given patterns.
+
+`--file=ARCHIVE'
+`-F ARCHIVE'
+     Archive filename to use instead of standard input or output.  To
+     use a tape drive on another machine as the archive, use a filename
+     that starts with `HOSTNAME:'.  The hostname can be preceded by a
+     username and an `@' to access the remote tape drive as that user,
+     if you have permission to do so (typically an entry in that user's
+     `~/.rhosts' file).
+
+`--force-local'
+     With `-F', `-I', or `-O', take the archive file name to be a local
+     file even if it contains a colon, which would ordinarily indicate
+     a remote host name.
+
+`--format=FORMAT'
+
+`-H FORMAT'
+     Use archive format FORMAT.  The valid formats are listed below;
+     the same names are also recognized in all-caps.  The default in
+     copy-in mode is to automatically detect the archive format, and in
+     copy-out mode is `bin'.
+
+    `bin'
+          The obsolete binary format.
+
+    `odc'
+          The old (POSIX.1) portable format.
+
+    `newc'
+          The new (SVR4) portable format, which supports file systems
+          having more than 65536 i-nodes.
+
+    `crc'
+          The new (SVR4) portable format with a checksum added.
+
+    `tar'
+          The old `tar' format.
+
+    `ustar'
+          The POSIX.1 `tar' format.  Also recognizes most `tar'
+          archives, many of which are similar, but not identical.
+
+    `hpbin'
+          The obsolete binary format used by HPUX's `cpio' (which
+          stores device files differently).
+
+    `hpodc'
+          The portable format used by HPUX's `cpio' (which stores
+          device files differently).
+
+`--extract'
+`-i'
+     Run in copy-in mode.  *Note Copy-in mode::.
+
+`-I ARCHIVE'
+     Archive filename to use instead of standard input.  To use a tape
+     drive on another machine as the archive, use a filename that
+     starts with `HOSTNAME:'.  The hostname can be preceded by a
+     username and an `@' to access the remote tape drive as that user,
+     if you have permission to do so (typically an entry in that user's
+     `~/.rhosts' file).
+
+`-k'
+     Ignored; for compatibility with other versions of `cpio'.
+
+`--link'
+`-l'
+     Link files instead of copying them, when possible.
+
+`--dereference'
+`-L'
+     Copy the file that a symbolic link points to, rather than the
+     symbolic link itself.
+
+`--preserve-modification-time'
+`-m'
+     Retain previous file modification times when creating files.
+
+`--message=MESSAGE'
+`-M MESSAGE'
+     Print MESSAGE when the end of a volume of the backup media (such
+     as a tape or a floppy disk) is reached, to prompt the user to
+     insert a new volume.  If MESSAGE contains the string `%d', it is
+     replaced by the current volume number (starting at 1).
+
+`--numeric-uid-gid'
+`-n'
+     Show numeric UID and GID instead of translating them into names
+     when using the `--verbose option'.
+
+`--no-absolute-filenames'
+     Create all files relative to the current directory in copy-in
+     mode, even if they have an absolute file name in the archive.
+
+`--no-preserve-owner'
+     Do not change the ownership of the files; leave them owned by the
+     user extracting them.  This is the default for non-root users, so
+     that users on System V don't inadvertantly give away files.  This
+     option can be used in copy-in mode and copy-pass mode
+
+`--create'
+`-o'
+     Run in copy-out mode.  *Note Copy-out mode::.
+
+`-O ARCHIVE'
+     Archive filename to use instead of standard output.  To use a tape
+     drive on another machine as the archive, use a filename that
+     starts with `HOSTNAME:'.  The hostname can be preceded by a
+     username and an `@' to access the remote tape drive as that user,
+     if you have permission to do so (typically an entry in that user's
+     `~/.rhosts' file).
+
+`--only-verify-crc'
+     Verify the CRC's of each file in the archive, when reading a CRC
+     format archive. Don't actually extract the files.
+
+`--pass-through'
+`-p'
+     Run in copy-pass mode.  *Note Copy-pass mode::.
+
+`--quiet'
+`--silent'
+     Do not print the number of blocks copied.
+
+`--rename'
+`-r'
+     Interactively rename files.
+
+`--owner [USER][:.][GROUP]'
+`-R [USER][:.][GROUP]'
+     Set the ownership of all files created to the specified user
+     and/or group in copy-out and copy-pass modes.  Either the user,
+     the group, or both, must be present.  If the group is omitted but
+     the `:' or `.'  separator is given, use the given user's login
+     group.  Only the super-user can change files' ownership.
+
+`--swap-bytes'
+`-s'
+     Swap the bytes of each halfword (pair of bytes) in the files.
+     This option can be used in copy-in mode.
+
+`--swap-halfwords'
+`-S'
+     Swap the halfwords of each word (4 bytes) in the files.  This
+     option may be used in copy-in mode.
+
+`--sparse'
+     Write files with large blocks of zeros as sparse files.  This
+     option is used in copy-out and copy-pass modes.
+
+`--list'
+`-t'
+     Print a table of contents of the input.
+
+`--unconditional'
+`-u'
+     Replace all files, without asking whether to replace existing
+     newer files with older files.
+
+`--verbose'
+`-v'
+     List the files processed, or with `-t', give an `ls -l' style table
+     of contents listing.  In a verbose table of contents of a ustar
+     archive, user and group names in the archive that do not exist on
+     the local system are replaced by the names that correspond locally
+     to the numeric UID and GID stored in the archive.
+
+`--dot'
+`-V'
+     Print a `.' for each file processed.
+
+`--version'
+     Print the cpio program version number and exit.
+
+
+File: paxutils.info,  Node: pax invocation,  Next: tar invocation,  Prev: cpio invocation,  Up: Top
+
+Invoking `pax'
+**************
+
+   This chapter is not written yet.
+
+
+File: paxutils.info,  Node: tar invocation,  Next: Subcommands,  Prev: pax invocation,  Up: Top
+
+Invoking `tar'
+**************
+
+   This chapter is about how one invokes the `tar' command, from the
+command synopsis (*note Synopsis::.).  There are numerous options, and
+many styles for writing them.  One option should specify the subcommand
+`tar' should perform (*note Subcommand summary::.); other options are
+meant to detail how this subcommand should be performed (*note Option
+summary::.).  Non-option arguments are not always interpreted the same
+way; their interpretation depends on what the subcommand is.
+
+   You will find in this chapter everything about option styles and
+rules for writing them (*note Styles::.).  On the other hand, most
+subcommands and options are described elsewhere, in other chapters.
+Here, you will find only synthetic descriptions for subcommands and
+options, together with pointers to other parts of the `tar' manual.
+
+   Some options are so special they are fully described right in this
+chapter.  They have the effect of inhibiting the normal operation of
+`tar' or else they globally alter the amount of feedback the user
+receives about what is going on.  This chapter describes the `--help'
+(*note help::.)  option, as well as `--version' (*note version::.),
+`--verbose' (`-v') (*note verbose::.), `--interactive'
+(`--confirmation', `-w') (*note interactive::.), and a few others.
+
+* Menu:
+
+* Synopsis::                    General synopsis of `tar'
+* Using options::               Using `tar' options
+* Styles::                      The three option styles
+* Documentation and help::      Documentation and troubleshooting
+* interactive::                 Asking for confirmation during subcommands
+
+
+File: paxutils.info,  Node: Synopsis,  Next: Using options,  Prev: tar invocation,  Up: tar invocation
+
+General synopsis of `tar'
+=========================
+
+   The `tar' program is invoked as either one of:
+
+     $ tar OPTION... [NAME]...
+     $ tar LETTER... [ARGUMENT]... [OPTION]... [NAME]...
+
+   The second form is for when old options are being used.
+
+   You can use `tar' to store files in an archive, to extract them from
+an archive, and to do other types of archive manipulation.  The primary
+argument to `tar', which is called the "subcommand", specifies which
+action to take.  The other arguments to `tar' are either "options",
+which change the way `tar' performs a subcommand, or file names or
+archive members, which specify the files or members `tar' is to act on.
+
+   You can actually type in arguments in any order, even if in this
+manual the options always precede the other arguments, to make examples
+easier to understand.  The option stating the operation mode (the `tar'
+subcommand) is usually given first.
+
+   Each NAME in the synopsis above is interpreted as an archive member
+name when the subcommand is one of `--compare' (`--diff', `-d'),
+`--delete', `--extract' (`--get', `-x'), `--list' (`-t') or `--update'
+(`-u').  When naming archive members, you must give the exact name of
+the member in the archive, as it is printed by `--list' (`-t').  For
+`--append' (`-r') and `--create' (`-c'), these NAME arguments specify
+the names of either files or directory hierarchies to place in the
+archive.  These files or hierarchies should already exist in the file
+system prior to the execution of the `tar' command.
+
+   `tar' interprets relative file names as relative to the working
+directory.  `tar' will make all file names relative (by removing
+leading slashes when archiving or restoring files) unless you specify
+otherwise (using the `--absolute-names' (`-P') option).  *Note
+absolute-names::, for more information about `--absolute-names' (`-P').
+
+   If you give the name of a directory as either a file name or a member
+name, then `tar' acts recursively on all the files and directories
+beneath that directory.  For example, the name `/' identifies all the
+files in the filesystem to `tar'.
+
+   The distinction between file names and archive member names is
+especially important when shell globbing is used, and is sometimes a
+source of confusion for newcomers.  *Note Wildcards::, for more
+information about globbing.  The problem is that shells can only glob
+using existing files in the file system.  Only `tar' itself can glob on
+archive members, so when that is necessary, you must ensure that
+wildcard characters reach `tar' without being interpreted by the shell
+first.  Using a backslash before `*' or `?', or putting the whole
+argument between quotes, is usually sufficient for this.  (On
+MS-DOS/MS-Windows, you *must* use quotes, since the backslash is a
+directory separator, and cannot be used to escape-protect wildcard
+characters.)
+
+   Even if NAMEs are often specified on the command line, they can also
+be read from a text file in the file system, using the
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option.
+
+   If you don't use any file name arguments, `--append' (`-r'),
+`--delete' and `--concatenate' (`--catenate', `-A') will do nothing,
+while `--create' (`-c') will usually yield a diagnostic and inhibit
+`tar' execution.  The other subcommands of `tar' (`--list' (`-t'),
+`--extract' (`--get', `-x'), `--compare' (`--diff', `-d'), and
+`--update' (`-u')) will act on the entire contents of the archive.
+
+   Besides successful exits, `tar' may fail for many reasons.  Some
+reasons correspond to bad usage, that is, when the `tar' command is
+improperly written.  Errors may also be encountered later, while
+processing the archive or the files.  Some errors are recoverable, in
+which case the failure is delayed until `tar' has completed all its
+work, `tar' then says:
+
+     tar: Processed all files possible, despite earlier errors
+
+just before exiting with a nonzero status.(1) When `tar' is executed
+interactively and reports a recoverable error, the supplementary time
+before the prompt reappears, the noise coming from the disk, or the
+sight of the actual tape moving, gives some feel to the user that `tar'
+continued its processing.  But when run in scripts or unattended, the
+ending message is undoubtly useful.
+
+   Some errors are such that it would not be meaningful, or at least
+would be risky, to continue processing: `tar' then aborts processing
+immediately, and says so.  All abnormal exits, whether immediate or
+delayed, should *always* be clearly diagnosed on `stderr', after a line
+stating the nature of the error.  When an error is recoverable, `tar'
+attempts to continue processing as much as possible.  It will then exit
+with an error (nonzero) status, which is in fact delayed from the time
+the error effectively occurred.
+
+   `tar' returns only a few exit statuses.  We are really aiming for
+simplicity in that area, for now.(2) If you are not using the
+`--compare' (`--diff', `-d') option, zero means that everything went
+well, besides maybe innocuous warnings (however, *note
+ignore-failed-read::.).  Nonzero means that something went wrong.  As
+of today, "nonzero" is almost always 1 or 2, except for remote
+subcommands, where it may be 128.  The value 1 is meant to report a
+difference (*note compare::.), while the value 2 represents all other
+errors.
+
+   The `tar' program is often used early in a pipe, in which case the
+exit status of `tar' is less easy to obtain, as the error exit of the
+whole pipe is the error exit of the last program in the pipeline.  If
+you are using `bash', check the `PIPESTATUS' array for `tar''s exit
+status.  Otherwise, it *is* possible with `sh' or `ksh' to fetch the
+exit status of a process in the middle of a pipeline, just ugly:(3)
+
+     $ exec 3>&1
+     $ status=`((tar ...; echo $? >&4) | tee ... >&3) 4>&1`
+
+   ---------- Footnotes ----------
+
+   (1) The message used to be "Error exit delayed from previous
+errors", but many users complained they did not understand what this
+means, so we changed the message.
+
+   (2) `tar' once had a complex system of exit codes, which became
+unreliable over time, forcing a great cleanup in version 1.11.8.
+
+   (3) This clever recipe has been communicated by Brendan O'Dea.
+
+
+File: paxutils.info,  Node: Using options,  Next: Styles,  Prev: Synopsis,  Up: tar invocation
+
+Using `tar' options
+===================
+
+   `tar' has about eight operating modes which allow you to perform a
+variety of tasks.  You are required to choose one operating mode each
+time you employ the `tar' program, by specifying one and only one
+subcommand as an argument to the `tar' command (*note Subcommands::.).
+Depending on the circumstances, you may also wish to customize how the
+chosen operating mode behaves.  For example, you may wish to change the
+way the output looks, or the format of the files that you wish to
+archive may require you to do something special in order to make the
+archive look right.
+
+   You can customize and control `tar''s performance by running `tar'
+with one or more options (such as `--verbose' (`-v')).  "options" are
+arguments to `tar' which are (as their name suggests) optional.
+Depending on the operating mode, you may specify one or more options.
+Different options will have different effects, but in general they all
+change details of how `tar' works on archives, such as archive format,
+archive name, or level of user interaction.  Some options make sense
+with all operating modes, while others are meaningful only with
+particular modes.  You will likely use some options frequently, while
+you will only use others infrequently, or not at all.  (A full list of
+options is available in *note All options::..)
+
+   Note that `tar' options are case sensitive.  For example, the
+options `-T' and `-t' are different; the first requires an argument for
+stating the name of a file providing a list of NAMEs, while the second
+does not require an argument and is another way to write `--list'
+(`-t').
+
+   In addition to the eight subcommands, there are many options to
+`tar', and three different styles for writing both: long (mnemonic)
+form, short form, and old style.  These styles are discussed below.
+Both the options and the subcommands can be written in any of these
+three styles.
+
+
+File: paxutils.info,  Node: Styles,  Next: Documentation and help,  Prev: Using options,  Up: tar invocation
+
+The three option styles
+=======================
+
+   There are three styles for writing subcommands and options to the
+command line invoking `tar'.  The different styles were developed at
+different times during the history of `tar'.  These styles will be
+presented below, from the most recent to the oldest.
+
+   Some options must take an argument.  (For example,
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') takes the name of an archive
+file as an argument.  If you do not supply an archive file name, `tar'
+will use a default which may vary from site to site; thus, we recommend
+that you always supply a specific archive file name in your portable
+scripts.)  Where you *place* the arguments generally depends on which
+style of options you choose.  We will detail specific information
+relevant to each option style in the sections on the different option
+styles, below.  The differences are subtle, yet can often be very
+important; incorrect option placement can cause you to overwrite a
+number of important files.  We urge you to note these differences, and
+only use the option style(s) which make(s) the most sense to you until
+you feel comfortable with the others.
+
+* Menu:
+
+* Long options::                Long option style
+* Short options::               Short option style
+* Old style::                   Old option style
+* Mixing::                      Mixing option styles
+

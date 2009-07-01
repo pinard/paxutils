@@ -1,0 +1,1131 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
+
+
+
+   This file documents `pax' utilities.  `cpio', `pax' and `tar' are
+tools used to store, backup, and transport files within archives.
+These tools are able to create and extract archives.  `cpio' is also
+able to directly copy many files from one place to another.  Some
+accessory tools allow to do basic tape positionning and handling,
+either locally or remotely.
+
+   Most of the manual, as it stands, specifically describes `tar'.
+This comes from the fact that it results from a quick merge of a small
+`cpio' document within a relatively bigger `tar' manual.  It also
+account for the fact that `tar' is currently much more complex than the
+other tools.  We expect that such things might tend to reequilibrate
+themselves, as time and maintenance goes, as the tools in `pax'
+utilities will influence each other.
+
+   This manual documents the release 2.4d of `pax' utilities.
+
+* Menu:
+
+* Introduction::                Introduction
+* cpio Tutorial::               Tutorial introduction to `cpio'
+* tar Tutorial::                Tutorial introduction to `tar'
+* cpio invocation::             Invoking `cpio'
+* pax invocation::              Invoking `pax'
+* tar invocation::              Invoking `tar'
+* Subcommands::                 `tar' subcommands
+* Choosing::                    Choosing files and names for `tar'
+* Formats::                     Controlling the archive format
+* Media::                       Tapes and other archive media
+* Backups::                     Performing backups and restoring files
+* All options::                 All `tar' options
+* Date input formats::          Date input formats
+* Archive format::              Format of archive files
+* Index::                       Index
+
+ -- The Detailed Node Listing --
+
+Introduction
+
+* Book contents::               What this book contains
+* Definitions::                 Some definitions
+* What cpio does::              What `cpio' does
+* What pax does::               What `pax' does
+* What tar does::               What `tar' does
+* Stylistic conventions::       Stylistic conventions
+* Authors::                     `tar' authors
+* Reports::                     Reporting bugs or suggestions
+
+Tutorial Introduction to `tar'
+
+* Assumptions::                 Assumptions this tutorial makes
+* Simplified invokation::       The structure of a `tar' command
+* Basic tar options::           `tar' subcommands and options
+* create list extract tutorial::  The three most frequently used subcommands
+* file verbose help::           Three frequently used options
+* create tutorial::             How to create archives
+* list tutorial::               How to list archives
+* extract tutorial::            How to extract members from an archive
+* Looking ahead::               Looking ahead: The rest of this manual
+
+Three Frequently Used Options
+
+* file tutorial::               The `--file' option
+* verbose tutorial::            The `--verbose' option
+* help tutorial::               Getting help: Using the `--help' option
+
+How to Create Archives
+
+* prepare for examples::        Preparing a practice directory for examples
+* Creating the archive tutorial::  Creating the archive
+* create verbose::              Running `--create' with `--verbose'
+* Short create::                Short forms with `--create'
+* create dir tutorial::         Archiving directories
+
+How to List Archives
+
+* absolute tutorial::           Specifying member names correctly
+* Listing directories::         Listing the contents of a stored directory
+
+How to Extract Members from an Archive
+
+* Extracting archives::         Extracting an entire archive
+* Extracting files::            Extracting specific files
+* Extracting directories::      Extracting files that are directories
+* Failing commands::            Commands that will fail
+* Two mistakes::                Two dangerous mistakes
+
+Invoking `cpio'
+
+* Copy-out mode::               Copy-out mode
+* Copy-in mode::                Copy-in mode
+* Copy-pass mode::              Copy-pass mode
+* cpio Options::                Options for `cpio'
+
+Invoking `tar'
+
+* Synopsis::                    General synopsis of `tar'
+* Using options::               Using `tar' options
+* Styles::                      The three option styles
+* Documentation and help::      Documentation and troubleshooting
+* interactive::                 Asking for confirmation during subcommands
+
+The Three Option Styles
+
+* Long options::                Long option style
+* Short options::               Short option style
+* Old style::                   Old option style
+* Mixing::                      Mixing option styles
+
+Documentation and Troubleshooting
+
+* version::                     Knowing the `tar' version
+* help::                        Getting help: Using the `--help' option
+* verbose::                     The `--verbose' option
+* checkpoint::                  Being warned of all directories
+* show-omitted-dirs::           Being warned of skipped directories
+* totals::                      Sizeing the amount of data written
+* block-number::                Adding physical addresses to messages
+
+`tar' Subcommands
+
+* list::                        How to list archives
+* extract::                     How to extract members from an archive
+* create::                      The three most frequently used subcommands
+* Applications::                Other uses for `tar'
+
+How to List Archives
+
+* Reading::                     Options to help read archives
+* compare::                     Comparing members with the file system
+
+Options to Help Read Archives
+
+* read-full-records::           Reading full records
+* ignore-zeros::                Ignoring blocks of zeros
+* ignore-failed-read::          Ignoring read failures
+
+How to Extract Members from an Archive
+
+* extract options::             Options used for extraction
+* Writing::                     Changing how `tar' writes files
+* Preventing overwrite::        Options to prevent overwriting files
+* Unlinking::                   Options to destroy files
+* Attributes::                  Handling file attributes
+* Scarce::                      Coping with scarce resources
+
+Options to Prevent Overwriting Files
+
+* keep-old-files::              Keeping old files
+* to-stdout::                   Writing to standard output
+* backup::                      Backup options
+* suffix::                      Deciding the backup file suffixes
+
+Options to Destroy Files
+
+* unlink-first::                Removing files prior to extraction
+* recursive-unlink::            Removing whole directories
+
+Handling File Attributes
+
+* touch::                       Setting modification times
+* same-owner::                  Restoring file ownership
+* same-permissions::            Setting access permissions
+* no-attributes::               Leaving file attributes alone
+
+Coping with Scarce Resources
+
+* starting-file::               Starting file
+* same-order::                  Same order
+* preserve::                    Preserving permissions and order
+
+How to Create Archives
+
+* name-prefix::                 Using name prefixes
+* atime-preserve::              Preserving last access time
+* remove-files::                Removing files
+* append::                      How to add files to existing archives
+* update::                      Updating an archive
+
+How to Add Files to Existing Archives
+
+* Appending files::             Appending files to an archive
+* Multiple files::              Multiple files with the same name
+
+Updating an Archive
+
+* How to update::               How to update members of an archive
+* Unsuitability of update::     Updating does not always work
+
+Other `tar' Usages
+
+* concatenate::                 Combining archives with `tar'
+* Using cat with archives::     Combining archives with `cat'
+* delete::                      Removing archive members from an archive
+
+Combining Archives with `tar'
+
+* Using cat with archives::     Combining archives with `cat'
+
+Choosing Files and Names for `tar'
+
+* file::                        Three frequently used options
+* Selecting Archive Members::   Selecting archive members
+* Exclusions::                  Excluding files by name
+* Time criteria::               Time based exclusions
+* Walking::                     Walking through directories
+* Relative::                    Relative notations for file names
+
+Choosing and Naming Archive Files
+
+* Using file::                  Using the `--file' option
+* Standard archive::            Archive on standard input or output
+* lmh::                         Abbreviating drive and density
+* Remote::                      Accessing a remote drive
+* force-local::                 Inhibiting remote access
+* rsh-command::                 Selecting the remote access mechanism
+* rmt invocation::              How `rmt' works
+
+Selecting Archive Members
+
+* files-from::                  Reading names from a file
+* find with files-from::        Using `find' to generate a list of files
+* null::                        `NUL' terminated file names
+
+Excluding Files by Name
+
+* exclude::                     Excluding some files
+* exclude-from::                Handling a lot of exclusions
+* Wildcards::                   Wildcard patterns and matching
+* Problems with exclude::       Problems with using the `exclude' options
+
+Time Based Exclusions
+
+* after-date::                  Operating only on new files
+* newer-mtime::                 Operating only on altered files
+
+Walking through Directories
+
+* no-recursion::                Descending into directories
+* one-file-system::             Crossing filesystem boundaries
+
+Relative Notations for File Names
+
+* directory::                   Changing the working directory
+* absolute-names::              Absolute file names
+
+Controlling the Archive Format
+
+* Portability::                 Making `tar' archives more portable
+* Forced fields::               Options to preset file attributes
+* Compression::                 Using less space through compression
+* Other formats::               Other non-`tar' formats
+
+Making `tar' Archives More Portable
+
+* Portable names::              Portable names
+* dereference::                 Symbolic links
+* old-archive::                 Old V7 archives
+* posix::                       `tar' and POSIX `tar'
+* Checksumming::                Checksumming problems
+
+Options to Preset File Attributes
+
+* mode::                        Presetting permissions
+* owner::                       Forcing a given owner
+* group::                       Forcing a given group
+* numeric-owner::               Using numeric owner and group
+
+Using Less Space through Compression
+
+* Archive compression::         Compressing the whole archive
+* Member compression::          Compressing individual members
+
+Compressing the Whole Archive
+
+* gzip::                        Using `gzip' compression
+* compress::                    Using `compress' compression
+* use-compress-program::        Using other compression programs
+
+Compressing Individual Members
+
+* sparse::                      Archiving sparse files
+
+Other non-`tar' formats
+
+* cpio::                        Tutorial introduction to `cpio'
+* zip::                         Comparison of `tar' and `zip'
+
+Tapes and Other Archive Media
+
+* Blocking::                    Blocking
+* Many on one::                 Many archives on one tape
+* One on many::                 Using multiple tapes
+* Being careful::               Being even more careful
+* Other tape considerations::   Other tape considerations
+
+Blocking
+
+* Blocks and records::          Blocks and records
+* blocking-factor::             Setting the blocking factor
+* record-size::                 Setting a record size
+* Media types::                 Per-Media blocking considerations
+* Reblocking::                  Automatic reblocking
+
+Many Archives on One Tape
+
+* Tape positioning::            Tape positions and tape marks
+* mt invocation::               The `mt' utility
+
+Using Multiple Tapes
+
+* Multi-volume archives::       Archives longer than one tape or disk
+* multi-volume::                Using multi-volume mode
+* tape-length::                 Announcing the tape length
+* info-script::                 Taking actions at volume switching
+* volno-file::                  Changing the volume number in prompts
+
+Being Even More Careful
+
+* label::                       Including labels in the archive
+* verify::                      Verifying data as it is stored
+* Write protection::            Write protection
+
+Performing Backups and Restoring Files
+
+* incremental listed-incremental::  The incremental options
+* Backup levels::               Levels of backups
+* Backup parameters::           Setting parameters for backups and restoration
+* Scripted backups::            Using the backup scripts
+* Scripted restoration::        Using the restore script
+
+The Incremental Options
+
+* incremental::                 The incremental options
+* listed-incremental::          Backing up with a snapshot list
+
+Levels of Backups
+
+* Full dumps::                  Using `tar' to perform full dumps
+* Incremental dumps::           Using `tar' to perform incremental dumps
+
+Setting Parameters for Backups and Restoration
+
+* backup-specs example::        An example text of `backup-specs'
+* Script syntax::               Syntax for `backup-specs'
+
+All `tar' Options
+
+* Subcommand summary::          Subcommands
+* Option summary::              `tar' options
+* Short option summary::        Short options cross-reference
+
+Date Input Formats
+
+* General date syntax::         General date syntax
+* Calendar date item::          Calendar date item
+* Time of day item::            Time of day item
+* Timezone item::               Timezone item
+* Day of week item::            Day of week item
+* Relative item in date strings::  Relative item in date strings
+* Pure numbers in date strings::  Pure numbers in date strings
+* Authors of getdate::          Authors of `getdate'
+
+Format of Archive Files
+
+* tar-h::                       The C description of a header block
+* Standard format::             The standard format
+* Extended format::             Extensions to the archive format
+
+
+File: paxutils.info,  Node: Introduction,  Next: cpio Tutorial,  Prev: Top,  Up: Top
+
+Introduction
+************
+
+   Welcome to the `pax' Utilities manual.  Most tools in this collection
+are used to create and manipulate files ("archives"), which are actually
+collections of many other files.  The utilities provide users with an
+organized and systematic method for controlling a large amount of data.
+Other tools are meant to manoeuvre magnetic tapes.
+
+* Menu:
+
+* Book contents::               What this book contains
+* Definitions::                 Some definitions
+* What cpio does::              What `cpio' does
+* What pax does::               What `pax' does
+* What tar does::               What `tar' does
+* Stylistic conventions::       Stylistic conventions
+* Authors::                     `tar' authors
+* Reports::                     Reporting bugs or suggestions
+
+
+File: paxutils.info,  Node: Book contents,  Next: Definitions,  Prev: Introduction,  Up: Introduction
+
+What this book contains
+=======================
+
+   This chapter introduces you to various terms that will recur
+throughout the book.  It also tells you who has worked on `tar' and its
+documentation, and where you should send bug reports or comments.
+
+   The second chapter is a tutorial (*note tar Tutorial::.) which
+provides a gentle introduction for people who are new to using `tar'.
+It is meant to be self-contained, not requiring any reading from
+subsequent chapters to make sense.  It moves from topic to topic in a
+logical, progressive order, building on information already explained.
+The tutorial introduces the three most frequently used subcommands
+(`--create' (`-c'), `--list' (`-t'), and `--extract' (`--get', `-x'))
+as well as a few frequently used options.
+
+   Each remaining chapter presents everything that needs to be said
+about a specific topic.  These, taken altogether, should offer a
+complete reference manual for `tar' (they do not refer to the tutorial
+chapter).  The entire book, including the tutorial, assumes that the
+reader understands some basic concepts of using a Unix-type operating
+system.
+
+   The third chapter presents `tar' options and option syntax.  The
+fourth chapter presents all `tar' subcommands, as well as many options
+more specifically related to particular `tar' subcommands.  Other
+chapters explain how one chooses files and entry names on which `tar'
+operates and how one selects the format and portability of generated
+archives.  The final chapters concentrate on magnetic media used for
+archiving, and discuss how backups can be generated and restored.
+
+   One appendix (*note Date input formats::.) exists in its entirety in
+other GNU manuals, and is mostly self-contained.  Another appendix
+(*note Archive format::.), which details the format of the archive file
+generated by `tar', contains a long quotation taken directly from the
+`tar' sources.
+
+
+File: paxutils.info,  Node: Definitions,  Next: What cpio does,  Prev: Book contents,  Up: Introduction
+
+Some definitions
+================
+
+   The `tar' program is used to create and manipulate `tar' archives.
+An "archive" is a single file which contains the contents of many
+files, while still identifying the name of each file, its owner, and so
+forth.(1)  You can use `tar' to "create" a new archive in a specified
+directory.
+
+   The files inside an archive are called "members".  Within this
+manual, we use the term "file" to refer only to files accessible in the
+normal ways (by `ls', `cat', and so forth), and the term "member" to
+refer only to the members of an archive.  Similarly, a "file name" is
+the name of a file, as it resides in the filesystem, and a "member
+name" is the name of an archive member within the archive.
+
+   The term "extraction" refers to the process of copying an archive
+member (or multiple members) into in the filesystem as a file (or
+files).  Extracting all the members of an archive is often called
+"extracting the archive".  The term "unpack" can also be used to refer
+to the extraction of many or all the members of an archive.  Extracting
+an archive does not destroy the archive's structure, just as creating an
+archive does not destroy the copies of the files that exist outside of
+the archive.  You may also "list" the members in a given archive (this
+is often thought of as "printing" them to the standard output, or the
+command line), or "append" members to a pre-existing archive.  All of
+these tasks can be performed using `tar' subcommands.
+
+   ---------- Footnotes ----------
+
+   (1) In addition, archives record access permissions, user and group,
+size in bytes, and last modification time.  Some archives also record
+the file names in each archived directory, as well as other file and
+directory information.
+
+
+File: paxutils.info,  Node: What cpio does,  Next: What pax does,  Prev: Definitions,  Up: Introduction
+
+What `cpio' does
+================
+
+   The `cpio' program copies files into or out of a `cpio' or `tar'
+archive.  The archive can be another file on the disk, a magnetic tape,
+or a pipe.
+
+   `cpio' supports the following archive formats: binary, old ASCII,
+new ASCII, crc, HPUX binary, HPUX old ASCII, old `tar', and POSIX.1
+`tar'.  The `tar' format is provided for compatibility with the `tar'
+program.  By default, `cpio' creates binary format archives, for
+compatibility with older `cpio' programs.  When extracting from
+archives, `cpio' automatically recognizes which kind of archive it is
+reading and can read archives created on machines with a different
+byte-order.
+
+
+File: paxutils.info,  Node: What pax does,  Next: What tar does,  Prev: What cpio does,  Up: Introduction
+
+What `pax' does
+===============
+
+   The `pax' program is the archiving utility specified and mandated by
+POSIX.  It handles `cpio' or `tar' archives, using a different user
+interface.  This program is not really available yet in `pax'
+utilities: it only received little testing so far, and some required
+functionnalities are still to be written.
+
+
+File: paxutils.info,  Node: What tar does,  Next: Stylistic conventions,  Prev: What pax does,  Up: Introduction
+
+What `tar' does
+===============
+
+   The `tar' program allows the creation of `tar' archives, as well as
+various other kinds of manipulation.  For example, you can use `tar' on
+previously created archives to extract files, to store additional
+files, or to update or list files which were already stored.
+
+   Initially, `tar' archives were used to store files conveniently on
+magnetic tape.  The name `tar' comes from this use; it stands for
+*t*ape *ar*chiver.  Despite the utility's name, `tar' can direct its
+output to other available devices, files, or other programs (using
+pipes).  `tar' can even access remote devices or files (as archives).
+
+   You can use `tar' archives in many ways.  We want to stress a few of
+them: storage, backup, and transportation.
+
+Storage
+     Often, `tar' archives are used to store related files for
+     convenient file transfer over a network.  While preparing it for
+     distribution, software is often bundled into `tar' archives, so
+     that all the files relating to a particular program (or set of
+     related programs) can be transferred as a single unit.
+
+     A magnetic tape can store several files in sequence.  However, the
+     tape has no names for these files; it only knows their relative
+     position on the tape.  One way to store several files on one tape
+     and retain their names is by creating a `tar' archive.  Even when
+     the basic transfer mechanism can keep track of names, as FTP can,
+     the nuisance of handling multiple files, directories, and multiple
+     links makes `tar' archives useful.
+
+     Archive files are also used for long-term storage.  You can think
+     of this as transportation from the present into the future.  (It
+     is a science-fiction idiom that you can move through time as well
+     as in space; the idea here is that `tar' can be used to move
+     archives in all dimensions, even time!)
+
+Backup
+     Because the archive created by `tar' is capable of preserving file
+     information and directory structure, `tar' is commonly used for
+     performing full and incremental backups of disks.  A backup puts a
+     collection of files (possibly pertaining to many users and
+     projects) together on a disk or a tape.  This guards against
+     accidental destruction of the information in those files.  `tar'
+     has special features that allow it to be used to make incremental
+     and full dumps of all the files in a filesystem.
+
+Transportation
+     You can create an archive on one system, transfer it to another
+     system, and extract the contents there.  This allows you to
+     transport a group of files from one system to another.
+
+
+File: paxutils.info,  Node: Stylistic conventions,  Next: Authors,  Prev: What tar does,  Up: Introduction
+
+Stylistic conventions
+=====================
+
+   Conventionally, `tar' archives are given names ending with `.tar'.
+This is not necessary for `tar' to operate properly, but this manual
+follows that convention in order to accustom readers to it and to make
+examples clearer.
+
+   Often, people refer to `tar' archives as "`tar' files", and archive
+members as "files" or "entries".  For people familiar with the
+operation of `tar', this causes no difficulty.  However, in this
+manual, we consistently refer to "archives" and "archive members" to
+make learning to use `tar' easier for novice users.
+
+   In the examples, `$' represents a typical shell prompt.  It precedes
+lines you should type; to make this more clear, those lines as well as
+the lines which represent the computer's response are shown in `like
+this'.
+
+   Although long option names are more easily learned and read, short
+options are still so widely used that we cannot ignore them.  So that
+you can become familiar with both styles at once, this manual usually
+repeats both the long (mnemonic) and short (abbreviated) option names
+whenever referring them, as well as within examples.  Many options do
+not have a short version.
+
+
+File: paxutils.info,  Node: Authors,  Next: Reports,  Prev: Stylistic conventions,  Up: Introduction
+
+`tar' authors
+=============
+
+   The `tar' program in `paxutils' evolved out of a project  originally
+written and maintained by John Gilmore (under the name `PD TAR').  The
+project started in 1985-08, and was offered to the FSF in 1985-09 with
+the agreement that later FSF contributions to `PD TAR' were to be
+public domain rather than copylefted.  The result was posted to
+`mod.sources' in 1986-10.  This version had the three main subcommands
+(old and short style options), supported both V7 format and a draft of
+P1003, archive compression, remote dumps (using `rsh dd' instead of
+`rmt'), big blocking, and clean end-of-file blocks, and was designed to
+be fast.  Written and initially debugged on a Sun Workstation running
+4.2BSD, `PD TAR' was soon ported to Xenix, Unisoft, Vax 4.2BSD,
+utzoonix, USG, Masscomp, Minix, and MS-DOS systems (VMS, Mac, Atari,
+and Amiga were added later).  Another version was posted to
+`comp.sources.unix' in 1987-11, and was presented on the Sun User Group
+in 1987-12 as `sugtar'.
+
+   In 1988-02, the FSF asked Jay Fenlason to implement arbitrarily long
+file names, append and update subcommands, multi-volume support, and
+verify and backup features.  After having received John's permission to
+do so in 1988-09, the FSF published a forked, copylefted version named
+`gnutar' in 1990-01.  While `PD TAR' continued to evolve in parallel,
+unidentified derivatives were distributed separately without sources,
+to the point that John decided in 1992-01, as a maintainer, that the
+public domain status of `PD TAR' was *unfortunate*.  In 1992-05, John
+wrote that it had been a mistake.  Later, in 1994-11, John suggested
+that we merge `PD TAR' definitively into `gnutar'.
+
+   The sparse file processing in `tar', added for the FSF by Joy Kendall
+(1989-06 to 1989-08), has been the subject of much debate, as it
+directly conflicts with the POSIX `prefix' field.(1)
+
+   The FSF package has been maintained by Jay Fenlason (1988-02 to
+1991-01) and Michael Bushnell(2) (1991-01 to 1993-03), with occasional
+interventions from David J. MacKenzie.  Since 1994-06, Franc,ois Pinard
+has been maintaining it with the help of numerous and kind users.  Let
+me stress that `tar' is a collective work, and owes much to all those
+people who reported problems, offered solutions and other insights, or
+shared their thoughts and suggestions.  An impressive, yet only
+partial, list of those contributors can be found in the `THANKS' file
+from the `tar' distribution.
+
+   Jay Fenlason put together a draft of a `tar' manual, borrowing notes
+from the original `man' page from John Gilmore.  This draft was
+distributed in `tar' versions 1.04 through 1.10, then withdrawn in
+version 1.11, for Michael Bushnell and Amy Gorin to work on a revamped
+version meant for the FSF, including a tutorial.  For version 1.11.8,
+Franc,ois Pinard put a manual together by merging information from all
+these sources.  For the FSF, Melissa Weisshaus later started an
+overhaul of the manual, and so did Daniel Hagerty.  Another merge
+yielded the manual you are now reading.  People contributed to specific
+aspects, like Karl Berry for dates,  Eli Zaretskii for MS-DOS, and
+surely others.  The title page of this manual was once a bit crowded
+with too many authors, so I (Franc,ois) decided for simplicity.  The
+title page now bears the sole name of John Gilmore.  I chose to pay
+that simple tribute to John's involvement behind the existence of this
+`tar'.(3)
+
+   The `cpio' program included in `paxutils' has been originally
+written by Phil Nelson in the summer of 1988, and further maintained by
+David MacKenzie up to 1992-11.  John Oleynick took over the `cpio'
+distribution until 1996-01.  Tom Tromey worked on `cpio' from 1995-10
+until 1998-05, that is, until it was merged with `tar' to create this
+`paxutils' package.  The parts of this manual pertaining to `cpio',
+including the `cpio' tutorial, have been written by Robert Carleton.
+
+   The `pax' program was added to the `cpio' distribution by Tom Tromey
+in 1995-10, and was brought into `paxutils' together with `cpio' and
+`mt'.
+
+   ---------- Footnotes ----------
+
+   (1) In 1988-03, Jay Fenlason was notified of the impending existence
+of this `prefix' field.  As J"org Schilling (the `star' author) once
+put it: `I would call this a hard violation of the standard.'
+
+   (2) In 1992, an enthusiastic teacher and his students promised a new
+`tar' to the FSF, including curses, Athena and Motif interfaces, wholly
+automated archives, multi-platform parallel tapes, all backup formats,
+etc.  The FSF got totally seduced, and stopped all `tar' development
+and most maintenance while waiting for the Wonder, which of course,
+never came.
+
+   (3) Readers often infer the author of a program from the author of
+its manual.  The current distribution, and even its documentation, is
+still in the spirit of the original `PD TAR' incentive.  So, although
+many people contributed, John Gilmore remains the real spiritual author
+for this package.
+
+
+File: paxutils.info,  Node: Reports,  Prev: Authors,  Up: Introduction
+
+Reporting bugs or suggestions
+=============================
+
+   If you find problems or have suggestions about this program or
+manual, please report them to <paxutils-bugs@iro.umontreal.ca>.(1)  You
+may also write directly, and less officially, to
+<pinard@iro.umontreal.ca>.  However, be warned that bug reports are
+public by nature; they may be transmitted to other maintainers or read
+by people interested in `tar' development.
+
+   A good bug report precisely explains your input, what you expected,
+what you got, and why this is wrong: in fact, it should help us (that
+is, the maintainer and those helping him) to see through your eyes.  If
+you think it might be useful, also send the necessary files and a recipe
+for reproducing the problem, carefully explaining what we should look at
+and understand.  Even though we prefer small files, large files are
+sometimes necessary; please make special, prior arrangements with us in
+such cases.  Be aware that some mailers mangle data, so `uuencode',
+`shar', or MIME methods are usually required.
+
+   You may expect an acknowledgement for your report soon after we
+receive it, and then some more information later, after we have worked
+on it.  Due to the difficult nature of many problems and the general
+work overload, it may take a long while before you get a definitive
+reply.  The `BACKLOG' file, in the distribution, summarizes all pending
+mail and reports about `tar'.
+
+   Even though we prefer reports about the latest version of `tar',
+this is not a strict requirement.  The command `tar --version' should
+tell you which version you have.  The canonical distribution points for
+the version documented in this manual, and the main GNU copy of this
+distribution, are:
+
+     ftp://ftp.iro.umontreal.ca/pub/tar/tar-2.4d.tar.gz
+     ftp://ftp.gnu.org/pub/gnu/tar-2.4d.tar.gz
+
+You can also get `tar' from the numerous GNU mirrors around the world.
+At the canonical distribution point, you might sometimes stumble on
+prereleases (which should normally not have a GNU copy).  Pretest
+releases always have a letter suffixing the version numbers.  Please do
+*not* redistribute these, as they are meant for pretesting only.  You
+ought to understand that prereleases might not be as stable as true
+releases, and that problems may be expected with them.  You may fetch
+pretest releases, of course, but then, you should understand the
+collaborative spirit of pretesting.
+
+   ---------- Footnotes ----------
+
+   (1) Even though John Gilmore is the original author of `tar', as he
+is no longer actively involved in its maintenance, he now prefers to be
+left out of `paxutils'-related email.
+
+
+File: paxutils.info,  Node: cpio Tutorial,  Next: tar Tutorial,  Prev: Introduction,  Up: Top
+
+Tutorial introduction to `cpio'
+*******************************
+
+   The `cpio' program performs three primary functions.  Copying files
+to an archive, extracting files from an archive, and passing files to
+another directory tree.  An archive can be a file on disk, one or more
+floppy disks, or one or more tapes.
+
+   When creating an archive, `cpio' takes the list of files to be
+processed from the standard input, and then sends the archive to the
+standard output, or to the device defined by the `-F' option.  *Note
+Copy-out mode::.  Usually `find' or `ls' is used to provide this list
+to the standard input.  In the following example you can see the
+possibilities for archiving the contents of a single directory.
+
+     % ls | cpio -ov > directory.cpio
+
+   The `-o' option creates the archive, and the `-v' option prints the
+names of the files archived as they are added.  Notice that the options
+can be put together after a single `-' or can be placed separately on
+the command line.  The `>' redirects the `cpio' output to the file
+`directory.cpio'.
+
+   If you wanted to archive an entire directory tree, the find command
+can provide the file list to `cpio':
+
+     % find . -print -depth | cpio -ov > tree.cpio
+
+   This will take all the files in the current directory, the
+directories below and place them in the archive `tree.cpio'.  Again the
+`-o' creates an archive, and the `-v' option shows you the name of the
+files as they are archived.  *Note Copy-out mode::.  Using the `.'  in
+the `find' statement will give you more flexibility when doing
+restores, as it will save file names with a relative path vice a hard
+wired, absolute path.  The `-depth' option forces `find' to print of
+the entries in a directory before printing the directory itself.  This
+limits the effects of restrictive directory permissions by printing the
+directory entries in a directory before the directory name itself.
+
+   Extracting an archive requires a bit more thought because `cpio'
+will not create directories by default.  Another characteristic is that
+it will not overwrite existing files unless you tell it to.
+
+     % cpio -iv < directory.cpio
+
+   This will retrieve the files archived in the file `directory.cpio'
+and place them in the present directory.  The `-i' option extracts the
+archive and the `-v' shows the file names as they are extracted.  If
+you are dealing with an archived directory tree, you need to use the
+`-d' option to create directories as necessary, something like:
+
+     % cpio -idv < tree.cpio
+
+   This will take the contents of the archive `tree.cpio' and extract
+it to the current directory.  If you try to extract the files on top of
+files of the same name that already exist (and have the same or later
+modification time) `cpio' will not extract the file unless told to do
+so by the `-u' option.  *Note Copy-in mode::.
+
+   In copy-pass mode, `cpio' copies files from one directory tree to
+another, combining the copy-out and copy-in steps without actually using
+an archive.  It reads the list of files to copy from the standard input;
+the directory into which it will copy them is given as a non-option
+argument.  *Note Copy-pass mode::.
+
+     % find . -depth -print0 | cpio --null -pvd new-dir
+
+   The example shows copying the files of the present directory, and
+sub-directories to a new directory called new-dir.  Some new options
+are the `-print0' available with GNU `find', combined with the `--null'
+option of cpio.  These two options act together to send file names
+between find and cpio, even if special characters are embedded in the
+file names.  Another is `-p', which tells cpio to pass the files it
+finds to the directory `new-dir'.
+
+
+File: paxutils.info,  Node: tar Tutorial,  Next: cpio invocation,  Prev: cpio Tutorial,  Up: Top
+
+Tutorial introduction to `tar'
+******************************
+
+   This chapter guides you through some basic examples of three `tar'
+subcommands: `--create' (`-c'), `--list' (`-t'), and `--extract'
+(`--get', `-x').  If you already know how to use some other version of
+`tar', then you may not need to read this chapter.  This chapter omits
+most complicated details about how `tar' works.
+
+* Menu:
+
+* Assumptions::                 Assumptions this tutorial makes
+* Simplified invokation::       The structure of a `tar' command
+* Basic tar options::           `tar' subcommands and options
+* create list extract tutorial::  The three most frequently used subcommands
+* file verbose help::           Three frequently used options
+* create tutorial::             How to create archives
+* list tutorial::               How to list archives
+* extract tutorial::            How to extract members from an archive
+* Looking ahead::               Looking ahead: The rest of this manual
+
+
+File: paxutils.info,  Node: Assumptions,  Next: Simplified invokation,  Prev: tar Tutorial,  Up: tar Tutorial
+
+Assumptions this tutorial makes
+===============================
+
+   This chapter is paced to allow beginners to learn about `tar'
+slowly.  At the same time, we will try to cover all the basic aspects of
+these three subcommands.  In order to accomplish both of these tasks, we
+have made certain assumptions about your knowledge before reading this
+manual, and the hardware you will be using:
+
+   * Before you start to work through this tutorial, you should
+     understand what the terms "archive" and "archive member" mean
+     (*note Definitions::.).  In addition, you should understand
+     something about how Unix-type operating systems work, and you
+     should know how to use some basic utilities.  For example, you
+     should know how to create, list, copy, rename, edit, and delete
+     files and directories; how to change between directories; and how
+     to figure out where you are in the filesystem.  You should have
+     some basic understanding of directory structure and how files are
+     named according to which directory they are in.  You should
+     understand concepts such as standard output and standard input,
+     what various definitions of the term "argument" mean, the
+     differences between relative and absolute path names, and the file
+     permission system.
+
+   * This manual assumes that you are working from your own home
+     directory (unless we state otherwise).  In this tutorial, you will
+     create a directory to practice `tar' commands in.  When we show
+     path names, we will assume that those paths are relative to your
+     home directory.  All of my examples are in a subdirectory of the
+     directory named by that path name; the subdirectory is called
+     `practice'.
+
+   * In general, we show examples of archives which exist on (or can be
+     written to, or worked with from) a directory on a hard disk.  In
+     most cases, you could write those archives to, or work with them
+     on, any other device, such as a tape drive.  However, some of the
+     later examples in the tutorial and next chapter will not work on
+     tape drives.  Additionally, working with tapes is much more
+     complicated than working with hard disks.  For these reasons, the
+     tutorial does not cover working with tape drives.  *Note Media::,
+     for complete information on using `tar' archives with tape drives.
+
+
+File: paxutils.info,  Node: Simplified invokation,  Next: Basic tar options,  Prev: Assumptions,  Up: tar Tutorial
+
+The structure of a `tar' command
+================================
+
+   A `tar' command has this basic structure:
+
+     $ tar SUBCOMMAND OPTION OPTION ... FILE FILE ...
+
+   We will explain the various component parts of this command in the
+rest of this chapter.  For more detailed information about the
+structure of a `tar' command and how to invoke `tar', please see *Note
+tar invocation::.
+
+
+File: paxutils.info,  Node: Basic tar options,  Next: create list extract tutorial,  Prev: Simplified invokation,  Up: tar Tutorial
+
+`tar' subcommands and options
+=============================
+
+   `tar' can take a variety of arguments which specify and define the
+actions it will have perform on a particular set of files or an
+archive.  The arguments to `tar' fall into one of two classes: options
+and non-options.  Options start with one or two dashes (`-'), except
+for the very first argument following `tar' on the command line: this
+argument always provides options, even if it does not start with a dash.
+
+   Some options fall into a class called "subcommands"; exactly one of
+these is both allowed and required for any instance of using `tar'; you
+may *not* specify more than one.  People sometimes speak of them as
+"operating modes".  You are in a particular operating mode when you
+have specified the subcommand which calls for that mode; there are eight
+subcommands in total, and thus there are eight operating modes.
+
+   The other arguments fall into the class known as "options".  You are
+not required to specify any options, and you are allowed to specify more
+than one at a time (depending on the way you are using `tar' at that
+time).  Some options are used so frequently, and are so useful for
+helping you type commands more carefully, that they are effectively
+"required".  We will discuss them in this chapter.
+
+   You can write most of the `tar' subcommands and options in any of
+three forms: long (mnemonic) form, short form, and old style.  Some of
+the subcommands and options have no short or "old" forms; however, the
+subcommands and options which we will cover in this tutorial have
+corresponding abbreviations.    We will indicate those abbreviations
+appropriately to get you used to seeing them.  (Note that the "old
+style" option forms exist in `tar' for compatibility with Unix `tar'.
+We present a full discussion of this way of writing options and
+subcommands in *Note Old style::, and we discuss the other two styles of
+writing options in *Note Long options:: and *Note Short options::.)
+
+   In the examples and in the text of this tutorial, we usually use the
+long forms of subcommands and options; but the "short" forms produce
+the same result and can make typing long `tar' commands easier.  For
+example, instead of typing
+
+     $ tar --create --verbose --file=afiles.tar apple angst aspic
+
+you can type
+     $ tar -c -v -f afiles.tar apple angst aspic
+
+or even
+     $ tar -cvf afiles.tar apple angst aspic
+
+For more information on option syntax, see *Note Styles::.  In
+discussions in the text, when we name an option by its long form, we
+also give the corresponding short option in parentheses.
+
+   The term "option" can be confusing at times, since "subcommands" are
+often lumped in with the actual, *optional* "options" in certain
+general class statements.  For example, we just talked about "short and
+long forms of options and subcommands".  However, experienced `tar'
+users often refer to these by shorthand terms such as "short and long
+forms of options".  This term assumes that the "subcommands" are
+included as well.  Context will help you determine which definition of
+"options" to use.
+
+   Similarly, the term "command" can be confusing, as it is often used
+in two different ways.  People sometimes refer to `tar' "commands".
+The term, `tar' "commands", refers to the various *subcommands*.
+However, you will also sometimes hear the term "the `tar' command".
+When the word "command" is used specifically like this, a person is
+usually referring to the whole line, not the `tar' *subcommand*.
+Again, use context to figure out which of the meanings the speaker
+intends.
+
+
+File: paxutils.info,  Node: create list extract tutorial,  Next: file verbose help,  Prev: Basic tar options,  Up: tar Tutorial
+
+The three most frequently used subcommands
+==========================================
+
+   Here are the three most frequently used subcommands (both short and
+long forms), as well as a brief description of their meanings.  The
+rest of this chapter will cover how to use these subcommands in detail.
+We will present the rest of the subcommands in the next chapter.
+
+`--create' (`-c')
+     Create a new `tar' archive.
+
+`--list' (`-t')
+     List the contents of an archive.
+
+`--extract' (`--get', `-x')
+     Extract one or more members from an archive.
+
+
+File: paxutils.info,  Node: file verbose help,  Next: create tutorial,  Prev: create list extract tutorial,  Up: tar Tutorial
+
+Three frequently used options
+=============================
+
+   To understand how to run `tar' in the three operating modes listed
+previously, you also need to understand how to use two of the options to
+`tar': `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') (which takes an
+archive file as an argument) and `--verbose' (`-v').  (You are usually
+not *required* to specify either of these options when you run `tar',
+but they can be very useful in making things more clear and helping you
+avoid errors.)  A third option, `--help', gives a brief list of
+subcommands and options.  Unlike other `tar' options, `--help' is not
+run under any operating mode; in this sense, it is more like a
+subcommand, except that it does not act on any `tar' archive.
+
+* Menu:
+
+* file tutorial::               The `--file' option
+* verbose tutorial::            The `--verbose' option
+* help tutorial::               Getting help: Using the `--help' option
+
+
+File: paxutils.info,  Node: file tutorial,  Next: verbose tutorial,  Prev: file verbose help,  Up: file verbose help
+
+The `--file' option
+-------------------
+
+   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option specifies the
+name of an archive file.
+
+   You can specify an argument for the `--file=ARCHIVE-NAME' (`-f
+ARCHIVE-NAME') option whenever you use `tar'; this option determines
+the name of the archive file that `tar' will work on.
+
+   If you don't specify this argument, then `tar' will use a default,
+usually standard output or standard input, or some physical tape drive
+attached to your machine.  If there is no tape drive attached, or the
+default is not meaningful, then `tar' will print an error message.  The
+error message might look roughly like one of the following:
+
+     tar: can't open /dev/rmt8 : No such device or address
+     tar: can't open /dev/rsmt0 : I/O error
+
+Thus, to avoid this sort of confusion, we recommend that you always
+specify an archive file name by using `--file=ARCHIVE-NAME' (`-f
+ARCHIVE-NAME') when writing your `tar' commands.  For more information
+on using the `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option, see
+*Note file::.
+
+
+File: paxutils.info,  Node: verbose tutorial,  Next: help tutorial,  Prev: file tutorial,  Up: file verbose help
+
+The `--verbose' option
+----------------------
+
+   The `--verbose' (`-v') option shows the files being worked on as
+`tar' is running.
+
+   `--verbose' (`-v') shows details about the results of running `tar'.
+This can be especially useful when the results might not be obvious.
+For example, if you want to see the progress of `tar' as it writes
+files into the archive, you can use the `--verbose' (`-v') option.  In
+the beginning, you may find it useful to use `--verbose' (`-v') at all
+times; when you are more accustomed to `tar', you will likely want to
+use it at certain times but not at others.  We will use `--verbose'
+(`-v') at times to help make something clear, and we will give many
+examples both using and not using `--verbose' (`-v') to show the
+differences.
+
+   Sometimes, a single instance of `--verbose' (`-v') on the command
+line will show a full, `ls'-style listing of an archive or files,
+giving sizes, owners, and similar information.  Other times,
+`--verbose' (`-v') will only show files or members that the particular
+subcommand is operating on at the time.  In the latter case, you can
+use `--verbose' (`-v') twice in a command to get a listing such as that
+in the former case.  For example, instead of saying
+
+     $ tar -cvf afiles.tar apple angst aspic
+
+above, you might say
+
+     $ tar -cvvf afiles.tar apple angst aspic
+
+This works equally well using short or long forms of options.  Using
+long forms, you would simply write out the option twice, like this:
+
+     $ tar --create --verbose --verbose ...
+
+Note that you must double the hyphens properly each time.
+
+   Later in the tutorial, we will give examples using
+`--verbose --verbose'.
+
+
+File: paxutils.info,  Node: help tutorial,  Prev: verbose tutorial,  Up: file verbose help
+
+Getting help: Using the `--help' option
+---------------------------------------
+
+   The `--help' option to `tar' prints out a summary list of all
+options available for the current version of `tar' on your system.
+There is no abbreviation for this option.
+

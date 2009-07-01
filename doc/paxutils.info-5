@@ -1,0 +1,1071 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Remote,  Next: force-local,  Prev: lmh,  Up: file
+
+Accessing a remote drive
+------------------------
+
+   In order to access the tape drive on a remote machine, `tar' uses
+the remote tape server written at the University of California at
+Berkeley.  The remote tape server must be installed as `/etc/rmt' on
+any machine whose tape drive you want to use.  `tar' calls `/etc/rmt'
+by running an `rsh' or `remsh' to the remote machine, optionally using
+a different login name if one is supplied.
+
+   A copy of the source for the remote tape server is provided.  It is
+Copyright (C) 1983 by the Regents of the University of California, but
+can be freely distributed.  Instructions for compiling and installing
+it are included in the `Makefile'.
+
+   To specify an archive file on a device attached to a remote machine,
+use the following:
+
+     --file=HOSTNAME:/DEV/FILE NAME
+
+`tar' will complete the remote connection, if possible, and prompt you
+for a username and password.  If you use
+`--file=@HOSTNAME:/DEV/FILE NAME', `tar' will complete the remote
+connection, if possible, using your username as the username on the
+remote machine.
+
+   If the archive file name includes a colon (`:'), then it is assumed
+to be a file on another machine.  If the archive file is
+`USER@HOST:FILE', then FILE is used on the host HOST.  The remote host
+is accessed using the `rsh' program, with a username of USER.  If the
+username is omitted (along with the `@' sign), then your user name will
+be used.  (This is the normal `rsh' behavior.)  It is necessary for the
+remote machine to have the `/usr/ucb/rmt' program installed, in
+addition to permitting your `rsh' access.
+
+   If you need to use a file whose name includes a colon, then the
+remote tape drive behavior can be inhibited by using the
+`--force-local' option (*note force-local::.).  You can tell `tar' to
+use an alternative to `rsh' by using the `rsh-command=COMMAND' option
+(*note rsh-command::.).
+
+   A few options are related to such special interpretation.
+
+
+File: paxutils.info,  Node: force-local,  Next: rsh-command,  Prev: Remote,  Up: file
+
+Inhibiting remote access
+------------------------
+
+   The `--force-local' option treats the archive file name specified by
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') as local even if it contains
+a colon.  (The MS-DOS version always treats DOS-style absolute file
+names with a drive letter as local.)
+
+
+File: paxutils.info,  Node: rsh-command,  Next: rmt invocation,  Prev: force-local,  Up: file
+
+Selecting the remote access mechanism
+-------------------------------------
+
+   By using the `rsh-command=COMMAND' option, `tar' may be asked to use
+remote COMMAND instead of `rsh'.  This option exists so that people who
+use something other than the standard `rsh' (for example, a Kerberized
+`rsh') can access a remote device.
+
+   When this option is not used, the shell command found when the `tar'
+program was installed is used instead.  This is the first found of
+`/usr/ucb/rsh', `/usr/bin/remsh', `/usr/bin/rsh', `/usr/bsd/rsh' or
+`/usr/bin/nsh'.  The installer may have overridden this by defining the
+environment variable `RSH' *at installation time*.
+
+   The option `rsh-command=COMMAND' causes `tar' to use remote COMMAND
+instead of `rsh'.  This option exists so that people who use something
+other than the standard `rsh' (for example, a Kerberized `rsh') can
+access a remote device.
+
+   When this command is not used, the shell command found when the `tar'
+program was installed is used instead.  This is the first found of
+`/usr/ucb/rsh', `/usr/bin/remsh', `/usr/bin/rsh', `/usr/bsd/rsh' or
+`/usr/bin/nsh'.  The installer may have overridden this by defining the
+environment variable `RSH' *at installation time*.
+
+
+File: paxutils.info,  Node: rmt invocation,  Prev: rsh-command,  Up: file
+
+How `rmt' works
+---------------
+
+   This subsection has yet to be written.
+
+
+File: paxutils.info,  Node: Selecting Archive Members,  Next: Exclusions,  Prev: file,  Up: Choosing
+
+Selecting archive members
+=========================
+
+   "File name arguments" specify which files in the file system `tar'
+operates on, when creating or adding to an archive, or which archive
+members `tar' operates on, when reading or deleting from an archive.
+*Note Subcommands::.
+
+   To specify file names, you can include them as the last arguments on
+the command line, as follows:
+     tar SUBCOMMAND [OPTION1 OPTION2 ...] [FILE NAME-1 FILE NAME-2 ...]
+
+   If you specify a directory name as a file name argument, all the
+files in that directory are operated on by `tar'.
+
+   If you do not specify files when `tar' is invoked with `--create'
+(`-c'), `tar' operates on all the non-directory files in the working
+directory.  If you specify either `--list' (`-t') or `--extract'
+(`--get', `-x'), `tar' operates on all the archive members in the
+archive.  If you specify any subcommand other than one of these three,
+`tar' does nothing.
+
+   By default, `tar' takes file names from the command line.  However,
+there are other ways to specify file or member names, or to modify the
+manner in which `tar' selects the files or members upon which to
+operate.  *Note files-from::; see *Note exclude::.  In general, these
+methods work for specifying the names of both files and archive members.
+
+* Menu:
+
+* files-from::                  Reading names from a file
+* find with files-from::        Using `find' to generate a list of files
+* null::                        `NUL' terminated file names
+
+
+File: paxutils.info,  Node: files-from,  Next: find with files-from,  Prev: Selecting Archive Members,  Up: Selecting Archive Members
+
+Reading names from a file
+-------------------------
+
+   Instead of giving the names of files or archive members on the
+command line, you can put the names into a file, and then use the
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option to `tar'.
+Give the name of the file which contains the list of files to include
+as the argument to `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES').
+In the list, the file names should be separated by newlines.  You will
+frequently use this option when you have generated the list of files to
+archive with the `find' utility.
+
+   The `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option gets
+names to extract or create from file FILE NAME.
+
+   If you give a single dash as a file name for
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'), (that is, if you
+specify either `--files-from=-' or `-T -'), then the file names are
+read from standard input.
+
+   Unless you are running `tar' with `--create' (`-c'), you cannot use
+both `--files-from=-' and `--file=-' (`-f -') in the same command.
+
+
+File: paxutils.info,  Node: find with files-from,  Next: null,  Prev: files-from,  Up: Selecting Archive Members
+
+Using `find' to generate a list of files
+----------------------------------------
+
+   The following example shows how to use `find' to generate a list of
+files smaller than 400K in length and put that list into a file called
+`small-files'.  You can then use the `--files-from=FILE-OF-NAMES' (`-T
+FILE-OF-NAMES') option to `tar' to specify the files from that file,
+`small-files', to create the archive `little.tgz'.  (The `--gzip'
+(`-z') option to `tar' compresses the archive with `gzip'; *note
+gzip::. for more information.)
+
+     $ find . ! -type d -size -400 -print > small-files
+     $ tar -c -v -z -T small-files -f little.tgz
+
+The `! -type d' predicate is needed so that `find' won't print the name
+`.' directory itself, if it happens to be small in size.  If `find'
+were to print the name of `.', all of the files in the current
+directory would end up in the archive, in addition to the files that
+are smaller than 400KB!
+
+   You can use the `find' utility to generate a list of files.  You can
+then pass this list to `tar' using the `--files-from=FILE-OF-NAMES'
+(`-T FILE-OF-NAMES') option.  For more information on using `find',
+please consult .
+
+   The following example shows how to use `find' to generate a list of
+files smaller than 400K in length and put that list into a file called
+`small-files'.  You can then use the `-T' option to `tar' to specify
+the files from that file, `small-files', to create the archive
+`little.tgz'.  (The `-z' option to `tar' compresses the archive with
+`gzip'; *note gzip::. for more information.)
+
+     $ find . -size -400 -print > small-files
+     $ tar -c -v -z -T small-files -f little.tgz
+
+   This example shows how to use `find' to generate a list of files
+larger than 800K in length and put that list into a file called
+`long-files'.  The `-print0' option to `find' just just like `-print',
+except that it separates files with a `NUL' rather than with a newline.
+You can then run `tar' with both the `--null' and `-T' options to
+specify that `tar' get the files from that file, `long-files', to
+create the archive `big.tgz'.  The `--null' option to `tar' will cause
+`tar' to recognize the `NUL' separator between files.
+
+     $ find . -size +800 -print0 > long-files
+     $ tar -c -v --null --files-from=long-files --file=big.tar
+
+
+File: paxutils.info,  Node: null,  Prev: find with files-from,  Up: Selecting Archive Members
+
+`NUL' terminated file names
+---------------------------
+
+   The `--null' option causes `--files-from=FILE-OF-NAMES' (`-T
+FILE-OF-NAMES') to read file names terminated by a `NUL' instead of a
+newline, so files whose names contain newlines can be archived using
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES').
+
+   So, the `--null' option exists so that users can tell `tar' to
+consider only `NUL' terminated file names, instead of files that
+terminate in a newline.
+
+   The `--null' option is just like the one in GNU `xargs' and `cpio',
+and is useful with the `-print0' predicate of GNU `find'.  In `tar',
+`--null' also causes `--directory=DIRECTORY' (`-C DIRECTORY') options
+to be treated as file names to archive, in case there are any files out
+there called `-C'.
+
+   This example shows how to use `find' to generate a list of files
+larger than 800K in length and put that list into a file called
+`long-files'.  The `-print0' option to `find' works just like `-print',
+except that it separates files with a `NUL' rather than with a newline.
+You can then run `tar' with both the `--null' and `-T' options to
+specify that `tar' get the files from that file, `long-files', to
+create the archive `big.tgz'.  The `--null' option to `tar' will cause
+`tar' to recognize the `NUL' separator between files.
+
+     $ find . ! -type d -size +800 -print0 > long-files
+     $ tar -c -v --null --files-from=long-files --file=big.tar
+
+Again, you need the `! -type d' predicate to prevent `find' from
+printing the `.' directory name, which would have caused `tar' to
+include the entire directory in the archive.
+
+
+File: paxutils.info,  Node: Exclusions,  Next: Time criteria,  Prev: Selecting Archive Members,  Up: Choosing
+
+Excluding files by name
+=======================
+
+   To avoid operating on files whose names match a particular pattern,
+use the `--exclude=PATTERN' or `--exclude-from=FILE-OF-PATTERNS' (`-X
+FILE-OF-PATTERNS') options.  These options are available while creating
+an archive, as well as when listing an archive or extracting from it.
+
+* Menu:
+
+* exclude::                     Excluding some files
+* exclude-from::                Handling a lot of exclusions
+* Wildcards::                   Wildcard patterns and matching
+* Problems with exclude::       Problems with using the `exclude' options
+
+
+File: paxutils.info,  Node: exclude,  Next: exclude-from,  Prev: Exclusions,  Up: Exclusions
+
+Excluding some files
+--------------------
+
+   The `--exclude=PATTERN' option causes `tar' to ignore files that
+match the PATTERN.
+
+   The `--exclude=PATTERN' option will prevent any file or member which
+matches the shell wildcards (PATTERN) from being operated on (PATTERN
+can be a single file name or a more complex expression; see *Note
+Wildcards::).  For example, if you want to create an archive with all
+the contents of the directory `foo' in `/tmp', except the file
+`foo/bar', you can use the command `tar --create --file=arch.tar
+--exclude=foo/bar'.  You may give multiple `--exclude=PATTERN' options.
+
+
+File: paxutils.info,  Node: exclude-from,  Next: Wildcards,  Prev: exclude,  Up: Exclusions
+
+Handling a lot of exclusions
+----------------------------
+
+   The `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS') option
+causes `tar' to ignore files that match the patterns listed in FILE.
+
+   Use the `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS')
+option to read a list of shell wildcards, one per line, from FILE;
+`tar' will ignore files matching those wildcards.  Thus if `tar' is
+called as `tar -c -X foo .'  and the file `foo' contains a single line
+`*.o', no files whose names end in `.o' will be added to the archive.
+
+
+File: paxutils.info,  Node: Wildcards,  Next: Problems with exclude,  Prev: exclude-from,  Up: Exclusions
+
+Wildcard patterns and matching
+------------------------------
+
+   "Globbing" is the operation by which "wildcard" characters, `*' or
+`?' for example, are replaced and expanded into all existing files
+matching the given pattern.  However, `tar' often uses wildcard patterns
+for matching (or globbing) archive members instead of actual files in
+the filesystem.  Wildcard patterns are also used for verifying volume
+labels of `tar' archives.  This section explains wildcard syntax for
+`tar'.(1)
+
+   A PATTERN should be written according to shell syntax, using wildcard
+characters to effect globbing.  Most characters in the pattern stand
+for themselves in the matched string, and case is significant: `a' will
+match only `a', and not `A'.  The character `?' in the pattern matches
+any single character in the matched string.  The character `*' in the
+pattern matches zero, one, or more single characters in the matched
+string.  The character `\' says to take the following character of the
+pattern *literally*; it is useful when one needs to match the `?', `*',
+`[', or `\' characters themselves.
+
+   The character `[', up to the matching `]', introduces a "character
+class".  A character class is a list of acceptable characters for the
+next single character of the matched string.  For example, `[abcde]'
+would match any of the first five letters of the alphabet.  Note that
+within a character class all of the "special characters" listed above,
+other than `\', lose their special meaning; for example, `[-\\[*?]]'
+would match any of the characters `-', `\', `[', `*', `?', or `]'.  In
+a character class, the special construction `[A-E]', using an hyphen
+between two letters, is meant to represent all characters between A and
+E, inclusive.  (Due to parsing constraints, the characters `-' and `]'
+must come either *first* or *last* in a character class.)
+
+   If the first character of the class after the opening `[' is `!' or
+`^', then the meaning of the class is reversed.  Rather than listing
+the characters to match, it lists those characters that are *forbidden*
+as the next single character of the matched string.
+
+   Other characters of the class stand for themselves.  The special
+construction `[A-E]', using a hyphen between two letters, is meant to
+represent all characters between A and E inclusive.
+
+   Despite what some other tools do, periods (`.') or forward slashes
+(`/') are not considered special for wildcard matches.  For example,
+the pattern `*baz' may match file `/foo/bar/baz' as well as file
+`foobaz'.  Moreover, in exclude contexts, if a pattern completely
+matches a directory prefix of a matched string, then it matches the full
+matched string: so any pattern excluding a directory also excludes all
+the files beneath it.
+
+   There are some discussions floating in the air asking for
+modifications in the way `tar' accomplishes wildcard matches.  We
+perceive any change of semantics in this area as a delicate thing to
+impose on `tar' users.  On the other hand, we should be progressive
+enough to correct any ill-design: compatibility at any price is not
+always a good attitude.  In conclusion, it is *possible* that slight
+amendments be later brought to the previous description.  Your opinions
+on the matter are welcome.
+
+   ---------- Footnotes ----------
+
+   (1) For the literate programmer, suffice to say that wildcarding is
+achieved through the `fnmatch' library routine, used without flags for
+labels, or with `FNM_LEADING_DIR' for excludes.
+
+
+File: paxutils.info,  Node: Problems with exclude,  Prev: Wildcards,  Up: Exclusions
+
+Problems with using the `exclude' options
+-----------------------------------------
+
+   Some users find `exclude' options confusing.  Here are some common
+pitfalls:
+
+   * The `tar' program will always act on file names listed on the
+     command line, no matter whether or not there is an exclusion that
+     would otherwise affect them.  In the example above, if you create
+     an archive and exclude files that end with `*.o', but explicitly
+     name the file `catc.o' after all the options have been listed,
+     `catc.o' *will* be included in the archive.
+
+   * You can sometimes confuse the meanings of `--exclude=PATTERN' and
+     `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS').  Be
+     careful: use `--exclude=PATTERN' when files to be excluded are
+     given as a pattern on the command line.  Use
+     `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS') to
+     introduce the name of a file which contains a list of patterns,
+     one per line; each of these patterns can exclude zero, one, or
+     many files.
+
+   * When you use `--exclude=PATTERN', be sure to quote the PATTERN
+     parameter, so `tar' sees wildcard characters like `*'.  If you do
+     not do this, the shell might expand the `*' itself using files at
+     hand, so `tar' might receive a list of files instead of one
+     pattern, or none at all, making the command illegal.
+
+     For example, write:
+
+          $ tar -c -f ARCHIVE.TAR -X '*/tmp/*' DIRECTORY
+
+     rather than:
+
+          $ tar -c -f ARCHIVE.TAR -X */tmp/* DIRECTORY
+
+   * You must use use shell syntax, or globbing, rather than `regexp'
+     syntax, when using exclude options in `tar'.  If you try to use
+     `regexp' syntax to describe files to be excluded, your command
+     might fail.  *Note Wildcards::.
+
+   * In earlier versions of `tar', what is now the
+     `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS') option
+     was called `--exclude-PATTERN' instead.  Now, `--exclude=PATTERN'
+     applies to patterns listed on the command line and
+     `--exclude-from=FILE-OF-PATTERNS' applies to patterns listed in a
+     file.
+
+
+File: paxutils.info,  Node: Time criteria,  Next: Walking,  Prev: Exclusions,  Up: Choosing
+
+Time based exclusions
+=====================
+
+   These options limit `tar' to only operating on files which have been
+modified after the date specified.  A file is considered to have
+changed if the contents have been modified, or if the owner,
+permissions, and so forth have been changed.  (For more information on
+how to specify a date, see *Note Date input formats::; remember that the
+entire date argument must be quoted if it contains any spaces.)
+
+   Gurus would say that `--after-date=DATE' (`--newer=DATE', `-N DATE')
+tests both the `mtime' (time the contents of the file were last
+modified) and the `ctime' (time the file's status was last changed:
+owner, permissions, etc) fields, while `--newer-mtime=DATE' tests only
+`mtime' field.
+
+   To be precise, `--after-date=DATE' (`--newer=DATE', `-N DATE')
+checks *both* `mtime' and `ctime' and processes the file if either one
+is more recent than DATE, while `--newer-mtime=DATE' only checks
+`mtime' and disregards `ctime'.  Neither uses `atime' (the last time the
+contents of the file were looked at).
+
+   The MS-DOS/MS-Windows file systems record only one time stamp per
+file (Windows 9X and NT file systems have all three time fields).  On
+those file systems, `--after-date=DATE' (`--newer=DATE', `-N DATE') and
+`--newer-mtime=DATE' will have the same effect.  MS-DOS stores file
+time with 2-second granularity; you need to consider this when setting
+the value of DATE for these two options.
+
+   Date specifiers can have embedded spaces.  Because of this, you may
+need to quote date arguments to keep the shell from parsing them as
+separate arguments.
+
+     *Please note:* `--after-date=DATE' (`--newer=DATE', `-N DATE') and
+     `--newer-mtime=DATE' should not be used for incremental backups.
+     Some files (such as those in renamed directories) are not selected
+     properly by these options.  *Note incremental listed-incremental::.
+
+   You may use these options with any subcommand.  Note that these
+options differ from the `--update' (`-u') subcommand in that they allow
+you to specify a particular date against which `tar' can compare when
+deciding whether or not to archive the files.
+
+* Menu:
+
+* after-date::                  Operating only on new files
+* newer-mtime::                 Operating only on altered files
+
+
+File: paxutils.info,  Node: after-date,  Next: newer-mtime,  Prev: Time criteria,  Up: Time criteria
+
+Operating only on new files
+---------------------------
+
+   The `--after-date=DATE' (`--newer=DATE', `-N DATE') option causes
+`tar' to work only on files whose modification or inode-changed times
+are newer than the DATE given.  If you use this option when creating or
+appending to an archive, the archive will only include new files.  If
+you use `--after-date=DATE' (`--newer=DATE', `-N DATE') when extracting
+an archive, `tar' will only extract files newer than the DATE you
+specify.
+
+   To select files newer than the modification time of a file that
+already exists, you can use the {No Value For "reference"} option of
+GNU `date', available in GNU shell utilities 1.13 or later.  For
+example, you could say:
+
+     $ tar -cf ARCHIVE.TAR --newer="`date -r FILE`" /home
+
+The `date' command in this command returns the timestamp of that
+already existing file; this timestamp expands to become the reference
+date which `--after-date=DATE' (`--newer=DATE', `-N DATE') uses to
+determine which files to archive.
+
+   *Note Date input formats::, for a precise specification of all date
+formats which are usable with this option.  Many date notations have
+spaces included, you should sure that you use quotes around the option
+value, so these spaces are not interpreted by the shell as argument
+separators.
+
+
+File: paxutils.info,  Node: newer-mtime,  Prev: after-date,  Up: Time criteria
+
+Operating only on altered files
+-------------------------------
+
+   The `--newer-mtime=DATE' option causes `tar' to work only on files
+whose modification time is newer than the DATE given.  If you use this
+option when creating or appending to an archive, the archive will only
+include new files.  If you use `--newer-mtime=DATE' when extracting an
+archive, `tar' will only extract files newer than the DATE you specify.
+
+   If you only want `tar' to make the date comparison based on
+modification of the actual contents of the file (rather than inode
+changes), then use the `--newer-mtime=DATE' option.  Option
+`--newer-mtime=DATE' acts like `--after-date=DATE' (`--newer=DATE', `-N
+DATE'), but only looks at modification times.
+
+   The acceptable date notations are the same as those the
+`--after-date=DATE' (`--newer=DATE', `-N DATE') option accepts (*note
+Date input formats::.).
+
+
+File: paxutils.info,  Node: Walking,  Next: Relative,  Prev: Time criteria,  Up: Choosing
+
+Walking through directories
+===========================
+
+* Menu:
+
+* no-recursion::                Descending into directories
+* one-file-system::             Crossing filesystem boundaries
+
+
+File: paxutils.info,  Node: no-recursion,  Next: one-file-system,  Prev: Walking,  Up: Walking
+
+Descending into directories
+---------------------------
+
+   Usually, `tar' will recursively explore all directories (either
+those given on the command line or through the
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option) for the
+various files they contain.  However, you may not always want `tar' to
+act this way.
+
+   The `--no-recursion' option inhibits `tar''s recursive descent into
+specified directories.  If you specify `--no-recursion', you can use
+the `find' utility for hunting through levels of directories to
+construct a list of file names which you could then pass to `tar'.
+`find' allows you to be more selective when choosing which files to
+archive; see *Note files-from:: for more information on using `find'
+with `tar'.
+
+   The `--no-recursion' option prevents `tar' from recursively
+descending directories.
+
+   When you use `--no-recursion', `tar' grabs directory entries
+themselves, but does not descend into them recursively.  Many people use
+`find' for locating files they want to back up, and since `tar'
+*usually* recursively descends on directories, they have to use the
+`! -d' option to `find'  as they usually do not want all the files in a
+directory.  They then use the `--files-from=FILE-OF-NAMES' (`-T
+FILE-OF-NAMES') option to archive the files located via `find'.
+
+   The problem when restoring files archived in this manner is that the
+directories themselves are not in the archive; so the
+`--same-permissions' (`--preserve-permissions', `-p') option does not
+affect them--while users might really like it to.  Specifying
+`--no-recursion' is a way to tell `tar' to grab only the directory
+entries given to it, adding no new files on its own.
+
+
+File: paxutils.info,  Node: one-file-system,  Prev: no-recursion,  Up: Walking
+
+Crossing filesystem boundaries
+------------------------------
+
+   Normally `tar' will automatically cross file system boundaries in
+order to archive files which are part of a directory tree.  You can
+change this behavior by specifying `--one-file-system' (`-l').  This
+option only affects files that are archived because they are in a
+directory that is being archived; `tar' will still archive files
+explicitly named on the command line or through
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'), regardless of where
+they reside.
+
+   The `--one-file-system' (`-l') option prevents `tar' from crossing
+file system boundaries when archiving.  Use it in conjunction with any
+write subcommand.
+
+   The `--one-file-system' (`-l') option causes `tar' to modify its
+normal behavior in archiving the contents of directories.  If a file in
+a directory is not on the same filesystem as the directory itself, then
+`tar' will not archive that file.  If the file is a directory itself,
+`tar' will not archive anything beneath it; in other words, `tar' will
+not cross mount points.
+
+   It is reported that using this option, the mount point *is*
+archived, but nothing under it is.
+
+   This option is useful for making full or incremental archival backups
+of a single file system.  If this option is used in conjunction with
+`--verbose' (`-v'), files that are excluded are mentioned by name on the
+standard error.
+
+
+File: paxutils.info,  Node: Relative,  Prev: Walking,  Up: Choosing
+
+Relative notations for file names
+=================================
+
+* Menu:
+
+* directory::                   Changing the working directory
+* absolute-names::              Absolute file names
+
+
+File: paxutils.info,  Node: directory,  Next: absolute-names,  Prev: Relative,  Up: Relative
+
+Changing the working directory
+------------------------------
+
+   To change the working directory in the middle of a list of file
+names, either on the command line or in a file specified using
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'), use
+`--directory=DIRECTORY' (`-C DIRECTORY').  This will change the working
+directory to the directory DIRECTORY after that point in the list.
+
+   The `--directory=DIRECTORY' (`-C DIRECTORY') option changes the
+working directory in the middle of a command line.
+
+   For example,
+
+     $ tar -c -f jams.tar grape prune -C food cherry
+
+will place the files `grape' and `prune' from the current directory
+into the archive `jams.tar', followed by the file `cherry' from the
+directory `food'.  This option is especially useful when you have
+several widely separated files that you want to store as if they were
+in the same directory.
+
+   Note that the file `cherry' is recorded in the archive under the
+precise name `cherry', *not* `food/cherry'.  Thus, the archive will
+contain three files that all appear to have come from the same
+directory; if the archive is extracted with plain `tar --extract', all
+three files will be written in the current directory.
+
+   Contrast this with the command
+
+     $ tar -c -f jams.tar grape prune food/cherry
+
+which records the third file in the archive under the name
+`food/cherry' so that, if the archive is extracted using `tar
+--extract', the third file will be written in a subdirectory named
+`food'.
+
+   You can use the `--directory=DIRECTORY' (`-C DIRECTORY') option to
+make the archive independent of the original name of the directory
+holding the files.  The following command places the files
+`/etc/passwd', `/etc/hosts', and `/lib/libc.a' into the archive
+`foo.tar':
+
+     $ tar -c -f foo.tar -C /etc passwd hosts -C /lib libc.a
+
+However, the names of the archive members will be exactly what they were
+on the command line: `passwd', `hosts', and `libc.a'.  They will not
+appear to be related by file name to the original directories where
+those files were located.
+
+   Note that `--directory=DIRECTORY' (`-C DIRECTORY') options are
+interpreted consecutively.  If `--directory=DIRECTORY' (`-C DIRECTORY')
+specifies a relative file name, it is interpreted relative to the then
+current directory, which might not be the same as the original current
+working directory of `tar', due to a previous `--directory=DIRECTORY'
+(`-C DIRECTORY') option.
+
+   When using `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') (*note
+files-from::.), you can put `-C' options in the file list.
+Unfortunately, you cannot put `--directory=DIRECTORY' (`-C DIRECTORY')
+options in the file list.  (This interpretation can be disabled by
+using the `--null' option.)
+
+
+File: paxutils.info,  Node: absolute-names,  Prev: directory,  Up: Relative
+
+Absolute file names
+-------------------
+
+   When `tar' extracts archive members from an archive, it strips any
+leading slashes (`/') from the member name.  This causes absolute member
+names in the archive to be treated as relative file names.  This allows
+you to have such members extracted wherever you want, instead of being
+restricted to extracting the member in the exact directory named in the
+archive.  For example, if the archive member has the name `/etc/passwd',
+`tar' will extract it as if the name were really `etc/passwd'.  (On
+MS-DOS and MS-Windows, `tar' also strips the drive letter and the colon
+that follows it, if the original file names include them, so
+`d:/foo/bar' is archived as `foo/bar'.)
+
+   Other `tar' programs do not do this.  As a result, if you create an
+archive whose member names start with a slash, they will be difficult
+for other people to use with other `tar' programs.  Therefore, `tar'
+also strips leading slashes from member names when putting members into
+the archive.  For example, if you ask `tar' to add the file `/bin/ls'
+to an archive, it will do so, but the member name will be `bin/ls'.
+
+   At either time, `tar' prints out a message about removing the `/'
+from file names.  This message appears once per `tar' invocation.  It
+is imperative that the user be warned about this; ignoring it can cause
+very serious surprises later.  (On MS-DOS/MS-Windows, `tar' also
+reports the removal of the drive specification.)  Some people,
+nevertheless, do not want to see this message.  Wanting to play really
+dangerously, one may of course redirect `tar' standard error to the
+sink.  For example, under `sh':
+
+     $ tar cf archive.tar /home 2> /dev/null
+
+Another solution, both nicer and simpler, would be to change to the `/'
+directory first, and then avoid absolute notation.  For example:
+
+     $ (cd / && tar cf archive.tar home)
+     $ tar cfC archive.tar / home
+
+   If you want to extract the files in an archive to the same absolute
+names that they had when the archive was created, you should use a
+similar recipe at extract time.  Following the example above:
+
+     $ (cd / && tar xf archive.tar)
+     $ tar xfC archive.tar /
+
+(On MS-DOS, include the drive specification in the `-C' option, or
+change the current drive before the `cd' command.)
+
+   If you use the `--absolute-names' (`-P') option, `tar' will carry
+out neither of these transformations, that is, it will not remove
+leading slashes when adding archive members, and will not strip leading
+slashes from member names when restoring an archive.  If you only
+invoked `tar' from the root directory you would never need the
+`--absolute-names' (`-P') option, but using this option may be more
+convenient than switching to root.  So, the two examples above could be
+respectively replaced by these two lines:
+
+     $ tar cfP archive.tar /home
+     $ tar xfP archive.tar
+
+   Using the `--absolute-names' (`-P') option also suppress the warning
+message.
+
+
+File: paxutils.info,  Node: Formats,  Next: Media,  Prev: Choosing,  Up: Top
+
+Controlling the archive format
+******************************
+
+* Menu:
+
+* Portability::                 Making `tar' archives more portable
+* Forced fields::               Options to preset file attributes
+* Compression::                 Using less space through compression
+* Other formats::               Other non-`tar' formats
+
+
+File: paxutils.info,  Node: Portability,  Next: Forced fields,  Prev: Formats,  Up: Formats
+
+Making `tar' archives more portable
+===================================
+
+   Creating a `tar' archive on a particular system that is to be useful
+later on many other machines and with other versions of `tar' is more
+challenging than you might think.  `tar' archive formats have been
+evolving since the first versions of Unix.  Many such formats are
+around, and they are not always compatible with each other.  This
+section discusses a few problems, and gives some advice about making
+`tar' archives more portable.
+
+   One golden rule is simplicity.  For example, limit your `tar'
+archives to contain only regular files and directories, avoiding other,
+special kinds of files.  Do not attempt to save sparse files or
+contiguous files as such.  Let's discuss a few more problems, in turn.
+
+* Menu:
+
+* Portable names::              Portable names
+* dereference::                 Symbolic links
+* old-archive::                 Old V7 archives
+* posix::                       `tar' and POSIX `tar'
+* Checksumming::                Checksumming problems
+
+
+File: paxutils.info,  Node: Portable names,  Next: dereference,  Prev: Portability,  Up: Portability
+
+Portable names
+--------------
+
+   Use *straight* file and directory names, made up of printable ASCII
+characters, avoiding colons, slashes, backslashes, spaces, and other
+*dangerous* characters.  Avoid deep directory nesting.  Accounting for
+oldish System V machines, limit your file and directory names to 14
+characters or less.
+
+   If you intend for your `tar' archives to be read under MS-DOS, you
+should not rely on case-sensitivity for file names, and you might use
+the GNU `doschk' program for helping you further diagnosing illegal
+MS-DOS names, which are even more limited than System V's.  `tar'
+compiled for MS-DOS *does* try to cope with filenames which are illegal
+on MS-DOS file systems (), but the best portability strategy is to
+avoid such problems in the first place.  Even newer versions of
+MS-Windows, such as Windows 9X and Windows NT, still have some
+restrictions on characters which can appear in a file name.  Typically,
+characters which are special to the shell, like `?', `*', and `|', are
+not allowed and should be avoided.
+
+
+File: paxutils.info,  Node: dereference,  Next: old-archive,  Prev: Portable names,  Up: Portability
+
+Symbolic links
+--------------
+
+   Normally, when `tar' archives a symbolic link, it writes a block to
+the archive naming the target of the link.  In that way, the `tar'
+archive is a faithful record of the filesystem contents.  The
+`--dereference' (`-h') option is used with `--create' (`-c'), and
+causes `tar' to archive the files symbolic links point to, instead of
+the links themselves.  So, when this option is used, when `tar'
+encounters a symbolic link, it will archive the linked-to file, instead
+of simply recording the presence of a symbolic link.
+
+   When using `--dereference' (`-h'), the real name under which the
+file is stored in the file system is not recorded in the archive.  To
+record both the symbolic link name and the file name in the system,
+archive the file under both names.  If all links were recorded
+automatically by `tar', an extracted file might be linked to a file
+name that no longer exists in the file system.
+
+   If a linked-to file is encountered again by `tar' while creating the
+same archive, an entire second copy of it will be stored.  (This
+*might* be considered a bug.)
+
+   So, for portable archives, do not archive symbolic links as such, and
+use `--dereference' (`-h'): many systems do not support symbolic links,
+and moreover, your distribution might be unusable if it contains
+unresolved symbolic links.
+
+
+File: paxutils.info,  Node: old-archive,  Next: posix,  Prev: dereference,  Up: Portability
+
+Old V7 archives
+---------------
+
+   Certain old versions of `tar' cannot handle additional information
+recorded by newer `tar' programs.  To create an archive in V7 format
+(not ANSI), which can be read by these old versions, specify the
+`--old-archive' (`-o') option in conjunction with the `--create' (`-c').
+When you specify it, `tar' leaves out information about directories,
+pipes, FIFOs, contiguous files, and device files, and specifies file
+ownership by group and user IDs instead of group and user names.
+
+   When updating an archive, do not use `--old-archive' (`-o') unless
+the archive was created using this option.
+
+   In most cases, a *new* format archive can be read by an *old* `tar'
+program without serious trouble, so this option should seldom be
+needed.  On the other hand, most modern `tar's are able to read old
+format archives, so it might be safer for you to always use
+`--old-archive' (`-o') for your distributions.
+
+
+File: paxutils.info,  Node: posix,  Next: Checksumming,  Prev: old-archive,  Up: Portability
+
+`tar' and POSIX `tar'
+---------------------
+
+   `tar' was based on an early draft of the POSIX 1003.1 `ustar'
+standard.  Extensions to this `tar', such as the support for file names
+longer than 100 characters, use portions of the `tar' header record
+which were specified in that POSIX draft as unused.  Subsequent changes
+in POSIX have allocated the same parts of the header record for other
+purposes.  As a result, `tar' is incompatible with the current POSIX
+spec, and with `tar' programs that follow it.
+
+   We plan to reimplement these extensions in a new way which is upward
+compatible with the latest POSIX `tar' format, but we don't know when
+this will be done.
+
+   In the mean time, there is simply no way of telling what might
+happen if you read a `tar' archive that uses the extensions using some
+other `tar' program.  So if you want to read the archive with another
+`tar' program, be sure to write it using the `--old-archive' (`-o')
+option (`-o').
+
+   Traditionally, old `tar's have a limit of 100 characters.  `tar'
+attempted two different approaches to overcoming this limit, using and
+extending a format specified by a draft of P1003.1.  The first way was
+not that successful, and involved `@MaNgLeD@' file names, or such;
+while a second approach used `././@LongLink' and other tricks, yielding
+better success.  In theory, `tar' should be able to handle file names
+of practically unlimited length.  So, if `tar' fails to dump and
+retrieve files having more than 100 characters, then there is a bug in
+`tar'.
+
+   But, for strict conformity to POSIX, the limit was still 100
+characters.  For various other purposes, `tar' used areas left
+unassigned in the POSIX draft.  POSIX later revised the P1003.1 `ustar'
+format by assigning previously unused header fields in such a way that
+the upper limit for file name length was raised to 256 characters.
+However, the actual POSIX limit oscillates between 100 and 256,
+depending on the precise location of slashes in full file name (this is
+rather ugly).  Since `tar' uses the same fields for quite other
+purposes, it became incompatible with the latest POSIX standards.
+
+   For longer or non-fitting file names, we plan to use yet another set
+of extensions, but this time, complying with the provisions POSIX
+offers for extending the format, rather than conflicting with it.
+Whenever an archive uses old `tar' extension format or POSIX
+extensions, whether for very long file names or for other special cases,
+this archive becomes non-portable to other `tar' implementations.  In
+fact, anything can happen.  The most forgiving `tar's will merely
+unpack the file using a wrong name, and maybe create another file named
+something like `@LongName', with the true file name in it.  `tar's not
+protecting themselves may segment violate!
+
+   Compatibility concerns make all of these things more difficult, as we
+will have to support *all* these things together, for a while.  `tar'
+should be able to produce and read true POSIX format files, while being
+able to detect old `tar' formats, including old V7 format, and process
+them conveniently.  It will take years before this whole area
+stabilizes ...
+
+   There are plans to raise this 100 limit to 256, and yet produce POSIX
+conformant archives.  Past 256, we do not know yet if `tar' will go
+non-POSIX again, or merely refuse to archive the file.
+
+   There are plans for `tar' to support the latest POSIX format more
+fully, while being able to read old V7 format, old GNU (semi-POSIX plus
+extensions), and full POSIX.  One may ask if there is part of the POSIX
+format that we still cannot support.  This simple question has a
+complex answer.  Maybe, on closer inspection, some strong limitations
+will pop up, but up to now, nothing looks too difficult (but see
+below).  We only have these few pages of POSIX telling about `Extended
+tar format' (P1003.1-1990-section 10.1.1), and there are references to
+other parts of the standard we do not have, which should normally
+enforce limitations on stored file names (we suspect things like fixing
+what `/' and `<NUL>' mean).  There are also some points which the
+standard does not make clear.  Existing practice will then drive what
+we should do.
+
+   POSIX mandates that when a file name cannot fit within 100 to 256
+characters (the variance comes from the fact a `/' is ideally needed as
+the 156th character) or a link name cannot fit within 100 characters, a
+warning should be issued and the file *not* be stored.  Unless the
+`--posix' option is given (or `POSIXLY_CORRECT' is set), we believe
+that `tar' should disobey this specification, and automatically switch
+to using extensions to overcome file name or link name length
+limitations.
+
+   There is a problem, however, which we have not intimately studied
+yet.  Given a truly POSIX archive with names having more than 100
+characters, we guess that `tar' up to 1.11.8 will process it as if it
+were an old V7 archive, and be fooled by some fields which are coded
+differently.  So, the question is to decide if the next generation of
+`tar' should produce POSIX format by default, whenever possible,
+producing archives that older versions of `tar' might not be able to
+read correctly.  We fear that we will have to suffer such a choice one
+of these days, if we want `tar' to go closer to POSIX.  We might choose
+to do that right away.  Another possibility is to produce the current
+`tar' format by default for a few years, but have `tar' versions from
+some 1.POSIX and up able to recognize all three formats, and let older
+`tar' fade out slowly.  Then, we could switch to producing POSIX format
+by default, with not much harm to those still having (very old at that
+time) `tar' versions prior to 1.POSIX.
+
+   POSIX format cannot represent very long names, volume headers,
+splitting of files in multi-volumes, sparse files, and incremental
+dumps; these would be all disallowed if `--posix' is given or
+`POSIXLY_CORRECT' is set.  Otherwise, if `tar' is given long names, or
+`-[VMSgG]', then it should automatically go non-POSIX.  We think this
+is easily granted without much discussion.
+
+   Another point is that only `mtime' is stored in POSIX archives,
+while `tar' currently also stores `atime' and `ctime'.  If we want
+`tar' to go closer to POSIX, my choice would be to drop `atime' and
+`ctime' support on average.  On the other hand, we perceive that full
+dumps or incremental dumps need `atime' and `ctime' support, so for
+those special applications, POSIX has to be avoided altogether.
+
+   A few users requested that `--sparse' (`-S') be always active by
+default.  We think that before replying to them, we have to decide if
+we want `tar' to go closer to POSIX on average, while producing files.
+My choice would be to go closer to POSIX in the long run.  Besides
+possible double reading, we do not see any point in not trying to save
+files as sparse when creating archives which are neither POSIX nor
+old-V7, so the actual `--sparse' (`-S') would become selected by
+default when producing such archives, whatever the reason is.  So,
+`--sparse' (`-S') alone might be redefined to force extended format
+archives, and recover its previous meaning from this fact.
+
+   Extended format as it exists now can easily fool other POSIX `tar's,
+as it uses fields which POSIX considers to be part of the file name
+prefix.  We wonder if it would not be a good idea, in the long run, to
+try changing extended format so that any added field (like `ctime',
+`atime', file offset in subsequent volumes, or sparse file
+descriptions) would be wholly and always pushed into an extension block,
+instead of using space in the POSIX header block.  We could manage to
+do that portably between future `tar's.  So other POSIX `tar's might at
+least be able to provide roughly correct listings for the archives
+produced by `tar', if not to process them otherwise.
+
+   Using these projected extensions might induce older `tar's to fail.
+We would use the same approach as for POSIX.  We'll put out a `tar'
+capable of reading POSIXier, yet extended archives, but will not produce
+this format by default, when not in POSIX mode.  In a few years, when
+newer `tar's will have flooded out `tar' 1.11.X and earlier, we could
+switch to producing POSIXier extended archives, with no real harm to
+users, as almost all existing `tar's will be ready to read POSIXier
+format.  In fact, we'll do both changes at the same time, in a few
+years, and just prepare `tar' for both changes, without effecting them,
+from 1.POSIX.  (Both changes: 1--using POSIX conventions for getting
+over 100 characters; 2--avoiding mangling POSIX headers for extensions,
+using only POSIX mandated extension techniques).
+
+   So, a future `tar' will have a `--posix' flag forcing the usage of
+truly POSIX headers, and so, producing archives that previous `tar's
+will not be able to read.  So, *once* pretest announces that feature,
+it would be particularly useful for users to test how exchangeable
+archives will be between `tar' with `--posix' and other POSIX `tar's.
+
+   In a few years, when `tar' will produce POSIX headers by default,
+`--posix' will have a strong meaning and will disallow extensions.  But
+in the meantime, for a long while, `--posix' in `tar' will not disallow
+extensions like `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL'),
+`--multi-volume' (`-M'), `--sparse' (`-S'), or very long file or link
+names.  However, `--posix' with extensions will use POSIX headers with
+reserved-for-users extensions to headers, and we will be curious to
+know how well or badly POSIX `tar's will react to these.
+
+   `tar' prior to 1.POSIX, and after 1.POSIX without `--posix',
+generates and checks `ustar  ', with two suffixed spaces.  This is
+sufficient for older `tar' not to recognize POSIX archives, and
+consequently, wrongly decide those archives are in old V7 format.  It
+is a useful bug for me, because `tar' has other POSIX
+incompatibilities, and we need to segregate `tar' semi-POSIX archives
+from truly POSIX archives, for `tar' should be somewhat compatible with
+itself, while migrating closer to latest POSIX standards.  So, we'll be
+very careful about how and when we will do the correction.
+

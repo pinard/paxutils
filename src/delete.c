@@ -1,5 +1,5 @@
 /* Delete entries from a tar archive.
-   Copyright (C) 1988, 1992, 1994, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1994, 1996, 1997, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -73,11 +73,9 @@ move_archive (int count)
 #endif /* MTIOCTOP */
 
   {
-    off_t position = rmtlseek (archive, 0L, 1);
+    off_t position = rmtlseek (archive, 0L, SEEK_CUR) + record_size * count;
 
-    position += record_size * count;
-
-    if (rmtlseek (archive, position, 0) != position)
+    if (rmtlseek (archive, position, SEEK_SET) != position)
       FATAL_ERROR ((0, 0, _("Could not re-position archive file")));
 
     return;
@@ -90,7 +88,7 @@ move_archive (int count)
 `----------------------------------------------------------------*/
 
 static void
-write_record (int move_back_flag)
+write_record (bool move_back_flag)
 {
   save_record = record_start;
   record_start = new_record;
@@ -144,7 +142,7 @@ delete_archive_members (void)
 
   while (logical_status == HEADER_STILL_UNREAD)
     {
-      enum read_header status = read_header ();
+      enum read_header status = read_header (&current);
 
       switch (status)
 	{
@@ -152,15 +150,15 @@ delete_archive_members (void)
 	  abort ();
 
 	case HEADER_SUCCESS:
-	  if (name = name_scan (current_file_name), !name)
+	  if (name = name_scan (current.name), !name)
 	    {
-	      set_next_block_after (current_header);
-	      if (current_header->oldgnu_header.isextended)
+	      set_next_block_after (current.block);
+	      if (current.block->oldgnu_header.isextended)
 		skip_extended_headers ();
-	      skip_file ((long) (current_stat.st_size));
+	      skip_file (current.stat.st_size);
 	      break;
 	    }
-	  name->found = 1;
+	  name->match_found = true;
 	  logical_status = HEADER_SUCCESS;
 	  break;
 
@@ -170,7 +168,7 @@ delete_archive_members (void)
 	  break;
 
 	case HEADER_FAILURE:
-	  set_next_block_after (current_header);
+	  set_next_block_after (current.block);
 	  switch (previous_status)
 	    {
 	    case HEADER_STILL_UNREAD:
@@ -202,8 +200,8 @@ delete_archive_members (void)
       return;
     }
 
-  write_archive_to_stdout = 0;
-  new_record = (union block *) xmalloc ((size_t) record_size);
+  write_archive_to_stdout = false;
+  new_record = (union block *) xmalloc (record_size);
 
   /* Save away blocks before this one in this record.  */
 
@@ -215,10 +213,10 @@ delete_archive_members (void)
 
 #if 0
   /* FIXME: Old code, before the goto was inserted.  To be redesigned.  */
-  set_next_block_after (current_header);
-  if (current_header->oldgnu_header.isextended)
+  set_next_block_after (current.block);
+  if (current.block->oldgnu_header.isextended)
     skip_extended_headers ();
-  skip_file ((long) (current_stat.st_size));
+  skip_file (current.stat.st_size);
 #endif
   logical_status = HEADER_STILL_UNREAD;
   goto flush_file;
@@ -226,7 +224,7 @@ delete_archive_members (void)
   /* FIXME: Solaris 2.4 Sun cc (the ANSI one, not the old K&R) says:
        "delete.c", line 223: warning: loop not entered at top
      Reported by Bruno Haible.  */
-  while (1)
+  while (true)
     {
       enum read_header status;
 
@@ -237,11 +235,11 @@ delete_archive_members (void)
 	  flush_archive ();
 	  records_read++;
 	}
-      status = read_header ();
+      status = read_header (&current);
 
       if (status == HEADER_ZERO_BLOCK && ignore_zeros_option)
 	{
-	  set_next_block_after (current_header);
+	  set_next_block_after (current.block);
 	  continue;
 	}
       if (status == HEADER_END_OF_FILE || status == HEADER_ZERO_BLOCK)
@@ -251,25 +249,25 @@ delete_archive_members (void)
 		 (size_t) (BLOCKSIZE * blocks_needed));
 	  new_blocks += blocks_needed;
 	  blocks_needed = 0;
-	  write_record (0);
+	  write_record (false);
 	  break;
 	}
 
       if (status == HEADER_FAILURE)
 	{
 	  ERROR ((0, 0, _("Deleting non-header from archive")));
-	  set_next_block_after (current_header);
+	  set_next_block_after (current.block);
 	  continue;
 	}
 
       /* Found another header.  */
 
-      if (name = name_scan (current_file_name), name)
+      if (name = name_scan (current.name), name)
 	{
-	  name->found = 1;
+	  name->match_found = true;
 	flush_file:
-	  set_next_block_after (current_header);
-	  blocks_to_skip = (current_stat.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
+	  set_next_block_after (current.block);
+	  blocks_to_skip = (current.stat.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
 
 	  while (record_end - current_block <= blocks_to_skip)
 	    {
@@ -284,14 +282,13 @@ delete_archive_members (void)
 
       /* Copy header.  */
 
-      new_record[new_blocks] = *current_header;
+      new_record[new_blocks] = *current.block;
       new_blocks++;
       blocks_needed--;
-      blocks_to_keep
-	= (current_stat.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
-      set_next_block_after (current_header);
+      blocks_to_keep = (current.stat.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
+      set_next_block_after (current.block);
       if (blocks_needed == 0)
-	write_record (1);
+	write_record (true);
 
       /* Copy data.  */
 
@@ -326,7 +323,7 @@ delete_archive_members (void)
 	  kept_blocks_in_record -= count;
 
 	  if (blocks_needed == 0)
-	    write_record (1);
+	    write_record (true);
 	}
     }
 

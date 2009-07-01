@@ -1,11 +1,17 @@
-# Makefile.in generated automatically by automake 1.1n from Makefile.am
+# Makefile.in generated automatically by automake 1.3b from Makefile.am
 
-# Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
-# gives unlimited permission to copy, distribute and modify it.
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# Makefile for GNU tar sources.
-# Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+# Makefile for tar sources.
+# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,6 +50,8 @@ mandir = @mandir@
 includedir = @includedir@
 oldincludedir = /usr/include
 
+DESTDIR =
+
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -61,83 +69,109 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 transform = @program_transform_name@
 
-NORMAL_INSTALL = true
-PRE_INSTALL = true
-POST_INSTALL = true
-NORMAL_UNINSTALL = true
-PRE_UNINSTALL = true
-POST_UNINSTALL = true
-ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-AUTOHEADER = @AUTOHEADER@
-AUTOMAKE = @AUTOMAKE@
-CATALOGS = @CATALOGS@
-CATOBJEXT = @CATOBJEXT@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+ALL_LINGUAS = @ALL_LINGUAS@
+ALL_MOFILES = @ALL_MOFILES@
+ALL_POFILES = @ALL_POFILES@
 CC = @CC@
-DATADIRNAME = @DATADIRNAME@
+CPP = @CPP@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
-GENCAT = @GENCAT@
-GMOFILES = @GMOFILES@
-GMSGFMT = @GMSGFMT@
-GT_NO = @GT_NO@
-GT_YES = @GT_YES@
-INSTOBJEXT = @INSTOBJEXT@
-INTLDEPS = @INTLDEPS@
-INTLLIBS = @INTLLIBS@
-INTLOBJS = @INTLOBJS@
+LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
-MKINSTALLDIRS = @MKINSTALLDIRS@
-MSGFMT = @MSGFMT@
+MOFILES = @MOFILES@
 PACKAGE = @PACKAGE@
-POFILES = @POFILES@
-POSUB = @POSUB@
 RANLIB = @RANLIB@
 RMT = @RMT@
+TEST_BOLDC = @TEST_BOLDC@
+TEST_CPIO = @TEST_CPIO@
+TEST_DEVFLAG = @TEST_DEVFLAG@
+TEST_GID = @TEST_GID@
+TEST_GID2 = @TEST_GID2@
+TEST_GID2NAME = @TEST_GID2NAME@
+TEST_GIDNAME = @TEST_GIDNAME@
+TEST_GNUTAR = @TEST_GNUTAR@
+TEST_ID = @TEST_ID@
+TEST_MKFIFO = @TEST_MKFIFO@
+TEST_TAR = @TEST_TAR@
+TEST_UID = @TEST_UID@
+TEST_UIDNAME = @TEST_UIDNAME@
 U = @U@
-USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
-USE_NLS = @USE_NLS@
 VERSION = @VERSION@
 YACC = @YACC@
+extra_bin_progs = @extra_bin_progs@
+extra_libexec_progs = @extra_libexec_progs@
 
 AUTOMAKE_OPTIONS = gnits ansi2knr
-bin_PROGRAMS = tar
-libexec_PROGRAMS = @RMT@
-EXTRA_PROGRAMS = rmt
+EXTRA_PROGRAMS = mt rmt
+bin_PROGRAMS = cpio tar $(extra_bin_progs)
+libexec_PROGRAMS = $(extra_libexec_progs)
+noinst_PROGRAMS = pax
 
-noinst_HEADERS = arith.h common.h rmt.h system.h tar.h
+noinst_HEADERS = arith.h common.h cpio.h cpiohdr.h defer.h extern.h \
+rmt.h system.h tar.h tarhdr.h ustar.h
+shared_SOURCES = cdf.c copyin.c copyout.c copypass.c defer.c fmtcpio.c \
+fmttar.c format.c getfile.c global.c rename.c util.c
+
+cpio_SOURCES = cpio.c $(shared_SOURCES) rtapelib.c
+mt_SOURCES = mt.c rtapelib.c
+pax_SOURCES = pax.c $(shared_SOURCES) rtapelib.c
 rmt_SOURCES = rmt.c
 tar_SOURCES = arith.c buffer.c compare.c create.c delete.c extract.c \
-incremen.c list.c mangle.c misc.c names.c open3.c rtapelib.c tar.c update.c
+header.c incremen.c list.c mangle.c misc.c names.c open3.c reading.c \
+rtapelib.c tar.c update.c
 
-INCLUDES = -I../intl -I$(top_srcdir)/lib
-LDADD = ../lib/libtar.a @INTLLIBS@
-localedir = $(prefix)/@DATADIRNAME@/locale
+EXTRA_DIST = rmt.cpio.c rmt.cpio.h rtapelib.cpio.c
+
+INCLUDES = -I$(top_srcdir)/lib
+LDADD = ../lib/libpu.a
+
+localedir = $(prefix)/share/locale
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
-PROGRAMS =  $(bin_PROGRAMS) $(libexec_PROGRAMS)
+PROGRAMS =  $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS)
 
 
 DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-o = @U@o
 ANSI2KNR = @ANSI2KNR@
-rmt_OBJECTS =  rmt.$o
+mt_OBJECTS =  mt$U.o rtapelib$U.o
+mt_LDADD = $(LDADD)
+mt_DEPENDENCIES =  ../lib/libpu.a
+mt_LDFLAGS = 
+rmt_OBJECTS =  rmt$U.o
 rmt_LDADD = $(LDADD)
-rmt_DEPENDENCIES =  ../lib/libtar.a
+rmt_DEPENDENCIES =  ../lib/libpu.a
 rmt_LDFLAGS = 
-tar_OBJECTS =  arith.$o buffer.$o compare.$o create.$o delete.$o \
-extract.$o incremen.$o list.$o mangle.$o misc.$o names.$o open3.$o \
-rtapelib.$o tar.$o update.$o
+cpio_OBJECTS =  cpio$U.o cdf$U.o copyin$U.o copyout$U.o copypass$U.o \
+defer$U.o fmtcpio$U.o fmttar$U.o format$U.o getfile$U.o global$U.o \
+rename$U.o util$U.o rtapelib$U.o
+cpio_LDADD = $(LDADD)
+cpio_DEPENDENCIES =  ../lib/libpu.a
+cpio_LDFLAGS = 
+tar_OBJECTS =  arith$U.o buffer$U.o compare$U.o create$U.o delete$U.o \
+extract$U.o header$U.o incremen$U.o list$U.o mangle$U.o misc$U.o \
+names$U.o open3$U.o reading$U.o rtapelib$U.o tar$U.o update$U.o
 tar_LDADD = $(LDADD)
-tar_DEPENDENCIES =  ../lib/libtar.a
+tar_DEPENDENCIES =  ../lib/libpu.a
 tar_LDFLAGS = 
+pax_OBJECTS =  pax$U.o cdf$U.o copyin$U.o copyout$U.o copypass$U.o \
+defer$U.o fmtcpio$U.o fmttar$U.o format$U.o getfile$U.o global$U.o \
+rename$U.o util$U.o rtapelib$U.o
+pax_LDADD = $(LDADD)
+pax_DEPENDENCIES =  ../lib/libpu.a
+pax_LDFLAGS = 
 CFLAGS = @CFLAGS@
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LINK = $(CC) $(LDFLAGS) -o $@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LINK = $(CC) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(noinst_HEADERS)
 
 DIST_COMMON =  ChangeLog Makefile.am Makefile.in ansi2knr.1 ansi2knr.c
@@ -147,17 +181,17 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP = --best
-SOURCES = $(rmt_SOURCES) $(tar_SOURCES)
-OBJECTS = $(rmt_OBJECTS) $(tar_OBJECTS)
+SOURCES = $(mt_SOURCES) $(rmt_SOURCES) $(cpio_SOURCES) $(tar_SOURCES) $(pax_SOURCES)
+OBJECTS = $(mt_OBJECTS) $(rmt_OBJECTS) $(cpio_OBJECTS) $(tar_OBJECTS) $(pax_OBJECTS)
 
-default: all
+all: Makefile $(ANSI2KNR) $(PROGRAMS) $(HEADERS)
 
 .SUFFIXES:
-.SUFFIXES: .c .o ._c ._o
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnits src/Makefile
+.SUFFIXES: .S .c .o .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && $(AUTOMAKE) --gnits --include-deps src/Makefile
 
-Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status $(BUILT_SOURCES)
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -165,7 +199,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status $(BUILT_SOURCES)
 mostlyclean-binPROGRAMS:
 
 clean-binPROGRAMS:
-	test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
 distclean-binPROGRAMS:
 
@@ -173,24 +207,24 @@ maintainer-clean-binPROGRAMS:
 
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(bindir)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo "  $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p|sed '$(transform)'`"; \
-	     $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p|sed '$(transform)'`; \
+	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
 uninstall-binPROGRAMS:
-	$(NORMAL_UNINSTALL)
+	@$(NORMAL_UNINSTALL)
 	list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  rm -f $(bindir)/`echo $$p|sed '$(transform)'`; \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
 mostlyclean-libexecPROGRAMS:
 
 clean-libexecPROGRAMS:
-	test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
+	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
 
 distclean-libexecPROGRAMS:
 
@@ -198,134 +232,190 @@ maintainer-clean-libexecPROGRAMS:
 
 install-libexecPROGRAMS: $(libexec_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(libexecdir)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
 	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo "  $(INSTALL_PROGRAM) $$p $(libexecdir)/`echo $$p|sed '$(transform)'`"; \
-	     $(INSTALL_PROGRAM) $$p $(libexecdir)/`echo $$p|sed '$(transform)'`; \
+	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
 uninstall-libexecPROGRAMS:
-	$(NORMAL_UNINSTALL)
+	@$(NORMAL_UNINSTALL)
 	list='$(libexec_PROGRAMS)'; for p in $$list; do \
-	  rm -f $(libexecdir)/`echo $$p|sed '$(transform)'`; \
+	  rm -f $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
+
+mostlyclean-noinstPROGRAMS:
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+
+distclean-noinstPROGRAMS:
+
+maintainer-clean-noinstPROGRAMS:
 
 .c.o:
 	$(COMPILE) -c $<
 
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
 mostlyclean-compile:
-	rm -f *.o core
+	-rm -f *.o core *.core
 
 clean-compile:
 
 distclean-compile:
-	rm -f *.tab.c
+	-rm -f *.tab.c
 
 maintainer-clean-compile:
-
-ansi2knr: ansi2knr.o
-	$(LINK) ansi2knr.o $(LIBS)
-
-ansi2knr.o: $(CONFIG_HEADER)
 
 mostlyclean-krextra:
 
 clean-krextra:
+	-rm -f ansi2knr
 
 distclean-krextra:
-	rm -f ansi2knr
 
 maintainer-clean-krextra:
+ansi2knr: ansi2knr.o
+	$(LINK) ansi2knr.o $(LIBS)
+ansi2knr.o: $(CONFIG_HEADER)
 
-._c._o:
-	@echo "$(COMPILE) -c $<"
-	@rm -f _$*.c
-	@ln $< _$*.c && $(COMPILE) -c _$*.c && mv _$*.o $@ && rm _$*.c
-
-._c.l_o:
-	@echo "$(LIBTOOL) --mode=compile $(COMPILE) -c $<"
-	@rm -f _$*.c
-	@ln $< _$*.c && $(LIBTOOL) --mode=compile $(COMPILE) -c _$*.c && mv _$*.lo $@ && rm _$*.c
 
 mostlyclean-kr:
-	rm -f *._o *.l_o *._c _*.c _*.o
+	-rm -f *_.c
 
 clean-kr:
 
 distclean-kr:
-	rm -f ansi2knr
 
 maintainer-clean-kr:
+
+mt: $(mt_OBJECTS) $(mt_DEPENDENCIES)
+	@rm -f mt
+	$(LINK) $(mt_LDFLAGS) $(mt_OBJECTS) $(mt_LDADD) $(LIBS)
 
 rmt: $(rmt_OBJECTS) $(rmt_DEPENDENCIES)
 	@rm -f rmt
 	$(LINK) $(rmt_LDFLAGS) $(rmt_OBJECTS) $(rmt_LDADD) $(LIBS)
 
+cpio: $(cpio_OBJECTS) $(cpio_DEPENDENCIES)
+	@rm -f cpio
+	$(LINK) $(cpio_LDFLAGS) $(cpio_OBJECTS) $(cpio_LDADD) $(LIBS)
+
 tar: $(tar_OBJECTS) $(tar_DEPENDENCIES)
 	@rm -f tar
 	$(LINK) $(tar_LDFLAGS) $(tar_OBJECTS) $(tar_LDADD) $(LIBS)
 
-arith._c: arith.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/arith.c > arith.tmp && mv arith.tmp $@
-buffer._c: buffer.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/buffer.c > buffer.tmp && mv buffer.tmp $@
-compare._c: compare.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/compare.c > compare.tmp && mv compare.tmp $@
-create._c: create.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/create.c > create.tmp && mv create.tmp $@
-delete._c: delete.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/delete.c > delete.tmp && mv delete.tmp $@
-extract._c: extract.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/extract.c > extract.tmp && mv extract.tmp $@
-incremen._c: incremen.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/incremen.c > incremen.tmp && mv incremen.tmp $@
-list._c: list.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/list.c > list.tmp && mv list.tmp $@
-mangle._c: mangle.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/mangle.c > mangle.tmp && mv mangle.tmp $@
-misc._c: misc.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/misc.c > misc.tmp && mv misc.tmp $@
-names._c: names.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/names.c > names.tmp && mv names.tmp $@
-open3._c: open3.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/open3.c > open3.tmp && mv open3.tmp $@
-rmt._c: rmt.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/rmt.c > rmt.tmp && mv rmt.tmp $@
-rtapelib._c: rtapelib.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/rtapelib.c > rtapelib.tmp && mv rtapelib.tmp $@
-tar._c: tar.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/tar.c > tar.tmp && mv tar.tmp $@
-update._c: update.c $(ANSI2KNR)
-	$(ANSI2KNR) $(srcdir)/update.c > update.tmp && mv update.tmp $@
+pax: $(pax_OBJECTS) $(pax_DEPENDENCIES)
+	@rm -f pax
+	$(LINK) $(pax_LDFLAGS) $(pax_OBJECTS) $(pax_LDADD) $(LIBS)
+arith_.c: arith.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/arith.c; then echo $(srcdir)/arith.c; else echo arith.c; fi` | $(ANSI2KNR) > arith_.c
+buffer_.c: buffer.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/buffer.c; then echo $(srcdir)/buffer.c; else echo buffer.c; fi` | $(ANSI2KNR) > buffer_.c
+cdf_.c: cdf.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/cdf.c; then echo $(srcdir)/cdf.c; else echo cdf.c; fi` | $(ANSI2KNR) > cdf_.c
+compare_.c: compare.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/compare.c; then echo $(srcdir)/compare.c; else echo compare.c; fi` | $(ANSI2KNR) > compare_.c
+copyin_.c: copyin.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/copyin.c; then echo $(srcdir)/copyin.c; else echo copyin.c; fi` | $(ANSI2KNR) > copyin_.c
+copyout_.c: copyout.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/copyout.c; then echo $(srcdir)/copyout.c; else echo copyout.c; fi` | $(ANSI2KNR) > copyout_.c
+copypass_.c: copypass.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/copypass.c; then echo $(srcdir)/copypass.c; else echo copypass.c; fi` | $(ANSI2KNR) > copypass_.c
+cpio_.c: cpio.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/cpio.c; then echo $(srcdir)/cpio.c; else echo cpio.c; fi` | $(ANSI2KNR) > cpio_.c
+create_.c: create.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/create.c; then echo $(srcdir)/create.c; else echo create.c; fi` | $(ANSI2KNR) > create_.c
+defer_.c: defer.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/defer.c; then echo $(srcdir)/defer.c; else echo defer.c; fi` | $(ANSI2KNR) > defer_.c
+delete_.c: delete.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/delete.c; then echo $(srcdir)/delete.c; else echo delete.c; fi` | $(ANSI2KNR) > delete_.c
+extract_.c: extract.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/extract.c; then echo $(srcdir)/extract.c; else echo extract.c; fi` | $(ANSI2KNR) > extract_.c
+fmtcpio_.c: fmtcpio.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/fmtcpio.c; then echo $(srcdir)/fmtcpio.c; else echo fmtcpio.c; fi` | $(ANSI2KNR) > fmtcpio_.c
+fmttar_.c: fmttar.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/fmttar.c; then echo $(srcdir)/fmttar.c; else echo fmttar.c; fi` | $(ANSI2KNR) > fmttar_.c
+format_.c: format.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/format.c; then echo $(srcdir)/format.c; else echo format.c; fi` | $(ANSI2KNR) > format_.c
+getfile_.c: getfile.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/getfile.c; then echo $(srcdir)/getfile.c; else echo getfile.c; fi` | $(ANSI2KNR) > getfile_.c
+global_.c: global.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/global.c; then echo $(srcdir)/global.c; else echo global.c; fi` | $(ANSI2KNR) > global_.c
+header_.c: header.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/header.c; then echo $(srcdir)/header.c; else echo header.c; fi` | $(ANSI2KNR) > header_.c
+incremen_.c: incremen.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/incremen.c; then echo $(srcdir)/incremen.c; else echo incremen.c; fi` | $(ANSI2KNR) > incremen_.c
+list_.c: list.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/list.c; then echo $(srcdir)/list.c; else echo list.c; fi` | $(ANSI2KNR) > list_.c
+mangle_.c: mangle.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/mangle.c; then echo $(srcdir)/mangle.c; else echo mangle.c; fi` | $(ANSI2KNR) > mangle_.c
+misc_.c: misc.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/misc.c; then echo $(srcdir)/misc.c; else echo misc.c; fi` | $(ANSI2KNR) > misc_.c
+mt_.c: mt.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/mt.c; then echo $(srcdir)/mt.c; else echo mt.c; fi` | $(ANSI2KNR) > mt_.c
+names_.c: names.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/names.c; then echo $(srcdir)/names.c; else echo names.c; fi` | $(ANSI2KNR) > names_.c
+open3_.c: open3.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/open3.c; then echo $(srcdir)/open3.c; else echo open3.c; fi` | $(ANSI2KNR) > open3_.c
+pax_.c: pax.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/pax.c; then echo $(srcdir)/pax.c; else echo pax.c; fi` | $(ANSI2KNR) > pax_.c
+reading_.c: reading.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/reading.c; then echo $(srcdir)/reading.c; else echo reading.c; fi` | $(ANSI2KNR) > reading_.c
+rename_.c: rename.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/rename.c; then echo $(srcdir)/rename.c; else echo rename.c; fi` | $(ANSI2KNR) > rename_.c
+rmt_.c: rmt.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/rmt.c; then echo $(srcdir)/rmt.c; else echo rmt.c; fi` | $(ANSI2KNR) > rmt_.c
+rtapelib_.c: rtapelib.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/rtapelib.c; then echo $(srcdir)/rtapelib.c; else echo rtapelib.c; fi` | $(ANSI2KNR) > rtapelib_.c
+tar_.c: tar.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/tar.c; then echo $(srcdir)/tar.c; else echo tar.c; fi` | $(ANSI2KNR) > tar_.c
+update_.c: update.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/update.c; then echo $(srcdir)/update.c; else echo update.c; fi` | $(ANSI2KNR) > update_.c
+util_.c: util.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/util.c; then echo $(srcdir)/util.c; else echo util.c; fi` | $(ANSI2KNR) > util_.c
+arith_.o buffer_.o cdf_.o compare_.o copyin_.o copyout_.o copypass_.o \
+cpio_.o create_.o defer_.o delete_.o extract_.o fmtcpio_.o fmttar_.o \
+format_.o getfile_.o global_.o header_.o incremen_.o list_.o mangle_.o \
+misc_.o mt_.o names_.o open3_.o pax_.o reading_.o rename_.o rmt_.o \
+rtapelib_.o tar_.o update_.o util_.o : $(ANSI2KNR)
 
 tags: TAGS
 
-ID: $(HEADERS) $(SOURCES)
-	here=`pwd` && cd $(srcdir) && mkid -f$$here/ID $(SOURCES) $(HEADERS)
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $(SOURCES) $(HEADERS) $(LISP)
 
-TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES)
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
-	done; \
-	test -z "$(ETAGS_ARGS)$(SOURCES)$(HEADERS)$$tags" \
-	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $(SOURCES) $(HEADERS) -o $$here/TAGS)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
 
 mostlyclean-tags:
 
 clean-tags:
 
 distclean-tags:
-	rm -f TAGS ID
+	-rm -f TAGS ID
 
 maintainer-clean-tags:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
 subdir = src
+
 distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
@@ -333,50 +423,90 @@ distdir: $(DISTFILES)
 	  || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
 	  || cp -p $$d/$$file $(distdir)/$$file; \
 	done
-arith.$o arith.l$o: arith.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h
-buffer.$o buffer.l$o: buffer.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h ..//lib/fnmatch.h common.h tar.h arith.h \
-	..//lib/modechange.h rmt.h
-compare.$o compare.l$o: compare.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h \
-	rmt.h
-create.$o create.l$o: create.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h
-delete.$o delete.l$o: delete.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h \
-	rmt.h
-extract.$o extract.l$o: extract.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h
-incremen.$o incremen.l$o: incremen.c system.h ../config.h \
-	..//lib/pathmax.h ..//lib/error.h common.h tar.h arith.h \
-	..//lib/modechange.h
-list.$o list.l$o: list.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h
-mangle.$o mangle.l$o: mangle.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h
-misc.$o misc.l$o: misc.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h ..//lib/backupfile.h rmt.h common.h tar.h \
-	arith.h ..//lib/modechange.h
-names.$o names.l$o: names.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h ..//lib/fnmatch.h common.h tar.h arith.h \
-	..//lib/modechange.h
-open3.$o open3.l$o: open3.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h
-rmt.$o rmt.l$o: rmt.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h
-rtapelib.$o rtapelib.l$o: rtapelib.c system.h ../config.h \
-	..//lib/pathmax.h ..//lib/error.h rmt.h
-tar.$o tar.l$o: tar.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h ..//lib/getopt.h common.h tar.h arith.h \
-	..//lib/modechange.h ..//lib/backupfile.h
-update.$o update.l$o: update.c system.h ../config.h ..//lib/pathmax.h \
-	..//lib/error.h common.h tar.h arith.h ..//lib/modechange.h
+arith.o: arith.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h common.h tar.h arith.h ../lib/backupfile.h \
+	../lib/modechange.h
+buffer.o: buffer.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h ../lib/fnmatch.h common.h tar.h \
+	arith.h ../lib/backupfile.h ../lib/modechange.h rmt.h
+cdf.o: cdf.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h extern.h ../lib/dstring.h cpiohdr.h cpio.h
+compare.o: compare.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h rmt.h
+copyin.o: copyin.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
+	cpio.h extern.h ../lib/dstring.h defer.h rmt.h ../lib/fnmatch.h
+copyout.o: copyout.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
+	cpio.h extern.h ../lib/dstring.h defer.h rmt.h
+copypass.o: copypass.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
+	cpio.h extern.h ../lib/dstring.h
+create.o: create.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h ../lib/hash.h
+defer.o: defer.c ../config.h system.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h cpiohdr.h cpio.h extern.h ../lib/dstring.h \
+	defer.h
+delete.o: delete.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h rmt.h
+extract.o: extract.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+fmtcpio.o: fmtcpio.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h \
+	cpiohdr.h cpio.h ../lib/filetypes.h
+fmttar.o: fmttar.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
+	cpio.h extern.h ../lib/dstring.h rmt.h tarhdr.h ustar.h
+format.o: format.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h
+getfile.o: getfile.c ../config.h system.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h
+global.o: global.c ../config.h cpiohdr.h cpio.h system.h \
+	../lib/pathmax.h ../lib/gettext.h ../lib/error.h extern.h \
+	../lib/dstring.h
+header.o: header.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+incremen.o: incremen.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+list.o: list.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h common.h tar.h arith.h ../lib/backupfile.h \
+	../lib/modechange.h
+main.o: main.c ../config.h ../lib/getopt.h ../lib/filetypes.h system.h \
+	../lib/pathmax.h ../lib/gettext.h ../lib/error.h cpiohdr.h \
+	cpio.h ../lib/dstring.h extern.h rmt.h
+mangle.o: mangle.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+misc.o: misc.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h rmt.h common.h tar.h arith.h ../lib/backupfile.h \
+	../lib/modechange.h
+names.o: names.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h ../lib/fnmatch.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+open3.o: open3.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h
+reading.o: reading.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+rename.o: rename.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h
+rtapelib.o: rtapelib.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h rmt.h
+update.o: update.c system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
+	../lib/backupfile.h ../lib/modechange.h
+util.o: util.c ../config.h system.h ../lib/pathmax.h ../lib/gettext.h \
+	../lib/error.h cpiohdr.h cpio.h extern.h ../lib/dstring.h rmt.h
 
 info:
 dvi:
 check: all
-	$(MAKE)
 installcheck:
 install-exec: install-binPROGRAMS install-libexecPROGRAMS
 	@$(NORMAL_INSTALL)
@@ -389,63 +519,91 @@ install: install-exec install-data all
 
 uninstall: uninstall-binPROGRAMS uninstall-libexecPROGRAMS
 
-all: $(ANSI2KNR) $(PROGRAMS) $(HEADERS) Makefile
-
 install-strip:
-	$(MAKE) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s' install
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s' INSTALL_SCRIPT='$(INSTALL_PROGRAM)' install
 installdirs:
-	$(mkinstalldirs)  $(bindir) $(libexecdir)
+	$(mkinstalldirs)  $(DESTDIR)$(bindir) $(DESTDIR)$(libexecdir)
 
 
 mostlyclean-generic:
-	test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
-	test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
-	rm -f Makefile $(DISTCLEANFILES)
-	rm -f config.cache config.log stamp-h
-	test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-	test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
-	test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 mostlyclean:  mostlyclean-binPROGRAMS mostlyclean-libexecPROGRAMS \
-		mostlyclean-compile mostlyclean-krextra mostlyclean-kr \
-		mostlyclean-tags mostlyclean-generic
+		mostlyclean-noinstPROGRAMS mostlyclean-compile \
+		mostlyclean-krextra mostlyclean-kr mostlyclean-tags \
+		mostlyclean-generic
 
-clean:  clean-binPROGRAMS clean-libexecPROGRAMS clean-compile \
-		clean-krextra clean-kr clean-tags clean-generic \
-		mostlyclean
+clean:  clean-binPROGRAMS clean-libexecPROGRAMS clean-noinstPROGRAMS \
+		clean-compile clean-krextra clean-kr clean-tags \
+		clean-generic mostlyclean
 
 distclean:  distclean-binPROGRAMS distclean-libexecPROGRAMS \
-		distclean-compile distclean-krextra distclean-kr \
-		distclean-tags distclean-generic clean
-	rm -f config.status
+		distclean-noinstPROGRAMS distclean-compile \
+		distclean-krextra distclean-kr distclean-tags \
+		distclean-generic clean
+	-rm -f config.status
 
 maintainer-clean:  maintainer-clean-binPROGRAMS \
 		maintainer-clean-libexecPROGRAMS \
+		maintainer-clean-noinstPROGRAMS \
 		maintainer-clean-compile maintainer-clean-krextra \
 		maintainer-clean-kr maintainer-clean-tags \
 		maintainer-clean-generic distclean
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
-.PHONY: default mostlyclean-binPROGRAMS distclean-binPROGRAMS \
-clean-binPROGRAMS maintainer-clean-binPROGRAMS uninstall-binPROGRAMS \
-install-binPROGRAMS mostlyclean-libexecPROGRAMS \
-distclean-libexecPROGRAMS clean-libexecPROGRAMS \
-maintainer-clean-libexecPROGRAMS uninstall-libexecPROGRAMS \
-install-libexecPROGRAMS mostlyclean-compile distclean-compile \
-clean-compile maintainer-clean-compile mostlyclean-krextra \
-distclean-krextra clean-krextra maintainer-clean-krextra mostlyclean-kr \
-distclean-kr clean-kr maintainer-clean-kr tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir info dvi \
-installcheck install-exec install-data install uninstall all \
-installdirs mostlyclean-generic distclean-generic clean-generic \
+.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
+maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+mostlyclean-libexecPROGRAMS distclean-libexecPROGRAMS \
+clean-libexecPROGRAMS maintainer-clean-libexecPROGRAMS \
+uninstall-libexecPROGRAMS install-libexecPROGRAMS \
+mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
+clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-krextra distclean-krextra \
+clean-krextra maintainer-clean-krextra mostlyclean-kr distclean-kr \
+clean-kr maintainer-clean-kr tags mostlyclean-tags distclean-tags \
+clean-tags maintainer-clean-tags distdir info dvi installcheck \
+install-exec install-data install uninstall all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+cpio.o: cpio.c
+	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/cpio.c
+
+cpio._o: cpio._c
+	@rm -f _cpio.c
+	@ln cpio._c _cpio.c
+	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _cpio.c
+	@mv _cpio.o $@
+	@rm _cpio.c
+
+mt.o: mt.c
+	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/mt.c
+
+mt._o: mt._c
+	@rm -f _mt.c
+	@ln mt._c _mt.c
+	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _mt.c
+	@mv _mt.o $@
+	@rm _mt.c
+
+pax.o: pax.c
+	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/pax.c
+
+pax._o: pax._c
+	@rm -f _pax.c
+	@ln pax._c _pax.c
+	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _pax.c
+	@mv _pax.o $@
+	@rm _pax.c
 
 tar.o: tar.c
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/tar.c

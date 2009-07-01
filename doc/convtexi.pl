@@ -2,49 +2,23 @@
 eval "exec /usr/local/bin/perl -S $0 $*"
     if 0;
 
-# Copy a Texinfo file, replacing @value's, @FIXME's and other gooddies.
-# Copyright © 1996 Free Software Foundation, Inc.
+# Process `tar.texi', replacing @value's and @FIXME's appropriately.
+# Copyright © 1996, 1998 Progiciels Bourbeau-Pinard inc.
 # François Pinard <pinard@iro.umontreal.ca>, 1996.
+
+$PROOF = 0;
+if ($ARGV[0] eq '-proof')
+{
+    $PROOF = 1;
+    shift;
+}
 
 $_ = <>;
 while ($_)
 {
-    if (/^\@c()$/ || /^\@c (.*)/ || /^\@(include .*)/)
-    {
-	if ($topseen)
-	{
-	    print "\@format\n";
-	    print "\@strong{\@\@c} $1\n";
-	    $_ = <>;
-	    while (/\@c (.*)/)
-	    {
-		print "\@strong{\@\@c} $1\n";
-		$_ = <>;
-	    }
-	    print "\@end format\n";
-	}
-	else
-	{
-	    $delay .= "\@format\n";
-	    $delay .= "\@strong{\@\@c} $1\n";
-	    $_ = <>;
-	    while (/\@c (.*)/)
-	    {
-		$delay .= "\@strong{\@\@c} $1\n";
-		$_ = <>;
-	    }
-	    $delay .= "\@end format\n";
-	}
-    }
-    elsif (/^\@chapter /)
-    {
-	print;
-#	print $delay;
-	$delay = '';
-	$topseen = 1;
-	$_ = <>;
-    }
-    elsif (/^\@macro /)
+    %option = () if /^\@node/;
+
+    if (/^\@macro /)
     {
 	$_ = <> while ($_ && ! /^\@end macro/);
 	$_ = <>;
@@ -54,31 +28,44 @@ while ($_)
 	$set{$1} = $2;
 	$_ = <>;
     }
-    elsif (/^\@UNREVISED/)
-    {
-	print "\@quotation\n";
-	print "\@emph{(This message will disappear, once this node is revised.)}\n";
-	print "\@end quotation\n";
-	$_ = <>;
-    }
     else
     {
-	while (/\@value{([^\}]*)}/)
+	while (/\@value{(([-a-z0-9]*)[^\}]*)}/)
 	{
-	    if (defined $set{$1})
+	    if (defined $set{"$1"})
 	    {
-		$_ = "$`$set{$1}$'";
+		$value = $set{"$1"};
+
+		if ($2)
+		{
+		    if ($option{$2})
+		    {
+			$_ = "$`$option{$2}$'";
+		    }
+		    else
+		    {
+			$_ = "$`$value$'";
+			$option{$2} = "\@w{\@kbd{--$2}}";
+		    }
+		}
+		else
+		{
+		    $_ = "$`$value$'";
+		}
+	    }
+	    elsif ($PROOF)
+	    {
+		$_ = "$`\@strong{<UNDEFINED>}$1\@strong{</>}$'";
 	    }
 	    else
 	    {
-		$_ = "$`\@strong{<UNDEFINED>}$1\@strong{</UNDEFINED>}$'";
+		$_ = "$`$1$'";
 	    }
 	}
-	while (/\@FIXME-?([a-z]*)\{/)
+
+	while (/\@FIXME\{/)
 	{
-	    $tag = $1 eq '' ? 'fixme' : $1;
-	    $tag =~ y/a-z/A-Z/;
-	    print "$`\@strong{<$tag>}";
+	    print "$`\@strong{<FIXME>}" if $PROOF;
 	    $_ = $';
 	    $level = 1;
 	    while ($level > 0)
@@ -88,31 +75,33 @@ while ($_)
 		    if ($1 eq '{')
 		    {
 			$level++;
-			print "$`\{";
+			print "$`\{" if $PROOF;
 			$_ = $';
 		    }
 		    elsif ($level > 1)
 		    {
 			$level--;
-			print "$`\}";
+			print "$`\}" if $PROOF;
 			$_ = $';
 		    }
 		    else
 		    {
 			$level = 0;
-			print "$`\@strong{</$tag>}";
+			print "$`\@strong{</>}" if $PROOF;
 			$_ = $';
 		    }
 		}
 		else
 		{
-		    print;
+		    print if $PROOF;
 		    $_ = <>;
 		}
 	    }
 	}
+
 	print;
 	$_ = <>;
     }
 }
+
 exit 0;

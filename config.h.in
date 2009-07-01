@@ -32,8 +32,9 @@
 /* Define if your system has a working fnmatch function.  */
 #undef HAVE_FNMATCH
 
-/* Define if you have a working `mmap' system call.  */
-#undef HAVE_MMAP
+/* Define if system calls automatically restart after interruption
+   by a signal.  */
+#undef HAVE_RESTARTABLE_SYSCALLS
 
 /* Define if your struct stat has st_blksize.  */
 #undef HAVE_ST_BLKSIZE
@@ -56,8 +57,14 @@
 /* Define if on MINIX.  */
 #undef _MINIX
 
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef mode_t
+
 /* Define to `long' if <sys/types.h> doesn't define.  */
 #undef off_t
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
 
 /* Define if the system does not provide POSIX.1 features except
    with this defined.  */
@@ -93,8 +100,11 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef uid_t
 
-/* This is unconditionally defined for setting a GNU environment.  */
-#undef _GNU_SOURCE
+/* Define if tar format support should be included.  (It doesn't work) */
+#undef CPIO_USE_GNU_TAR
+
+/* Define if internal debugging code should be enabled.  */
+#undef DEBUG_CPIO
 
 /* Define to a string giving the full name of the default archive file.  */
 #undef DEFAULT_ARCHIVE
@@ -116,26 +126,20 @@
 /* Define to 1 if NLS is requested.  */
 #undef ENABLE_NLS
 
-/* Define as 1 if you have catgets and don't want to use GNU gettext.  */
-#undef HAVE_CATGETS
+/* Define as 1 if you have dcgettext.  */
+#undef HAVE_DCGETTEXT
 
-/* Define to 1 if you have getgrgid(3).  */
-#undef HAVE_GETGRGID
-
-/* Define to 1 if you have getpwuid(3).  */
-#undef HAVE_GETPWUID
-
-/* Define as 1 if you have gettext and don't want to use GNU gettext.  */
+/* Define as 1 if you have gettext.  */
 #undef HAVE_GETTEXT
-
-/* Define if your locale.h file contains LC_MESSAGES.  */
-#undef HAVE_LC_MESSAGES
 
 /* Define to 1 if mknod function is available.  */
 #undef HAVE_MKNOD
 
-/* Define to 1 if stpcpy function is available.  */
-#undef HAVE_STPCPY
+/* Define if your locale.h file contains LC_MESSAGES.  */
+#undef HAVE_LC_MESSAGES
+
+/* Define to 1 if printf() supports "%llu" format.  */
+#undef HAVE_PRINTF_LLU
 
 /* Define if `union wait' is the type of the first arg to wait functions.  */
 #undef HAVE_UNION_WAIT
@@ -162,29 +166,47 @@
    site ftp.antaire.com in antaire/src, file dmalloc/dmalloc.tar.gz.  */
 #undef WITH_DMALLOC
 
-/* The number of bytes in a long long.  */
-#undef SIZEOF_LONG_LONG
+/* Define to rpl_malloc if the replacement function should be used.  */
+#undef malloc
+
+/* Define to type of major device number, if not otherwise defined.  */
+#undef major_t
+
+/* Define to type of minor device number, if not otherwise defined.  */
+#undef minor_t
+
+/* Define to rpl_realloc if the replacement function should be used.  */
+#undef realloc
+
+/* Define to type of signed memory size, if not otherwise defined.  */
+#undef ssize_t
+
+/* The number of bytes in a unsigned int.  */
+#undef SIZEOF_UNSIGNED_INT
 
 /* The number of bytes in a unsigned long.  */
 #undef SIZEOF_UNSIGNED_LONG
 
-/* Define if you have the __argz_count function.  */
-#undef HAVE___ARGZ_COUNT
+/* The number of bytes in a unsigned long long.  */
+#undef SIZEOF_UNSIGNED_LONG_LONG
 
-/* Define if you have the __argz_next function.  */
-#undef HAVE___ARGZ_NEXT
+/* Define if you have the DONE_WORKING_MALLOC_CHECK function.  */
+#undef HAVE_DONE_WORKING_MALLOC_CHECK
 
-/* Define if you have the __argz_stringify function.  */
-#undef HAVE___ARGZ_STRINGIFY
-
-/* Define if you have the basename function.  */
-#undef HAVE_BASENAME
+/* Define if you have the DONE_WORKING_REALLOC_CHECK function.  */
+#undef HAVE_DONE_WORKING_REALLOC_CHECK
 
 /* Define if you have the dcgettext function.  */
 #undef HAVE_DCGETTEXT
 
 /* Define if you have the dirname function.  */
 #undef HAVE_DIRNAME
+
+/* Define if you have the endgrent function.  */
+#undef HAVE_ENDGRENT
+
+/* Define if you have the endpwent function.  */
+#undef HAVE_ENDPWENT
 
 /* Define if you have the execlp function.  */
 #undef HAVE_EXECLP
@@ -201,14 +223,17 @@
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
 
-/* Define if you have the getpagesize function.  */
-#undef HAVE_GETPAGESIZE
+/* Define if you have the gettext function.  */
+#undef HAVE_GETTEXT
 
 /* Define if you have the isascii function.  */
 #undef HAVE_ISASCII
 
 /* Define if you have the lchown function.  */
 #undef HAVE_LCHOWN
+
+/* Define if you have the memmove function.  */
+#undef HAVE_MEMMOVE
 
 /* Define if you have the memset function.  */
 #undef HAVE_MEMSET
@@ -219,20 +244,20 @@
 /* Define if you have the mkfifo function.  */
 #undef HAVE_MKFIFO
 
-/* Define if you have the munmap function.  */
-#undef HAVE_MUNMAP
-
 /* Define if you have the nap function.  */
 #undef HAVE_NAP
 
 /* Define if you have the napms function.  */
 #undef HAVE_NAPMS
 
+/* Define if you have the pipe function.  */
+#undef HAVE_PIPE
+
 /* Define if you have the poll function.  */
 #undef HAVE_POLL
 
-/* Define if you have the putenv function.  */
-#undef HAVE_PUTENV
+/* Define if you have the popen function.  */
+#undef HAVE_POPEN
 
 /* Define if you have the rename function.  */
 #undef HAVE_RENAME
@@ -243,20 +268,14 @@
 /* Define if you have the select function.  */
 #undef HAVE_SELECT
 
-/* Define if you have the setenv function.  */
-#undef HAVE_SETENV
-
 /* Define if you have the setlocale function.  */
 #undef HAVE_SETLOCALE
 
 /* Define if you have the stpcpy function.  */
 #undef HAVE_STPCPY
 
-/* Define if you have the strcasecmp function.  */
-#undef HAVE_STRCASECMP
-
-/* Define if you have the strchr function.  */
-#undef HAVE_STRCHR
+/* Define if you have the stpncpy function.  */
+#undef HAVE_STPNCPY
 
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
@@ -267,14 +286,14 @@
 /* Define if you have the usleep function.  */
 #undef HAVE_USLEEP
 
-/* Define if you have the <argz.h> header file.  */
-#undef HAVE_ARGZ_H
-
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
+
+/* Define if you have the <libintl.h> header file.  */
+#undef HAVE_LIBINTL_H
 
 /* Define if you have the <limits.h> header file.  */
 #undef HAVE_LIMITS_H
@@ -284,9 +303,6 @@
 
 /* Define if you have the <locale.h> header file.  */
 #undef HAVE_LOCALE_H
-
-/* Define if you have the <malloc.h> header file.  */
-#undef HAVE_MALLOC_H
 
 /* Define if you have the <memory.h> header file.  */
 #undef HAVE_MEMORY_H
@@ -300,14 +316,14 @@
 /* Define if you have the <netdb.h> header file.  */
 #undef HAVE_NETDB_H
 
-/* Define if you have the <nl_types.h> header file.  */
-#undef HAVE_NL_TYPES_H
-
 /* Define if you have the <poll.h> header file.  */
 #undef HAVE_POLL_H
 
 /* Define if you have the <sgtty.h> header file.  */
 #undef HAVE_SGTTY_H
+
+/* Define if you have the <stdbool.h> header file.  */
+#undef HAVE_STDBOOL_H
 
 /* Define if you have the <string.h> header file.  */
 #undef HAVE_STRING_H
@@ -363,14 +379,20 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the <values.h> header file.  */
-#undef HAVE_VALUES_H
-
-/* Define if you have the i library (-li).  */
-#undef HAVE_LIBI
-
 /* Define if you have the nsl library (-lnsl).  */
 #undef HAVE_LIBNSL
 
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
+
+/* This is recommended for all GNU sources.  We conditionalize it in
+   case some library file defines it.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+
+/* Long longs are of no use if we cannot print them easily.  */
+#if !HAVE_PRINTF_LLU
+# undef SIZEOF_UNSIGNED_LONG_LONG
+# define SIZEOF_UNSIGNED_LONG_LONG 0
+#endif

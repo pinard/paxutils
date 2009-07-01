@@ -1,0 +1,1153 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Tape positioning,  Next: mt invocation,  Prev: Many on one,  Up: Many on one
+
+Tape positions and tape marks
+-----------------------------
+
+   Just as archives can store more than one file from the file system,
+tapes can store more than one archive file.  To keep track of where
+archive files (or any other type of file stored on tape) begin and end,
+tape archive devices write magnetic "tape marks" on the archive media.
+Tape drives write one tape mark between files, two at the end of all
+the file entries.
+
+   If you think of data as a series of records "RRRR", and tape marks as
+"*", a tape might look like the following:
+
+     RRRR*RRRRRR*RRRRR*RR*RRRRR**-------------------------
+
+   Tape devices read and write tapes using a read/write "tape head"--a
+physical part of the device which can only access one point on the tape
+at a time.  When you use `tar' to read or write archive data from a
+tape device, the device will begin reading or writing from wherever on
+the tape the tape head happens to be, regardless of which archive or
+what part of the archive the tape head is on.  Before writing an
+archive, you should make sure that no data on the tape will be
+overwritten (unless it is no longer needed).  Before reading an
+archive, you should make sure the tape head is at the beginning of the
+archive you want to read.  (The `restore' script will find the archive
+automatically.   *Note Scripted restoration::.)  *Note mt invocation::,
+for an explanation of the tape moving utility.
+
+   If you want to add new archive file entries to a tape, you should
+advance the tape to the end of the existing file entries, backspace
+over the last tape mark, and write the new archive file.  If you were
+to add two archives to the example above, the tape might look like the
+following:
+
+     RRRR*RRRRRR*RRRRR*RR*RRRRR*RRR*RRRR**----------------
+
+
+File: paxutils.info,  Node: mt invocation,  Prev: Tape positioning,  Up: Many on one
+
+The `mt' utility
+----------------
+
+   *Note blocking-factor::.
+
+   You can use the `mt' utility to advance or rewind a tape past a
+specified number of archive files on the tape.  This will allow you to
+move to the beginning of an archive before extracting or reading it, or
+to the end of all the archives before writing a new one.
+
+   The syntax of the `mt' command is:
+
+     $ mt [-f TAPENAME] OPERATION [NUMBER]
+
+   where TAPENAME is the name of the tape device, NUMBER is the number
+of times a subcommand is performed (with a default of one), and
+OPERATION is one of the following:
+
+`eof'
+`weof'
+     Writes NUMBER tape marks at the current position on the tape.
+
+`fsf'
+     Moves tape position forward NUMBER files.
+
+`bsf'
+     Moves tape position back NUMBER files.
+
+`rewind'
+     Rewinds the tape.  (Ignores NUMBER).
+
+`offline'
+`rewoff1'
+     Rewinds the tape and takes the tape device off-line. (Ignores
+     NUMBER).
+
+`status'
+     Prints status information about the tape unit.
+
+   If you don't specify a TAPENAME, `mt' uses the environment variable
+`TAPE'; if `TAPE' is not defined, `mt' uses the device `/dev/rmt12'.
+
+   `mt' returns a 0 exit status when the operation(s) were successful,
+1 if the command was unrecognized, and 2 if a subcommand failed.
+
+   If you use `--extract' (`--get', `-x') with the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option specified, `tar'
+will read an archive label (the tape head has to be positioned on it)
+and print an error if the archive label doesn't match the ARCHIVE-NAME
+specified.  ARCHIVE-NAME can be any regular expression.  If the labels
+match, `tar' extracts the archive.  *Note label::, .  `tar --list
+--label' will cause `tar' to print the label.
+
+
+File: paxutils.info,  Node: One on many,  Next: Being careful,  Prev: Many on one,  Up: Media
+
+Using multiple tapes
+====================
+
+   Often you might want to write a large archive, one larger than will
+fit on the actual tape you are using.  In such a case, you can run
+multiple `tar' commands, but this can be inconvenient, particularly if
+you are using options like `--exclude=PATTERN' or dumping entire
+filesystems.  Therefore, `tar' supports multiple tapes automatically.
+
+   Use `--multi-volume' (`-M') on the command line, and then `tar' will,
+when it reaches the end of the tape, prompt for another tape, and
+continue the archive.  Each tape will have an independent archive, and
+can be read without needing the other.  (As an exception to this, the
+file that `tar' was archiving when it ran out of tape will usually be
+split between the two archives; in this case you need to extract from
+the first archive, using `--multi-volume' (`-M'), and then put in the
+second tape when prompted, so `tar' can restore both halves of the
+file.)
+
+   `tar' multi-volume archives do not use a truly portable format.  You
+need `tar' at both ends to process them properly.
+
+   When prompting for a new tape, `tar' accepts any of the following
+responses:
+
+`?'
+     Request `tar' to explain possible responses.
+
+`q'
+     Request `tar' to exit immediately.
+
+`n FILENAME'
+     Request `tar' to write the next volume on the file FILENAME.
+
+`!'
+     Request `tar' to run a subshell.
+
+`y'
+     Request `tar' to begin writing the next volume.
+
+   (You should type `y' only *after* you have changed the tape;
+otherwise `tar' will write over the volume it just finished.)
+
+   If you want more elaborate behavior than this, give `tar' the
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME') option.  The file SCRIPT-NAME is expected to be a program
+(or shell script) to be run instead of the normal prompting procedure.
+When the program finishes, `tar' will immediately begin writing the
+next volume.  The behavior of the `n' response to the normal
+tape-change prompt is not available if you use
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME').
+
+   The method `tar' uses to detect end of tape is not perfect, and
+fails on some operating systems or on some devices.  You can use the
+`--tape-length=KBYTES' (`-L KBYTES') option if `tar' can't detect the
+end of the tape itself.  This option selects `--multi-volume' (`-M')
+automatically.  The SIZE argument should then be the usable size of the
+tape.  But for many devices, and floppy disks in particular, this
+option is never actually required, as far as we know.
+
+   If you want `tar' to cycle through a series of tape drives, then you
+can use the `n' response to the tape-change prompt.  This is error
+prone, however, and doesn't work at all with
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME').  Therefore, if you give `tar' multiple
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') options, then the specified
+files will be used, in sequence, as the successive volumes of the
+archive.  Only when the first one in the sequence needs to be used
+again will `tar' prompt for a tape change (or run the info script).
+
+   Multi-volume archives
+
+   With `--multi-volume' (`-M'), `tar' will not abort when it cannot
+read or write any more data.  Instead, it will ask you to prepare a new
+volume.  If the archive is on a magnetic tape, you should change tapes
+now; if the archive is on a floppy disk, you should change disks, and so
+forth.
+
+   Each volume of a multi-volume archive is an independent `tar'
+archive, complete in itself.  For example, you can list or extract any
+volume alone; just don't specify `--multi-volume' (`-M').  However, if
+one file in the archive is split across volumes, the only way to extract
+it successfully is with a multi-volume extract command `--extract
+--multi-volume' (`-xM') starting on or before the volume where the file
+begins.
+
+   For example, let's presume someone has two tape drives on a system,
+named `/dev/tape0' and `/dev/tape1'.  To have `tar' switch to the
+second drive when it needs to write the second tape, and then back to
+the first tape, and so forth, just do either of:
+
+     $ tar --create --multi-volume --file=/dev/tape0 --file=/dev/tape1 FILES
+     $ tar cMff /dev/tape0 /dev/tape1 FILES
+
+* Menu:
+
+* Multi-volume archives::       Archives longer than one tape or disk
+* multi-volume::                Using multi-volume mode
+* tape-length::                 Announcing the tape length
+* info-script::                 Taking actions at volume switching
+* volno-file::                  Changing the volume number in prompts
+
+
+File: paxutils.info,  Node: Multi-volume archives,  Next: multi-volume,  Prev: One on many,  Up: One on many
+
+Archives longer than one tape or disk
+-------------------------------------
+
+   To create an archive that is larger than will fit on a single unit of
+the media, use the `--multi-volume' (`-M') option in conjunction with
+the `--create' (`-c') option (*note create::.).  A "multi-volume"
+archive can be manipulated like any other archive (provided the
+`--multi-volume' (`-M') option is specified), but is stored on more
+than one tape or disk.
+
+   When you specify `--multi-volume' (`-M'), `tar' does not report an
+error when it comes to the end of an archive volume (when reading) or
+the end of the media (when writing).  Instead, it prompts you to load a
+new storage volume.  If the archive is on a magnetic tape, you should
+change tapes when you see the prompt; if the archive is on a floppy
+disk, you should change disks; and so forth.
+
+   You can read each individual volume of a multi-volume archive as if
+it were an archive by itself.  For example, to list the contents of one
+volume, use `--list' (`-t'), without `--multi-volume' (`-M') specified.
+To extract an archive member from one volume (assuming it is on that
+volume), use `--extract' (`--get', `-x'), again without
+`--multi-volume' (`-M').
+
+   If an archive member is split across volumes (that is, its entry
+begins on one volume of the media and ends on another), you need to
+specify `--multi-volume' (`-M') to extract it successfully.  In this
+case, you should load the volume where the archive member starts, and
+use `tar --extract --multi-volume'--`tar' will prompt for later volumes
+as it needs them.  *Note Extracting archives::, for more information
+about extracting archives.
+
+   `--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME') is like `--multi-volume' (`-M'), except that `tar' does
+not prompt you directly to change media volumes when a volume is
+full--instead, `tar' runs commands you have stored in SCRIPT-NAME.  For
+example, this option can be used to eject cassettes, or to broadcast
+messages such as `Someone please come change my tape' when performing
+unattended backups.  When SCRIPT-NAME is done, `tar' will assume that
+the media has been changed.
+
+   Multi-volume archives can be modified like any other archive.  To add
+files to a multi-volume archive, you need to only mount the last volume
+of the archive media (and new volumes, if needed).  For all other
+subcommands that modify the archive, you need to use the entire archive.
+
+   If a multi-volume archive was labeled using `--label=ARCHIVE-LABEL'
+(`-V ARCHIVE-LABEL') (*note label::.) when it was created, `tar' will
+not automatically label volumes which are added later.  To label
+subsequent volumes, specify `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL') again in conjunction with the `--append' (`-r'),
+`--update' (`-u') or `--concatenate' (`--catenate', `-A') subcommand.
+
+
+File: paxutils.info,  Node: multi-volume,  Next: tape-length,  Prev: Multi-volume archives,  Up: One on many
+
+Using multi-volume mode
+-----------------------
+
+   When the `--multi-volume' (`-M') option is given, `tar' creates a
+multi-volume archive, when used in conjunction with `--create' (`-c').
+To perform any other subcommand on a multi-volume archive, specify
+`--multi-volume' (`-M') in conjunction with that subcommand.  It
+creates, lists, or extracts a multi-volume archive.
+
+   This option causes `tar' to write a "multi-volume" archive--one that
+may be larger than will fit on the medium used to hold it.  *Note
+Multi-volume archives::.
+
+   Beware that there is *no* real standard about the proper way for a
+`tar' archive to span volume boundaries.  If you have a multi-volume
+created by some vendor's `tar', there is almost no chance you could
+read all the volumes with `tar'.  The converse is also true: you should
+not expect multi-volume archives created by `tar' to be fully recovered
+by any vendor's `tar'.  Since there is little chance that, in mixed
+system configurations, some vendor's `tar' will work on another
+vendor's machine, and there is a great chance that `tar' will work on
+most of them, your best bet is to install `tar' on all machines between
+which you know exchange of files is possible.
+
+
+File: paxutils.info,  Node: tape-length,  Next: info-script,  Prev: multi-volume,  Up: One on many
+
+Announcing the tape length
+--------------------------
+
+   Option `--tape-length=KBYTES' (`-L KBYTES') has the effect of
+forcing a change of the tape after writing NUM x 1024 bytes.
+
+   This option might be useful when your tape drivers do not properly
+detect the end of physical tapes.  By being slightly conservative on the
+maximum tape length, you might avoid the problem entirely.
+
+
+File: paxutils.info,  Node: info-script,  Next: volno-file,  Prev: tape-length,  Up: One on many
+
+Taking actions at volume switching
+----------------------------------
+
+   The `--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME',
+`-F SCRIPT-NAME') option indicates the name of a program, or shell
+script, meant to help create a multi-volume archive via a script.  Used
+in conjunction with `--create' (`-c').  It gets `file' executed at end
+of each tape.  This implies `--multi-volume' (`-M').
+
+   This script should exit with zero status if `tar' is to continue the
+archiving operation.  `tar' interprets a non-zero exit (or any other
+kind of error) as a request to abort processing right away.  For
+example, this could ease the termination of `tar' when the script
+determines it runs out of tapes, or in other situations of unattented
+environments.
+
+
+File: paxutils.info,  Node: volno-file,  Prev: info-script,  Up: One on many
+
+Changing the volume number in prompts
+-------------------------------------
+
+   The volume number used by `tar' in its tape-change prompt can be
+changed; if you give the `--volno-file=FILE-OF-NUMBER' option, then
+FILE-OF-NUMBER should be a nonexistent file to be created, or a file
+already containing a decimal number.  That number will be used as the
+volume number of the first volume written.  When `tar' is finished, it
+will rewrite the file with the now-current volume number.  (This does
+not change the volume number written on a tape label, as per *Note
+label::; it *only* affects the number used in the prompt.)
+
+
+File: paxutils.info,  Node: Being careful,  Next: Other tape considerations,  Prev: One on many,  Up: Media
+
+Being even more careful
+=======================
+
+* Menu:
+
+* label::                       Including labels in the archive
+* verify::                      Verifying data as it is stored
+* Write protection::            Write protection
+
+
+File: paxutils.info,  Node: label,  Next: verify,  Prev: Being careful,  Up: Being careful
+
+Including labels in the archive
+-------------------------------
+
+   To give the archive a name which will be recorded in it, use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option.  This will write a
+special block identifying VOLUME-LABEL as the name of the archive to
+the front of the archive, which will be displayed when the archive is
+listed with `--list' (`-t').  If you are creating a multi-volume
+archive with `--multi-volume' (`-M') (*note One on many::.), then the
+volume label will have `Volume NNN' appended to the name you give,
+where NNN is the number of the volume of the archive.  If you use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option when reading an
+archive, it checks to make sure the label on the tape matches the one
+you give.  *Note label::.
+
+   When `tar' writes an archive to tape, it creates a single tape file.
+If multiple archives are written to the same tape, one after the other,
+they each get written as separate tape files.  When extracting, it is
+necessary to position the tape at the right place before running `tar'.
+To do this, use the `mt' command.  For more information on the `mt'
+command and on the organization of tapes into a sequence of tape files,
+see *Note mt invocation::.
+
+   People often seem to do:
+
+     $ tar --label="SOME-PREFIX `date +SOME-FORMAT`"
+
+or such, to put a common date on all volumes or an archive set.
+
+   The `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option creates an
+archive with volume name NAME.
+
+   This option causes `tar' to write out a "volume header" at the
+beginning of the archive.  If `--multi-volume' (`-M') is used, each
+volume of the archive will have a volume header of `NAME Volume N',
+where N is 1 for the first volume, 2 for the next, and so on.
+
+   To avoid problems caused by misplaced paper labels on the archive
+media, you can include a "label" entry--an archive member which contains
+the name of the archive--in the archive itself.  Use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option in conjunction with
+the `--create' (`-c') subcommand to include a label entry in the
+archive as it is being created.
+
+   If you create an archive using both `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL') and `--multi-volume' (`-M'), each volume of the archive
+will have an archive label of the form `ARCHIVE-LABEL Volume N', where
+N is 1 for the first volume, 2 for the next, and so on.  *Note
+Multi-volume archives::, for information on creating multiple volume
+archives.
+
+   If you list or extract an archive using `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL'), `tar' will print an error if the archive label doesn't
+match the ARCHIVE-LABEL specified, and will then not list nor extract
+the archive.  In those cases, the ARCHIVE-LABEL argument is interpreted
+as a globbing-style pattern which must match the actual magnetic volume
+label.  *Note Wildcards::, for a precise description of how the match
+is attempted.(1) If the switch `--multi-volume' (`-M') is being used,
+the volume label matcher will also suffix ARCHIVE-LABEL by
+` Volume [1-9]*' if the initial match fails, before giving up.  Since
+the volume numbering is automatically added in labels at creation time,
+it sounded logical to help the user take care of it when the archive is
+being read as well.
+
+   The `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option was once
+called `--volume', but is not available under that name anymore.
+
+   To find out an archive's label entry (or to find out if an archive
+has a label at all), use `tar --list --verbose'.  `tar' will print the
+label first, and then print archive member information, as in the
+example below:
+
+     $ tar --verbose --list --file=iamanarchive
+     V--------- 0 0 0 1992-03-07 12:01 iamalabel--Volume Header--
+     -rw-rw-rw- myself users 40 1990-05-21 13:30 iamafilename
+
+   The `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option includes an
+"archive-label" at the beginning of the archive when the archive is
+being created, when used in conjunction with the `--create' (`-c')
+option.  Check to make sure the archive label matches the one specified
+(when used in conjunction with the `--extract' (`--get', `-x') option).
+
+   To get a common label on all tapes of a series, use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option.  To ensure that
+this label is different in each series created through a single script
+used on a regular basis, just manage to get a date string as part of
+the label.  For example:
+
+     $ tar cfMV /dev/tape "Daily backup for `date +%Y-%m-%d`"
+     $ tar --create --file=/dev/tape --multi-volume \
+          --label="Daily backup for `date +%Y-%m-%d`"
+
+   Also note that each label has its own date and time, which
+corresponds to when `tar' initially attempted to write it, often soon
+after the operator launches `tar' or types the carriage return telling
+that the next tape is ready.  Comparing date labels gives an idea of
+tape throughput only if the delays for rewinding tapes and the operator
+switching them were negligible, which is usually not the case.
+
+   ---------- Footnotes ----------
+
+   (1) Previous versions of `tar' used full regular expression
+matching, or before that, only exact string matching, instead of
+wildcard matching.  We decided for the sake of simplicity to use a
+uniform matching device throughout `tar'.
+
+
+File: paxutils.info,  Node: verify,  Next: Write protection,  Prev: label,  Up: Being careful
+
+Verifying data as it is stored
+------------------------------
+
+   Option `--verify' (`-W') attempts to verify the archive after
+writing.
+
+   This option causes `tar' to verify the archive after writing it.
+Each volume is checked after it is written, and any discrepancies are
+recorded on the standard error output.
+
+   Verification requires that the archive be on a backspaceable medium.
+This means that pipes, some cartridge tape drives, and some other
+devices cannot be verified.
+
+   You can ensure the accuracy of an archive by comparing files in the
+filesystem with archive members.  `tar' can compare an archive to the
+filesystem as the archive is being written, to verify a write
+operation, or can compare a previously written archive, to ensure that
+it is up to date.
+
+   To check for discrepancies in an archive immediately after it is
+written, use the `--verify' (`-W') option in conjunction with the
+`--create' (`-c') subcommand.  When this option is specified, `tar'
+checks archive members against their counterparts in the file system,
+and reports discrepancies on the standard error.  In multi-volume
+archives, each volume is verified after it is written, before the next
+volume is written.
+
+   To verify an archive, you must be able to read it from before the end
+of the last written entry.  This option is useful for detecting data
+errors on some tapes.  Archives written to pipes, some cartridge tape
+drives, and some other devices cannot be verified.
+
+   One can explicitly compare an already made archive with the file
+system by using the `--compare' (`--diff', `-d') option, instead of
+using the more automatic `--verify' (`-W') option.  *Note compare::.
+
+   Note that these two options have a slightly different intent.  The
+`--compare' (`--diff', `-d') option checks how similar are the logical
+contents of some archive to what is on your disks, while the `--verify'
+(`-W') option is really for checking if the physical contents agree and
+if the recording media itself is of dependable quality.  So, for the
+`--verify' (`-W') option, `tar' tries to defeat all in-memory cache
+pertaining to the archive, while it leaves the speed optimization
+undisturbed for the `--compare' (`--diff', `-d') option.  If you
+nevertheless use `--compare' (`--diff', `-d') for media verification,
+you may have to defeat the in-memory cache yourself, maybe by opening
+and reclosing the door latch of your recording unit, forcing some doubt
+in your operating system about the fact this is really the same volume
+as the one just written or read.
+
+   The `--verify' (`-W') option would not be necessary if drivers were
+indeed able to detect dependably all write failures.  This sometimes
+requires many magnetic heads, some able to read after the writes
+occurred.  One would not say that drivers unable to detect all cases
+are necessarily flawed, as far as programming is concerned.
+
+
+File: paxutils.info,  Node: Write protection,  Prev: verify,  Up: Being careful
+
+Write protection
+----------------
+
+   Almost all tapes and diskettes, and in a few rare cases even disks,
+can be "write protected", to protect data on them from being changed.
+Once an archive is written, you should write protect the media to
+prevent the archive from being accidently overwritten or deleted.
+(This will protect the archive from being changed with a tape or floppy
+drive--it will not protect it from magnetic fields or other physical
+hazards).
+
+   The write protection device itself is usually an integral part of the
+physical media, and can be a two position (write enabled/write
+disabled) switch, a notch which can be popped out or covered, a ring
+which can be removed from the center of a tape reel, or some other
+changeable feature.
+
+
+File: paxutils.info,  Node: Other tape considerations,  Prev: Being careful,  Up: Media
+
+Other tape considerations
+=========================
+
+   Some versions of Unix (Ultrix 3.1 is known to have this problem),
+can claim that a short write near the end of a tape succeeded, when it
+actually failed.  This will result in the -M option not working
+correctly.  The best workaround at the moment is to use a significantly
+larger blocking factor than the default 20.
+
+   In order to update an archive, `tar' must be able to backspace the
+archive in order to reread or rewrite a record that was just read (or
+written).  This is currently possible only on two kinds of files: normal
+disk files (or any other file that can be backspaced with `lseek'), and
+industry-standard 9-track magnetic tape (or any other kind of tape that
+can be backspaced with the `MTIOCTOP' `ioctl').
+
+   This means that the `--append' (`-r'), `--update' (`-u'),
+`--concatenate' (`--catenate', `-A'), and `--delete' commands will not
+work on any other kind of file.  Some media simply cannot be
+backspaced, which means that these commands and options will never be
+able to work on them.  These non-backspacing media include pipes and
+cartridge tape drives.
+
+   Some other media can be backspaced, and `tar' will work on them once
+`tar' is modified to do so.
+
+   Archives created with the `--multi-volume' (`-M'),
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL'), and `--incremental'
+(`-G') options may not be readable by other versions of `tar'.  In
+particular, restoring a file that was split over a volume boundary will
+require some careful work with `dd', if it can be done at all.  Other
+versions of `tar' may also create an empty file whose name is that of
+the volume header.  Some versions of `tar' may create normal files
+instead of directories archived with the `--incremental' (`-G') option.
+
+errors from system:
+permission denied
+no such file or directory
+not owner
+
+errors from `tar':
+directory checksum error
+header format error
+
+errors from media/system:
+i/o error
+device busy
+
+
+File: paxutils.info,  Node: Backups,  Next: All options,  Prev: Media,  Up: Top
+
+Performing backups and restoring files
+**************************************
+
+   `tar' is distributed along with the scripts which the Free Software
+Foundation uses for performing backups.  There are no corresponding
+scripts available yet for doing restoration of files.  Even though
+there is a good chance those scripts may be satisfactory to you, they
+are not the only scripts or methods available for doing backups and
+restores.  You may well create your own, or use more sophisticated
+packages dedicated to that purpose.
+
+   Some users are enthusiastic about `Amanda' (The Advanced Maryland
+Automatic Network Disk Archiver), a backup system developed by James da
+Silva (<jds@cs.umd.edu>) and available on many Unix systems.  This is
+free software, and it is available at these places:
+
+     http://www.cs.umd.edu/projects/amanda/amanda.html
+     ftp://ftp.cs.umd.edu/pub/amanda
+
+   Here is a possible plan for a future documentation about the backup
+scripts which are provided within the `tar' distribution.
+
+.* dumps
+. + what are dumps
+
+. + different levels of dumps
+.  - full dump = dump everything
+.  - level 1, level 2 dumps etc, -
+	A level n dump dumps everything changed since the last level
+	n-1 dump (?)
+
+. + how to use scripts for dumps  (ie, the concept)
+.  - scripts to run after editing backup specs (details)
+
+. + Backup Specs, what is it.
+.  - how to customize
+.  - actual text of script  [/sp/dump/backup-specs]
+
+. + Problems
+.  - rsh doesn't work
+.  - rtape isn't installed
+.  - (others?)
+
+. + the --incremental option of tar
+
+. + tapes
+.  - write protection
+.  - types of media
+.   : different sizes and types, useful for different things
+.  - files and tape marks
+     one tape mark between files, two at end.
+.  - positioning the tape
+     MT writes two at end of write,
+       backspaces over one when writing again.
+
+   This chapter documents both the provided FSF scripts and the `tar'
+options which are more specific to use as a backup tool.
+
+   To "back up" a file system means to create archives that contain all
+the files in that file system.  Those archives can then be used to
+restore any or all of those files (for instance if a disk crashes or a
+file is accidently deleted).  File system "backups" are also called
+"dumps".
+
+* Menu:
+
+* incremental listed-incremental::  The incremental options
+* Backup levels::               Levels of backups
+* Backup parameters::           Setting parameters for backups and restoration
+* Scripted backups::            Using the backup scripts
+* Scripted restoration::        Using the restore script
+
+
+File: paxutils.info,  Node: incremental listed-incremental,  Next: Backup levels,  Prev: Backups,  Up: Backups
+
+The incremental options
+=======================
+
+* Menu:
+
+* incremental::                 Backing up without a snapshot list
+* listed-incremental::          Backing up with a snapshot list
+
+
+File: paxutils.info,  Node: incremental,  Next: listed-incremental,  Prev: incremental listed-incremental,  Up: incremental listed-incremental
+
+Backing up without a snapshot list
+----------------------------------
+
+   `--incremental' (`-G') is used in conjunction with `--create' (`-c'),
+`--extract' (`--get', `-x'), or `--list' (`-t') when backing up and
+restoring file systems.  An archive cannot be extracted or listed with
+the `--incremental' (`-G') option specified unless it was created with
+this option specified.  This option should only be used by a script,
+not by the user, and is usually disregarded in favor of
+`--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE'), which is
+described below.
+
+   `--incremental' (`-G') in conjunction with `--create' (`-c') causes
+`tar' to write, at the beginning of the archive, an entry for each of
+the directories that will be archived.  The entry for a directory
+includes a list of all the files in the directory at the time the
+archive was created and a flag for each file indicating whether or not
+the file is going to be put in the archive.
+
+   Note that this option causes `tar' to create a non-standard archive
+that may not be readable by other versions of the `tar' program.
+
+   `--incremental' (`-G') in conjunction with `--extract' (`--get',
+`-x') causes `tar' to read the lists of directory contents previously
+stored in the archive, *delete* files in the file system that did *not*
+exist in their directories when the archive was created, and then
+extract the files in the archive.
+
+   This behavior is convenient when restoring a damaged file system from
+a succession of incremental backups: it restores the entire state of
+the file system to that which obtained when the backup was made.  If
+`--incremental' (`-G') isn't specified, the file system will probably
+fill up with files that shouldn't exist any more.
+
+   `--incremental' (`-G') in conjunction with `--list' (`-t') causes
+`tar' to print, for each directory in the archive, the list of files in
+that directory at the time the archive was created.  This information
+is put out in a format that is not easy for humans to read, but which
+is unambiguous for a program: each file name is preceded by either a
+`Y' if the file is present in the archive, an `N' if the file is not
+included in the archive, or a `D' if the file is a directory (and is
+included in the archive).  Each file name is terminated by a null
+character.  The last file is followed by an additional null and a
+newline to indicate the end of the data.
+
+
+File: paxutils.info,  Node: listed-incremental,  Prev: incremental,  Up: incremental listed-incremental
+
+Backing up with a snapshot list
+-------------------------------
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') acts like
+`--incremental' (`-G'), but when used in conjunction with `--create'
+(`-c') will also cause `tar' to use the file SNAPSHOT-FILE, which
+contains information about the state of the file system at the time of
+the last backup, to decide which files to include in the archive being
+created.  That file will then be updated by `tar'.  If the file FILE
+does not exist when this option is specified, `tar' will create it, and
+include all appropriate files in the archive.  However, if the created
+archive is sent to the sink (by creating over `/dev/null'), the
+snapshot file is neither created nor updated.
+
+   The file FILE, which is archive independent, contains the date it
+was last modified and a list of devices, inode numbers and directory
+names.  `tar' will archive files with newer mod dates or inode change
+times, and directories with an unchanged inode number and device but a
+changed directory name.  The file is updated after the files to be
+archived are determined, but before the new archive is actually created.
+
+   Although it should be obvious that a device has a non-volatile
+value, NFS devices have non-dependable values when an automounter gets
+into the picture.  This leads to a great deal of spurious redumping in
+incremental dumps, so it is somewhat useless to compare two NFS device
+numbers over time.  So `tar' now considers all NFS devices as being
+equal when it comes to comparing directories; this is fairly gross, but
+there does not seem to be a better way to go.
+
+
+File: paxutils.info,  Node: Backup levels,  Next: Backup parameters,  Prev: incremental listed-incremental,  Up: Backups
+
+Levels of backups
+=================
+
+   An archive containing all the files in the file system is called a
+"full backup" or "full dump".  You could ensure your data by creating a
+full dump every day.  This strategy, however, would waste a substantial
+amount of archive media and user time, as unchanged files are daily
+re-archived.
+
+   It is more efficient to do a full dump only occasionally.  To back up
+files between full dumps, you can do an incremental dump.  A "level
+one" dump archives all the files that have changed since the last full
+dump.
+
+   A typical dump strategy would be to perform a full dump once a week,
+and a level one dump once a day.  This means some versions of files
+will in fact be archived more than once, but this dump strategy makes
+it possible to restore a file system to within one day of accuracy by
+only extracting two archives--the last weekly (full) dump and the last
+daily (level one) dump.  The only information lost would be in files
+changed or created since the last daily backup.  (Doing dumps more than
+once a day is usually not worth the trouble).
+
+   `tar' comes with scripts you can use to do full and level-one dumps.
+Using scripts (shell programs) to perform backups and restoration is a
+convenient and reliable alternative to typing out file name lists and
+`tar' commands by hand.
+
+   Before you use these scripts, you need to edit the file
+`backup-specs', which specifies parameters used by the backup scripts
+and by the restore script.    *Note Script syntax::.  Once the backup
+parameters are set, you can perform backups or restoration by running
+the appropriate script.
+
+   The name of the restore script is `restore'.    The names of the
+level one and full backup scripts are, respectively, `level-1' and
+`level-0'.  The `level-0' script also exists under the name `weekly',
+and the `level-1' under the name `daily'--these additional names can be
+changed according to your backup schedule.  *Note Scripted
+restoration::, for more information on running the restoration script.
+*Note Scripted backups::, for more information on running the backup
+scripts.
+
+   *Please note:* The backup scripts and the restoration scripts are
+designed to be used together.  While it is possible to restore files by
+hand from an archive which was created using a backup script, and to
+create an archive by hand which could then be extracted using the
+restore script, it is easier to use the scripts.   *Note incremental::,
+and *Note listed-incremental::, before making such an attempt.
+
+* Menu:
+
+* Full dumps::                  Using `tar' to perform full dumps
+* Incremental dumps::           Using `tar' to perform incremental dumps
+
+
+File: paxutils.info,  Node: Full dumps,  Next: Incremental dumps,  Prev: Backup levels,  Up: Backup levels
+
+Using `tar' to perform full dumps
+---------------------------------
+
+   Full dumps should only be made when no other people or programs are
+modifying files in the filesystem.  If files are modified while `tar'
+is making the backup, they may not be stored properly in the archive,
+in which case you won't be able to restore them if you have to.  (Files
+being modified are written with no trouble, and do not corrupt the
+entire archive.)
+
+   You will want to use the `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL') option to give the archive a volume label, so you can
+tell what this archive is even if the label falls off the tape, or
+anything like that.
+
+   Unless the filesystem you are dumping is guaranteed to fit on one
+volume, you will need to use the `--multi-volume' (`-M') option.  Make
+sure you have enough tapes on hand to complete the backup.
+
+   If you want to dump each filesystem separately you will need to use
+the `--one-file-system' (`-l') option to prevent `tar' from crossing
+filesystem boundaries when storing (sub)directories.
+
+   The `--incremental' (`-G') option is not needed, since this is a
+complete copy of everything in the filesystem, and a full restore from
+this backup would only be done onto a completely empty disk.
+
+   Unless you are in a hurry, and trust the `tar' program (and your
+tapes), it is a good idea to use the `--verify' (`-W') option, to make
+sure your files really made it into the dump properly.  This will also
+detect cases where the file was modified while (or just after) it was
+being archived.  Not all media (notably cartridge tapes) are capable of
+being verified, unfortunately.
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') always
+takes a file name argument.  If the file doesn't exist, `tar' runs a
+level zero dump, creating the file.  If the file exists, `tar' uses
+that file to see what has changed.
+
+   `--incremental' (`-G') handles old extended format incremental
+backup.
+
+   The `--incremental' (`-G') option means the archive is an incremental
+backup.  Its meaning depends on the command that it modifies.
+
+   When this option is used for creating an incremental backup of a
+filesystem, `tar' writes, at the beginning of the archive, an entry for
+each of the directories that will be operated on.  The entry for a
+directory includes a list of all the files in the directory at the time
+the dump was done, and a flag for each file indicating whether the file
+is going to be put in the archive.  This information is used when doing
+a complete incremental restore.
+
+   Note that this option causes `tar' to create a non-standard archive
+that may not be readable by other versions of the `tar' program.
+
+   If the `--incremental' (`-G') option is used with `--list' (`-t'),
+`tar' will list, for each directory in the archive, the list of files in
+that directory at the time the archive was created.  This information
+is put out in a format that is not easy for humans to read, but which
+is unambiguous for a program: each file name is preceded by either a
+`Y' if the file is present in the archive, an `N' if the file is not
+included in the archive, or a `D' if the file is a directory (and is
+included in the archive).  Each file name is terminated by a null
+character.  The last file is followed by an additional null and a
+newline to indicate the end of the data.
+
+   If the `--incremental' (`-G') option is used with `--extract'
+(`--get', `-x'), then when the entry for a directory is found, all
+files that currently exist in that directory but are not listed in the
+archive *are deleted from the directory*.
+
+   This behavior is convenient when you are restoring a damaged file
+system from a succession of incremental backups: it restores the entire
+state of the file system to that which obtained when the backup was
+made.  If you don't use `--incremental' (`-G'), the file system will
+probably fill up with files that shouldn't exist any more.
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') handles
+new extended format incremental backup.
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') acts like
+`--incremental' (`-G'), but when used in conjunction with `--create'
+(`-c') will also cause `tar' to use the file FILE, which contains
+information about the state of the filesystem at the time of the last
+backup, to decide which files to include in the archive being created.
+That file will then be updated by `tar'.  If the file FILE does not
+exist when this option is specified, `tar' will create it, and include
+all appropriate files in the archive.
+
+   The file, which is archive independent, contains the date it was last
+modified and a list of devices, inode numbers and directory names.
+`tar' will archive files with newer mod dates or inode change times,
+and directories with an unchanged inode number and device but a changed
+directory name.  The file is updated after the files to be archived are
+determined, but before the new archive is actually created.
+
+   When restoring, only files newer than the saved time are restored,
+and the directory list is used to speed up subcommands.
+
+   `tar' actually writes the file twice: once before the data is
+written, and once after.
+
+
+File: paxutils.info,  Node: Incremental dumps,  Prev: Full dumps,  Up: Backup levels
+
+Using `tar' to perform incremental dumps
+----------------------------------------
+
+   Performing incremental dumps is similar to performing full dumps,
+although a few more options will usually be needed.
+
+   You will need to use the `-N DATE' option to tell `tar' to only
+store files that have been modified since DATE.  DATE should be the
+date and time of the last full/incremental dump.  *Note after-date::.
+
+   A standard scheme is to do a *monthly* (full) dump once a month, a
+*weekly* dump once a week of everything since the last monthly, and a
+*daily* dump every day of everything since the last (weekly or monthly)
+dump.
+
+   Here is a copy of the script used to dump the filesystems of the
+machines here at the Free Software Foundation.  This script is run via
+`cron' late at night when people are least likely to be using the
+machines.  This script dumps several filesystems from several machines
+at once (via NFS).  The operator is responsible for ensuring that all
+the machines will be up at the time the dump happens.  If a machine is
+not running, its files will not be dumped, and the next day's
+incremental dump will *not* store files that would have gone onto that
+dump.
+
+     #!/bin/csh
+     # Dump thingie
+     set now = `date`
+     set then = `cat date.nfs.dump`
+     /u/hack/bin/tar -c -G -v\
+      -f /dev/rtu20\
+      -b 126\
+      -N "$then"\
+      -V "Dump from $then to $now"\
+      /alpha-bits/gp\
+      /gnu/hack\
+      /hobbes/u\
+      /spiff/u\
+      /sugar-bombs/u
+     echo $now > date.nfs.dump
+     mt -f /dev/rtu20 rew
+
+   Output from this script is stored in a file, for the operator to
+read later.
+
+   This script uses the file `date.nfs.dump' to store the date and time
+of the last dump.
+
+   Since this is a streaming tape drive, no attempt to verify the
+archive is made.  This is also why the high blocking factor (126) is
+used.  The tape drive must also be rewound by the `mt' command after
+the dump is made.
+
+
+File: paxutils.info,  Node: Backup parameters,  Next: Scripted backups,  Prev: Backup levels,  Up: Backups
+
+Setting parameters for backups and restoration
+==============================================
+
+   The file `backup-specs' specifies backup parameters for the backup
+and restoration scripts provided with `tar'.  You must edit
+`backup-specs' to fit your system configuration and schedule before
+using these scripts.
+
+   *Note Script syntax::, for an explanation of this syntax.
+
+   `backup-specs' specifies the following parameters:
+
+`ADMINISTRATOR'
+     The user name of the backup administrator.
+
+`BACKUP_HOUR'
+     The hour at which the backups are done.  This can be a number from
+     0 to 23, or the string `now'.
+
+`TAPE_FILE'
+     The device `tar' writes the archive to.  This device should be
+     attached to the host on which the dump scripts are run.
+
+`TAPE_STATUS'
+     The command to use to obtain the status of the archive device,
+     including error count.  On some tape drives there may not be such a
+     command; in that case, simply use `TAPE_STATUS=false'.
+
+`BLOCKING'
+     The blocking factor `tar' will use when writing the dump archive.
+     *Note blocking-factor::.
+
+`BACKUP_DIRS'
+     A list of file systems to be dumped.  You can include any directory
+     name in the list--subdirectories on that file system will be
+     included, regardless of how they may look to other networked
+     machines.  Subdirectories on other file systems will be ignored.
+
+`HOST_NAME'
+     The host name specifies which host to run `tar' on, and should
+     normally be the host that actually contains the file system.
+     However, the host machine must have `tar' installed, and must be
+     able to access the directory containing the backup scripts and
+     their support files using the same file name that is used on the
+     machine where the scripts are run (that is, what `pwd' will print
+     when in that directory on that machine).  If the host that
+     contains the file system does not have this capability, you can
+     specify another host as long as it can access the file system
+     through NFS.
+
+`BACKUP_FILES'
+     A list of individual files to be dumped.  These should be
+     accessible from the machine on which the backup script is run.
+
+* Menu:
+
+* backup-specs example::        An example text of `backup-specs'
+* Script syntax::               Syntax for `backup-specs'
+
+
+File: paxutils.info,  Node: backup-specs example,  Next: Script syntax,  Prev: Backup parameters,  Up: Backup parameters
+
+An example text of `backup-specs'
+---------------------------------
+
+   The following is the text of `backup-specs' as it appears at FSF:
+
+     # site-specific parameters for file system backup.
+     
+     ADMINISTRATOR=friedman
+     BACKUP_HOUR=1
+     TAPE_FILE=/dev/nrsmt0
+     TAPE_STATUS="mts -t $TAPE_FILE"
+     BLOCKING=124
+     BACKUP_DIRS="
+     	albert:/fs/fsf
+     	apple-gunkies:/gd
+     	albert:/fs/gd2
+     	albert:/fs/gp
+     	geech:/usr/jla
+     	churchy:/usr/roland
+     	albert:/
+     	albert:/usr
+     	apple-gunkies:/
+     	apple-gunkies:/usr
+     	gnu:/hack
+     	gnu:/u
+     	apple-gunkies:/com/mailer/gnu
+     	apple-gunkies:/com/archive/gnu"
+     
+     BACKUP_FILES="/com/mailer/aliases /com/mailer/league*[a-z]"
+
+
+File: paxutils.info,  Node: Script syntax,  Prev: backup-specs example,  Up: Backup parameters
+
+Syntax for `backup-specs'
+-------------------------
+
+   `backup-specs' is in shell script syntax.  The following conventions
+should be considered when editing the script:
+
+   A quoted string is considered to be contiguous, even if it is on more
+than one line.  Therefore, you cannot include commented-out lines
+within a multi-line quoted string.  BACKUP_FILES and BACKUP_DIRS are
+the two parameters most likely to be multi-line.
+
+   A quoted string typically cannot contain wildcards.  In
+`backup-specs', however, the parameters BACKUP_DIRS and BACKUP_FILES
+can contain wildcards.
+
+
+File: paxutils.info,  Node: Scripted backups,  Next: Scripted restoration,  Prev: Backup parameters,  Up: Backups
+
+Using the backup scripts
+========================
+
+   The syntax for running a backup script named SCRIPT-NAME is:
+
+     $ SCRIPT-NAME [TIME-TO-BE-RUN]
+
+   where TIME-TO-BE-RUN can be a specific system time, or can be `now'.
+If you do not specify a time, the script runs at the time specified in
+`backup-specs' (*note Script syntax::.).
+
+   You should start a script with a tape or disk mounted.  Once you
+start a script, it prompts you for new tapes or disks as it needs them.
+Media volumes don't have to correspond to archive files--a
+multi-volume archive can be started in the middle of a tape that
+already contains the end of another multi-volume archive.  The
+`restore' script prompts for media by its archive volume, so to avoid
+an error message you should keep track of which tape (or disk) contains
+which volume of the archive.    *Note Scripted restoration::.
+
+   The backup scripts write two files on the file system.  The first is
+a record file in `/etc/tar-backup/', which is used by the scripts to
+store and retrieve information about which files were dumped.  This
+file is not meant to be read by humans, and should not be deleted by
+them.  *Note incremental listed-incremental::, for a more detailed
+explanation of this file.
+
+   The second file is a log file containing the names of the file
+systems and files dumped, the time when the backup was made, and any
+error messages that were generated, as well as how much space was left
+in the media volume after the last volume of the archive was written.
+You should check this log file after every backup.  The file name is
+`log-MMM-DDD-YYYY-level-1' or `log-MMM-DDD-YYYY-full'.
+
+   The script also prints the name of each system being dumped to the
+standard output.
+

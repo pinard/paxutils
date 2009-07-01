@@ -976,7 +976,7 @@ not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite
 #include <malloc.h>
 #endif
 
-#if  (defined (MEMMOVE_MISSING) || \
+#if  (!defined (HAVE_MEMMOVE) || \
       !defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
 
 /* Snarfed directly from Emacs src/dispnew.c:
@@ -1036,7 +1036,7 @@ safe_bcopy (from, to, size)
 	  bcopy (from, to, endt - from);
 	}
     }
-}     
+}
 #endif	/* Not emacs.  */
 
 #define memmove(to, from, size) safe_bcopy ((from), (to), (size))

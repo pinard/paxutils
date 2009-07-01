@@ -3,9 +3,7 @@
 **  Originally written by Steven M. Bellovin <smb@research.att.com> while
 **  at the University of North Carolina at Chapel Hill.  Later tweaked by
 **  a couple of people on Usenet.  Completely overhauled by Rich $alz
-**  <rsalz@bbn.com> and Jim Berets <jberets@bbn.com> in August, 1990;
-**
-**  This grammar has 13 shift/reduce conflicts.
+**  <rsalz@bbn.com> and Jim Berets <jberets@bbn.com> in August, 1990.
 **
 **  This code is in the public domain and has no copyright.
 */
@@ -51,8 +49,6 @@
    host does not conform to Posix.  */
 #define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
 
-#include "getdate.h"
-
 #if defined (STDC_HEADERS) || defined (USG)
 # include <string.h>
 #endif
@@ -63,10 +59,6 @@
 #if !defined (HAVE_BCOPY) && defined (HAVE_MEMCPY) && !defined (bcopy)
 # define bcopy(from, to, len) memcpy ((to), (from), (len))
 #endif
-
-extern struct tm	*gmtime ();
-extern struct tm	*localtime ();
-extern time_t		mktime ();
 
 /* Remap normal yacc parser interface names (yyparse, yylex, yyerror, etc),
    as well as gratuitiously global symbol names, so we can have multiple
@@ -171,6 +163,9 @@ static int	yyRelSeconds;
 static int	yyRelYear;
 
 %}
+
+/* This grammar has 13 shift/reduce conflicts. */
+%expect 13
 
 %union {
     int			Number;
@@ -441,6 +436,15 @@ o_merid	: /* NULL */
 
 %%
 
+/* Include this file down here because bison inserts code above which
+   may define-away `const'.  We want the prototype for get_date to have
+   the same signature as the function definition does. */
+#include "getdate.h"
+
+extern struct tm	*gmtime ();
+extern struct tm	*localtime ();
+extern time_t		mktime ();
+
 /* Month and day table. */
 static TABLE const MonthDayTable[] = {
     { "january",	tMONTH,  1 },
@@ -493,7 +497,7 @@ static TABLE const OtherTable[] = {
     { "now",		tMINUTE_UNIT,	0 },
     { "last",		tUNUMBER,	-1 },
     { "this",		tMINUTE_UNIT,	0 },
-    { "next",		tUNUMBER,	2 },
+    { "next",		tUNUMBER,	1 },
     { "first",		tUNUMBER,	1 },
 /*  { "second",		tUNUMBER,	2 }, */
     { "third",		tUNUMBER,	3 },
@@ -886,9 +890,7 @@ difftm (a, b)
 }
 
 time_t
-get_date (p, now)
-     const char *p;
-     const time_t *now;
+get_date (const char *p, const time_t *now)
 {
   struct tm tm, tm0, *tmp;
   time_t Start;

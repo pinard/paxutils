@@ -1,13 +1,54 @@
+1998-06-24  François Pinard  <pinard@iro.umontreal.ca>
+
+	* tar.h: Many corrections to comments.
+	* Makefile.am (header.texi): Adjusted.
+	Reported by Doug Edwards.
+
+1998-05-23  François Pinard  <pinard@iro.umontreal.ca>
+
+	* cpio.1, mt.1: New files.
+	* paxutils.texi: New name for tar.texi, with cpio.texi integrated.
+	* Makefile.am (info_TEXINFOS): Change tar.texi for paxutils.texi.
+	(man_MANS): Add cpio.1 and mt.1.
+	(EXTRA_DIST): Add ChangeLog.cpio.
+	* ChangeLog: Integrate entries from cpio.
+
+1998-03-19  François Pinard  <pinard@iro.umontreal.ca>
+
+	* convtexi.pl: Adjust for the needs of the current manual merge.
+
+1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
+
+	(FIXME: Just a temporary ChangeLog entry! :-)
+	* help2man: New version.  To be studied later.
+	* Makefile.am (EXTRA_DIST): Adjusted.
+	Reported by Brendan O'Dea.
+
+1997-10-17  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* tar.texi: Fix missing cross-references.  Add DOS-specific info.
+	Fix typos.
+
+1997-08-04  François Pinard  <pinard@iro.umontreal.ca>
+
+	* helptoman.pl: New file.
+	* Makefile.am: Prepare, install and distribute the man page.
+	Reported by Brendan O'Dea.
+
+1997-05-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am (tar.info): Remove goal if makeinfo fails.
+
 1997-04-23  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Release 1.12.
+	* Release tar 1.12.
 
 	* Makefile.am (EXTRA_DIST): Remove tar-mew.texi for the release.
 	(tar.dvi) [!PUBLISH]: Delete @smallbook.  Call sed in all cases.
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11o.
+	* Prerelease tar 1.11o.
 
 	* Makefile.am (tar.info): Comment about needed makeinfo version.
 	Reported by Sherwood Botsford.
@@ -30,7 +71,7 @@
 
 1996-11-06  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.13.
+	* Prerelease tar 1.11.13.
 
 	* getdate.texi: New file, from elsewhere.
 	* tar.texi: Replace a lot of text by an include of getdate.texi.
@@ -38,14 +79,14 @@
 
 1996-08-24  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.12.
+	* Prerelease tar 1.11.12.
 
 	* Makefile.am (EXTRA_DIST): Remove texinfo.tex, now that Automake
 	handles it automatically.
 
 1996-07-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.11.
+	* Prerelease tar 1.11.11.
 
 	* Makefile.am (tar.info): Remove -I$(srcdir), which was useless.
 
@@ -56,7 +97,7 @@
 
 1996-07-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.10.
+	* Prerelease tar 1.11.10.
 
 	* Makefile.am (EXTRA_DIST): Distribute convtexi.pl, for now.
 
@@ -92,6 +133,10 @@
 	Reported by Cesar Romani, Joachim Seelig, Mark Bynum and Ulrich
 	Drepper.
 
+1995-12-16  Karl Eichwalder  <ke@ke.Central.DE>
+
+	* cpio.texi: INFO-DIR-ENTRY.
+
 1995-11-29  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (clean): Remove tmp-* files.
@@ -104,10 +149,27 @@
 	texinfo.tex is found, as texi2dvi gets no clue from the file name.
 	(DISTFILES): Also distribute tar.info-8.
 
+1995-11-25  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.am: Let automake handle version.texi stuff.
+
 1995-11-22  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Distribute ChangeLog.
 	* ChangeLog: New file, extracted from top-level ChangeLog.
+
+1995-11-13  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.am: New file.
+
+1995-11-02  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.in (dist_topdir): Removed.
+	(stamp-vti): Use cpio.texi.
+
+1995-10-31  Tom Tromey  <tromey@cambric.colorado.edu>
+
+	* Makefile.in: New file.
 
 1995-06-22  François Pinard  <pinard@iro.umontreal.ca>
 

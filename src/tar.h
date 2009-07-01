@@ -1,5 +1,5 @@
 /* Format of tar archives.
-   Copyright (C) 1988, 92, 93, 94, 96, 97 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -15,15 +15,15 @@
    with this program; if not, write to the Free Software Foundation, Inc.,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* GNU tar Archive Format description.  */
+/* tar archive format description.  */
 
-/* If OLDGNU_COMPATIBILITY is not zero, tar produces archives which, by
-   default, are readable by older versions of GNU tar.  This can be
-   overriden by using --posix; in this case, POSIXLY_CORRECT in environment
-   may be set for enforcing stricter conformance.  If OLDGNU_COMPATIBILITY
-   is zero or undefined, tar will eventually produces archives which, by
-   default, POSIX compatible; then either using --posix or defining
-   POSIXLY_CORRECT enforces stricter conformance.
+/* If OLDGNU_COMPATIBILITY is set, tar produces archives which, by default,
+   are readable by older versions of tar.  This can be overridden by using
+   --posix; in this case, the environment variable POSIXLY_CORRECT can
+   be set to enforce stricter conformance.  If OLDGNU_COMPATIBILITY is zero or
+   undefined, tar will eventually produces archives which, by default,
+   will be POSIX compatible; then, either using --posix or defining
+   POSIXLY_CORRECT will enforce stricter conformance.
 
    This #define will disappear in a few years.  FP, June 1995.  */
 #define OLDGNU_COMPATIBILITY 1
@@ -86,23 +86,23 @@ struct posix_header
 #define TOWRITE  00002		/* write by other */
 #define TOEXEC   00001		/* execute/search by other */
 
-/*-------------------------------------.
-| `tar' Header Block, GNU extensions.  |
-`-------------------------------------*/
+/*-----------------------------------------.
+| `tar' Header Block, various extensions.  |
+`-----------------------------------------*/
 
-/* In GNU tar, SYMTYPE is for to symbolic links, and CONTTYPE is for
-   contiguous files, so maybe disobeying the `reserved' comment in POSIX
-   header description.  I suspect these were meant to be used this way, and
-   should not have really been `reserved' in the published standards.  */
+/* In tar, SYMTYPE is for symbolic links, and CONTTYPE is for contiguous
+   files, thus possibly disobeying the `reserved' comment in the POSIX header
+   description.  I suspect these were meant to be used this way, and should
+   not really have been `reserved' in the published standards.  */
 
-/* *BEWARE* *BEWARE* *BEWARE* that the following information is still
-   boiling, and may change.  Even if the OLDGNU format description should be
-   accurate, the so-called GNU format is not yet fully decided.  It is
-   surely meant to use only extensions allowed by POSIX, but the sketch
-   below repeats some ugliness from the OLDGNU format, which should rather
-   go away.  Sparse files should be saved in such a way that they do *not*
-   require two passes at archive creation time.  Huge files get some POSIX
-   fields to overflow, alternate solutions have to be sought for this.  */
+/* *BEWARE* that the following information is still in flux, and may change.
+   Even if the OLDGNU format description should be accurate, the so-called GNU
+   format is not yet fully decided.  It is surely meant to use only extensions
+   allowed by POSIX, but the sketch below repeats some ugliness from the
+   OLDGNU format, which should rather go away.  Sparse files should be saved
+   in such a way that they do *not* require two passes at archive creation
+   time.  Huge files cause some POSIX fields to overflow; alternate solutions
+   have to be sought for this.  */
 
 /* Descriptor for a single file hole.  */
 
@@ -114,23 +114,22 @@ struct sparse
 };
 
 /* Sparse files are not supported in POSIX ustar format.  For sparse files
-   with a POSIX header, a GNU extra header is provided which holds overall
-   sparse information and a few sparse descriptors.  When an old GNU header
-   replaces both the POSIX header and the GNU extra header, it holds some
-   sparse descriptors too.  Whether POSIX or not, if more sparse descriptors
-   are still needed, they are put into as many successive sparse headers as
-   necessary.  The following constants tell how many sparse descriptors fit
-   in each kind of header able to hold them.  */
+   with a POSIX header, an extra header is provided which holds overall sparse
+   information and a few sparse descriptors.  When an old GNU header replaces
+   both the POSIX header and the extra header, it holds some sparse
+   descriptors too.  Whether POSIX or not, if more sparse descriptors are
+   still needed, they are put into as many successive sparse headers as
+   necessary.  The following constants tell how many sparse descriptors fit in
+   each kind of header able to hold them.  */
 
 #define SPARSES_IN_EXTRA_HEADER  16
 #define SPARSES_IN_OLDGNU_HEADER 4
 #define SPARSES_IN_SPARSE_HEADER 21
 
-/* The GNU extra header contains some information GNU tar needs, but not
-   foreseen in POSIX header format.  It is only used after a POSIX header
-   (and never with old GNU headers), and immediately follows this POSIX
-   header, when typeflag is a letter rather than a digit, so signaling a GNU
-   extension.  */
+/* The extra header contains some information needed by tar, but not foreseen
+   in POSIX header format.  It is only used after a POSIX header (and never
+   with old GNU headers), and immediately follows this POSIX header, when
+   typeflag is a letter rather than a digit, thus signaling an extension.  */
 
 struct extra_header
 {				/* byte offset */
@@ -146,10 +145,10 @@ struct extra_header
 				/* 505 */
 };
 
-/* Extension header for sparse files, used immediately after the GNU extra
-   header, and used only if all sparse information cannot fit into that
-   extra header.  There might even be many such extension headers, one after
-   the other, until all sparse information has been recorded.  */
+/* Extension header for sparse files, used immediately after the extra header,
+   and used only if all sparse information cannot fit into that extra header.
+   There might even be many such extension headers, one after the other, until
+   all sparsity information has been recorded.  */
 
 struct sparse_header
 {				/* byte offset */
@@ -160,12 +159,11 @@ struct sparse_header
 };
 
 /* The old GNU format header conflicts with POSIX format in such a way that
-   POSIX archives may fool old GNU tar's, and POSIX tar's might well be
-   fooled by old GNU tar archives.  An old GNU format header uses the space
-   used by the prefix field in a POSIX header, and cumulates information
-   normally found in a GNU extra header.  With an old GNU tar header, we
-   never see any POSIX header nor GNU extra header.  Supplementary sparse
-   headers are allowed, however.  */
+   POSIX archives may fool old tars, and POSIX tars might well be fooled by
+   old tar archives.  An old GNU format header uses the space used by the
+   prefix field in a POSIX header, and accumulates information normally found
+   in an extra header.  With an old tar header, we never see any POSIX header
+   nor extra header.  Supplementary sparse headers are allowed, however.  */
 
 struct oldgnu_header
 {				/* byte offset */
@@ -183,50 +181,50 @@ struct oldgnu_header
 };
 
 /* OLDGNU_MAGIC uses both magic and version fields, which are contiguous.
-   Found in an archive, it indicates an old GNU header format, which will be
-   hopefully become obsolescent.  With OLDGNU_MAGIC, uname and gname are
-   valid, though the header is not truly POSIX conforming.  */
-#define OLDGNU_MAGIC "ustar  "	/* 7 chars and a null */
+   Found in an archive, it indicates an old GNU header format, which will
+   hopefully have become obsolescent.  With OLDGNU_MAGIC, uname and gname are
+   valid, though the header is not truly POSIX conformant.  */
+#define OLDGNU_MAGIC "ustar  "  /* 7 chars and a null */
 
 /* The standards committee allows only capital A through capital Z for
    user-defined expansion.  */
 
-/* This is a dir entry that contains the names of files that were in the
-   dir at the time the dump was made.  */
-#define GNUTYPE_DUMPDIR	'D'
+/* This is a dir entry that contains the names of files that were in the dir
+   at the time the dump was made.  */
+#define OLDGNU_DUMPDIR	'D'
 
 /* Identifies the *next* file on the tape as having a long linkname.  */
-#define GNUTYPE_LONGLINK 'K'
+#define OLDGNU_LONGLINK 'K'
 
 /* Identifies the *next* file on the tape as having a long name.  */
-#define GNUTYPE_LONGNAME 'L'
+#define OLDGNU_LONGNAME 'L'
 
 /* This is the continuation of a file that began on another volume.  */
-#define GNUTYPE_MULTIVOL 'M'
+#define OLDGNU_MULTIVOL 'M'
 
 /* For storing filenames that do not fit into the main header.  */
-#define GNUTYPE_NAMES 'N'
+#define OLDGNU_NAMES 'N'
 
 /* This is for sparse files.  */
-#define GNUTYPE_SPARSE 'S'
+#define OLDGNU_SPARSE 'S'
 
 /* This file is a tape/volume header.  Ignore it on extraction.  */
-#define GNUTYPE_VOLHDR 'V'
+#define OLDGNU_VOLHDR 'V'
 
 /*--------------------------------------.
-| tar Header Block, overall structure.  |
+| tar header block, overall structure.  |
 `--------------------------------------*/
 
 /* tar files are made in basic blocks of this size.  */
-#define BLOCKSIZE 512
+#define BLOCKSIZE ((size_t) 512)
 
 enum archive_format
 {
   DEFAULT_FORMAT,		/* format to be decided later */
   V7_FORMAT,			/* old V7 tar format */
-  OLDGNU_FORMAT,		/* GNU format as per before tar 1.12 */
+  OLDGNU_FORMAT,		/* GNU format as per before tar 2.0 */
   POSIX_FORMAT,			/* restricted, pure POSIX format */
-  GNU_FORMAT			/* POSIX format with GNU extensions */
+  FREE_FORMAT			/* POSIX format with extensions */
 };
 
 union block
@@ -238,4 +236,4 @@ union block
   struct sparse_header sparse_header;
 };
 
-/* End of Format description.  */
+/* End of format description.  */

@@ -1,4 +1,4 @@
-# Makefile for GNU tar scripts.
+# Makefile for tar scripts.
 # Copyright (C) 1994 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify

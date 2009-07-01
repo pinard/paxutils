@@ -1,6 +1,107 @@
+1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am: Inactivate all tests, for making the snapshot.
+	* none.sh: New file.
+
+1998-10-03  François Pinard  <pinard@iro.umontreal.ca>
+
+	* genfile.c, version.sh: Adjust for combined package name.
+
+1998-05-25  François Pinard  <pinard@iro.umontreal.ca>
+
+	* README, README2, TODO, cpiotest, defs.in,
+	echotime.c, rediff.c, regress.sh, swapb.c, swaphw.c, verify.c and
+	wrsparse.c: New files, from cpio.
+	* Makefile.am: Merged the one from cpio/tests, and adjusted.
+	* ChangeLog: Integrate entries from cpio.
+
+1998-05-19  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am (INCLUDES): Delete -I../intl.
+	(LDADD): Delete @INTLLIBS@.
+
+1998-03-07  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* increm01.sh: Increase the second sleep to 3 second, to cover for
+	the 2-seconds granularity in file timestamps on certain DOSish
+	filesystems.
+
+	* create01.sh: Correct the test for DOSish systems.
+
+	* gzip.sh: Adjust the error messages to their new wording.
+
+1998-03-04  François Pinard  <pinard@iro.umontreal.ca>
+
+	* gzip.sh, volume.sh: Do not test /dev/null, as DJGPP has it.
+	Reported by Eli Zaretskii.
+
+1998-02-23  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am: Not all tests require genfile, list those who do.
+
+1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Prerelease tar 1.12a.
+
+	* extrac05.sh: New file.
+	* Makefile.am (TESTS): Adjusted.
+
+1998-02-18  François Pinard  <pinard@iro.umontreal.ca>
+
+	* preset.in: Add some comments for those wanting to debug.
+	* before: Correct a relative top_srcdir.  Trigger shell trace if -d.
+
+	* ignfail.sh: Adjust for changed message.
+
+1998-02-17  François Pinard  <pinard@iro.umontreal.ca>
+
+	* extrac04.sh: New file.
+	* Makefile.am (TESTS): Adjusted.
+	Reported by Graham Catchpole.
+
+1998-01-06  François Pinard  <pinard@iro.umontreal.ca>
+
+	* increm01.sh: New name for incremen.sh.
+	* increm02.sh: New file.
+	* Makefile.am (TESTS): Adjusted.
+	Reported by Göran Uddeborg.
+
+1997-10-17  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* preset.in (tmpdir): New, to use instead of $$.
+	* before, after: Use $tmpdir instead of tmp-$$.
+
+	* extrac02.sh: Test $COMSPEC, not COMMAND.COM.
+	* incremen.sh: Add a sleep.
+
+1997-06-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* version.sh: Skip the counting of the test, by exiting with 77.
+
+	* create01.sh: Skip test on MSDOS, as there are no fork there.
+	* extrac02.sh: Skip test on MSDOS, as there are no links there.
+	* gzip.sh, volume.sh: Skip tests if /dev/null does not exist.
+	Reported by John Gatewood Ham.
+
+	* ignfail.sh: Skip test if we can write into directories having no
+	permissions.  Comment out the older check for root.
+	Reported by James Crawford Ralston and John Gatewood Ham.
+
+1997-06-06  François Pinard  <pinard@iro.umontreal.ca>
+
+	* append01.sh: Renamed from append.sh.
+	* create01.sh: New file.
+	* Makefile.am: Adjusted.
+
+1997-04-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* preset.in (LC_ALL): New, defined to C.
+	(LANGUAGE, LANG): Defined to C instead of empty.
+	Reported by Ulrich Drepper.
+
 1997-04-25  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Release 1.12.
+	* Release tar 1.12.
 
 	* gzip.sh, ignfail.sh: Adjust to new delayed error exit message.
 
@@ -24,7 +125,7 @@
 
 1997-04-22  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11q.
+	* Prerelease tar 1.11q.
 
 	* extrac03.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
@@ -57,7 +158,7 @@
 
 1997-04-17  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11p.
+	* Prerelease tar 1.11p.
 
 	* genfile.c (usage): Add a program description.
 	(main): Output --version according to recent GNU standards.
@@ -74,7 +175,7 @@
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11o.
+	* Prerelease tar 1.11o.
 
 1997-03-29  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -126,9 +227,15 @@
 	'' for out and err, so allowing us to use escaped newlines.  In
 	case of multiple output in a single test, ensure separator lines.
 
+1996-11-10  Tom Tromey  <tromey@cygnus.com>
+
+	* Makefile.am (check-local): Set GCPIO.
+	(GCPIO): Define.
+	* defs.in: Allow GCPIO to be set externally.
+
 1996-11-06  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.13.
+	* Prerelease tar 1.11.13.
 
 	* childerr.sh, direxist.sh, volcheck.sh: Use sh, not bash.
 	Reported by John David Anglin.
@@ -140,7 +247,7 @@
 
 1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.12.
+	* Prerelease tar 1.11.12.
 
 	* Makefile.am ($(TESTS)): Depend on preset.
 	* version.sh (PATH): Adjust for multi-line --version output.
@@ -148,6 +255,43 @@
 	localise its own output.
 	(echo_n, echo_c): Define from the result of echo configuration.
 	* after: Handle echo with newline suppressed.
+
+1996-09-14  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* defs.in: Removed setup_fifos function; just do work inline.
+
+	* regress.sh: Use FIFOS, not TESTINGFIFOS.
+
+	* defs.in: Make subdir for testing.
+
+	* cpiotest: Handle tests in subdir.
+
+	* Makefile.am (check-local): New target.
+	(TESTS): Removed.
+
+	* cpiotest: Exit with correct status.
+
+	* defs.in: Changed non-verbose output.
+	(count, failed): New variables.
+
+	* regress.sh: Always put space before $BOLDC.
+	Renamed MYUID to XUID.
+
+1996-09-13  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* defs.in (ECHOTIME): Use echotime, not echo-time.
+
+	* t1: Removed.
+
+	* Makefile.am (TESTS): Set to cpiotest.
+
+	* cpiotest: New file.
+
+	* regress.sh: Removed all code that is now in defs.in.
+
+1996-09-12  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* defs.in (GCPIO): Make definition absolute.
 
 1996-09-09  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -159,5 +303,30 @@
 	* ChangeLog, Makefile.am, pretest.in, version.sh: New files.
 	* checktar.sh, genfile.c: New files, moved from src/.
 
-	A regression test is an old dream for GNU tar.
+	A regression test is an old dream for tar.
 	Reported by Tom Tromey and Robert Bernstein.
+
+1996-03-24  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* defs.in (XUID): Renamed from UID.
+
+1996-03-11  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* Makefile.am (check_PROGRAMS): New macro; renamed from
+	noinst_PROGRAMS.
+
+1996-03-09  Tom Tromey  <tromey@creche.cygnus.com>
+
+	* t1: New file.
+
+	* Makefile.am (TESTS): New macro.
+
+	* verify.c: Use Autoconf 2 method for finding dirent.
+	Ditto alloca.
+	(read_a_dir): Use NAMLEN.
+
+	* rediff.c (main): Use stdin, not NULL, when reading from stdin.
+
+	* Makefile.am: New file
+
+	* Started.

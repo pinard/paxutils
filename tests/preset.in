@@ -1,6 +1,28 @@
 #! /bin/sh
 # Set the testing environment.
 
+# To tackle a particular failing TEST, go to the `tests/' in the build
+# hierarchy, and do something like `../../tests/TEST -d'.  `./TEST -d'
+# should also work if the build is configured right into the distribution.
+# Save the transcript into file which you then edit into a simpler script,
+# which you will sculpt as the debugging saga takes shape! :-)
+
+# Normally, a work directory is created for the duration of the test,
+# `stdout' and `stderr' are redirected into files in the work directory,
+# and the work directory is recursively deleted when the test is successful.
+# This allows for batch testing, with some useful information kept for
+# each failed test.
+
+# The `-d' option drives the test in the current directory, sets `-x' in
+# the shell for the core of the test, and suppresses the final comparisons.
+# The tester should remove crumb files or directories before testing,
+# and evaluate from the displayed output if the test was successful or not.
+
+if test "$1" = -d; then
+  shift
+  debug=1
+fi
+
 PACKAGE=@PACKAGE@
 VERSION=@VERSION@
 top_srcdir=@top_srcdir@
@@ -9,9 +31,19 @@ srcdir=@srcdir@
 echo_n='@ECHO_N@'
 echo_c='@ECHO_C@'
 
+# LC_MESSAGES is always shadowed by LC_ALL.  Here are the only cases:
+# - GNU:       LANGUAGE -> LC_ALL -> LC_MESSAGES -> LANG
+# - POSIX:     LC_ALL -> LC_MESSAGES -> LANG
+# - XPG4:      LC_ALL -> LANG
+# - SysV/XPG2: LANG
 export LANGUAGE
-LANGUAGE=
+LANGUAGE=C
 export LANG
-LANG=
-export LC_MESSAGES
-LC_MESSAGES=
+LANG=C
+export LC_ALL
+LC_ALL=C
+
+# DOS bash gets a new PID to every subshell running subsidiary scripts, so
+# use `$$' once.  Ensure a directory name, unique in first 8 characters.
+tmpdir=tmp$$
+export tmpdir

@@ -1,0 +1,104 @@
+NOTE much of the below is now false.  FIXME.
+
+regress.sh is a regression test suite for gcpio.  Before running it
+you must configure it by hand.  The following shell variables are
+set at the top of the script:
+
+VERBOSE=1
+	By default regress.sh only prints the version number of gcpio
+	and the output of any tests that fail.  Set VERBOSE to 1 if you
+	want it to print successful tests.
+
+FIRSTFAIL=''
+	If set to any non-empty value, then the test suite will stop
+	after the first failure.  This is useful if more than one
+	test causes cpio to dump core, and you want to debug the first
+	one.
+
+SYMLINKS=yes
+	Set SYMLINKS to be "yes" if your system has BSD style symbolic links.
+	If you don't have symbolic links, set SYMLINKS to be "no" so
+	regress.sh will not try to test symbolic links.
+
+GCPIO=`pwd`/../cpio
+	Set this to be the name of the version gcpio that is being tested.
+	
+GNEWC="-H newc"
+	Set this to be the gcpio option for the "new portable" format.  This
+	is currently "-H newc", but may change to "-c" in the future.
+
+GOLDC="-c"
+	Set this to be the gcpio option for the "old portable" format.  This
+	is currently "-c", but may change to "-H odc" in the future.
+
+BINCPIO=/bin/cpio
+	If your system has a standard version of cpio, set BINCPIO to be
+	its name so regress.sh can make sure that it and gcpio can
+	read each others' archives.  
+
+BOLDC="-c"
+	Set this to be the standard cpio option for the "old portable"
+	format.  This is "-c" on most machines, but "-H odc" on System V.4
+	machines.
+
+BINTAR=/bin/tar
+	If your system has a standard version of tar, set BINTAR to be
+	its name so regress.sh can make sure that gcpio can read standard
+	tar archives.
+
+GNUTAR=gnutar
+	If your system has GNU tar, set GNUTAR to be its name so regress.sh
+	can make sure that gcpio can read POSIX tar archives.
+
+UID=2589
+UIDNAME=juo
+	Set UID and UIDNAME to be your uid number and name.
+
+GID=11001
+GIDNAME=sysprog
+	Set GID and GIDNAME to be your gid number and name.
+
+GID2=1000
+GID2NAME=systems
+	If your system supports multiple groups and you are a member of
+	more than 1 group, set GID2 and GID2NAME to another group so
+	regress.sh can tests gcpio's ability to set different gid's.
+
+	
+Once you have set all the shell variables, you can run regress.sh like
+this:
+
+	$ ./regress.sh
+
+Ideally, it should only print the gcpio version number and nothing else,
+meaning that all tests passed.  If there are any errors, regress.sh will
+print the test that failed, followed by a "diff" (actually a "rediff", see
+README2) of it's expected output and actual output, followed by any errors
+that it got while verifying that the destination tree "matches" the source
+tree:
+
+error: BINCPIO -idum -c < 1.odc.gcpio
+  expected output ------  actual output:
+  verify output:
+    ./tmp3/tmp4 mode match 040777 should be 040755.
+
+In the error above, regress.sh was using BINCPIO (the standard cpio) to
+read an "old portablility" format archive (the odc in the input
+filename; the second component of archive names that regress.sh uses
+usually tell the format, e.g. odc, c, crc, tar, ustar, etc.) that was
+created by gcpio (the third component of archive names used by
+regress.sh usually tell what program created the archive: gcpio, cpio,
+tar, gtar, etc.).  The output was OK, but the mode on one file was not 
+correctly set.
+
+This particular error seems to have been caused by an error in the
+standard cpio program not properly setting the protection of empty
+directories.  The regression tests may turn up other problems with
+the standard cpio and tar.  Some versions of tar do not put empty
+directories into the archives they create.  On some System V.3 systems
+that support symbolic links on top of a System V file system, the
+standard cpio and/or tar has not been modified to handle the symbolic
+links.  You can usually ignore minor errors like this that come
+from using BINCPIO or BINTAR (and using gcpio to read .cpio and .tar
+files created by them).
+

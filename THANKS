@@ -1,9 +1,15 @@
-GNU tar THANKS file
+paxutils THANKS file
 
-GNU tar has originally been written by Graham Todd.  Many people
-further contributed to GNU tar by reporting problems, suggesting
-various improvements or submitting actual code.  Here is a list of
-these people.  Help me keep it complete and exempt of errors.
+PDTAR has originally been written by John Gilmore, and got better than
+it started due to the effort and care put by the following people: Henry
+Spencer, Fred Fish, Ian Darwin, Geoff Collyer, Stan Barber, Guy Harris,
+Dave Brower, Richard Todd, Michael Rendell, Stu Heiss and Rich $alz.
+The FSF version of `tar' was derived from PDTAR by Jay Fenlason and Joy
+Kendall.
+
+Many people further contributed to `paxutils' by reporting problems,
+suggesting various improvements or submitting actual code.  Here is a list
+of these people.  Help me keep it complete and exempt of errors.
 
 Aage Robeck		aagero@ifi.uio.no
 Akiko Matsushita	matusita@sra.co.jp
@@ -15,7 +21,9 @@ Alex Schmidt		root@lacesm.ufsm.br
 Alexander Dupuy		dupuy@smarts.com
 Alexander Lehmann	alex@hal.rhein-main.de
 Alexander V. Lukyanov	lav@long.yar.ru
+Alexandre Oliva		oliva@dcc.unicamp.br
 Alois Steindl		Alois.Steindl+Mechanik@tuwien.ac.at
+Amos Gouaux		amos@utdallas.edu
 Amos Yahil		ayahil@sbast4.ess.sunysb.edu
 Anders Andersson	andersa@docs.uu.se
 Anders Liljeborg	anders@fysik4.kth.se
@@ -26,15 +34,18 @@ Andreas Jaeger		aj@arthur.pfalz.de
 Andreas Koppenhoefer	koppenh@trick.informatik.uni-stuttgart.de
 Andreas Reuter		ar205@bonzo.geowiss.nat.tu-bs.de
 Andreas Schwab		schwab@issan.informatik.uni-dortmund.de
+Andreas Zeller		zeller@ips.cs.tu-bs.de
 Andrew A. Ivanov	ivanov@mics.msu.su
+Andrew Dunstan		Andrew.Dunstan@its.maynick.com.au
 Andrew J. Schorr	schorr@ead.dsa.com
 Andrew Torda		torda@igc.chem.ethz.ch
 Andrey A. Chernov	ache@astral.msk.su
 Andy Gay		andy@rdl.co.uk
+Anne Becker		anne@spl.oz.au
 Antonio Jose Coutinho	ajc@di.uminho.pt
 Ariel Faigon		ariel@engr.sgi.com
 Arne Wichmann		aw@math.uni-sb.de
-Arnold Robbins		arnold@gnu.ai.mit.edu
+Arnold Robbins		arnold@gnu.org
 Art Isbell		aisbell@cubicsol.com
 Axel Boldt		boldt@math.ucsb.edu
 Axel Habermann		kiwi@belly.in-berlin.de
@@ -47,12 +58,16 @@ Bennett Todd		bet@mordor.com
 Benny Holmgren		benny@hgs.se
 Bernard Chen		bern@cs.ucla.edu
 Bernard Derval		derval@iro.umontreal.ca
+Bernhard Simon		bs@bsws.edvz.tuwien.ac.at
 Bo Nygaard Bai		bai@iesd.auc.dk
+Bob Forsman		thoth@gainesville.fl.us
 Bob Kaehms		kaehms@was.archive.org
 Bob Mende Pie		mende@piecomputer.rutgers.edu
 Bradley A. Smith	basmith@prometheus.chem.umn.edu
 Brendan Kehoe		brendan@cygnus.com
+Brendan O'Dea		bod@compusol.com.au
 Brett Gaines		gaines@saifr00.ateng.az.honeywell.com
+Brian J. Murrell	brian@interlinx.bc.ca
 Brian Perkins		bperkins@netspace.org
 Brian R. Smith		brian@cygnus.com
 Bruce Evans		bde@runx.oz.au
@@ -69,9 +84,9 @@ Chad Hurwitz		churritz@cts.com
 Chance Reschke		creschke@usra.edu
 Charles Fu		ccwf@klab.caltech.edu
 Charles Lopes		Charles.Lopes@infm.ulst.ac.uk
-Charles M. Hannum	mycroft@gnu.ai.mit.edu
+Charles M. Hannum	mycroft@gnu.org
 Chip Salzenberg		tct!chip
-Chris Arthur		csa@gnu.ai.mit.edu
+Chris Arthur		csa@gnu.org
 Chris F.M. Verberne	verberne@prl.philips.nl
 Chris G. Demetriou	cgd@sun-lamp.cs.berkeley.edu
 Chris Hopps		sycom.mi.org!ro-chp!chopps
@@ -85,31 +100,39 @@ Christoph Litauer	litauer@mailhost.uni-koblenz.de
 Christophe Colle	colle@krtkg1.rug.ac.be
 Christopher T. Johnson	cjohnson@camelot.com
 Christopher Vickery	vickery@ipc1.cs.qc.edu
+Chun-Hsiung Chiu	james@tiger.hfu.edu.tw
 Claude Scarpelli	claude@genethon.fr
 Claus Heine		Claus_Heine@ac2.maus.de
 Cliff Krumvieda		cliff@cs.cornell.edu
 Clinton Carr		clint@netcom.com
+Clive Stubbings		cas@vjet.demon.co.uk
 Conrad Hughes		chughes@maths.tcd.ie
 Constantin Belous	const@cris.net
 Coranth Gryphon		gryphon@bur.visidyne.com
+Craig Wiegert		c-wiegert@uchicago.edu
+Dale Hirchert		hirk@clcs11.ksc.nasa.gov
 Dale R. Worley		worley@world.std.com
 Dale Wiles		wiles@geordi.calspan.com
 Dan Bloch		dan@transarc.com
 Dan Reish		dreish@izzy.net
-Daniel Hagerty		hag@gnu.ai.mit.edu
+Daniel Hagerty		hag@gnu.org
 Daniel Quinlan		quinlan@pathname.com
 Daniel R. Guilderson	d.guilderson@ma30.bull.com
 Daniel S. Barclay	daniel@compass-da.com
 Daniel Trinkle		trinkle@cs.purdue.edu
 Danny R. Johnston	danny@cs.weber.edu
+Darren Hiebert		darren@hmi.com
 Dave Barr		barr@math.psu.edu
 Dave Gentzel		gentzel@nova.enet.dec.com
 Dave Gregorich		dtg@ipac.caltech.edu
+David Coffin		dcoffin@shore.net
 David J. MacKenzie	djm@uunet.uu.net
 David Johnson		David.W.Johnson@colorado.edu
 David K. Drum		ccdavid@mizzou1.missouri.edu
+David Lamkin		drl@net-tel.co.uk
 David Lawyer		david.lawyer@patchbay.com
 David Lemson		lemson@uiuc.edu
+David Liu		dliu@chem.ucsb.edu
 David Mansfield		david@cobite.com
 David Martin		dmartin@lerc.nasa.gov
 David N. Brown		dbrown@lorien.physics.louisville.edu
@@ -119,68 +142,93 @@ David Steiner		dsteiner@ispa.uni-osnabrueck.de
 David Taylor		taylor@think.com
 Dean Gaudet		dgaudet@watdragon.uwaterloo.ca
 Demizu Noritoshi	nori-d@is.aist-nara.ac.jp
+Denis Excoffier		Denis.Excoffier@ens.fr
 Denis Fortin		fortin@acm.org
 Dennis Pixton		dennis@math.binghamton.edu
 Dick Streefland		dicks@tasking.nl
+Dieter Nützel		nuetzel@kogs.informatik.uni-hamburg.de
 Dietmar Braun		dietmar@highway.bertelsmann.de
 Dimitri Bougoulias	opus@hol.gr
 Dimitris Fousekis	dfousek@leon.nrcps.ariadne-t.gr
 Dirk Herr-Hoyman	hoymand@gate.net
 Don Bennett		dpb@netcom.com
-Donald B Gordon		dbgordon@gnu.ai.mit.edu
+Donald B Gordon		dbgordon@gnu.org
 Donald H. Locker	dhl@spuf1d83.lcp.chrysler.com
+Doug Edwards		dde@sitewright.com
 Douglas Scott		doug@foxtrot.ccmrc.ucsb.edu
 Drew Sullivan		drew@sni.ca
 Drew Trieger		trieger@woodstock.abbott.com
 Dunstan Vavasour	dev@cegelecproj.co.uk
 Ed Childs		echilds@bgs.com
+Ed DeRivas		eddr@celtech.com
 Edgar Taube		et@immd8.informatik.uni-erlangen.de
 Eduardo Kortright	eduardo@cs.ua.edu
 Eduardo V. de Rivas	eddie@asterion.com
 Edward Welbourne	eddy@gen.cam.ac.uk
+Egil Kvaleberg		egil@kvaleberg.no
+Eli Zaretskii		eliz@is.elta.co.il
 Elmar Heeb		heeb@itp.ethz.ch
 Elmer Fittery		elmerf@ptw.com
+Emmanuel Galanos	eman@hotkey.net.au
 Eric Backus		ericb@lsid.hp.com
 Eric Benson		eb@amazon.com
 Eric M. Boehm		Eric.M.Boehm@optimumtech.com
+Eric S. Raymond		esr@thyrsus.com
 Eric Norum		eric@ee.ualberta.ca
 Erich Stefan Boleyn	erich@uruk.org
 Erick Branderhorst	branderh@debian.iaehv.nl
 Erik D. Frederick	edf@deckard.mc.duke.edu
+Erik E. Rantapaa	rantapaa@math.umn.edu
 Esa Karell		karell@cs.helsinki.fi
 Ezra Peisach		epeisach@mit.edu
 Fabio d'Alessi		cars@civ.bio.unipd.it
+Felix von Leitner	leitner@math.fu-berlin.de
+Florian La Roche	florian@suse.de
 Frank Koenen		koenfr@lidp.com
+Frank Roscher		frank@chemnitz.abs-rz.de
 Franz-Werner Gergen	gergen@edvulx.mpi-stuttgart.mpg.de
 François Pinard		pinard@iro.umontreal.ca
 Fritz Elfert		fritz@fsun.triltsch.de
 George Chyu		gschyu@ccgate.dp.beckman.com
+Georg Schwarz		schwarz@physik.tu-berlin.de
+Gerard Hickey		Gerard.Hickey@nsc.com
 Gerben Wierda		gerben@rna.indiv.nluug.nl
 Gerd Knorr		kraxel@cs.tu-berlin.de
 Giorgio Signorini	signo@chim.unifi.it
+Graham Catchpole	graham-catchpole@edscss.demon.co.uk
 Graham Whitted		gbw@sgrail.com
 Grant McDorman		grant@isgtec.com
 Greg Black		gjb@gba.oz.au
 Greg Chung		gchung@caip.rutgers.edu
+Greg Herman		G.Herman@osd.ts.fujitsu.co.jp
 Greg Hudson		ghudson@mit.edu
+Greg Lehey		grog@lemis.de
 Greg Maples		greg@clari.net
 Greg McGary		gkm@cstone.net
 Göran Uddeborg		gvran@uddeborg.pp.se
+Han Holl		jeholl@euronet.nl
 Hans Guerth		100664.3101@compuserve.com
+Hao He			he@physics.usyd.edu.au
 Harald König		koenig@tat.physik.uni-tuebingen.de
 Harald Milz		hm@seneca.ix.de
 Heiko Schinke		mdqac@biochemtech.uni-halle.de
 Heiko Schlichting	heiko@fu-berlin.de
 Henrik Bakman		hb@csd.uu.se
+Hermann Lauer		Hermann.Lauer@iwr.uni-heidelberg.de
 Hernan Prieto Schmidt	hernan@pea.usp.br
+Hirofumi Yamaki		yamaki@kuis.kyoto-u.ac.jp
 Hiroyuki Bessho		bsh@grotto.iijnet.or.jp
 Holger Teutsch		holger@hotbso.rhein-main.de
+Horst von Brand		vonbrand@sleipnir.valparaiso.cl
+Horst-W. Radners	bzpradne@ufer.zib.de
+Hugh Daniel		ecotone!hugh
 Hugh Secker-Walker	hugh@ear.mit.edu
 Hunyue Yau		hunyue.yau@picksys.com
-Ian Jackson		ijackson@gnu.ai.mit.edu
+Ian Jackson		ijackson@gnu.org
 Ian Lance Taylor	ian@cygnus.com
 Ian T. Zimmerman	itz@crl.com
 Indra Singhal		indra@synoptics.com
+Ishikawa Chiaki		Chiaki.Ishikawa@personal-media.co.jp
 J. Dean Brock		brock@cs.unca.edu
 J.J. Bailey		jjb@jagware.bcc.com
 J.T. Conklin		jtc@cygnus.com
@@ -196,7 +244,7 @@ Jan Djarv		jan.djarv@mbox200.swipnet.se
 Janice Burton		r06a165@bcc25.kodak.com
 Janne Snabb		snabb@niksula.hut.fi
 Jason R. Mastaler	jason@webmaster.net
-Jay Fenlason		hack@gnu.ai.mit.edu
+Jay Fenlason		hack@gnu.org
 Jean-Michel Soenen	soenen@lectra.fr
 Jean-Ph. Martin-Flatin	syj@ecmwf.int
 Jean-loup Gailly	jloup@chorus.fr
@@ -216,13 +264,17 @@ Jim Murray		jjm@jjm.com
 Joachim Holzfuss	Joachim.Holzfuss@iap.physik.th-darmstadt.de
 Joachim Seelig		joachim@kruemel.han.de
 Joe DeBattista		joed@itsa.ucsf.edu
+Joh Dokler		joh.dokler@nsc.ijs.si
 Johan Vromans		jvromans@squirrel.nl
+Johann Haider		jhaider@edvz.tuwien.ac.at
 Johannes Helander	jvh@cs.hut.fi
 John Clark		jclark@gray.cscwc.pima.edu
 John D. Sybalsky	John_D._Sybalsky.MV@envos.xerox.com
 John David Anglin	dave@hiauly1.hia.nrc.ca
+John Gatewood Ham	zappaman@alphabox.compsci.buu.ac.th
 John Gilmore		gnu@toad.com
 John J. Szetela		johns@angelo.amd.com
+John Klug		john.klug@unisys.com
 John L. Chmielewski	jlc@attmail.com
 John Oleynick		juo@klinzhai.rutgers.edu
 John R. Vanderpool	fish@daacdev1.stx.com
@@ -231,6 +283,7 @@ Jon Lewis		jlewis@inorganic5.fdt.net
 Jonathan I. Kamens	jik@cam.ov.com
 Jonathan N. Sherman	sysjns@etacrs1.safb.af.mil
 Jonathan Thornburg	thornbur@theory.physics.ubc.ca
+Jörg Schilling		js@cs.tu-berlin.de
 Joseph E. Sacco		jsacco@ssl.com
 Joshua R. Poulson	jrp@plaza.ds.adp.com
 Joutsiniemi Tommi Il	tj75064@cs.tut.fi
@@ -246,7 +299,7 @@ Jörgen Hägg		Jorgen.Hagg@axis.se
 Kai Petzke		wpp@marie.physik.tu-berlin.de
 Kai Schlichting		kai@computel.com
 Karl Berry		karl@cs.umb.edu
-Karl Heuer		kwzh@gnu.ai.mit.edu
+Karl Heuer		kwzh@gnu.org
 Karl Vogel		vogelke@c-17igp.wpafb.af.mil
 Karlos Z. Smith		kazen@viptx.net
 Karsten Thygesen	karthy@kom.auc.dk
@@ -278,6 +331,7 @@ Marcin Matuszewski	marcin@frodo.nask.org.pl
 Marcus Daniels		marcus@sysc.pdx.edu
 Mark Bynum		bynum@cennas.nhmfl.gov
 Mark Clements		mpc@mbsmm.com
+Mark Eichin		eichin@cygnus.com
 Mark Frost		mfrost@ncd.com
 Mark Kollert		Mark.Kollert@oi42.kwu.siemens.de
 Mark W. Eichin		eichin@cygnus.com
@@ -287,13 +341,15 @@ Martin Goik		goma0002@fh-karlsruhe.de
 Martin Mares		mj@k332.feld.cvut.cz
 Marty Leisner		leisner@eso.mc.xerox.com
 Massimo Dal Zotto	dz@cs.unitn.it
+Matthias Urlichs	smurf@noris.de
 Mats Lofkvist		d87-mal@nada.kth.se
 Matt Power		mhpower@mit.edu
 Matthew J. D'Errico	doc@deathstar.lis.cch.com
 Matti Aarnio		mea@utu.fi
 Max Hailperin		max@nic.gac.edu
 Maxime Taksar		mmt@redbrick.com
-Melissa Weisshaus	melissa@gnu.ai.mit.edu
+Melissa Weisshaus	melissa@gnu.org
+Merlin J. Mathesius	merlinm@justus.chi.il.us
 Michael Dietrich	mdt@is.in-berlin.de
 Michael Ellis		bosun@aquarius.seaoar.uvic.ca
 Michael Giddings	giddings@whitewater.chem.wisc.edu
@@ -306,9 +362,12 @@ Michael Lin		mlin@lynx.com
 Michael Maass		michael.maass@bk.bosch.de
 Michael Meissner	meissner@cygnus.com
 Michael P Urban		urban@cobra.jpl.nasa.gov
+Michael Pakovic		mpakovic@southeast.net
 Michael Schmidt		michael@muc.de
 Michael Schwingen	m.schwingen@stochastik.rwth-aachen.de
 Michael Smolsky		fnsiguc@astro.weizmann.ac.il
+Mike Castle		dalgoda@mack.rt66.com
+Mike Kienenberger	mkienenb@arsc.edu
 Mike Muuss		mike@brl.mil
 Mike Nolan		nolan@lpl.arizona.edu
 Mike Rogers		mike@demon.net
@@ -321,9 +380,10 @@ Neil Faulks		neil@dcs.kcl.ac.uk
 Neil Jerram		nj104@cus.cam.ac.uk
 Nelson H.F. Beebe	beebe@math.utah.edu
 Nick Barron		nikb@cix.compulink.co.uk
-Noah Friedman		friedman@prep.ai.mit.edu
+Noah Friedman		friedman@gnu.org
 Noel Cragg		noel@red-bean.com
 Norbert Kiesel		norbert@rwthi3.informatik.rwth-aachen.de
+Norman Kysler		norman@shirkhan.cs.tu-berlin.de
 Olaf Schlueter		olaf@toppoint.de
 Olaf Wucknitz		owucknitz@hs.uni-hamburg.de
 Oliver Trepte		oliver@fysik4.kth.se
@@ -332,7 +392,9 @@ Oswald P. Backus IV	backus@lks.csi.com
 Pascal Meheut		pascal@cnam.cnam.fr
 Patrick Fulconis	fulco@sig.uvsq.fr
 Patrick Timmons		timmons@electech.polymtl.ca
+Paul Colin De Verdière	Paul.COLINDEVERDIERE@enst-bretagne.fr
 Paul Eggert		eggert@twinsun.com
+Paul Green		Paul_Green@stratus.com
 Paul Kanz		paul@icx.com
 Paul Mitchell		P.Mitchell@surrey.ac.uk
 Paul Nevai		pali+@osu.edu
@@ -344,11 +406,14 @@ Pekka Janhunen		Pekka.Janhunen@fmi.fi
 Per Bojsen		pb@delta.dk
 Per Foreby		perf@efd.lth.se
 Pete Geenhuizen		peteg@beno.css.gov
+Peter Bloom		P.L.H.Bloom@library.tudelft.nl
 Peter Carah		pete@looneytunes.com
 Peter Fox		fox@gec-mi-at.co.uk
+Peter Kohler		kohler@netcetera.ch
 Peter Kutschera		peter@zditr1.arcs.ac.at
 Peter Seebach		seebs@taniemarie.solon.com
 Phil Hands		phil@hands.com
+Phil Nelson		phil@cs.wwu.edu
 Philippe Defert		defert@cern.ch
 Piercarlo Grandi	piercarl@sabi.demon.co.uk
 Pierce Cantrell		cantrell@ee.tamu.edu
@@ -361,18 +426,21 @@ Randy Bias		randyb@edge.edge.net
 Ray Dassen		jdassen@wi.leidenuniv.nl
 Reuben J. Ravago	reuben@asti.dost.gov.ph
 Reuben Sumner		rasumner@undergrad.math.uwaterloo.ca
+Rex Dieter		rdieter@math.unl.edu
 Ricardo Marek		ricky@ornet.co.il
 Richard Deal		deal@xi.cs.fsu.edu
 Richard J. Kettlewell	richard@elmail.co.uk
 Richard Lloyd		R.K.Lloyd@csc.liv.ac.uk
 Richard O'Neill		richard@nexus.vnus.bc.ca
 Richard Sims		rbs@acs.bu.edu
-Richard Stallman	rms@gnu.ai.mit.edu
+Richard Stallman	rms@gnu.org
 Richard Westerik	richardw@bssi.nl
 Rick Emerson		rick@ssg.com
 Rob Parry		rparry@hydrolab.arsusda.gov
+Rob Urban		urban@rto.dec.com
 Robert Anthony Nader	naderr@usa.net
 Robert Bernstein	rocky@panix.com
+Robert Carleton		rbc@gnu.org
 Robert E. Brown		brown@bibliotech.com
 Robert Frey		bobf@unix.advansys.com
 Robert Leslie		rob@mars.org
@@ -386,7 +454,7 @@ Rod Buchanan		rod.buchanan@kratos.co.uk
 Rod Thompson		rodt@synopsys.com
 Roderich Schupp		roderich@syntec.m.eunet.de
 Rodney Brown		RBrown@cocam.com.au
-Roland McGrath		roland@gnu.ai.mit.edu
+Roland McGrath		roland@gnu.org
 Roland Schemers III	schemers@vela.acs.oakland.edu
 Rolf Niepraschk		niepraschk@chbrb.berlin.ptb.de
 Roman Gollent		roman@portal.stwing.upenn.edu
@@ -401,31 +469,38 @@ Sakai Kiyotaka		ksakai@netwk.ntt-at.co.jp
 Santiago Vila Doncel	sanvila@unex.es
 Sarah Quady		squady@warp10.keck.hawaii.edu
 Saul Lubkin		lubkin@cs.rochester.edu
+Scott Bertilson		scott@nts.umn.edu
 Scott Grosch		garath@engin.umich.edu
 Scott Hunziker		ksh@eskimo.com
 Scott J. Kramer		sjk@graham.com
 Scott L. Burson		gyro@zeta-soft.com
 Scott S. Bertilson	scott@geom.umn.edu
+Sebastian Unger		unger@studi.mathematik.hu-berlin.de
 Serge Granik		serge@euler.berkeley.edu
 Seth Robertson		seth@ctr.columbia.edu
 Sherwood Botsford	sherwood@space.ualberta.ca
+Shimon Facterman	fshimon@iil.intel.com
 Simon Wright		simon.j.wright@gecm.com
 Sisira Jayasinghe	sisira.jayasinghe@sdrc.com
 Skip Montanaro		skip@automatrix.com
 Simon Wright		simon@pogner.demon.co.uk
+Sriram Srinivasan	sriram@weblogic.com
 Stefan Skoglund		sp2stes1@ida.his.se
 Steffen Stempel		stempel@ira.uka.de
 Stephen Gildea		gildea@intouchsys.com
 Stephen J Bevan		stephenb@harlequin.co.uk
+Stephen J. Friedl	friedl@mtndew.com
+Stephen K Degler	sdegler@zeitgeist.com
 Stephen Saroff		saroff@msc.edu
 Stuart Kemp		skemp@bmc.com
 Stuart Poulin		stuart@indsys.com
 Sven Verdoolaege	skimo@breughel.ufsia.ac.be
 Sylvain ROUGIER		un@grolier.fr
+Tanya Ruttenberg	tanya@cie.cuc.com
 Tarang Kumar Patel	mombasa@ptolemy.arc.nasa.gov
 Ted Rule		Ted_Rule@flextech.co.uk
-The King		elvis@gnu.ai.mit.edu
-Thomas Bushnell n/BSG	thomas@gnu.ai.mit.edu
+The King		elvis@gnu.org
+Thomas Bushnell n/BSG	thomas@gnu.org
 Thomas König		Thomas.Koenig@ciw.uni-karlsruhe.de
 Thomas Krebs		krebs@faps.uni-erlangen.de
 Thomas M. Browder Jr.	browder@use1.eglin.af.mil
@@ -443,34 +518,40 @@ Tim Towers		tzt@uniplex.co.uk
 Timothy J. Lee		timlee@netcom.com
 Timothy Fossum		fossum@cs.uwp.edu
 Tito Flagella		tito@di.unipi.it
+Tobias Ringstrom	tobias@it.chalmers.se
+Todd Rannow		rannow@msc.edu
 Tom Popovitch		tpop@informix.com
 Tom Quinn		trq@astro.washington.edu
 Tom Tromey		tromey@drip.colorado.edu
+Tony Lill		ajlill@ajlc.waterloo.on.ca
 Tor Lillqvist		tml@hemuli.tte.vtt.fi
 Torbjorn Granlund	tege@sics.se
 Torkel Hasle		torkel@bibsyst.no
 Torsten Lull		tlupi@gppc.de
+Torsten Naumann		tna@informatik.tu-chemnitz.de
 Toshiaki Nishi		toshi@sss.osa.sharp.co.jp
 Travis L. Priest	T.L.Priest@larc.nasa.gov
 Troy Rudolph		rudtr01@cai.com
 Tsutomu Yamada		tsutomu@sra.co.jp
-Ulrich Drepper		drepper@gnu.ai.mit.edu
+Ulrich Drepper		drepper@gnu.org
 Van Snyder		vsnyder@math.jpl.nasa.gov
 Vic Abell		abe@cc.purdue.edu
 Victor J. Griswold	vgris@aironet.com
 Vince Del Vecchio	vdelvecc@inmet.com
+Vladimir Michl		MichlV@risc.upol.cz
 W. Phillip Moore	wpm@morgan.com
+Walter C. Pelissero	wcp@lpds.sublink.org
 Warner Losh		imp@boulder.parcplace.com
 Warren Dodge		warrend@sptekwv3.wv.tek.com
 Wayne Christopher	wayne@icemcfd.com
 Werner Almesberger	werner.almesberger@lrc.di.epfl.ch
-William Bader		wbader@pluto.csee.lehigh.edu
+William Bader		william@nscs.fast.net
 William J. Eaton	wje@hoffman.rstnu.bcm.tmc.edu
 William Kucharski	kucharsk@netcom.com
 Wlodzimierz Jan Martin	wjm@pg.gda.pl
 Wolfgang Rupprecht	wolfgang@wsrcc.com
 Wolfram Gloger		Wolfram.Gloger@dent.med.uni-muenchen.de
 Wolfram Wagner		ww@mpi-sb.mpg.de
-Yasushi Suzudo		ysuzudo@mail.asiandevbank.org
+Yasushi Suzudo		SGR00413@niftyserve.or.jp
 Yu-Min Liang		min@taz.ho.att.com
 maximum entropy		entropy@zippy.bernstein.com

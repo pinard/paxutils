@@ -1,5 +1,5 @@
-/* Simple arithmetic for numbers greater than a long int, for GNU tar.
-   Copyright (C) 1996, 1997 Free Software Foundation, Inc.
+/* Arithmetic for numbers greater than an unsigned long or int, for tar.
+   Copyright (C) 1996, 1997, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,45 +15,70 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* Also, see comments at beginning of arith.c.  */
-
 #define BITS_PER_BYTE 8		/* number of bits in each sizeof unit */
 #define BITS_PER_TARLONG 42	/* wanted number of bits in each tarlong */
 
-/* In all cases, tarlong is the proper type for a big number.
-
-   For simulated arithmetic, SUPERDIGIT is the base, TARLONG_FORMAT is the
-   format to print a single super-digit filled with zeroes to the left, and
-   BITS_PER_SUPERDIGIT is the smallest number of bits required to fully
-   represent each super-digit.  LONGS_PER_TARLONG says how many longs are
-   required for a full tarlong, and SIZEOF_TARLONG is the size of a tarlong
-   in bytes.
+/* In all cases, tarlong is the proper type for a big number.  tarcell is
+   either unsigned long, or unsigned int if the former is unavailable.
 
    For straight compiler arithmetic, SUPERDIGIT is zero and TARLONG_FORMAT
    is the format to directly print a tarlong (without zero-filling).
 
-   The values of SIZEOF_LONG_LONG and SIZEOF_UNSIGNED_LONG, below, are
-   obtained through the configuration process.  */
+   For simulated arithmetic, SUPERDIGIT is the base, TARLONG_FORMAT is the
+   format to print a single super-digit filled with zeroes to the left, and
+   BITS_PER_SUPERDIGIT is the smallest number of bits required to fully
+   represent each super-digit.  CELLS_PER_TARLONG says how many cells are
+   required for a full tarlong, and SIZEOF_TARLONG is the size of a tarlong
+   in bytes.
 
-#if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG >= BITS_PER_TARLONG
+   The values of SIZEOF_UNSIGNED_LONG_LONG, SIZEOF_UNSIGNED_LONG and
+   SIZEOF_UNSIGNED_INT, below, are obtained through the configuration
+   process, and SIZEOF_UNSIGNED_LONG_LONG is reset to zero by the
+   configuration process if printf does not support %llu.  If nonzero,
+   SUPERDIGIT is the biggest power of 10 which fits in half the bits of an
+   tarcell.  See comments at beginning of `arith.c' for more explanations.  */
+
+#if BITS_PER_BYTE * SIZEOF_UNSIGNED_INT >= BITS_PER_TARLONG
 # define SUPERDIGIT 0
-# define TARLONG_FORMAT "%uld"
-typedef unsigned long tarlong;
+# define TARLONG_FORMAT "%u"
+typedef unsigned int tarlong;
 #else
-# if BITS_PER_BYTE * SIZEOF_LONG_LONG >= BITS_PER_TARLONG + 1
+# if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG >= BITS_PER_TARLONG
 #  define SUPERDIGIT 0
-#  define TARLONG_FORMAT "%lld"
-typedef long long tarlong;
+#  define TARLONG_FORMAT "%lu"
+typedef unsigned long tarlong;
 # else
-#  if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG >= 64
-#   define SUPERDIGIT 1000000000L
-#   define BITS_PER_SUPERDIGIT 29
-#   define TARLONG_FORMAT "%09uld"
+#  if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG_LONG >= BITS_PER_TARLONG + 1
+#   define SUPERDIGIT 0
+#   define TARLONG_FORMAT "%llu"
+typedef unsigned long long tarlong;
 #  else
-#   if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG >= 32
-#    define SUPERDIGIT 10000L
-#    define BITS_PER_SUPERDIGIT 14
-#    define TARLONG_FORMAT "%04uld"
+#   if SIZEOF_UNSIGNED_LONG
+typedef unsigned long tarcell;
+#    if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG >= 64
+#     define SUPERDIGIT 1000000000L
+#     define BITS_PER_SUPERDIGIT 29
+#     define TARLONG_FORMAT "%09lu"
+#    else
+#     if BITS_PER_BYTE * SIZEOF_UNSIGNED_LONG >= 32
+#      define SUPERDIGIT 10000L
+#      define BITS_PER_SUPERDIGIT 14
+#      define TARLONG_FORMAT "%04lu"
+#     endif
+#    endif
+#   else
+typedef unsigned int tarcell;
+#    if BITS_PER_BYTE * SIZEOF_UNSIGNED_INT >= 64
+#     define SUPERDIGIT 1000000000
+#     define BITS_PER_SUPERDIGIT 29
+#     define TARLONG_FORMAT "%09u"
+#    else
+#     if BITS_PER_BYTE * SIZEOF_UNSIGNED_INT >= 32
+#      define SUPERDIGIT 10000
+#      define BITS_PER_SUPERDIGIT 14
+#      define TARLONG_FORMAT "%04u"
+#     endif
+#    endif
 #   endif
 #  endif
 # endif
@@ -61,26 +86,26 @@ typedef long long tarlong;
 
 #if SUPERDIGIT
 
-# define LONGS_PER_TARLONG \
+# define CELLS_PER_TARLONG \
     ((BITS_PER_TARLONG + BITS_PER_SUPERDIGIT - 1) / BITS_PER_SUPERDIGIT)
-# define SIZEOF_TARLONG (LONGS_PER_TARLONG * sizeof (unsigned long))
+# define SIZEOF_TARLONG (CELLS_PER_TARLONG * sizeof (tarcell))
 
 /* The NEC EWS 4.2 C compiler gets confused by a pointer to a typedef that
    is an array.  So we wrap the array into a struct.  (Pouah!)  */
 
 struct tarlong
 {
-  unsigned long digit[LONGS_PER_TARLONG];
+  tarcell digit[CELLS_PER_TARLONG];
 };
 
 typedef struct tarlong tarlong;
 
-int zerop_tarlong_helper PARAMS ((unsigned long *));
-int lessp_tarlong_helper PARAMS ((unsigned long *, unsigned long *));
-void clear_tarlong_helper PARAMS ((unsigned long *));
-void add_to_tarlong_helper PARAMS ((unsigned long *, int));
-void mult_tarlong_helper PARAMS ((unsigned long *, int));
-void print_tarlong_helper PARAMS ((unsigned long *, FILE *));
+bool zerop_tarlong_helper PARAMS ((tarcell *));
+bool lessp_tarlong_helper PARAMS ((tarcell *, tarcell *));
+void clear_tarlong_helper PARAMS ((tarcell *));
+void add_to_tarlong_helper PARAMS ((tarcell *, tarcell));
+void mult_tarlong_helper PARAMS ((tarcell *, tarcell));
+void print_tarlong_helper PARAMS ((tarcell *, FILE *));
 
 # define zerop_tarlong(Accumulator) \
    zerop_tarlong_helper (&(Accumulator).digit[0])
@@ -92,10 +117,10 @@ void print_tarlong_helper PARAMS ((unsigned long *, FILE *));
    clear_tarlong_helper (&(Accumulator).digit[0])
 
 # define add_to_tarlong(Accumulator, Value) \
-   add_to_tarlong_helper (&(Accumulator).digit[0], (Value))
+   add_to_tarlong_helper (&(Accumulator).digit[0], (tarcell) (Value))
 
 # define mult_tarlong(Accumulator, Value) \
-   mult_tarlong_helper (&(Accumulator).digit[0], (Value))
+   mult_tarlong_helper (&(Accumulator).digit[0], (tarcell) (Value))
 
 # define print_tarlong(Accumulator, File) \
    print_tarlong_helper (&(Accumulator).digit[0], (File))

@@ -1,0 +1,11 @@
+--- automake-1.3/automake.in	1998/04/21 13:21:19	1.1
++++ automake-1.3/automake.in	1998/04/21 13:21:34
+@@ -1014,7 +1014,7 @@
+ 			      . '`if test -f $(srcdir)/' . $base . '.c'
+ 			      . '; then echo $(srcdir)/' . $base . '.c'
+ 			      . '; else echo ' . $base . '.c; fi` '
+-			      . '| $(ANSI2KNR) ' . $base . "_.c\n");
++			      . '| $(ANSI2KNR) > ' . $base . "_.c\n");
+  	    push (@objects, $base . '_.o');
+  	    push (@objects, $base . '_.lo') if $seen_libtool;
+  	}

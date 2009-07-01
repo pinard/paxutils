@@ -1,0 +1,1125 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Unlinking,  Next: Attributes,  Prev: Preventing overwrite,  Up: extract
+
+Options to destroy files
+------------------------
+
+   Some people argue that `tar' should not hesitate to overwrite files
+with other files when extracting.  When extracting a `tar' archive, they
+expect to see a faithful copy of the state of the filesystem when the
+archive was created.  It is debatable that this would always be proper
+behavior.  For example, suppose one has an archive in which `usr/local'
+is a link to `usr/local2'.  Since the archive was created, maybe the
+site removed the link and renamed the whole hierarchy from `/usr/local2'
+to `/usr/local'.  Such things happen all the time.  We guess it would
+not be welcome at all, in the typical case, for `tar' to remove the
+whole hierarchy just to make room for the link to be reinstated, unless
+it *also* simultaneously restores the full `/usr/local2', of course!
+
+   By default, `tar' errs on the side of caution.  Some options allow
+users to change its behavior.  When no special options are given for
+this, `tar' removes single files when extracting over them, usually
+follows symbolic links when found, and does not destroy directories.
+
+* Menu:
+
+* unlink-first::                Removing files prior to extraction
+* recursive-unlink::            Removing whole directories
+
+
+File: paxutils.info,  Node: unlink-first,  Next: recursive-unlink,  Prev: Unlinking,  Up: Unlinking
+
+Removing files prior to extraction
+..................................
+
+   The `--unlink-first' (`-U') option tells `tar' to try removing files
+before extracting over them, instead of trying to overwrite them.
+
+
+File: paxutils.info,  Node: recursive-unlink,  Prev: unlink-first,  Up: Unlinking
+
+Removing whole directories
+..........................
+
+   When the `--recursive-unlink' option is specified, `tar' tries to
+remove files and directory hierarchies before extracting over them.
+*This is a dangerous option!*
+
+   So, `tar' is indeed able to remove a whole hierarchy to reestablish a
+symbolic link, for example, but *only if* `--recursive-unlink' is
+specified to allow this behavior.
+
+
+File: paxutils.info,  Node: Attributes,  Next: Scarce,  Prev: Unlinking,  Up: extract
+
+Handling file attributes
+------------------------
+
+* Menu:
+
+* touch::                       Setting modification times
+* same-owner::                  Restoring file ownership
+* same-permissions::            Setting access permissions
+* no-attributes::               Leaving file attributes alone
+
+
+File: paxutils.info,  Node: touch,  Next: same-owner,  Prev: Attributes,  Up: Attributes
+
+Setting modification times
+..........................
+
+   Normally, `tar' sets the modification times of extracted files to
+the modification times recorded for the files in the archive, but
+limits the permissions of extracted files by the current `umask'
+setting.
+
+   To set the modification times of extracted files to the time when
+the files were extracted, use the `--touch' (`-m') option in
+conjunction with `--extract' (`--get', `-x').
+
+   In fact, `--touch' (`-m') sets the modification time of extracted
+archive members to the time they were extracted, not the time recorded
+for them in the archive.  Use in conjunction with `--extract' (`--get',
+`-x').
+
+   The `--touch' (`-m') option does not extract file modification time.
+When this option is used, `tar' leaves the modification time of the
+files it extracts as the time when the files were extracted, instead of
+setting it to the time recorded in the archive.
+
+   This option is meaningless with `--list' (`-t').
+
+
+File: paxutils.info,  Node: same-owner,  Next: same-permissions,  Prev: touch,  Up: Attributes
+
+Restoring file ownership
+........................
+
+   The `--same-owner' option invites `tar' to create extracted files
+with the same ownership they have in the archive, if this is possible.
+
+   When using `tar' as super-user at extraction time, ownership is
+always restored.  So this option is meaningful only for non-root users,
+when `tar' is executed on those systems able to give files away.  This
+is considered as a security flaw by many people, at least because it
+makes quite difficult to correctly charge users for the disk space they
+occupy.  Also, the `suid' or `sgid' attributes of files are easily and
+silently lost when files are given away.
+
+   When writing an archive, `tar' writes the user ID and user name
+separately.  If it can't find a user name (because the user ID is not
+in `/etc/passwd'), it does not write one.  When restoring, and doing a
+`chmod', as when you use `--same-permissions'
+(`--preserve-permissions', `-p'), () it tries to look up the name (if
+one was written) in `/etc/passwd'.  If it fails, then it uses the user
+ID stored in the archive instead.
+
+
+File: paxutils.info,  Node: same-permissions,  Next: no-attributes,  Prev: same-owner,  Up: Attributes
+
+Setting access permissions
+..........................
+
+   The `--same-permissions' (`--preserve-permissions', `-p') option
+requests the extraction of all protection information.  This option
+causes `tar' to set the modes (access permissions) of extracted files
+exactly as recorded in the archive.  If this option is not used, the
+current `umask' setting limits the permissions on extracted files.
+
+   To set the modes (access permissions) of extracted files to those
+recorded for those files in the archive, use `--same-permissions'
+(`--preserve-permissions', `-p') in conjunction with the `--extract'
+(`--get', `-x') subcommand.
+
+   The {No Value For "same-permission"} option asks that the modes of
+extracted archive members be those recorded in the archive, ignoring
+current umask settings.  Use in conjunction with `--extract' (`--get',
+`-x').
+
+   This option is meaningless with `--list' (`-t').
+
+
+File: paxutils.info,  Node: no-attributes,  Prev: same-permissions,  Up: Attributes
+
+Leaving file attributes alone
+.............................
+
+   The experimental `--no-attributes' option has the effect of
+inhibiting all attempts at restoring file attributes, like owner, group,
+mode, or time stamps.  In this case, `tar' lets the underlying system
+handle such things, and does not try to intervene in any way.
+
+
+File: paxutils.info,  Node: Scarce,  Prev: Attributes,  Up: extract
+
+Coping with scarce resources
+----------------------------
+
+* Menu:
+
+* starting-file::               Starting file
+* same-order::                  Same order
+* preserve::                    Preserving permissions and order
+
+
+File: paxutils.info,  Node: starting-file,  Next: same-order,  Prev: Scarce,  Up: Scarce
+
+Starting file
+.............
+
+   Part of an archive may be skipped through the usage of the
+`--starting-file=NAME' (`-K NAME') option.  It forces the chosen
+subcommand to start in the middle of an archive.  Use in conjunction
+with `--extract' (`--get', `-x') or `--list' (`-t').
+
+   If a previous attempt to extract files failed due to lack of disk
+space, you can use `--starting-file=NAME' (`-K NAME') to start
+extracting only after member NAME of the archive.  This assumes, of
+course, that there is now free space, or that you are now extracting
+into a different file system.  (You could also choose to suspend `tar',
+remove unnecessary files from the file system, and then restart the
+same `tar' subcommand.  In this case, `--starting-file=NAME' (`-K
+NAME') is not necessary.  *Note incremental::, *Note interactive::, and
+*Note exclude::.)
+
+
+File: paxutils.info,  Node: same-order,  Next: preserve,  Prev: starting-file,  Up: Scarce
+
+Same order
+..........
+
+   The `--same-order' (`--preserve-order', `-s') option allows `tar' to
+process large lists of file names on machines with small amounts of
+memory.  Use in conjunction with `--compare' (`--diff', `-d'), `--list'
+(`-t'), or `--extract' (`--get', `-x').
+
+   The `--same-order' (`--preserve-order', `-s') option tells `tar'
+that the list of file names to be listed or extracted is sorted in the
+same order as the files in the archive.  This allows a large list of
+names to be used, even on a small machine that would not otherwise be
+able to hold all the names in memory at the same time.  Such a sorted
+list can easily be created by running `tar -t' on the archive and
+editing its output.
+
+   This option is probably never needed on modern computer systems.
+
+
+File: paxutils.info,  Node: preserve,  Prev: same-order,  Up: Scarce
+
+Preserving permissions and order
+................................
+
+   Bizarrely, the `--preserve' option is the same as using both
+`--same-permissions' (`--preserve-permissions', `-p') and
+`--same-order' (`--preserve-order', `-s') simultaneously.
+
+   The `--preserve' option has no equivalent short option name.  It is
+really equivalent to `--same-permissions' (`--preserve-permissions',
+`-p') plus `--same-order' (`--preserve-order', `-s').
+
+
+File: paxutils.info,  Node: create,  Next: Applications,  Prev: extract,  Up: Subcommands
+
+How to create archives
+======================
+
+   One of the basic subcommands of `tar' is `--create' (`-c'), which
+you use to create a `tar' archive.  We will explain `--create' (`-c')
+first because, in order to learn about the other subcommands, you will
+find it useful to have an archive available to practice on.
+
+   To make this easier, in this section you will first create a
+directory containing three files.  Then we will show you how to create
+an *archive* inside the new directory.  Both the directory and the
+archive are specifically for you to practice on.  The rest of this
+chapter and the next chapter will show many examples using this
+directory and the files you will create: some of those files may be
+other directories and other archives.
+
+   The three files you will archive in this example are called `blues',
+`folk', and `jazz'.  The archive is called `collection.tar'.
+
+   This section will proceed slowly, detailing how to use `--create'
+(`-c') in `verbose' mode, and showing examples using both short and long
+forms.  In the rest of the tutorial, and in the examples in the next
+chapter, we will proceed at a slightly quicker pace.  This section
+moves more slowly to allow beginning users to understand how `tar'
+works.
+
+   Creating an empty archive would have a kind of elegance.  One can
+initialize an empty archive and later use `--append' (`-r') for adding
+all members.  Some applications would not welcome making an exception
+in the way of adding the first archive member.
+
+   There is little or no reason to create an empty archive, but you can
+if you wish.  (In itself, an empty archive is useless, but later you can
+use `--append' (`-r') to add members.  There are no actions using an
+empty archive that you cannot do as well or better with a regular
+archive.)  Moreover, there have been reports that some versions of
+`tar' have trouble with an empty archive on magnetic tapes.
+
+   Consequently, `tar' will not create an empty archive directly;
+specifically, `tar' will not create an archive if you specify the
+`--create' (`-c') option but fail to specify
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') and do not provide
+any arguments besides options.
+
+   If, after considering all this, you should want to create an empty
+archive, you must specify a value for the `--files-from=FILE-OF-NAMES'
+(`-T FILE-OF-NAMES') option that has no names in it, as in the
+following example:
+
+     $ tar --create --file=empty-archive.tar --files-from=/dev/null
+     $ tar cfT empty-archive.tar /dev/null
+
+   On the other hand, many people reported that it is dangerously easy
+for `tar' to destroy a magnetic tape with an empty archive.(1)  The two
+most common errors are:
+
+  1. Mistakingly using `create' instead of `extract', when the intent
+     was to extract the full contents of an archive.  This error is
+     likely: keys `c' and `x' are right next ot each other on the
+     QWERTY keyboard.  Instead of being unpacked, the archive then gets
+     wholly destroyed.  When users speak about "exploding" an archive,
+     they usually mean something else ... Ahem!
+
+  2. Forgetting the argument to `file', when the intent was to create
+     an archive with a single file in it.  This error is likely because
+     a tired user can easily add the `f' key to the cluster of option
+     letters, by the mere force of habit, without realizing the full
+     consequences of doing so.  The usual consequence is that the single
+     file, which was meant to be archived, is instead destroyed.
+
+   So, recognizing the likelihood and the catastrophic nature of these
+errors, `tar' now distances itself from elegance, and cravenly refuses
+to create an archive when `--create' (`-c') option is given, there are
+no arguments besides options, and `--files-from=FILE-OF-NAMES' (`-T
+FILE-OF-NAMES') option is *not* used.  Observe:
+
+     $ tar c
+     tar: Cravenly refusing to create an empty archive
+     Try `tar --help' for more information.
+     $ tar cf foo
+     tar: Cravenly refusing to create an empty archive
+     Try `tar --help' for more information.
+
+To get around the cautiousness of `tar' and nevertheless create an
+archive with nothing in it, one may still use, as the value for the
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option, a file with
+no names in it, as shown in the following commands:
+
+     $ tar --create --file=empty-archive.tar --files-from=/dev/null
+     $ tar cfT empty-archive.tar /dev/null
+
+* Menu:
+
+* name-prefix::                 Using name prefixes
+* atime-preserve::              Preserving last access time
+* remove-files::                Removing files
+* append::                      How to add files to existing archives
+* update::                      Updating an archive
+
+   ---------- Footnotes ----------
+
+   (1) This is well described in `The Unix-Hater's Handbook' by Simson
+Garfinkel, Daniel Weise, and Steven Strassmann, IDG Books, ISBN
+1-56884-203-1.
+
+
+File: paxutils.info,  Node: name-prefix,  Next: atime-preserve,  Prev: create,  Up: create
+
+Using name prefixes
+-------------------
+
+   Sometimes the directory structure you want an archive to create when
+you unpack it is different from the directory structure you built it in.
+
+   This is often true when you are using a `tar' production in a
+makefile, to build distribution archives in a source-code directory.
+The most convenient way to do this would be with a command like the
+following:
+
+     $ tar --create --file=distribution.tar *
+
+But this makes an archive that will unpack as a lot of individual files,
+which is usually not what you want.  Assuming your build directory is
+named `project', you might do something like
+
+     $ tar --directory=.. --create --file=distribution.tar project
+
+   But this means you will be stuck with the name of your build
+directory as the top-level name of the distribution archive.  Often you
+would like your distribution archive to unpack into a single directory,
+but with a synthetic top-level directory name (perhaps including a
+version number).
+
+   You can get this effect with the `--name-prefix=PREFIX' option.  Its
+argument is a name prefix which gets prepended to each file name entry
+in an archive as it is added to the archive.
+
+   For example, if you say
+
+     $ tar --name-prefix='project-5.23/' --create --file=collection.tar *
+
+   you will make an archive of all the files and directories in the
+current directory, but it will extract into the single subdirectory
+`project-5.23'.
+
+   Note that you will almost always want the argument of
+`--name-prefix=PREFIX' to end with a directory delimiter (forward slash
+under Unix-like operating systems, forward slash or backslash under
+DOS).  Otherwise you will make an archive in which each file has a
+prefix welded directly to the first segment of its name.  While this
+capability is there for full generality, it is probably not what you
+want.
+
+
+File: paxutils.info,  Node: atime-preserve,  Next: remove-files,  Prev: name-prefix,  Up: create
+
+Preserving last access time
+---------------------------
+
+   When `tar' reads files, their access times get updated.  To have
+`tar' attempt to set the access times back to what they were before
+they were read, use the `--atime-preserve' option.  This doesn't work
+for files that you don't own, unless you're root, and it doesn't
+interact nicely with incremental dumps (*note Backups::.), but it is
+good enough for some purposes.
+
+   This option doesn't have any effect on MS-DOS, since `atime' is not
+supported by the DOS FAT file system.  (It *does* work on MS-Windows
+9X.)
+
+
+File: paxutils.info,  Node: remove-files,  Next: append,  Prev: atime-preserve,  Up: create
+
+Removing files
+--------------
+
+   The effect of the `--remove-files' option is to remove files once
+they have been added to the archive.
+
+
+File: paxutils.info,  Node: append,  Next: update,  Prev: remove-files,  Up: create
+
+How to add files to existing archives
+-------------------------------------
+
+   If you want to add files to an existing archive, you don't need to
+create a new archive; you can use `--append' (`-r').  The archive must
+already exist in order to use `--append' (`-r').  (A related subcommand
+is the `--update' (`-u') subcommand; you can use this to add newer
+versions of archive members to an existing archive.  To learn how to do
+this with `--update' (`-u'), refer to *Note update::.)
+
+   If you use `--append' (`-r') to add a file to an archive which
+already contains a member with the same name, then the old member is
+not deleted.  What does happen, however, is somewhat complex.  `tar'
+*allows* you to have infinite numbers of archive members with the same
+name.  Some subcommands treat these same-named members no differently
+than any other set of archive members: for example, if you view an
+archive with `--list' (`-t'), you will see all of those members listed,
+with their modification times, owners, etc.
+
+   Other subcommands don't deal with these members as well as you might
+prefer; if you were to use `--extract' (`--get', `-x') to extract the
+archive, only the most recently added copy of a member with the same
+name as other members would end up in the working directory.  This is
+because `--extract' (`--get', `-x') extracts an archive in the order
+the members appeared in the archive; the most recently archived members
+will be extracted last.  Additionally, an extracted member will
+*overwrite* a file of the same name which existed in the directory
+already, and `tar' will not prompt you about this.  Thus, only the most
+recently archived member will end up being extracted, as it will
+overwrite the one extracted before it, and so on.  (One way of
+extracting all of the members without overwriting them is to use the
+`--backup'[=METHOD] option; see *Note backup::.)
+
+   Other than using `--backup'[=METHOD], there are a few additional
+ways to get around this.
+
+   If you want to replace an archive member, use `--delete' to delete
+the member you want to remove from the archive, and then use `--append'
+(`-r') to add the member you want to be in the archive.  (Replacing one
+member with another will not work on certain types of media, such as
+tapes; see *Note delete:: and *Note Media::, for more information.)
+Note that you cannot change the order of the archive; the most recently
+added member will still appear last.  In this sense, you cannot truly
+"replace" one member with another.
+
+* Menu:
+
+* Appending files::             Appending files to an archive
+* Multiple files::              Multiple files with the same name
+
+
+File: paxutils.info,  Node: Appending files,  Next: Multiple files,  Prev: append,  Up: append
+
+Appending files to an archive
+.............................
+
+   The simplest way to add a file to an already existing archive is the
+`--append' (`-r') subcommand, which writes specified files into the
+archive whether or not they are already among the archived files.  When
+you use `--append' (`-r'), you *must* specify file name arguments, as
+there is no default.  If you specify a file that already exists in the
+archive, another copy of the file will be added to the end of the
+archive.  As with other subcommands, the member names of the newly added
+files will be exactly the same as their names given on the command line
+(except that backslashes in MS-DOS file names are mirrored to Unix-style
+forward slashes).  The `--verbose' (`-v') option will print out the
+names of the files as they are written into the archive.
+
+   `--append' (`-r') cannot be performed on some tape drives,
+unfortunately, due to deficiencies in the formats those tape drives
+use.  The archive must be a valid `tar' archive, or else the results of
+using this subcommand will be unpredictable.  *Note Media::.
+
+   To demonstrate use of `--append' (`-r') to add a file to an archive,
+create a file called `rock' in the `practice' directory.  Make sure you
+are in the `practice' directory.  Then, run the following `tar' command
+to add `rock' to `collection.tar':
+
+     $ tar --append --file=collection.tar rock
+
+If you now use the `--list' (`-t') subcommand, you will see that `rock'
+has been added to the archive:
+
+     $ tar --list --file=collection.tar
+     jazz
+     blues
+     folk
+     rock
+
+
+File: paxutils.info,  Node: Multiple files,  Prev: Appending files,  Up: append
+
+Multiple files with the same name
+.................................
+
+   You can use `--append' (`-r') to add copies of files which have been
+updated since the archive was created.  (However, we do not recommend
+doing this, since there is another `tar' option called `--update'
+(`-u'); *note update::., for more information.  We describe this use of
+`--append' (`-r') here for the sake of completeness.)
+
+   When you extract the archive, the older version will effectively be
+lost.  This happens because files are extracted from an archive in the
+order in which they were archived.  Thus, when the archive is
+extracted, a file archived later in time will overwrite a file of the
+same name which was archived earlier, even though the older version of
+the file will remain in the archive unless you delete all versions of
+the file.
+
+   Suppose you change the file `blues' and then append the changed
+version to `collection.tar'.  As you saw above, the original `blues' is
+in the archive `collection.tar'.  If you change the file and append the
+new version of the file to the archive, there will be two copies in the
+archive.  When you extract the archive, the older version of the file
+will be extracted first, and then overwritten by the newer version when
+it is extracted.
+
+   You can append the new, changed copy of the file `blues' to the
+archive in this way:
+
+     $ tar --append --verbose --file=collection.tar blues
+     blues
+
+Because you specified the `--verbose' (`-v') option, `tar' has printed
+the name of the file being appended as it was acted on.  Now list the
+contents of the archive:
+
+     $ tar --list --verbose --file=collection.tar
+     -rw-rw-rw- myself users 28 1996-10-18 16:31 jazz
+     -rw-rw-rw- myself users 21 1996-09-23 16:44 blues
+     -rw-rw-rw- myself users 20 1996-09-23 16:44 folk
+     -rw-rw-rw- myself users 20 1996-09-23 16:44 rock
+     -rw-rw-rw- myself users 58 1996-10-24 18:30 blues
+
+The newest version of `blues' is now at the end of the archive (note
+the different creation dates and file sizes).  If you extract the
+archive, the older version of the file `blues' will be overwritten by
+the newer version.  You can confirm this by extracting the archive and
+running `ls' on the directory.  *Note Writing::, for more information.
+(*Please note:* This is the case unless you employ the
+`--backup'[=METHOD] option; .)
+
+
+File: paxutils.info,  Node: update,  Prev: append,  Up: create
+
+Updating an archive
+-------------------
+
+   In the previous section, you learned how to use `--append' (`-r') to
+add a file to an existing archive.  A related subcommand is `--update'
+(`-u').  The `--update' (`-u') subcommand updates a `tar' archive by
+comparing the date of the specified archive members against the date of
+the file with the same name.  If the file has been modified more
+recently than the archive member, then the newer version of the file is
+added to the archive (as with `--append' (`-r')).
+
+   Unfortunately, you cannot use `--update' (`-u') with magnetic tape
+drives.  The command will fail.
+
+   Both `--update' (`-u') and `--append' (`-r') work by adding to the
+end of the archive.  When you extract a file from the archive, only the
+version stored last will wind up in the file system, unless you use the
+`--backup'[=METHOD] option ().
+
+* Menu:
+
+* How to update::               How to update members of an archive
+* Unsuitability of update::     Updating does not always work
+
+
+File: paxutils.info,  Node: How to update,  Next: Unsuitability of update,  Prev: update,  Up: update
+
+How to update members of an archive
+...................................
+
+   You must use file name arguments with the `--update' (`-u')
+subcommand.  If you don't specify any files, `tar' won't act on any
+files and won't tell you that it didn't do anything (which might end up
+confusing you).
+
+   To see the `--update' (`-u') option at work, create a new file,
+`classical', in your practice directory, and some extra text to the
+file `blues', using any text editor.  Then invoke `tar' with the
+`update' subcommand and the `--verbose' (`-v') option specified, using
+the names of all the files in the practice directory as file name
+arguments:
+
+     $ tar --update -v -f collection.tar blues folk rock classical
+     blues
+     classical
+     $
+
+Because we have specified verbose mode, `tar' prints out the names of
+the files it is working on, which in this case are the names of the
+files that needed to be updated.  If you run `tar --list' and look at
+the archive, you will see `blues' and `classical' at its end.  There
+will be a total of two versions of the member `blues'; the one at the
+end will be newer and larger, since you added text before updating it.
+
+   (The reason `tar' does not overwrite the older file when updating it
+is because writing to the middle of a section of tape is a difficult
+process.  Tapes are not designed to get data inserted in their middle;
+doing so would destroy any data after the place you write.  *Note
+Media:: for more information about tapes.)
+
+   `--update' (`-u') is not suitable for performing backups for two
+reasons: it does not change directory content entries, and it lengthens
+the archive every time it is used.  The `tar' options intended
+specifically for backups are more efficient.  If you need to run
+backups, please consult *Note Backups::.
+
+
+File: paxutils.info,  Node: Unsuitability of update,  Prev: How to update,  Up: update
+
+Updating does not always work
+.............................
+
+   Sometimes, you may have a situation for which you would think usign
+`--update' (`-u') would be ideal; unfortunately, this is not always the
+case.  Two situations for which `--update' (`-u') is unsuitable are
+updating an archive stored on a magnetic tape, and making a backup.
+Other subcommands and options provide more appropriate solutions in
+these situations.
+
+   `tar' does not overwrite the older file when updating an archive.
+This is because writing to the middle of a section of tape is a
+difficult process.  Tapes are not really designed to go backward
+(although some have the capability), and their linear nature makes
+inserting data into the middle of a tape impossible, even if there is
+room at the end of the tape.  In this way, tapes differ from other kinds
+of storage media, such as floppy diskettes and hard drives.  *Note
+Media::, for more information about tapes and other kinds of storage
+media.
+
+   `--update' (`-u') is not suitable for performing backups for two
+reasons: it does not change directory content entries, and it lengthens
+the archive every time it is used.  The `tar' options intended
+specifically for backups are more efficient.  If you need to run
+backups, please consult *Note Backups::.
+
+
+File: paxutils.info,  Node: Applications,  Prev: create,  Up: Subcommands
+
+Other uses for `tar'
+====================
+
+   You can easily use archive files to transport a group of files from
+one system to another: put all relevant files into an archive on one
+computer system, transfer the archive to another system, and extract
+the contents there.  The basic transfer medium might be magnetic tape,
+Internet FTP, or even electronic mail (though you must encode the
+archive with `uuencode' in order to transport it properly by mail).
+Both machines do not have to use the same operating system, as long as
+they both support the `tar' program.
+
+   For example, here is how you might copy a directory's contents from
+one disk to another, while preserving the dates, modes, owners, and
+link-structure of all the files therein.  In this case, the transfer
+medium is a "pipe", which is a Unix redirection mechanism:
+
+     $ cd sourcedir; tar --create --file=- . | (cd targetdir; tar --extract --file=-)
+
+The command also works using short option forms:
+
+     $ cd sourcedir; tar -cf - . | (cd targetdir; tar -xf -)
+
+If you are really confident you are using `tar' and that standard input
+and output were not overridden by something else as the default archive
+at your installation, you might write the above examples more simply:
+
+     $ cd sourcedir; tar --create . | (cd targetdir; tar --extract)
+     $ cd sourcedir; tar -c . | (cd targetdir; tar -x)
+
+   This is one of the easiest methods to transfer a `tar' archive.
+
+* Menu:
+
+* concatenate::                 Combining archives with `tar'
+* Using cat with archives::     Combining archives with `cat'
+* delete::                      Removing archive members from an archive
+
+
+File: paxutils.info,  Node: concatenate,  Next: Using cat with archives,  Prev: Applications,  Up: Applications
+
+Combining archives with `tar'
+-----------------------------
+
+   Sometimes it may be convenient to add a second archive onto the end
+of an archive rather than adding individual files to the archive.  To
+add the contents of one or more archives to the end of another archive,
+you should use the `--concatenate' (`--catenate', `-A') subcommand.
+
+   To use `--concatenate' (`--catenate', `-A'), name two archives to be
+concatenated on the command line.  (Nothing happens if you don't list
+any.)  The members, and their member names, will be copied verbatim
+from those archives.  If this causes multiple members to have the same
+name, it does not delete any members; all the members with the same
+name coexist.  For information on how this affects reading the archive,
+.
+
+   To demonstrate how `--concatenate' (`--catenate', `-A') works,
+create two small archives called `bluesrock.tar' and `folkjazz.tar',
+using the relevant files from `practice':
+
+     $ tar -cvf bluesrock.tar blues rock
+     blues
+     rock
+     $ tar -cvf folkjazz.tar folk jazz
+     folk
+     jazz
+
+If you like, you can run `tar --list' to make sure the archives contain
+what they are supposed to:
+
+     $ tar -tvf bluesrock.tar
+     -rw-rw-rw- myself users 105 1997-01-21 19:42 blues
+     -rw-rw-rw- myself users  33 1997-01-20 15:34 rock
+     $ tar -tvf folkjazz.tar
+     -rw-rw-rw- myself users 20 1996-09-23 16:44 folk
+     -rw-rw-rw- myself users 65 1997-01-30 14:15 jazz
+
+   We can concatenate these two archives with `tar':
+
+     $ tar --concatenate --file=bluesrock.tar jazzfolk.tar
+
+   If you now list the contents of the `bluesrock.tar', you will see
+that now it also contains the archive members of `jazzfolk.tar':
+
+     $ tar --list --file=bluesrock.tar
+     blues
+     rock
+     jazz
+     folk
+
+   When you use `--concatenate' (`--catenate', `-A'), the source and
+target archives must already exist and must have been created using
+compatible format parameters ().  The new, concatenated archive will be
+called by the same name as the first archive listed on the command
+line.
+
+   Like `--append' (`-r'), this subcommand cannot be performed on some
+tape drives, due to deficiencies in the formats those tape drives use.
+
+   It may seem more intuitive to you to try to use `cat' to concatenate
+two archives instead of using the `--concatenate' (`--catenate', `-A')
+subcommand; after all, `cat' is the utility for combining files.
+
+   However, `tar' archives incorporate an end-of-file marker which must
+be removed if the concatenated archives are to be read properly as one
+archive.  `--concatenate' (`--catenate', `-A') removes the
+end-of-archive marker from the target archive before each new archive
+is appended.  If you use `cat' to combine the archives, the result will
+not be a valid `tar' format archive.  If you need to retrieve files
+from an archive that was added to using the `cat' utility, use the
+`--ignore-zeros' (`-i') option.  *Note ignore-zeros::, for further
+information on dealing with archives improperly combined using the
+`cat' utility.
+
+   You must specify the source archives using `--file=ARCHIVE-NAME'
+(`-f ARCHIVE-NAME') (*note file::.).  If you do not specify the target
+archive, `tar' uses the value of the environment variable `TAPE', or,
+if this has not been set, the default archive name.  If the default
+archive name is the standard output, `tar' will print an error message.
+
+* Menu:
+
+* Using cat with archives::     Combining archives with `cat'
+
+
+File: paxutils.info,  Node: Using cat with archives,  Next: delete,  Prev: concatenate,  Up: Applications
+
+Combining archives with `cat'
+-----------------------------
+
+   It may seem more intuitive to you to try to use `cat' to concatenate
+two archives instead of using the `--concatenate' (`--catenate', `-A')
+subcommand; after all, `cat' is the utility for combining files.
+However, `tar' archives incorporate an end-of-file marker which must be
+removed if the concatenated archives are to be read properly as one
+archive.  `--concatenate' (`--catenate', `-A') removes the
+end-of-archive marker from the target archive before each new archive
+is appended.
+
+   Therefore, if you use `cat' to combine the archives, the result will
+not be a valid `tar' format archive.  If you need to retrieve files
+from an archive that was added to using the `cat' utility, use the
+`--ignore-zeros' (`-i') option.  *Note ignore-zeros::, for further
+information on dealing with archives improperly combined using the
+`cat' shell utility.
+
+   You must specify the names of the archives that will be concatenated
+using `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') (*note file::.).  If
+you do not specify the target archive (the archive to which you will
+concatenate other archives), `tar' uses the value of the environment
+variable `TAPE', or, if this has not been set, the default archive name.
+
+
+File: paxutils.info,  Node: delete,  Prev: Using cat with archives,  Up: Applications
+
+Removing archive members from an archive
+----------------------------------------
+
+   You can remove members from an archive by using the `--delete'
+option.  Specify the name of the archive with `--file=ARCHIVE-NAME'
+(`-f ARCHIVE-NAME') and then specify the names of the members to be
+deleted; if you list no member names, nothing will be deleted.  The
+`--verbose' (`-v') option will cause `tar' to print the names of the
+members as they are deleted.  As with `--extract' (`--get', `-x'), you
+must give the exact member names when using `--delete'.  `--delete'
+will remove all versions of the named file from the archive.  The
+`--delete' subcommand can run very slowly.
+
+   Unlike other subcommands, `--delete' has no short form.
+
+   The `--delete' subcommand will rewrite the archive.  You can only
+use `--delete' on an archive if the archive device allows you to write
+to any point on the media at any time, that is, if it is a
+random-access device like a hard disk.  The `--delete' subcommand does
+not work on magnetic tapes.  Do not try to delete an archive member
+from a magnetic tape; the action will not succeed, and you will be
+likely to scramble the archive and damage your tape.  There is no safe
+way (except by completely rewriting the archive) to delete files from
+most kinds of magnetic tape.  *Note Media::.
+
+   To delete all versions of the file `blues' from the archive
+`collection.tar' in the `practice' directory, make sure you are in that
+directory, and then:
+
+     $ tar --list --file=collection.tar
+     jazz
+     blues
+     folk
+     rock
+     blues
+     blues
+     classical
+     $ tar --delete --file=collection.tar blues
+     $ tar --list --file=collection.tar
+     jazz
+     folk
+     rock
+     classical
+     $
+
+   The `--delete' option has been reported to work properly when `tar'
+acts as a filter from `stdin' to `stdout'.
+
+
+File: paxutils.info,  Node: Choosing,  Next: Formats,  Prev: Subcommands,  Up: Top
+
+Choosing files and names for `tar'
+**********************************
+
+   Certain options to `tar' enable you to specify a name for your
+archive.  Other options let you decide which files to include in, or
+exclude from, the archive, based on when or whether files were
+modified, whether the file names do or don't match specified patterns,
+or whether files are in specified directories.
+
+* Menu:
+
+* file::                        Choosing and naming archive files
+* Selecting Archive Members::   Selecting archive members
+* Exclusions::                  Excluding files by name
+* Time criteria::               Time based exclusions
+* Walking::                     Walking through directories
+* Relative::                    Relative notations for file names
+
+
+File: paxutils.info,  Node: file,  Next: Selecting Archive Members,  Prev: Choosing,  Up: Choosing
+
+Choosing and naming archive files
+=================================
+
+   By default, `tar' uses an archive file name that was compiled into
+it when `tar' was built on the system; usually this name refers to some
+physical tape drive on the machine.  Later versions of `tar' use
+standard output as the default archive file name (which you can
+redirect to another file).  However, the person who installed `tar' on
+the system may not have set the default to a meaningful value as far as
+most users are concerned.  As a result, you will usually want to tell
+`tar' where to find (or create) the archive.  The `--file=ARCHIVE-NAME'
+(`-f ARCHIVE-NAME') option allows you to specify a file to use as the
+archive instead of the default archive file location.
+
+   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option names the
+archive to create or operate on.  Use it in conjunction with any
+subcommand.
+
+   For example, in this `tar' command,
+
+     $ tar -cvf collection.tar blues folk jazz
+
+`collection.tar' is the name of the archive.  It must directly follow
+the `-f' option, since whatever directly follows `-f' will end up
+naming the archive.  If you neglect to specify an archive name, you may
+end up overwriting a file in the working directory with the archive you
+create, since `tar' will use this file's name for the archive name.
+
+   An archive can be saved as a file in the file system, sent through a
+pipe or over a network, or written to an I/O device such as a tape,
+floppy disk, or CD-Rewritable drive.
+
+   If you do not name the archive, `tar' uses the value of the
+environment variable `TAPE' as the file name for the archive.  If that
+is not available, `tar' uses a default, compiled-in archive name,
+usually that for tape unit zero (ie. `/dev/tu00'), or the standard
+output.  `tar' always needs an archive name.
+
+   If you use `-' as an archive name, `tar' reads the archive from
+standard input (when listing or extracting files), or writes it to
+standard output (when creating an archive).  If you use `-' as an
+archive name when modifying an archive, `tar' reads the original
+archive from its standard input and writes the entire new archive to
+its standard output.
+
+   To specify an archive file on a device attached to a remote machine,
+use the following:
+
+     --file=HOSTNAME:/DEV/FILE NAME
+
+`tar' will initiate the remote connection, if possible, and prompt you
+for a username and password.  If you use
+`--file=USER@HOSTNAME:/DEV/FILE NAME', `tar' will initiate the remote
+connection, if possible, using your username as the username on the
+remote machine.
+
+   If the archive file name includes a colon (`:'), then it is assumed
+to be a file on another machine.  If the archive file is
+`USER@HOST:FILE', then FILE is used on the host HOST.  The remote host
+is accessed using the `rsh' program, with a username of USER.  If the
+username is omitted (along with the `@' sign), then your user name will
+be used.  (This is the normal `rsh' behavior.)  It is necessary for the
+remote machine, in addition to permitting your `rsh' access, to have
+the `/usr/ucb/rmt' program installed.  If you need to use a file whose
+name includes a colon, then the remote tape drive behavior can be
+inhibited by using the `--force-local' option.
+
+   The MS-DOS/MS-Windows version of `tar' makes an exception to the
+above: it does *not* treat archive names with drive letters, such as
+`d:/backups/daily.tar', as remote.  This is so you would not be forced
+to use `--force-local' with the usual DOS-style absolute file names.
+`tar' only makes this exception when the colon is preceded by a single
+character in the range `[A-z]', which are valid MS-DOS/MS-Windows drive
+letters.  (Yes, DOS also allows the drive letter to be one of the six
+ASCII characters between uppercase `Z' and lowercase `a'.)  This means
+that remote machines with single-letter names are effectively
+disallowed by the MS-DOS version of `tar'.  However, we find it hard to
+believe that anybody would use a one-letter name for a machine.  (And
+as of now, `tar' doesn't support remote access on MS-DOS anyway.)
+
+   When the archive is being created to `/dev/null', `tar' tries to
+minimize input and output subcommands.  The Amanda backup system, when
+used with `tar', has an initial sizing pass which uses this feature.
+
+* Menu:
+
+* Using file::                  Using the `--file' option
+* Standard archive::            Archive on standard input or output
+* lmh::                         Abbreviating drive and density
+* Remote::                      Accessing a remote drive
+* force-local::                 Inhibiting remote access
+* rsh-command::                 Selecting the remote access mechanism
+* rmt invocation::              How `rmt' works
+
+
+File: paxutils.info,  Node: Using file,  Next: Standard archive,  Prev: file,  Up: file
+
+Using the `--file' option
+-------------------------
+
+   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option allows you to
+specify a file to use as the archive instead of the default archive
+file location.
+
+   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option names the
+archive to create or operate on.  Use in conjunction with any
+subcommand.
+
+   For example, in this `tar' command,
+
+     $ tar -cvf genres.tar blues folk jazz
+
+`genres.tar' is the name of the archive.  It must directly follow the
+`-f' option, since whatever directly follows `-f' will end up naming
+the archive.  If you neglect to specify an archive name, you may end up
+overwriting a file in the working directory with the archive you
+create, since `tar' will use this file's name for the archive name.
+
+   When the archive is being created to `/dev/null', `tar' tries to
+minimize input and output subcommands.  The Amanda backup system, when
+used with `tar', has an initial sizing pass which uses this feature.
+
+   If you do not name the archive, `tar' uses the value of the
+environment variable `TAPE' as the file name for the archive.  If that
+is not available, `tar' uses a default, compiled-in archive name,
+usually that for tape unit zero (ie. `/dev/tu00').  `tar' always needs
+an archive name.
+
+   If you use `-' as an archive name, `tar' reads the archive from
+standard input (when listing or extracting files), or writes it to
+standard output (when creating an archive).  If you use `-' as an
+archive name when modifying an archive, `tar' reads the original
+archive from its standard input and writes the entire new archive to
+its standard output.
+
+     $ cd sourcedir; tar -cf - . | (cd targetdir; tar -xf -)
+
+   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option is used to
+specify the file name of the archive `tar' works on.  A few particular
+values are recognized especially, and then trigger special internal
+mechanics for accessing the archive.  For example:
+
+     -f [HOSTNAME:]FILE
+     --file=[HOSTNAME:]FILE
+
+may be used to access the archive file or device FILE on a networked
+computer named HOSTNAME.  Such special notations are described here.
+
+   If the file name is `-', `tar' reads the archive from standard input
+(when listing or extracting), or writes it to standard output (when
+creating).  If the `-' file name is given when updating an archive,
+`tar' will read the original archive from its standard input, and will
+write the entire new archive to its standard output.
+
+   If the file name contains a `:', it is interpreted as `hostname:file
+name'.  If the HOSTNAME contains an "at" sign (`@'), it is treated as
+`user@hostname:file name'.  In either case, `tar' will invoke the
+command `rsh' (or `remsh') to start up an `/etc/rmt' on the remote
+machine.  If you give an alternate login name, it will be given to the
+`rsh'.  Naturally, the remote machine must have an executable
+`/etc/rmt'.  This program is free software from the University of
+California, and a copy of the source code can be found with the sources
+for `tar'; it's compiled and installed by default.
+
+   Since absolute file names on MS-DOS and MS-Windows include a drive
+letter, like in `d:/dir/subdir/file', `tar' compiled for these
+platforms does not treat file names with `:' as remote files if there
+is a single letter before the colon.  `tar' also does not currently
+support archives on remote machines when it runs on MS-DOS/MS-Windows.
+
+   If `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') is not given, but the
+environment variable `TAPE' is set, its value is used; otherwise, old
+versions of `tar' used a default archive name (which was picked when
+`tar' was compiled).  The default is normally set up to be the "first"
+tape drive or other transportable I/O medium on the system.
+
+   Starting with version 1.11.5, `tar' uses standard input and standard
+output as the default device, and we will no longer try to support
+automatic device detection at installation time.  This was failing in
+so many cases that it was hopeless to repair.  It is now completely
+left to the installer to override standard input and standard output in
+favor of some default device, if this seems preferable to him/her.
+Further, we think *most* actual uses of `tar' are with pipes or disks,
+not tapes, cartridges, or diskettes.
+
+   Some users think that using standard input and output is asking for
+trouble.  This could lead to a nasty surprise on your screen if you
+forget to specify an output file name--especially if you are going
+through a network or terminal server capable of buffering large amounts
+of output.  We had so many bug reports in that area of configuring
+default tapes automatically, and so many contradicting requests, that
+we finally considered the problem to be intractable, at least if
+portability is demanded.  We could of course use something like
+`/dev/tape' as a default, but this is *also* asking for various kind of
+trouble, ranging from hung processes to accidental destruction of real
+tapes.  After having seen all this mess, using standard input and
+output as a default really sounds like the only clean choice left, and
+a very useful one too.
+
+   `tar' reads and writes archive in records; we suspect this is to be
+the main reason why block devices are preferred over character devices.
+Most probably, block devices are more efficient too.  The installer
+could also check for `DEFTAPE' in `<sys/mtio.h>'.
+
+
+File: paxutils.info,  Node: Standard archive,  Next: lmh,  Prev: Using file,  Up: file
+
+Archive on standard input or output
+-----------------------------------
+
+
+File: paxutils.info,  Node: lmh,  Next: Remote,  Prev: Standard archive,  Up: file
+
+Abbreviating drive and density
+------------------------------
+
+   In some circumstances, the special `-[0-7][lmh]' option may be used
+to specify drive and density.  (Not supported on MS-DOS/MS-Windows.)
+

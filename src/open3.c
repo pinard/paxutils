@@ -79,9 +79,9 @@ open3 (char *path, int flags, int mode)
   int exists = 1;
   int call_creat = 0;
 
-  /* We actually do the work by calling the open() or creat() system
-     call, depending on the flags.  Call_creat is true if we will use
-     creat(), false if we will use open().  */
+  /* We actually do the work by calling the open() or creat() system call,
+     depending on the flags.  Call_creat is true if we will use creat(), false
+     if we will use open().  */
 
   /* See if the file exists and is accessible in the requested mode.
 

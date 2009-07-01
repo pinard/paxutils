@@ -1,0 +1,167 @@
+These files are used for testing gcpio.  They are:
+
+echo-time.c - prints the time in seconds since 1/1/70 00:00:00 GMT.
+	Usage: 
+	$ ./echo-time
+	707152068
+
+swapb.c - prints a file with its bytes swapped if the file has an even 
+	number of bytes.  If it does not have an even number of bytes,
+	swapb prints the file unchanged.
+	$ cat foo
+	abc
+	$ ./swapb foo
+	ba
+	c$ cat bar
+	de
+	$ ./swapb bar
+	de
+	$
+
+swaphw.c - prints a file with its halfwords (16 bits) swapped if the
+	file has an even number of halfwords.  If it does not have an
+	even number of halfwords, swaphw prints the file unchanged.
+	$ cat foo
+	abc
+	$ ./swaphw foo
+	c
+	ba$ cat bar
+	de
+	$ ./swaphw bar
+	de
+	$
+
+rediff.c - A simple 'diff'-like program that accepts regular expressions.
+	$ cat foo
+	abc
+	def
+	gHi
+	$ cat foore
+	[aA][bB][cC]
+	d.f
+	ghi
+	$ ./rediff foore foo
+	< ghi
+	--------------------
+	> gHi
+
+	Regular expressions may only occur in the first file.  It might be
+	nice if rediff printed line numbers and could recognize when lines
+	were inserted or deleted.
+
+verify.c - A program that verifies characteristics of files.  If the
+	characteristics are "OK", verify is silent (unless the -verbose
+	switch is used); otherwise verify prints that actual and expected
+	values that don't match.
+
+	$ verify -size 12 file		# verify that the size of `file' is
+	$ verify -verbose -size 12 file	# 12.
+	OK: junk size.
+	$ verify -size 11 file
+	file size 12 should be 11.
+	$ verify -mode 0100644 file	# verify that file the file type
+					# and protection mode bits for file
+					# are 0100644 (octal).
+	$ verify -mtime-gt 1 file	# verify that file was modified
+					# after 1/1/70 00:00:01 GMT.
+
+These are some of the basic options to verify:
+
+	-size bytes
+	-mtime seconds-since-epoch
+	-mtime-gt seconds-since-epoch
+	-atime seconds-since-epoch
+	-atime-gt seconds-since-epoch
+	-atime-lt seconds-since-epoch
+	-uid user-id-number
+	-gid group-id-number
+	-ino inode-number
+	-mode file-type-and-protection-modes
+	-nlink links-to-file
+
+Verify can also operate on a list of files.
+
+	$ cat list			# verify that file1, file2 and file3
+	file1				# are all owned by uid 706.
+	file2
+	file3
+	$ ./verify -uid 706 < list
+
+Verify can also compare the characteristics of a file to another
+file, and print any differences:
+
+	$ ls -l file file2
+	-rw-r--r--   1 foo      bar            12 May 29 11:16 file
+	-rw-r--r--   1 foo      bar            15 May  6 17:15 file2
+	$ ./verify -match-file file2 -size-match -mode-match -uid-match file
+	file size match 12 should be 15.
+
+When comparing 2 files with the -match-file option, verify can also
+take these options:
+
+	-size-match
+	-mtime-match
+	-atime-match
+	-uid-match
+	-gid-match
+	-ino-match
+	-mode-match
+	-nlink-match
+
+When verify is comparing 2 files, the -contents-match option can be
+used to compare the contents of the 2 files:
+
+	$ ./verify -match-file file2 -contents-match file
+	file lengths and contents differ at bytes 13.
+	$ ./verify -match-file file -contents-match file
+
+If the files are actually directories, instead of regular files, verify
+compares their enteries (it only verifies their names, not any characteristics
+of the files themselves):
+
+	$ ls dir1 dir2
+	dir1:
+	a  b  c
+
+	dir2:
+	a  d
+	$ ./verify -match-file dir1 -contents-match dir2
+	dir2/b: missing file.
+	dir2/c: missing file.
+	dir2/d: extra file.
+
+If the files are symbolic links, verify makes sure that they point
+to the same file:
+
+	$ cd dir2
+	$ ln -s a b
+	$ ln -s a c
+	$ ln -s d f
+	$ ../verify -match-file b -contents-match c
+	$ ../verify -match-file f -contents-match c
+	c link contents differ.
+
+Verify can compare the characteristics of a file to a file with the same
+name in another directory.
+
+	$ ls -l file dir/file
+	-rw-r--r--   1 foo      bar            12 May 29 11:16 file
+	-rw-r--r--   1 foo      bar            12 May 29 11:40 dir/file
+	$ ./verify -match-dir dir -size-match -mode-match -mtime-match file
+	file mtime match 707152592 should be 707154016.
+
+Finally, verify can compare the characteristics of a list of files in
+the current directory and another directory:
+
+	$ cat list
+	file
+	file2
+	-rw-r--r--   1 foo      bar            12 May 29 11:40 dir/file
+	-rw-------   1 foo      bar            26 May 29 11:42 dir/file2
+	-rw-r--r--   1 foo      bar            12 May 29 11:16 file
+	-rw-r--r--   1 foo      bar            26 May 29 11:43 file2
+	$ ./verify -match-dir dir -mode-match -mtime-match -list < list
+	file mtime match 707152592 should be 707154016.
+	file2 mtime match 707154185 should be 707154132.
+	file2 mode match 0100644 should be 0100600.
+

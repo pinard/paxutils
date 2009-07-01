@@ -1,0 +1,1123 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Long options,  Next: Short options,  Prev: Styles,  Up: Styles
+
+Long option style
+-----------------
+
+   Each option has at least one long (or mnemonic) name starting with
+two dashes in a row, for example, `--list' (`-t').  The long names are
+clearer than their short or old equivalents.  It sometimes happens that
+a single long option has many different names which are synonymous, such
+as `--compare' and `--diff'.  In addition, long option names can be
+given unique abbreviations.  For example, `--cre' can be used in place
+of `--create' (`-c') because there is no other long option which begins
+with `cre'.  (One way to find this out is by trying it and seeing what
+happens;(1) if a particular abbreviation could represent more than one
+option, `tar' will tell you that that abbreviation is ambiguous and
+you'll know that that abbreviation won't work.  You may also choose to
+run `tar --help' to see a list of options.)
+
+   Long options are meant to be obvious and easy to remember, and their
+meanings are generally easier to discern than those of their
+corresponding short options (see below).  For example,
+
+     $ tar --create --verbose --blocking-factor=20 --file=/dev/rmt0
+
+gives a fairly good set of hints about what the command does, even for
+those not fully acquainted with `tar'.
+
+   Long options which require arguments take those arguments immediately
+following the option name; they are introduced by an equal sign.  For
+example, the `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option (which
+tells the name of the `tar' archive) is given a file such as
+`archive.tar' as argument by using the notation `--file=archive.tar'
+for the long option.
+
+   ---------- Footnotes ----------
+
+   (1) Be aware that if you run `tar' with a unique abbreviation for
+the long name of an option you didn't want to use, you are stuck; `tar'
+will perform the command as ordered.
+
+
+File: paxutils.info,  Node: Short options,  Next: Old style,  Prev: Long options,  Up: Styles
+
+Short option style
+------------------
+
+   Most options also have a short option name.  Short options start
+with a single dash, and are followed by a single character, for
+example, `-t' (which is equivalent to `--list').  The forms are
+absolutely identical in function; they are interchangeable.  Short
+option names are often preferred as they are faster to type than long
+option names.
+
+   Short options which require arguments take their arguments
+immediately following the option, usually separated by white space.  It
+is also possible to stick the argument right after the short option
+name, using no intervening space.  For example, you might write
+`-f archive.tar' or `-farchive.tar' instead of using
+`--file=archive.tar'.  Both `--file=ARCHIVE-NAME' and `-f ARCHIVE-NAME'
+denote the option which indicates a specific archive, here named
+`archive.tar'.
+
+   Short options' letters may be clumped together, but you are not
+required to do this (as compared to old options; see below).  When short
+options are clumped as a set, use one (single) dash for them all, e.g.
+`tar -cvf'.  Only the last option in such a set is allowed to have an
+argument.(1)
+
+   When the options are separated, the argument for each option which
+requires an argument directly follows that option, as is usual for Unix
+programs.  For example:
+
+     $ tar -c -v -b 20 -f /dev/rmt0
+
+   If you reorder short options' locations, be sure to move any
+arguments that belong to them.  If you do not move the arguments
+properly, you may end up overwriting files.
+
+   ---------- Footnotes ----------
+
+   (1) Clustering many options, the last of which has an argument, is a
+rather opaque way to write options.  Some wonder if GNU `getopt' should
+not even be made helpful enough to reject such usages as invalid.
+
+
+File: paxutils.info,  Node: Old style,  Next: Mixing,  Prev: Short options,  Up: Styles
+
+Old option style
+----------------
+
+   Like short options, old options are single letters.  However, old
+options must be written together as a single clumped set, without
+spaces separating them or dashes preceding them.(1)  This set of
+letters must be the first to appear on the command line, after the
+`tar' program name and some whitespace; old options cannot appear
+anywhere else.  The letter of an old option is exactly the same letter
+as the corresponding short option.  For example, the old option `t' is
+the same as the short option `-t', and consequently, the same as the
+long option `--list' (`-t').  So for example, the command `tar cv'
+specifies the option `-v' in addition to the subcommand `-c'.
+
+   When options that need arguments are given together with the command,
+all the associated arguments follow, in the same order as the options.
+Thus, the example given previously could also be written in the old
+style as follows:
+
+     $ tar cvbf 20 /dev/rmt0
+
+Here, `20' is the argument of `-b' and `/dev/rmt0' is the argument of
+`-f'.
+
+   On the other hand, this old-style syntax makes it difficult to match
+option letters with their corresponding arguments, and is often
+confusing.  In the command `tar cvbf 20 /dev/rmt0', for example, `20'
+is the argument for `-b', `/dev/rmt0' is the argument for `-f', and
+`-v' does not have a corresponding argument.  Even using short options,
+as in `tar -c -v -b 20 -f /dev/rmt0', is clearer, putting all arguments
+next to the option they pertain to.
+
+   If you want to reorder the letters in the old option argument, be
+sure to reorder any corresponding argument appropriately.
+
+   This old way of writing `tar' options can surprise even experienced
+users.  For example, the two commands:
+
+     $ tar cfz archive.tar.gz file
+     $ tar -cfz archive.tar.gz file
+
+are quite different!  The first example uses `archive.tar.gz' as the
+value for option `f' and recognizes the option `z'.  The second
+example, however, uses `z' as the value for option `f'--probably not
+what the user intended.
+
+   This example could be corrected in many ways, among which the
+following are equivalent:
+
+     $ tar -czf archive.tar.gz file
+     $ tar -cf archive.tar.gz -z file
+     $ tar cf archive.tar.gz -z file
+
+   As far as we know, all `tar' programs support old options.  This
+`tar' supports them not only for historical reasons, but also because
+many people are used to them.  Old options have their own virtues, like
+inter-operability in portable scripts, and concise writing.
+
+   ---------- Footnotes ----------
+
+   (1) Beware that if you precede options with a dash, you are
+announcing the short option style instead of the old option style;
+short options are decoded differently.
+
+
+File: paxutils.info,  Node: Mixing,  Prev: Old style,  Up: Styles
+
+Mixing option styles
+--------------------
+
+   All three styles may be intermixed in a single `tar' command, so
+long as the rules for each style are fully respected.(1)  old-style
+options and either of the modern styles of options may be mixed within
+a single `tar' command.  However, old-style options must be introduced
+as the first arguments only, following the rule for old options (old
+options must appear directly after the `tar' command and some
+whitespace).  Modern options may be given only after all arguments to
+the old options have been collected.  If this rule is not respected, a
+modern option might be falsely interpreted as the value of the argument
+to one of the old-style options.
+
+   For example, all the following commands are wholly equivalent, and
+illustrate the many combinations and orderings of option styles.
+
+     $ tar --create --file=archive.tar
+     $ tar --create -f archive.tar
+     $ tar --create -farchive.tar
+     $ tar --file=archive.tar --create
+     $ tar --file=archive.tar -c
+     $ tar -c --file=archive.tar
+     $ tar -c -f archive.tar
+     $ tar -c -farchive.tar
+     $ tar -cf archive.tar
+     $ tar -cfarchive.tar
+     $ tar -f archive.tar --create
+     $ tar -f archive.tar -c
+     $ tar -farchive.tar --create
+     $ tar -farchive.tar -c
+     $ tar c --file=archive.tar
+     $ tar c -f archive.tar
+     $ tar c -farchive.tar
+     $ tar cf archive.tar
+     $ tar f archive.tar --create
+     $ tar f archive.tar -c
+     $ tar fc archive.tar
+
+   On the other hand, the following commands are *not* equivalent to
+the previous set:
+
+     $ tar -f -c archive.tar
+     $ tar -fc archive.tar
+     $ tar -fcarchive.tar
+     $ tar -farchive.tarc
+     $ tar cfarchive.tar
+
+These last examples mean something completely different from what the
+user intended (judging by the example in the previous set which uses
+long options, whose intent is therefore very clear).  The first four
+specify that the `tar' archive would be a file named `-c', `c',
+`carchive.tar' or `archive.tarc', respectively.  The first two examples
+also specify a single non-option, NAME argument having the value
+`archive.tar'.  The last example contains only old-style option letters
+(repeating option `c' twice), not all of which are meaningful (for
+example, `.', `h', or `i'), with no argument value.
+
+   ---------- Footnotes ----------
+
+   (1) Before `tar' version 1.11.6, a bug prevented intermixing
+old-style options with long options in some cases.
+
+
+File: paxutils.info,  Node: Documentation and help,  Next: interactive,  Prev: Styles,  Up: tar invocation
+
+Documentation and troubleshooting
+=================================
+
+* Menu:
+
+* version::                     Knowing the `tar' version
+* help::                        Getting the list of possible options
+* verbose::                     Checking `tar' progress
+* checkpoint::                  Being warned of all directories
+* show-omitted-dirs::           Being warned of skipped directories
+* totals::                      Sizeing the amount of data written
+* block-number::                Adding physical addresses to messages
+
+
+File: paxutils.info,  Node: version,  Next: help,  Prev: Documentation and help,  Up: Documentation and help
+
+Knowing the `tar' version
+-------------------------
+
+   To be careful, the first thing is to check that you are really using
+the proper `tar'.  The `--version' option will generate a message
+giving confirmation that you are using this `tar', with the precise
+version you are using.  `tar' identifies itself and prints the version
+number to the standard output, then immediately exits successfully,
+without doing anything else, ignoring all other options.  For example,
+`tar --version' might return:
+
+     tar (Free paxutils) 2.4d
+
+The first occurrence of `tar' in the result above is the program name
+in the package (for example, `rmt' is another program), while the
+second occurrence of `tar' is the name of the package itself,
+containing possibly many programs.  The package is currently named
+`tar', after the name of the main program it contains.(1)
+
+   ---------- Footnotes ----------
+
+   (1) There are plans to merge the `cpio' and `tar' packages into a
+single one which would be called `paxutils'.  So, who knows if, one of
+this days, the `--version' would not yield `tar (Free paxutils) 3.2'.
+
+
+File: paxutils.info,  Node: help,  Next: verbose,  Prev: version,  Up: Documentation and help
+
+Getting the list of possible options
+------------------------------------
+
+   You might also want to check the spelling or meaning of some
+particular `tar' option, without resorting to this manual, once you
+have read it.  `tar' has a short help feature, triggerable through the
+`--help' option.  By using this option, `tar' will print a usage
+message listing all available options on standard output, then exit
+successfully, without doing anything else and ignoring all other
+options.  Even though this is only a brief summary, it may be several
+screens long.  So, if you are not using some kind of scrollable window,
+you might prefer to use something like:
+
+     $ tar --help | less
+
+presuming, here, that you like using `less' for a pager.  Other popular
+pagers are `more' and `pg'.  If you know about some KEYWORD which
+interests you and do not want to read all the `--help' output, another
+common idiom is:
+
+     $ tar --help | grep KEYWORD
+
+to get only the pertinent lines.
+
+   The perceptive reader would have noticed some contradiction in the
+previous paragraphs.  It is written that both `--version' and `--help'
+print something, and have all other options ignored.  In fact, they
+cannot ignore each other, and one of them has to win.  We do not
+specify which is stronger; experiment if you really wonder!
+
+   The short help output is quite succinct, and you might have to get
+back to the full documentation for precise points.  If you are reading
+this paragraph, you already have the `tar' manual in some form.  This
+manual is available in printed form, as a kind of small book.  It may
+be printed out of the `tar' distribution, provided you have TeX already
+installed somewhere, and a laser printer around.  Just configure the
+distribution, execute the command `make dvi', then print `doc/tar.dvi'
+the usual way (contact your local *guru* to know how).  If `tar' has
+been conveniently installed at your site, this manual is also available
+in interactive, hypertextual form as an Info file.  Just call
+`info tar' or, if you do not have the `info' program handy, use the Info
+reader provided within GNU Emacs, and choose `tar' from the main Info
+menu (with `m tar <RET>').
+
+   A short reference to `tar' in the form of a `man' page is also
+provided.  Currently, it doesn't tell much more than `tar --help' does.
+Other `man' pages exist for `tar', written at the time `tar' did not
+install any `man' pages on its own.  The string `tar (Free paxutils)
+2.4d' appears in the title of the *normal* `man' page.
+
+
+File: paxutils.info,  Node: verbose,  Next: checkpoint,  Prev: help,  Up: Documentation and help
+
+Checking `tar' progress
+-----------------------
+
+   Typically, `tar' performs most subcommands without reporting any
+information to the user except error messages.  When using `tar' with
+many options, particularly ones with complicated or difficult-to-predict
+behavior, it is possible to make serious mistakes.  `tar' provides
+several options that make observing its behavior easier.  These options
+cause `tar' to print information as it progresses in its job, and you
+might want to use them just to be more careful about what is going on,
+or merely to entertain yourself.  If you have encountered a problem when
+operating on an archive, however, you may need more information than
+just an error message in order to solve the problem.  The following
+options can be helpful diagnostic tools.
+
+   Normally, the `--list' (`-t') command to list an archive prints just
+the file names (one per line), and the other commands are silent.  When
+used with most subcommands, the `--verbose' (`-v') option causes `tar'
+to print the name of each file or archive member as it is processed.
+This and the other options which make `tar' print status information
+can be useful in monitoring `tar'.
+
+   With `--create' (`-c') or `--extract' (`--get', `-x'), `--verbose'
+(`-v') used once just prints the names of the files or members as they
+are processed.  Using it twice causes `tar' to print a longer listing
+(reminiscent of `ls -l') for each member.  Since `--list' (`-t')
+already prints the names of the members, `--verbose' (`-v') used once
+with `--list' (`-t') causes `tar' to print an `ls -l' type listing of
+the files in the archive.  The following examples both extract members
+with long list output:
+
+     $ tar --extract --file=archive.tar --verbose --verbose
+     $ tar xvv archive.tar
+
+   Verbose output appears on the standard output except when an archive
+is being written to the standard output, as with `tar --create --file=-
+--verbose' (`tar cfv -', or even `tar cv'--if the installer let
+standard output be the default archive).  In that case `tar' writes
+verbose output to the standard error stream.
+
+   Some people felt the need to produce an archive on standard output,
+while still wishing to segregate verbose output from error output.  A
+possible approach (on systems allowing it) would be to use a named pipe
+to receive the archive, and to have the consumer process read from that
+named pipe.  This has the advantage of leaving standard output free to
+receive verbose output, all separate from errors.
+
+
+File: paxutils.info,  Node: checkpoint,  Next: show-omitted-dirs,  Prev: verbose,  Up: Documentation and help
+
+Being warned of all directories
+-------------------------------
+
+   The `--checkpoint' option prints an occasional message as `tar'
+reads or writes the archive.  In fact, it print directory names while
+reading the archive.  It is designed for those who don't need the more
+detailed (and voluminous) output of `--block-number' (`-R'), but do want
+visual confirmation that `tar' is actually making progress.
+
+
+File: paxutils.info,  Node: show-omitted-dirs,  Next: totals,  Prev: checkpoint,  Up: Documentation and help
+
+Being warned of skipped directories
+-----------------------------------
+
+   The `--show-omitted-dirs' option, when reading an archive--with
+`--list' (`-t') or `--extract' (`--get', `-x'), for example--causes a
+message to be printed for each directory in the archive which is
+skipped.  This happens regardless of the reason for skipping: the
+directory might not have been named on the command line (implicitly or
+explicitly), or it might be excluded by the use of the
+`--exclude=PATTERN' option, or for some other reason.
+
+
+File: paxutils.info,  Node: totals,  Next: block-number,  Prev: show-omitted-dirs,  Up: Documentation and help
+
+Sizeing the amount of data written
+----------------------------------
+
+   The `--totals' option--which is only meaningful when used with
+`--create' (`-c')--causes `tar' to print the total amount written to
+the archive, after it has been fully created.
+
+   Currently, the amount written represents the size of the created
+archive before it gets compressed.  One wants to estimate the size of
+the used portion of a tape receiving a compressed archive, and as it
+stands, the option is not as useful as it should be.  Some later
+version of `tar' will change the meaning of this option to print the
+total amount written once compression has occurred.
+
+
+File: paxutils.info,  Node: block-number,  Prev: totals,  Up: Documentation and help
+
+Adding physical addresses to messages
+-------------------------------------
+
+   If `--block-number' (`-R') is used, `tar' prints, along with every
+message it would normally produce, the block number within the archive
+where the message was triggered (*Note Blocking::, to understand blocks
+and records).  Also, supplementary messages are triggered when reading
+blocks full of `NUL's, or when hitting end of file on the archive.  As
+of now, if the archive is properly terminated with a `NUL' block, the
+reading of the file may stop before end of file is met, so the position
+of end of file will not usually show when `--block-number' (`-R') is
+used.  Note that `tar' drains the archive before exiting when reading
+the archive from a pipe.
+
+   This option is especially useful when reading damaged archives, since
+it helps pinpoint the damaged sections.  It can also be used with
+`--list' (`-t') when listing a filesystem backup tape, allowing you to
+choose among several backup tapes when retrieving a file later, in
+favor of the tape where the file appears earliest (closest to the front
+of the tape).
+
+   Some later version of `tar' might use `--number-blocks' instead of
+`--block-number', so `--block' would then expand to
+`--blocking-factor=BLOCKS' (`-b BLOCKS') unambiguously.
+
+
+File: paxutils.info,  Node: interactive,  Prev: Documentation and help,  Up: tar invocation
+
+Asking for confirmation during subcommands
+==========================================
+
+   Typically, `tar' carries out a command without stopping for further
+instructions.  In some situations, however, you may want to exclude some
+files and archive members from the operation (for instance if disk or
+storage space is tight).  You can do this by excluding certain files
+automatically (*note Choosing::.), or by performing a subcommand
+interactively, using the `--interactive' (`--confirmation', `-w')
+option.
+
+   When the `--interactive' (`--confirmation', `-w') option is
+specified, before reading, writing, or deleting files, `tar' first
+prints a message for each such file, telling what action it intends to
+take, then asks for confirmation on the terminal.  The actions which
+require confirmation include adding a file to the archive, extracting a
+file from the archive, deleting a file from the archive, and deleting a
+file from disk.  To confirm the action, you must type a line of input
+beginning with `y'.  If your input line begins with anything other than
+`y', `tar' skips that file.
+
+   If `tar' is reading the archive from the standard input, `tar' opens
+the file `/dev/tty' to support the interactive communications.
+
+
+File: paxutils.info,  Node: Subcommands,  Next: Choosing,  Prev: tar invocation,  Up: Top
+
+`tar' subcommands
+*****************
+
+   A long while ago, `tar' once was a set of related programs, each
+dedicated to a particular function, like the creation of a new archive,
+listing the contents of an archive, or performing extraction.  It was
+done that way in order to have smaller independent programs, and better
+limit the memory requirements of each of them, at a time when computer
+memory was expensive.  Nowadays, such a split is no longer necessary,
+and the single `tar' program has a few special options, named
+"subcommands", meant to set the particular function to be achieved in a
+`tar' run, just as users once had to choose exactly which program of
+the `tar' family they needed for a given job.
+
+   This chapter has the purpose of presenting such `tar' subcommands or
+operating modes.  It also introduces many options meant to precisely
+control, or fine-tune, the behavior of the subcommands.  The separation
+between subcommands and fine-tuning options is not cast in stone, and
+should not be overemphasized.  This `tar' does implement such precise
+distinctions internally, of course, but this does not preclude future
+changes or adjustments.  In any case, none of these changes, if they
+ever occur, should much affect how `tar' is used in practice.
+
+   Besides `--help' and `--version', which trigger special behavior in
+`tar', the most popular subcommands are `--list' (`-t'), `--extract'
+(`--get', `-x'), and `--create' (`-c'); these are available in almost
+all implementations of the `tar' program.  The remaining subcommands
+are `--compare' (`--diff', `-d'), `--append' (`-r'), `--update'
+(`-u'),(1) `--concatenate' (`--catenate', `-A'), and `--delete'.  These
+remaining subcommands are often not offered in various `tar's, and when
+available, they seem to be much less often used than the three popular
+ones.
+
+* Menu:
+
+* list::                        How to list archives
+* extract::                     How to extract members from an archive
+* create::                      How to create archives
+* Applications::                Other uses for `tar'
+
+   ---------- Footnotes ----------
+
+   (1) Currently, `--update' (`-u') might be seen as either a
+subcommand or a fine-tuning option, depending on how it is used.
+
+
+File: paxutils.info,  Node: list,  Next: extract,  Prev: Subcommands,  Up: Subcommands
+
+How to list archives
+====================
+
+   Frequently, you will find yourself wanting to determine exactly what
+a particular archive contains.  You can use the `--list' (`-t')
+subcommand to get the member names as they currently appear in the
+archive, as well as various attributes of the files at the time they
+were archived.  For example, you can examine the archive
+`collection.tar' that you created in the last section with the command
+
+     $ tar --list --file=collection.tar
+
+The output of `tar' would then be:
+
+     blues
+     folk
+     jazz
+
+The archive `bfiles.tar' would list as follows:
+
+     ./birds
+     baboon
+     ./box
+
+Be sure to use a `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option, just
+as with `--create' (`-c'), to specify the name of the archive.
+
+   If you use the `--verbose' (`-v') option with `--list' (`-t'), then
+`tar' will print out a listing reminiscent of `ls -l', showing owner,
+file size, and so forth.
+
+   If you had used `--verbose' (`-v') mode, the example above would look
+like:
+
+     $ tar --list --verbose --file=collection.tar
+     -rw-rw-rw- myself users 42 1990-05-21 13:29 blues
+     -rw-rw-rw- myself users 62 1990-05-23 10:55 folk
+     -rw-rw-rw- myself users 40 1990-05-21 13:30 jazz
+
+   You can specify one or more individual member names as arguments when
+using `list'.  In this case, `tar' will only list the names of members
+you identify.  For example, `tar --list --file=afiles.tar apple' would
+only print `apple'.
+
+   Because `tar' preserves paths, file names must be specified as they
+appear in the archive (that is, relative to the directory from which the
+archive was created).  Therefore, it is essential when specifying member
+names to `tar' that you give the exact member names.  For example,
+`tar --list --file=bfiles birds' would produce an error message
+something like `tar: birds: Not found in archive', because there is no
+member named `birds', only one named `./birds'.  While the names
+`birds' and `./birds' name the same file, *member* names are compared
+using a simplistic name comparison, in which an exact match is
+necessary.  *Note absolute-names::.
+
+   However, `tar --list --file=collection.tar folk' would respond with
+`folk', because `folk' is in the archive file `collection.tar'.  If you
+are not sure of the exact file name, try listing all the files in the
+archive and searching for the one you expect to find; remember that if
+you use `--list' (`-t') with no file names as arguments, `tar' will
+print the names of all the members stored in the specified archive.
+
+   As an exception to member name preservation when creating the
+archive, `tar' on MS-DOS/MS-Windows mirrors the DOS-style backslashes
+into Unix-style forward slashes.  This is because the bulk of `tar' code
+is deeply entrenched in the Unix world and assumes that forward slashes
+are used in too many places.  Converting slashes automatically lets the
+users specify files as they are used to on those systems.  But it also
+means that you need to remember about this conversion, so you won't be
+surprised when `tar' lists the files differently than what you typed on
+the command line.  For example:
+
+     $ tar -cvf c:\files\backup\today.tar d:\data\may97 d:\data\june97
+     data/may97
+     data/june97
+     $ tar -xvf c:\files\backup\today.tar data\may97
+     data/may97
+
+   In the past, `tar' showed dates as `Nov 21 1996'; now it shows them
+as `1996-11-21'.  This is in accordance with the international standard
+ISO 8601.(1)
+
+   Sometime in the future, local date formats will become readily
+available, including the civilian American month-day-year format.
+However, as a general rule, we suggest that you use the ISO 8601 date
+format which lists units of time in a larger-to-smaller order.
+
+   For more information, see
+`http://www.ft.uni-erlangen.de/~mskuhn/iso-time.html', which contains a
+detailed explanation of the ISO 8601 standard.
+
+* Menu:
+
+* Reading::                     Options to help read archives
+* compare::                     Comparing members with the file system
+
+   ---------- Footnotes ----------
+
+   (1) You can revert to the old behavior by defining `USE_OLD_CTIME'
+in `src/list.c' before reinstalling `tar'.
+
+
+File: paxutils.info,  Node: Reading,  Next: compare,  Prev: list,  Up: list
+
+Options to help read archives
+-----------------------------
+
+   If you're not sure of the blocking factor of an archive, you can
+read the archive by specifying `--read-full-records' (`-B') and
+`--blocking-factor=BLOCKS' (`-b BLOCKS'), using a blocking factor
+larger than what the archive uses.  This lets you avoid having to
+determine the blocking factor of an archive.  *Note blocking-factor::.
+
+* Menu:
+
+* read-full-records::           Reading full records
+* ignore-zeros::                Ignoring blocks of zeros
+* ignore-failed-read::          Ignoring read failures
+
+
+File: paxutils.info,  Node: read-full-records,  Next: ignore-zeros,  Prev: Reading,  Up: Reading
+
+Reading full records
+....................
+
+   The `--read-full-records' (`-B') option is used in conjunction with
+`--extract' (`--get', `-x') to read an archive which contains
+incomplete records, or one which has a blocking factor less than the
+one specified.
+
+   If `--read-full-records' (`-B') is used, `tar' will not panic if an
+attempt to read a record from the archive does not return a full record.
+Instead, `tar' will keep reading until it has obtained a full record.
+
+   This option is turned on by default when `tar' is reading an archive
+from standard input, or from a remote machine.  This is because on BSD
+Unix systems, a read of a pipe will return however much happens to be
+in the pipe, even if it is less than `tar' requested.  If this option
+was not used, `tar' would fail as soon as it read an incomplete record
+from the pipe.
+
+   This option is also useful with the commands for updating an archive.
+
+   Normally, `tar' will request data in full record increments from an
+archive storage device.  If the device cannot return a full record,
+`tar' will report an error.  However, some devices do not always return
+full records, or do not require the last record of an archive to be
+padded out to the next record boundary.  To keep reading until you
+obtain a full record, or to accept an incomplete record if it contains
+an end-of-archive marker, specify the `--read-full-records' (`-B')
+option in conjunction with the `--extract' (`--get', `-x') or `--list'
+(`-t') subcommands.  *Note read-full-records::.
+
+   The `--read-full-records' (`-B') option is turned on by default when
+`tar' reads an archive from standard input, or from a remote machine.
+This is because on BSD Unix systems, attempting to read a pipe returns
+however much happens to be in the pipe, even if it is less than was
+requested.  If this option were not enabled, `tar' would fail as soon
+as it read an incomplete record from the pipe.
+
+
+File: paxutils.info,  Node: ignore-zeros,  Next: ignore-failed-read,  Prev: read-full-records,  Up: Reading
+
+Ignoring blocks of zeros
+........................
+
+   Normally, `tar' stops reading when it encounters a block of zeros
+between file entries (which usually indicates the end of the archive).
+POSIX mandates two blocks of zeros for representing the end of the
+archive.  Some `tar' programs produce two such blocks on write and
+expect two on read, others produce one and expect one.  This `tar'
+produces two and expects one, but is careful, while reading a pipe, to
+fully drain it until the end of file.  This avoids spurious messages
+about `broken pipes'.
+
+   Yet there are many `tar' programs around and many ways to produce
+compressed archives, and also many ways to read them.  It happens that
+when `gunzip' and `tar' collaborate to explode an archive, `gunzip'
+quits while `tar' still expects a full-sized record, with proper
+padding after the end of archive block.  This surely caused a few
+headaches to users observing the breaking of the pipe within their `sh'
+scripts, and yet unable to reproduce the problem interactively, one
+line at a time, within their `csh' shell.  Contrarily to `sh', `csh'
+remains silent about broken pipes!
+
+   The `--ignore-zeros' (`-i') option causes `tar' to ignore blocks of
+zeros in the archive and to read until the real end of the archive file.
+`--ignore-zeros' (`-i') allows `tar' to completely read an archive
+which contains a block of zeros before the end (for example, a damaged
+archive, or one which was created by `cat'-ing several archives
+together).
+
+   The `--ignore-zeros' (`-i') option is turned off by default because
+many versions of `tar' write garbage after the end-of-archive entry,
+since that part of the media is normally not supposed to be read.  The
+garbage is likely to be duplicate copies of the previous chunk of the
+archive, which will sometimes cause files to be overwritten or
+truncated since it may look like valid new archived files.
+
+
+File: paxutils.info,  Node: ignore-failed-read,  Prev: ignore-zeros,  Up: Reading
+
+Ignoring read failures
+......................
+
+   When the `--ignore-failed-read' option is given, `tar' will not exit
+with an error (nonzero) status, for the sole reason of having
+encountered unreadable files or directories.
+
+   When backing up a living file system, there is a time window between
+the phase when `tar' scans directories and the phase when it tries to
+open files to dump them.  It is possible, and even common, for the file
+to disappear during this window.  The `--ignore-failed-read' option is
+a way to ask `tar' not to report such problems as an error set in the
+exit status once the dump is completed.  Diagnostics are still
+reported, as the option does not turn them off.
+
+
+File: paxutils.info,  Node: compare,  Prev: Reading,  Up: list
+
+Comparing members with the file system
+--------------------------------------
+
+   The `--compare' (`--diff', `-d') subcommand compares specified
+archive members against files with the same names, and then reports
+differences in file size, mode, owner, modification date and contents.
+You should *only* specify archive member names, not file names.  If you
+do not name any members, then `tar' will compare the entire archive.
+If a file is represented in the archive but does not exist in the file
+system, `tar' reports a difference.
+
+   You have to specify the record size of the archive when modifying an
+archive with a non-default record size.
+
+   `tar' ignores files in the file system that do not have
+corresponding members in the archive.
+
+   The following example compares the archive members `rock', `blues',
+and `funk' in the archive `bluesrock.tar' with files of the same name
+in the file system.  (Note that there is no file `funk'; `tar' will
+report an error message.)
+
+     $ tar --compare --file=bluesrock.tar rock blues funk
+     rock
+     blues
+     funk: File does not exist
+
+If the file in the archive is a link, `tar' may have a different error
+message, such as
+
+     funk: Does not exist
+
+   The intent behind the `--compare' (`--diff', `-d') option is to
+check whether the archive represents the current state of files on
+disk, more than to validate the integrity of the archive media.  For
+this latter goal, *Note verify::.
+
+   Some filesystems, such as the FAT and VFAT used on MS-DOS and
+MS-Windows, only maintain file modification times up to the nearest even
+second.  `tar' compiled for such systems knows about this, and doesn't
+report a difference in mod times unless it is larger than one second.
+But if you run `tar' on Unix and your files reside on a FAT disk (via
+some network interface), you could have some false alarms in this case.
+
+
+File: paxutils.info,  Node: extract,  Next: create,  Prev: list,  Up: Subcommands
+
+How to extract members from an archive
+======================================
+
+   Creating an archive is only half the job--there is no point in
+storing files in an archive if you can't retrieve them.  The act of
+retrieving members from an archive so they can be used and manipulated
+as unarchived files again is called "extraction".  To extract files
+from an archive, use the `--extract' (`--get', `-x') subcommand.  As
+with `--create' (`-c'), specify the name of the archive with
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').  Extracting an archive does
+not modify the archive in any way; you can extract it multiple times if
+you want or need to.
+
+   Using `--extract' (`--get', `-x'), you can extract an entire
+archive, or specific files.  The files can be directories containing
+other files, or not.  As with `--create' (`-c') and `--list' (`-t'),
+you can use the short or the long form of the subcommand without
+affecting the performance.
+
+* Menu:
+
+* extract options::             Options used for extraction
+* Writing::                     Changing how `tar' writes files
+* Preventing overwrite::        Options to prevent overwriting files
+* Unlinking::                   Options to destroy files
+* Attributes::                  Handling file attributes
+* Scarce::                      Coping with scarce resources
+
+
+File: paxutils.info,  Node: extract options,  Next: Writing,  Prev: extract,  Up: extract
+
+Options used for extraction
+---------------------------
+
+   The previous chapter showed how to use `--extract' (`--get', `-x')
+to extract an archive into the filesystem.  Various options cause `tar'
+to extract more information than just file contents, such as the owner,
+the permissions, the modification date, and so forth.  This section
+presents options to be used with `--extract' (`--get', `-x') when
+certain special considerations arise.  You can review the information
+presented in *Note extract:: for more basic information about the
+`--extract' (`--get', `-x') subcommand.
+
+   Within a `tar' archive, a socket is stored as a pipe.
+
+   When archives created on Unix are extracted on MS-DOS and MS-Windows
+3.x, several problems pop up due to their incompatibilities with the
+Unix filesystem.  `tar' has several tricks up its sleeves to overcome
+such problems:
+
+   * Illegal characters in file names: the MS-DOS filesystem disallows
+     certain characters from appearing in a file name.  Except on
+     Windows 9X, it also doesn't allow file names with a leading dot
+     and file names with more that a single dot in the basename of the
+     file.
+
+     `tar' tries to repair such names automatically, by replacing the
+     offending characters with legal ones.  For example, `.emacs' is
+     exracted as `_emacs', `foo.bar.c' will be converted to
+     `foo_bar.c', `lost+found' will become `lost_found', and so forth.
+     (`tar' even tries to be intelligent by treating some cases
+     specially; for example, files which end with `.c++' are extracted
+     as `.cxx'.)
+
+     When the file is thus renamed, `tar' will print a message to that
+     effect when operating verbosely (*note verbose::.).  Note that if a
+     directory needs to be renamed, `tar' will print such a message for
+     all the files in that directory.
+
+   * DOS device names: MS-DOS and MS-Windows define their own reserved
+     names for character devices.  For example, the console device is
+     `CON', the printer device is `PRN', the serial port device is
+     `AUX', and so forth.
+
+     These names are special on DOS, in that files with these names, if
+     they exist in any directory, are inaccessible: the device driver
+     will intercept any file-related call before the filesystem ever
+     sees it.  (That's because MS-DOS wants to create an illusion that
+     the devices are present in every directory; in contrast, on Unix
+     the devices live under a special directory called `/dev'.)
+
+     When archives created on Unix are unpacked on MS-DOS, they might
+     include files with these "forbidden" names, such as `prn.txt' or
+     `aux.c'.  Trying to extract such files will lead to crashes, system
+     wedges, and other atrocities, as the device drivers will try to
+     interpret the data they get and act on it (for example, some
+     devices are read-only, and don't know how to handle incoming data).
+
+     Therefore, `tar' checks every file name it is about to extract, and
+     if it refers to a character device, `tar' changes that file's name
+     by prepending an underscore `_' to it; thus, `aux.c' will be
+     extracted as `_aux.c'.  (Actually, `tar' tries to prepend up to 2
+     underscore characters, each time checking if the new name is a
+     regular file.  If both attempts are unsuccessful, `tar' will print
+     an error message and refuse to extract that file.)
+
+     As with illegal characters, `tar' announces each renamed file when
+     under verbose operation.
+
+
+File: paxutils.info,  Node: Writing,  Next: Preventing overwrite,  Prev: extract options,  Up: extract
+
+Changing how `tar' writes files
+-------------------------------
+
+
+File: paxutils.info,  Node: Preventing overwrite,  Next: Unlinking,  Prev: Writing,  Up: extract
+
+Options to prevent overwriting files
+------------------------------------
+
+   Normally, `tar' writes extracted files into the file system without
+regard to the files already on the system; that is, files with the same
+names as archive members are overwritten when the archive is extracted.
+If the name of a corresponding file name is a symbolic link, the file
+pointed to by the symbolic link will be overwritten instead of the
+symbolic link itself (if this is possible).  Moreover, special devices,
+empty directories, and even symbolic links are automatically removed if
+they are found to be in the way of extraction.
+
+   To prevent `tar' from extracting an archive member from an archive
+if doing so will overwrite a file in the file system, use
+`--keep-old-files' (`-k') in conjunction with `--extract' (`--get',
+`-x').  When this option is specified, `tar' will report an error
+stating the name of the file in conflict instead of overwriting the
+file with the corresponding extracted archive member.
+
+   The `--unlink-first' (`-U') option removes existing files, symbolic
+links, empty directories, devices, and so forth, *prior* to extracting
+over them.  This could take care of several situations where
+overwriting files is undesirable.
+
+   One such situation occurs when the archive includes a regular file
+whereas the filesystem has a symbolic link by the same name.  Using
+this option will prevent `tar' from overwriting the file to which the
+symbolic link points by the contents of an extracted file, since the
+link itself is removed prior to the extraction.
+
+   Another situation is with overwriting a running program's executable
+file.  On some systems, the backing store for the executable *is* the
+original program file; overwriting it while the program runs could lead
+to segmentation violation and other crashes.  You could use the
+`--unlink-first' (`-U') option to prevent such woes when extracting
+arbitrary executables over currently running copies.  Note that if
+something goes wrong with the extraction and you *did* use this option,
+you might end up with no file at all.  Without this option, if
+something goes wrong with the extraction, the existing file is not
+overwritten, and is preserved.  (If you want to be safe either way, use
+both `--unlink-first' (`-U') and `--backup'[=METHOD]; *Note backup::.)
+
+   If you specify the `--recursive-unlink' option, `tar' removes
+*anything* that keeps you from extracting a file as far as current
+permissions will allow it.  This could include removal of the contents
+of a full directory hierarchy.  For example, someone using this feature
+may be very surprised at the results when extracting something over a
+directory entry from the archive.  This option can be dangerous; be very
+aware of what you are doing if you choose to use it.
+
+   Without `--recursive-unlink', `tar' silently overwrites
+non-directories, but will never overwrite existing non-empty
+directories.
+
+   One especially nasty subtlety with both `--unlink-first' (`-U') and
+`--recursive-unlink' options happens on filesystems which silently
+truncate the names of the files in the archive when they are extracted
+to the file system.  (MS-DOS and MS-Windows 3.X are two notorious
+examples.)  In such a case, `tar' might accidentally delete a file or a
+directory which has nothing to do with the extracted file, simply
+because their names are the same after truncation.  We recommend that
+you not use these two options on such filesystems.  In fact, we
+recommend that if you unpack on MS-DOS archives which were created on
+Unix, you *always* use either `--keep-old-files' (`-k') or
+`--backup'[=METHOD], to prevent the overwriting of existing files due
+to file name truncation.  *Note backup::.
+
+* Menu:
+
+* keep-old-files::              Keeping old files
+* to-stdout::                   Writing to standard output
+* backup::                      Backup options
+* suffix::                      Deciding the backup file suffixes
+
+
+File: paxutils.info,  Node: keep-old-files,  Next: to-stdout,  Prev: Preventing overwrite,  Up: Preventing overwrite
+
+Keeping old files
+.................
+
+   The `--keep-old-files' (`-k') option prevents `tar' from overwriting
+existing files with archive members having the same name.  The
+`--keep-old-files' (`-k') option is meaningless with `--list' (`-t').
+Prevents `tar' from overwriting files in the file system during
+extraction.
+
+
+File: paxutils.info,  Node: to-stdout,  Next: backup,  Prev: keep-old-files,  Up: Preventing overwrite
+
+Writing to standard output
+..........................
+
+   To write the extracted files to the standard output, instead of
+creating the files on the file system, use `--to-stdout' (`-O') in
+conjunction with `--extract' (`--get', `-x').  This option is useful if
+you are extracting files to send them through a pipe, and do not need to
+preserve them in the file system.  You might need to use this option to
+browse one or more files with a pager such as `less', or if you want
+the extracted file to have another name on the file system.
+
+   If you extract multiple members, they appear on standard output
+concatenated, in the order they are found in the archive.
+
+   When this option is used, `tar' is careful to not alter the file
+system.  `tar' writes the contents of the files extracted to its
+standard output.  This may be useful if you are only extracting the
+files in order to send them through a pipe.  This option is only
+meaningful with `--extract' (`--get', `-x').
+
+
+File: paxutils.info,  Node: backup,  Next: suffix,  Prev: to-stdout,  Up: Preventing overwrite
+
+Backup options
+..............
+
+   `tar' offers options for making backups of files before writing new
+versions.  These options control the details of these backups.  They may
+apply to the archive itself before it is created or rewritten, as well
+as to individual extracted members.  Other free programs (GNU `cp',
+`install', `ln', and `mv', for example) offer similar options.
+
+   Backup options may prove unexpectedly useful when extracting archives
+containing many members having identical names, or when extracting
+archives on systems having file name limitations, making different
+members appear as having similar names through the side-effect of name
+truncation.  (This is true only if we have a good scheme for truncated
+backup names, of which we are not sure at all: we suspect work is
+needed in this area.  The MS-DOS/MS-Windows version works with numbered
+backups even when file names are truncated.)  When any existing file is
+backed up before being overwritten by extraction, clashing files are
+automatically renamed to be unique, and the true name is kept for only
+the last file of a series of clashing files.  By using verbose mode,
+users may track exactly what happens.  We recommend that you *always*
+use numbered backups when unpacking archives on MS-DOS and on other
+systems that have file name limitations.
+
+   When `tar' is given the `--backup'[=METHOD] option, it makes backups
+of files that are about to be overwritten or removed.  Without this
+option, the original versions are destroyed.  However, *Note
+keep-old-files::.
+
+   At the detail level, some decisions are still experimental, and may
+change in the future.  We are awaiting comments from our users.  So
+please do not get in the habit of depending blindly on the details of
+the backup features.  For example, currently, directories themselves
+are never renamed through using these options, so extracting a file
+over a directory still has good chances to fail.  Also, backup options
+apply to created archives, not only to extracted members.  For created
+archives, backups will not be attempted when the archive is a block or
+character device, or when it refers to a remote file.
+
+   For the sake of simplicity and efficiency, backups are made by
+renaming old files prior to creation or extraction, and not by copying.
+The original name is restored if the file creation fails.  If a
+failure occurs after a partial extraction of a file, both the backup
+and the partially extracted file are kept.
+
+   Some people express the desire to *always* use the
+`--backup'[=METHOD] option by defining some kind of alias or script.
+This is not as easy as one may think, due to the fact that old-style
+options should appear first and consume arguments a bit unpredictably
+for an alias or script.  But if you are ready to give up using
+old-style options, you may resort to using something like a (Bourne
+shell) function here:
+
+     $ tar () { /usr/local/bin/tar --backup $*; }
+
+   The `--backup'[=METHOD] option also accepts an optional value,
+METHOD, which determines the type of backups that will be made.  If
+this value is not given, the value of the `VERSION_CONTROL' environment
+variable is used.  And if `VERSION_CONTROL' is not set, the default
+backup method is `existing'.
+
+   This value corresponds to the Emacs variable `version-control'; the
+same values for METHOD are accepted as in Emacs.  The values also have
+more descriptive names.  Here are the valid METHODs (unique
+abbreviations are accepted):
+
+`t'
+`numbered'
+     Always make numbered backups.
+
+`nil'
+`existing'
+     Make numbered backups of files that already have them, simple
+     backups of the others.
+
+`never'
+`simple'
+     Always make simple backups.
+
+
+File: paxutils.info,  Node: suffix,  Prev: backup,  Up: Preventing overwrite
+
+Deciding the backup file suffixes
+.................................
+
+   The `--suffix=SUFFIX' option informs `tar' about the SUFFIX which
+should be appended to each backup file made when `--backup'[=METHOD] is
+used.  If the `--suffix=SUFFIX' option is not specified, the value of
+the `SIMPLE_BACKUP_SUFFIX' environment variable is used.  And if
+`SIMPLE_BACKUP_SUFFIX' is not set, the default is `~', just as in Emacs.
+

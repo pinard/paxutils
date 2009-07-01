@@ -1,19 +1,29 @@
 #! /bin/sh
 # Do common operations before a particular test.
 
-mkdir tmp-$$
-cd tmp-$$
-
-case $srcdir in
-  /*|~*) ;;
-  *) srcdir=../$srcdir ;;
-esac
-
 out=
 err=
 
-echo $0 > checking
-exec 1> stdout
-exec 2> stderr
+if test -z "$debug"; then
+  mkdir $tmpdir
+  cd $tmpdir
 
-PATH=..:../../src:$PATH
+  case $top_srcdir in
+    /*|~*) ;;
+    *) top_srcdir=../$top_srcdir ;;
+  esac
+
+  case $srcdir in
+    /*|~*) ;;
+    *) srcdir=../$srcdir ;;
+  esac
+
+  echo $0 > checking
+  exec 1> stdout
+  exec 2> stderr
+
+  PATH=..:../../src:$PATH
+else
+  set -x
+  PATH=.:../src:$PATH
+fi

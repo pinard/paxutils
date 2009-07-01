@@ -1,5 +1,5 @@
-# Makefile for GNU tar library.
-# Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+# Makefile for paxutils library.
+# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,24 +18,27 @@
 
 AUTOMAKE_OPTIONS = gnits
 
-noinst_LIBRARIES = libtar.a
+noinst_LIBRARIES = libpu.a
 
-EXTRA_DIST = \
-alloca.c fileblocks.c fnmatch.c ftruncate.c execlp.c gmalloc.c \
-memset.c mkdir.c modechange.h rename.c rmdir.c stpcpy.c strstr.c
+EXTRA_DIST = alloca.c fileblocks.c fnmatch.c ftruncate.c execlp.c \
+full-read.c full-write.c gettext.c gmalloc.c malloc.c memset.c mkdir.c \
+modechange.h realloc.c rename.c rmdir.c stpcpy.c stpncpy.c strstr.c
 
-noinst_HEADERS = \
-argmatch.h backupfile.h error.h fnmatch.h getopt.h getdate.h getpagesize.h \
-pathmax.h
+noinst_HEADERS = argmatch.h backupfile.h dstring.h error.h filetypes.h \
+fnmatch.h getopt.h getdate.h getpagesize.h gettext.h hash.h makepath.h \
+pathmax.h save-cwd.h xalloc.h
 
-libtar_a_SOURCES = \
-argmatch.c backupfile.c error.c getdate.y getopt.c getopt1.c getversion.c \
-modechange.c msleep.c xgetcwd.c xmalloc.c xstrdup.c
+libpu_a_SOURCES = addext.c argmatch.c backupfile.c basename.c \
+dstring.c error.c filemode.c getdate.y getopt.c getopt1.c getversion.c \
+hash.c idcache.c makepath.c modechange.c msleep.c octal.c save-cwd.c \
+stripslash.c userspec.c xgetcwd.c xmalloc.c xstrdup.c
 
-INCLUDES = -I.. -I$(srcdir) -I../intl
-
-libtar_a_LIBADD = @ALLOCA@ @LIBOBJS@
-libtar_a_DEPENDENCIES = $(libtar_a_LIBADD)
+## INCLUDES = -I.. -I$(srcdir) -I../intl
+INCLUDES = -I.. -I$(srcdir)
+libpu_a_LIBADD = @ALLOCA@ @LIBOBJS@
+libpu_a_DEPENDENCIES = $(libpu_a_LIBADD)
+localedir = $(prefix)/share/locale
+aliaspath = $(localedir):.
 
 # Say $(srcdir), so GNU make does not report an ambiguity with the .y.c rule.
 $(srcdir)/getdate.c: getdate.y
@@ -43,3 +46,15 @@ $(srcdir)/getdate.c: getdate.y
 	cd $(srcdir) && \
 	  $(YACC) $(YFLAGS) getdate.y; \
 	  mv -f y.tab.c getdate.c
+
+gettext.o: gettext.c
+	$(COMPILE) -DALIASPATH=\"$(aliaspath)\" -DLOCALEDIR=\"$(localedir)\" \
+	  -c $(srcdir)/gettext.c
+
+gettext._o: gettext._c
+	@rm -f _gettext.c
+	@ln gettext._c _gettext.c
+	$(COMPILE) -DALIASPATH=\"$(aliaspath)\" -DLOCALEDIR=\"$(localedir)\" \
+	  -c _gettext.c
+	@mv _gettext.o $@
+	@rm _gettext.c

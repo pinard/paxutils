@@ -1,5 +1,5 @@
-/* Encode long filenames for GNU tar.
-   Copyright (C) 1988, 1992, 1994, 1996, 1997 Free Software Foundation, Inc.
+/* Encode long filenames for tar.
+   Copyright (C) 1988, 92, 94, 96, 97, 98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -36,15 +36,15 @@ struct mangled *first_mangle;
 int mangled_num = 0;
 
 /*---------------------------------------------------------------------.
-| Extract a GNUTYPE_NAMES record contents.  It seems that such are not |
-| produced anymore by GNU tar, but we leave the reading code around    |
-| nevertheless, for salvaging old tapes.			       |
+| Extract a OLDGNU_NAMES record contents.  It seems that such are not |
+| produced anymore by tar, but we leave the reading code around        |
+| nevertheless, for salvaging old tapes.                               |
 `---------------------------------------------------------------------*/
 
 void
 extract_mangle (void)
 {
-  int size = current_stat.st_size;
+  int size = current.stat.st_size;
   char *buffer = xmalloc ((size_t) (size + 1));
   char *copy = buffer;
   char *cursor = buffer;
@@ -54,20 +54,21 @@ extract_mangle (void)
   while (size > 0)
     {
       union block *block = find_next_block ();
-      int available;
+      size_t size_to_copy;
 
       if (!block)
 	{
-	  ERROR ((0, 0, _("Unexpected EOF in mangled names")));
+	  ERROR ((0, 0, _("Unexpected end of file in mangled file names")));
 	  return;
 	}
-      available = available_space_after (block);
-      if (available > size)
-	available = size;
-      memcpy (copy, block->buffer, (size_t) available);
-      copy += available;
-      size -= available;
-      set_next_block_after ((union block *) (block->buffer + available - 1));
+      size_to_copy = available_space_after (block);
+      if (size_to_copy > size)
+	size_to_copy = size;
+      memcpy (copy, block->buffer, size_to_copy);
+      copy += size_to_copy;
+      size -= size_to_copy;
+      set_next_block_after
+	((union block *) (block->buffer + size_to_copy - 1));
     }
 
   while (*cursor)

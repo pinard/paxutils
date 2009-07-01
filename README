@@ -1,82 +1,122 @@
-Here is GNU `tar' 1.12.  Please glance through *all* sections of this
-`README' file before starting configuration.  Also make sure you read files
-`ABOUT-NLS' and `INSTALL' if you are not familiar with them already.
+* README file for `paxutils'				allout -*- outline -*-
 
-If you got the `tar' distribution in `shar' format, timestamps ought to be
-properly restored, do not ignore such complaints at `unshar' time.
+  Here is `paxutils' 2.5.  Please glance through *all* sections of this
+  `README' file before starting configuration.  Make sure you read files
+  `ABOUT-NLS' and `INSTALL' if you are not familiar with them already.
 
-GNU `tar' saves many files together into a single tape or disk
-archive, and can restore individual files from the archive.  It includes
-multivolume support, the ability to archive sparse files, automatic archive
-compression/decompression, remote archives and special features that allow
-`tar' to be used for incremental and full backups.  This distribution
-also includes `rmt', the remote tape server.  The `mt' tape drive control
-program is in the GNU `cpio' distribution.
+  If you got this distribution in `shar' format, timestamps ought to be
+  properly restored, do not ignore such complaints at `unshar' time.
 
-GNU `tar' is derived from John Gilmore's public domain `tar'.
+  The canonical distribution point for this version is:
 
-See file `ABOUT-NLS' for how to customize this program to your language.
-See file `BACKLOG' for a summary of pending mail and articles.
-See file `COPYING' for copying conditions.
-See file `INSTALL' for compilation and installation instructions.
-See file `PORTS' for various ports of GNU tar to non-Unix systems.
-See file `NEWS' for a list of major changes in the current release.
-See file `THANKS' for a list of contributors.
+     http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.5.tar.gz
 
-Besides those configure options documented in files `INSTALL' and
-`ABOUT-NLS', a few extra options may be accepted after `./configure':
+  GNU mirrors also have it, the canonical distribution point for GNU being:
 
-* `--with-included-malloc' or `--without-included-malloc' may override
-the automatic choice made by `configure' about using included GNU malloc.
+     ftp://ftp.gnu.org/pub/gnu/paxutils-2.5.tar.gz
 
-* `--with-dmalloc' is a debugging option for looking at memory management
-problems, it prerequires Gray Watson's package, which is available as
-`ftp://ftp.letters.com/src/dmalloc/dmalloc.tar.gz'.
+.* Introduction
+   ------------
 
-The default archive device is now `stdin' on read and `stdout' on write.
-The installer can still override this by presetting `DEFAULT_ARCHIVE'
-in the environment before configuring (the behavior of `-[0-7]' or
-`-[0-7]lmh' options in `tar' are then derived automatically).  Similarly,
-`DEFAULT_BLOCKING' can be preset to something else than 20.
+. + Presentation
 
-For comprehensive modifications to GNU tar, you might need tools beyond
-those used in simple installations.  Fully install GNU m4 1.4 first,
-and only then, Autoconf 2.12 with officious patches held in `AC-PATCHES'.
-Install Perl, then Automake 1.1n with officious patches in `AM-PATCHES'.
-You might need Bison 1.25 with officious patches in `BI-PATCHES' (but yacc
-and byacc may be OK for you), and GNU tar itself.  All are available on
-GNU archive sites, like in ftp://prep.ai.mit.edu/pub/gnu/, but Automake
-is still ftp://ftp.cygnus.com/pub/tromey/automake-1.1n.tar.gz.
+    The `paxutils' tools, which manage archives of files, are `cpio',
+    `pax' and `tar'.  They can save many files together into a single tape
+    or disk archive, and can restore individual files from the archive.
+    They collectively include multivolume support, the ability to archive
+    sparse files, automatic archive compression and decompression, remote
+    archives, and special features allow for incremental and full backups.
 
-Send bug reports to `tar-bugs@gnu.ai.mit.edu'.  (Beware, old-timers: it is
-`@gnu', not `@prep'; and not `bug-gnu-utils' anymore.)  A bug report is
-an adequate description of the problem: your input, what you expected,
-what you got, and why this is wrong.  Diffs are welcome, but they only
-describe a solution, from which the problem might be uneasy to infer.
-If needed, submit actual data files with your report.  Small data files
-are preferred.  Big files may sometimes be necessary, but do not send them
-to the report address; rather take special arrangement with the maintainer.
+    `cpio' supports the features of the System V release 4 `cpio',
+    including support for `tar' archives.  The included `tar' is derived
+    from John Gilmore's public domain `tar'.
 
-Your feedback will help us to make a better and more portable package.
-Consider documentation errors as bugs, and report them as such.  If you
-develop anything pertaining to `tar' or have suggestions, let us know
-and share your findings by writing at `tar-forum@iro.umontreal.ca'.
+    This package also includes `rmt', the remote tape server, and `mt', a
+    tape drive control program; these two programs will only be compiled if
+    your system supports remote command execution, and tape drive control
+    operations, respectively.
 
-.--------------------.
-| Installation hints |
-`--------------------'
+. + See files
 
-Here are a few hints which might help installing `tar' on some systems.
+	ABOUT-NLS   how to customise this program to your language
+	BACKLOG     summary of pending mail and articles
+	COPYING     copying conditions
+	INSTALL     compilation and installation instructions
+	NEWS        major changes in the current release
+	README.dos  how to build `paxutils' for MS-DOS or MS-Windows
+	THANKS      partial list of contributors
 
-* Static linking.
+. + Configure options
 
-Some platform will, by default, prepare a smaller `tar' executable
-which depends on shared libraries.  Since GNU `tar' may be used for
-system-level backups and disaster recovery, installers might prefer to
-force static linking, making a bigger `tar' executable maybe, but able to
-work standalone, in situations where shared libraries are not available.
-The way to achieve static linking varies between systems.  Set LDFLAGS
-to a value from the table below, before configuration (see `INSTALL').
+    The default archive devices are `stdin' on read and `stdout' on write.
+    The installer can still override this by presetting `DEFAULT_ARCHIVE'
+    in the environment before configuring (the behaviour of `-[0-7]'
+    or `-[0-7]lmh' options in `tar' are then derived automatically).
+    Similarly, `DEFAULT_BLOCKING' can be preset to something else than 20.
+
+    Besides those configure options documented in files `INSTALL' and
+    `ABOUT-NLS', a few extra options may be accepted after `./configure':
+
+.  - `--with-included-malloc', `--without-included-malloc'
+
+     to override the automatic choice made by `configure' about using
+     included GNU malloc.
+
+.  - `--with-dmalloc'
+
+     to trigger a debugging feature for looking at memory management
+     problems, it pre-requires Gray Watson's package, which is available as
+     `ftp://ftp.letters.com/src/dmalloc/dmalloc.tar.gz'.
+
+. + Maintenance tools
+
+    For comprehensive modifications to `paxutils', you might need tools
+    beyond those used in simple installations.  If not done already, get:
+
+	ftp://i44ftp.info.uni-karlsruhe.de/pub/gnu/gettext-0.10.26.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/m4-1.4.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/perl-5.003.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/autoconf-2.12.tar.gz          + AC-PATCHES
+	ftp://ftp.cygnus.com/pub/tromey/automake-1.3.tar.gz	+ AM-PATCHES
+	ftp://ftp.gnu.org/pub/gnu/bison-1.25.tar.gz             + BI-PATCHES
+
+    Do not forget applying the `*-PATCHES' files (all officious)
+    appropriately.  Make sure GNU `m4' is fully installed before you start
+    installing Autoconf.  Have Perl installed before Automake.
+
+. + Report addresses
+
+    Send bug reports to `paxutils-bugs@iro.umontreal.ca'.  A bug report is
+    an adequate description of the problem: your input, what you expected,
+    what you got, and why this is wrong.  Diffs are welcome, but they only
+    describe a solution, from which the problem might be uneasy to infer.
+    If needed, submit actual data files with your report.  Small data
+    files are preferred.  Big files may sometimes be necessary, but do not
+    send them to the report address; rather take special arrangement with
+    the maintainer.
+
+    Your feedback will help us to make a better and more portable package.
+    Consider documentation errors as bugs, and report them as such.  If you
+    develop anything usefully related or have suggestions, let us know
+    and share your findings by writing at `paxutils-forum@iro.umontreal.ca'.
+
+.* Installation hints
+   ------------------
+
+   Here are a few hints which might help installing `paxutils' on some
+   systems.  Many may be applied by temporary presetting environment
+   variables while calling `./configure'.  File `INSTALL' explains this.
+
+. + Static linking
+
+    Some platform will, by default, prepare smaller program executable
+    which depends on shared libraries.  Since these tools may have to be
+    used for system-level backups and disaster recovery, system builders and
+    integrators might prefer forcing static linking, which might result in
+    a bigger executable, but able to work standalone, in situations where
+    shared libraries are not available.  The way to achieve static linking
+    varies between systems.  Set LDFLAGS to a value from the table below,
+    before configuration (see `INSTALL').
 
 	Platform	Compiler	LDFLAGS
 
@@ -89,93 +129,94 @@ to a value from the table below, before configuration (see `INSTALL').
 	Solaris		(vendor)	-Bstatic
 	SunOS		(vendor)	-Bstatic
 
-* Failed `incremen.sh'.
+    A few users manifested the wish that Linux packages, in particular,
+    offer some kind of statically linked tools for emergency cases.
 
-In an NFS environment, lack of synchronisation between machine clocks
-might create difficulties to any tool comparing dates and file timestamps,
-like `tar' in incremental dumps.  This has been a recurrent problem in
-GNU Makefiles for the last few years.  We would like a general solution.
+. + BSD compatibility matters
 
-* BSD compatibility matters.
+    Set LIBS to `-lbsd' before configuration (see `INSTALL') if the linker
+    complains about undefined `valloc' (AIX) or `bsd_ioctl' (Slackware).
+    Also set CPPFLAGS to `-I/usr/include/bsd/sys' before configuration to
+    solve dirent problems (NeXT), or to `-I/usr/include/bsd' if <sgtty.h>
+    is not found (Slackware).
 
-Set LIBS to `-lbsd' before configuration (see `INSTALL') if the linker
-complains about undefined `valloc' (AIX) or `bsd_ioctl' (Slackware).
-Also set CPPFLAGS to `-I/usr/include/bsd/sys' before configuration to
-solve dirent problems (NeXT), or to `-I/usr/include/bsd' if <sgtty.h>
-is not found (Slackware).
+. + `union wait' problems
 
-* `union wait' problems.
+    Configuration of `union wait' does not always take the best decision.
+    If you have this problem, edit file `config.cache' after configuration,
+    find the line about `tar_cv_header_union_wait', change `yes' by `no'
+    or vice-versa, then reconfigure again without doing `make distclean'.
 
-Configuration of `union wait' does not always take the best decision.
-If you have this problem, edit file `config.cache' after configuration,
-find the line about `tar_cv_header_union_wait', change `yes' by `no'
-or vice-versa, execute `./config.status', then launch `make'.
+. + FreeBSD users -- `configure' fails
 
-* `%lld' unsupported in `printf'.
+    It has been reported that `configure' does not run on FreeBSD 2.1.7,
+    because of a buggy `sh'.  It works using `bash', however.
 
-GNU C has `long long', but the underneath C library might not support
-the `%lld' format.  If you have this problem, edit file `config.cache'
-after configuration, find the line about `ac_cv_sizeof_long_long, change
-`8' by `0', execute `./config.status', then launch `make'.
+. + ISC users -- `S_*' symbols undefined
 
-* FreeBSD users -- `configure' fails.
+    On ISC 4.1mu, POSIX environment, set CFLAGS to `-posix' and CPPFLAGS to
+    `-D_SYSV3' before configuration (see `INSTALL').  This will trigger
+    the definition of a few `S_' prefixed symbols from <sys/stat.h>.
 
-It has been reported that `configure' does not run on FreeBSD 2.1.7,
-because of a buggy `sh'.  It works using `bash', however.
+. + Ultrix users -- broken `make'
 
-* ISC users -- `S_*' symbols undefined.
+    It seems that Ultrix make does not correctly handle shell commands
+    having logical connectives in them.  Use `s5make' if you have it, try
+    `PROG_ENV=SYSTEM_FIVE make' (works on Ultrix 4.4), or install GNU Make.
 
-On ISC 4.1mu, POSIX environment, set CFLAGS to `-posix' and CPPFLAGS to
-`-D_SYSV3' before configuration (see `INSTALL').  This will trigger the
-definition of a few `S_' prefixed symbols from <sys/stat.h>.
+. + Failed tests
 
-* Ultrix users -- broken `make'.
+    It is expected that `make check' will fail a few tests if your
+    environment if not fully Unix.  Here are a few more notes.
 
-It seems that Ultrix make does not correctly handle shell commands
-having logical connectives in them.  Use `s5make' if you have it, try
-`PROG_ENV=SYSTEM_FIVE make' (works on Ultrix 4.4), or install GNU Make.
+.  - incremen.sh
 
-.------------------.
-| Special topics.  |
-`------------------'
+     In an NFS environment, lack of synchronisation between machine
+     clocks might create difficulties to any tool comparing dates and
+     file timestamps, like `tar' in incremental dumps.  This has been a
+     recurrent problem in GNU Makefiles for the last few years.
 
-Here are a few special matters about GNU `tar', not related to build
-matters.  See previous section for such.
+.* Special topics
+   --------------
 
-* File attributes.
+   Here are a few special matters about `paxutils', not related to build
+   matters.  See previous section for such.
 
-About *security*, it is probable that future releases of `tar' will have
-some behaviour changed.  There are many pending suggestions to choose from.
-Today, extracting an archive not being `root', `tar' will restore suid/sgid
-bits on files but owned by the extracting user.  `root' automatically gets
-a lot of special priviledges, `-p' might later become required to get them.
+. + File attributes
 
-GNU `tar' does not properly restore symlink attributes.  Various systems
-implement flavours of symbolic links showing different behaviour and
-properties.  We did not successfully sorted all these out yet.  Currently,
-the `lchown' call will be used if available, but that's all.
+    About *security*, it is probable that future releases of `tar' will
+    have some behaviour changed.  There are many pending suggestions to
+    choose from.  Today, extracting an archive not being `root', `tar'
+    will restore suid/sgid bits on files but owned by the extracting user.
+    `root' automatically gets a lot of special privileges, `-p' might
+    later become required to get them.
 
-* POSIX compliance.
+    `tar' does not properly restore symlink attributes.  Various systems
+    implement flavours of symbolic links showing different behaviour
+    and properties.  We did not successfully sorted all these out yet.
+    Currently, the `lchown' call will be used if available, but that's all.
 
-GNU `tar' implements an early draft of the POSIX 1003.1 `ustar' standard
-which is different from the final standard.  This will be progressively
-corrected over the incoming few years.  Don't be mislead by the mere
-existence of the --posix option.  Later releases will become able to
-read truly POSIX archives, and also to produce them under option.  (Also,
-if you look at the internals, don't take the GNU extensions you see for
-granted, as they are planned to change.)  GNU tar 2.0 will produce POSIX
-archives by default, but there is a long way before we get there.
+. + POSIX compliance
 
-* What's next?
+    While the included `cpio' supports the final POSIX.1 "ustar" `tar'
+    format, the included `tar' implements the 6th draft of the POSIX
+    1003.1 `ustar' standard, which is different from the final standard.
+    `cpio' knows to recognize the nonstandard "ustar" archives produced by
+    `tar'.  This will be progressively corrected over the incoming years.
 
-The emphasis from 1.11.2 to 1.12 has been on solving the main portability,
-execution or usability bugs.  This was accompanied all over with an
-internal cleanup in the sources, and the reassembly of a `tar' manual.
+    Don't be mislead by the mere existence of the --posix option.
+    This option will be more fully implemented in later releases for
+    producing truly POSIX archives.  `paxutils' 3.0 will produce POSIX
+    archives by default, but there is a long way before we get there.
+    (If you look at the internals, don't take all the extensions you see
+    for granted, as they are planned to change.)
 
-The `BACKLOG' file shows an approximative priorisation of the many pending
-problems and suggestions.  Besides pending problems and all other matters
-listed above, the cleanup is planned to continue and extend to the general
-organisation of the code, preparing a long time in advance for a possible
-merge of the `cpio' and `tar' distributions, into some common `paxutils'.
-We also want to address some long-awaited performance issues (for example:
-double buffering) or enhancements (for example: per-file compression).
+. + What's next?
+
+    The `BACKLOG' file shows an approximative priorisation of the many
+    pending problems and suggestions.  Besides pending problems and all
+    other matters listed above, the cleanup will continue and extend to
+    the general organisation of the code, so to better merge the `cpio'
+    and `tar' algorithms, which were once fully separate.  We also want
+    to address some long-awaited performance issues (for example: double
+    buffering) or enhancements (for example: per-file compression).

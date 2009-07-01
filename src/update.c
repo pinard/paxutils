@@ -1,5 +1,5 @@
 /* Update a tar archive.
-   Copyright (C) 1988, 1992, 1994, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 96, 97, 98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -27,10 +27,11 @@
    instead, this should be done in buffer.c only.  */
 extern union block *current_block;
 
-/* We've hit the end of the old stuff, and its time to start writing new
-   stuff to the tape.  This involves seeking back one record and
+/* We're reading, but we just read the last block and its time to update.
+   That is, we have hit the end of the old stuff, and its now time to start
+   writing new stuff to the tape.  This involves seeking back one record and
    re-writing the current record (which has been changed).  */
-int time_to_start_writing = 0;
+bool time_to_start_writing = false;
 
 /* Pointer to where we started to write in the first record we write out.
    This is used if we can't backspace the output and have to null out the
@@ -46,45 +47,47 @@ static void
 append_file (char *path)
 {
   int handle;
-  struct stat stat_data;
-  long bytes_left;
+  struct stat stat_info;
+  off_t bytes_left;
 
-  if (stat (path, &stat_data) != 0
+  if (stat (path, &stat_info) != 0
       || (handle = open (path, O_RDONLY | O_BINARY), handle < 0))
     {
       ERROR ((0, errno, _("Cannot open file %s"), path));
       return;
     }
 
-  bytes_left = stat_data.st_size;
+  bytes_left = stat_info.st_size;
 
   while (bytes_left > 0)
     {
       union block *start = find_next_block ();
-      long buffer_size = available_space_after (start);
-      int status;
+      size_t size_to_read = available_space_after (start);
+      ssize_t size_read;
 
-      if (bytes_left < buffer_size)
+      if (bytes_left < size_to_read)
 	{
-	  buffer_size = bytes_left;
-	  status = buffer_size % BLOCKSIZE;
-	  if (status)
-	    memset (start->buffer + bytes_left, 0,
-		    (size_t) (BLOCKSIZE - status));
+	  size_t count;
+
+	  size_to_read = bytes_left;
+	  count = size_to_read % BLOCKSIZE;
+	  if (count)
+	    memset (start->buffer + bytes_left, 0, BLOCKSIZE - count);
 	}
 
-      status = read (handle, start->buffer, (size_t) buffer_size);
-      if (status < 0)
+      size_read = full_read (handle, start->buffer, size_to_read);
+      if (size_read < 0)
 	FATAL_ERROR ((0, errno,
-		_("Read error at byte %ld reading %d bytes in file %s"),
-		stat_data.st_size - bytes_left, buffer_size, path));
-      bytes_left -= status;
+		      _("Read error at byte %ld reading %lu bytes in file %s"),
+		      stat_info.st_size - bytes_left,
+		      (unsigned long) size_to_read, path));
+      bytes_left -= size_read;
 
-      set_next_block_after (start + (status - 1) / BLOCKSIZE);
+      set_next_block_after (start + (size_read - 1) / BLOCKSIZE);
 
-      if (status != buffer_size)
-	FATAL_ERROR ((0, 0, _("%s: File shrunk by %d bytes, (yark!)"),
-		      path, bytes_left));
+      if (size_read != size_to_read)
+	FATAL_ERROR ((0, 0, _("%s: File shrunk by %ul bytes, (yark!)"),
+		      path, (unsigned long) bytes_left));
     }
 
   close (handle);
@@ -100,7 +103,7 @@ void
 update_archive (void)
 {
   enum read_header previous_status = HEADER_STILL_UNREAD;
-  int found_end = 0;
+  bool found_end = false;
 
   name_gather ();
   if (subcommand_option == UPDATE_SUBCOMMAND)
@@ -109,7 +112,7 @@ update_archive (void)
 
   while (!found_end)
     {
-      enum read_header status = read_header ();
+      enum read_header status = read_header (&current);
 
       switch (status)
 	{
@@ -121,35 +124,36 @@ update_archive (void)
 	    struct name *name;
 
 	    if (subcommand_option == UPDATE_SUBCOMMAND
-		&& (name = name_scan (current_file_name), name))
+		&& (name = name_scan (current.name), name))
 	      {
-		struct stat stat_data;
-		enum archive_format unused;
+		struct stat stat_info;
 
-		decode_header (current_header, &current_stat, &unused, 0);
-		if (stat (current_file_name, &stat_data) < 0)
-		  ERROR ((0, errno, _("Cannot stat %s"), current_file_name));
-		else if (current_stat.st_mtime >= stat_data.st_mtime)
-		  name->found = 1;
+		decode_header (&current, false);
+		if (stat (current.name, &stat_info) < 0)
+		  ERROR ((0, errno, _("Cannot stat %s"), current.name));
+		else if (time_compare (current.stat.st_mtime,
+				       stat_info.st_mtime)
+			 >= 0)
+		  name->match_found = true;
 	      }
-	    set_next_block_after (current_header);
-	    if (current_header->oldgnu_header.isextended)
+	    set_next_block_after (current.block);
+	    if (current.block->oldgnu_header.isextended)
 	      skip_extended_headers ();
-	    skip_file ((long) current_stat.st_size);
+	    skip_file (current.stat.st_size);
 	    break;
 	  }
 
 	case HEADER_ZERO_BLOCK:
-	  current_block = current_header;
-	  found_end = 1;
+	  current_block = current.block;
+	  found_end = true;
 	  break;
 
 	case HEADER_END_OF_FILE:
-	  found_end = 1;
+	  found_end = true;
 	  break;
 
 	case HEADER_FAILURE:
-	  set_next_block_after (current_header);
+	  set_next_block_after (current.block);
 	  switch (previous_status)
 	    {
 	    case HEADER_STILL_UNREAD:
@@ -174,7 +178,7 @@ update_archive (void)
     }
 
   reset_eof ();
-  time_to_start_writing = 1;
+  time_to_start_writing = true;
   output_start = current_block->buffer;
 
   {
@@ -182,12 +186,12 @@ update_archive (void)
 
     while (path = name_from_list (), path)
       {
-	if (interactive_option && !confirm ("add", path))
+	if (interactive_option && !confirm (_("add %s?"), path))
 	  continue;
 	if (subcommand_option == CAT_SUBCOMMAND)
 	  append_file (path);
 	else
-	  dump_file (path, -1, 1);
+	  dump_file (path, (dev_t) -1, true);
       }
   }
 

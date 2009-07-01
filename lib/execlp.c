@@ -49,6 +49,8 @@ extern int errno;
 # endif
 #endif
 
+extern char **environ;
+
 /* Synopsis: execlp (file, arg0, arg1... argN, (char *) NULL)
 
    Exec a program, automatically searching for the program through all the
@@ -63,13 +65,13 @@ execlp (filename, arg0)
      char *filename;
      char *arg0;
 {
-  register char *p, *path;
-  register char *fnbuffer;
+  char *p = getenv ("PATH");
+  char *path;
+  char *fnbuffer;
   char **argstart = &arg0;
   struct stat statbuf;
-  extern char **environ;
 
-  if (p = getenv ("PATH"), p == NULL)
+  if (p == NULL)
     {
       /* Could not find path variable -- try to exec given filename.  */
 
@@ -98,7 +100,7 @@ execlp (filename, arg0)
 	strcpy (fnbuffer, path);
       else
 	{
-	  strncpy (fnbuffer, path, p - path);
+	  strncpy (fnbuffer, path, (size_t) (p - path));
 	  fnbuffer[p - path] = '\0';
 	  p++;			/* skip : for next time */
 	}
@@ -139,11 +141,11 @@ execlp (filename, arg0)
 
       if (errno == ENOEXEC)
 	{
-	  char *shell;
+	  const char *shell = getenv ("SHELL");
 
 	  /* Try to execute command "sh arg0 arg1 ...".  */
 
-	  if (shell = getenv ("SHELL"), shell == NULL)
+	  if (shell == NULL)
 	    shell = "/bin/sh";
 	  argstart[-1] = shell;
 	  argstart[0] = fnbuffer;
@@ -154,7 +156,6 @@ execlp (filename, arg0)
       /* If we succeeded, the execve() doesn't return, so we can only be
 	 here is if the file hasn't been found yet.  Try the next place
 	 on the path.  */
-
     }
 
   /* All attempts failed to locate the file.  Give up.  */

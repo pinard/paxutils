@@ -1,5 +1,5 @@
-/* System dependent definitions for GNU tar.
-   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+/* System dependent definitions for paxutils.
+   Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -35,6 +35,21 @@
 char *alloca ();
 #   endif
 #  endif
+# endif
+#endif
+
+/* MS-DOS and MS-Windows share so many common idiosyncrasies that it makes
+   sense to lump them together.  Also, WIN32 compilers have a lot to learn
+   from DJGPP...  Help them.  */
+#if MSDOS || WIN32 || _WIN32
+# define DOSWIN 1
+# if WIN32 || _WIN32
+#  include <direct.h>
+#  include <missing.h>
+#  define mkdir(d,m)		_mkdir(d)
+#  define setmode		_setmode
+#  define _flush_disk_cache()	(void)0
+#  define _use_lfn(x)		1
 # endif
 #endif
 
@@ -97,6 +112,12 @@ char *alloca ();
 extern int errno;
 #endif
 
+/* gcc on OS/2.  */
+#ifdef __EMX__
+# define EPERM EACCES
+# define ENXIO EIO
+#endif
+
 /* Declare open parameters.  */
 
 #if HAVE_FCNTL_H
@@ -132,20 +153,28 @@ extern int errno;
 #endif
 				/* MS-DOG forever, with my love! */
 #ifndef	O_BINARY
-# define O_BINARY 0
+# ifdef _O_BINARY
+#  define O_BINARY _O_BINARY
+# else
+#  define O_BINARY 0
+# endif
 #endif
 				/* Emulate System V 3-argument open call */
 #if EMUL_OPEN3
 # define open open3
 #endif
 
+/* File name for interacting with user, whenever stdin is unavailable.  */
+
+#if DOSWIN
+# define CONSOLE "con"
+#else
+# define CONSOLE "/dev/tty"
+#endif
+
 /* Declare file status routines and bits.  */
 
 #include <sys/stat.h>
-
-#ifndef S_ISLNK
-# define lstat stat
-#endif
 
 #if STAT_MACROS_BROKEN
 # undef S_ISBLK
@@ -160,16 +189,19 @@ extern int errno;
 # undef S_ISSOCK
 #endif
 
-/* On MSDOS, there are missing things from <sys/stat.h>.  */
-#if MSDOS
-# define S_ISUID 0
-# define S_ISGID 0
-# define S_ISVTX 0
+/* On DOSWIN, there are missing things from <sys/stat.h>.  */
+#if DOSWIN
+# ifndef S_ISUID
+#  define S_ISUID false
+# endif
+# ifndef S_ISGID
+#  define S_ISGID false
+# endif
+# ifndef S_ISVTX
+#  define S_ISVTX false
+# endif
 #endif
 
-#ifndef S_ISREG			/* POSIX.1 stat stuff missing */
-# define mode_t unsigned short
-#endif
 #if !defined(S_ISBLK) && defined(S_IFBLK)
 # define S_ISBLK(Mode) (((Mode) & S_IFMT) == S_IFBLK)
 #endif
@@ -203,6 +235,10 @@ extern int errno;
 # define mkfifo(Path, Mode) (mknod (Path, (Mode) | S_IFIFO, 0))
 #endif
 
+#ifndef S_ISLNK
+# define lstat stat
+#endif
+
 #if !defined(S_ISCTG) && defined(S_IFCTG) /* contiguous file */
 # define S_ISCTG(Mode) (((Mode) & S_IFMT) == S_IFCTG)
 #endif
@@ -211,7 +247,25 @@ extern int errno;
 #endif
 
 #ifndef _POSIX_SOURCE
-# include <sys/param.h>
+# ifndef WIN32
+#  ifndef _WIN32
+#   include <sys/param.h>
+#  endif
+# endif
+#endif
+
+/* For cpio/pax.  On most systems symlink() always creates links with
+   rwxrwxrwx protection modes, but on some (HP/UX 8.07; I think maybe DEC's
+   OSF on MIPS too) symlink() uses the value of umask, so links' protection
+   modes aren't always rwxrwxrwx.  There doesn't seem to be any way to change
+   the modes of a link (no system call like, say, lchmod()), it seems the only
+   way to set the modes right is to set umask before calling symlink().  */
+#if SYMLINK_USES_UMASK
+# define UMASKED_SYMLINK(Name1, Name2, Mode) \
+   umasked_symlink(Name1, Name2, Mode)
+#else
+# define UMASKED_SYMLINK(Name1, Name2, Mode) \
+   symlink(Name1, Name2)
 #endif
 
 /* Include <unistd.h> before any preprocessor test of _POSIX_VERSION.  */
@@ -238,15 +292,6 @@ extern int errno;
 # define GOT_MAJOR
 #endif
 
-#ifndef GOT_MAJOR
-# if MSDOS
-#  define major(Device)		(Device)
-#  define minor(Device)		(Device)
-#  define makedev(Major, Minor)	(((Major) << 8) | (Minor))
-#  define GOT_MAJOR
-# endif
-#endif
-
 /* For HP-UX before HP-UX 8, major/minor are not in <sys/sysmacros.h>.  */
 #ifndef GOT_MAJOR
 # if defined(hpux) || defined(__hpux__) || defined(__hpux)
@@ -265,16 +310,17 @@ extern int errno;
 
 /* Declare directory reading routines and structures.  */
 
+/* FIXME: Make sure NAMLEN is size_t in all circumstances.  */
 #if __TURBOC__
 # include "msd_dir.h"
-# define NAMLEN(dirent) ((dirent)->d_namlen)
+# define NAMLEN(Entry) ((Entry)->d_namlen)
 #else
 # if HAVE_DIRENT_H
 #  include <dirent.h>
-#  define NAMLEN(dirent) (strlen((dirent)->d_name))
+#  define NAMLEN(Entry) (strlen ((Entry)->d_name))
 # else
 #  define dirent direct
-#  define NAMLEN(dirent) ((dirent)->d_namlen)
+#  define NAMLEN(Entry) ((Entry)->d_namlen)
 #  if HAVE_SYS_NDIR_H
 #   include <sys/ndir.h>
 #  endif
@@ -348,11 +394,11 @@ extern int errno;
    optimal I/O blocksize for the file, in bytes.  Some systems, like
    Sequents, return st_blksize of 0 on pipes.  */
 
-#if !HAVE_ST_BLKSIZE
-# define ST_BLKSIZE(Statbuf) DEV_BSIZE
-#else
+#if HAVE_ST_BLKSIZE
 # define ST_BLKSIZE(Statbuf) \
     ((Statbuf).st_blksize > 0 ? (Statbuf).st_blksize : DEV_BSIZE)
+#else
+# define ST_BLKSIZE(Statbuf) DEV_BSIZE
 #endif
 
 /* Extract or fake data from a `struct stat'.  ST_NBLOCKS gives the
@@ -361,13 +407,7 @@ extern int errno;
    this loses when mixing HP-UX and BSD filesystems with NFS.  AIX PS/2
    counts st_blocks in 4K units.  */
 
-#if !HAVE_ST_BLOCKS
-# if defined(_POSIX_SOURCE) || !defined(BSIZE)
-#  define ST_NBLOCKS(Statbuf) (((Statbuf).st_size + 512 - 1) / 512)
-# else
-#  define ST_NBLOCKS(Statbuf) (st_blocks ((Statbuf).st_size))
-# endif
-#else
+#if HAVE_ST_BLOCKS
 # if defined(hpux) || defined(__hpux__) || defined(__hpux)
 #  define ST_NBLOCKS(Statbuf) ((Statbuf).st_blocks * 2)
 # else
@@ -376,6 +416,12 @@ extern int errno;
 #  else
 #   define ST_NBLOCKS(Statbuf) ((Statbuf).st_blocks)
 #  endif
+# endif
+#else
+# if defined(_POSIX_SOURCE) || !defined(BSIZE)
+#  define ST_NBLOCKS(Statbuf) (((Statbuf).st_size + 512 - 1) / 512)
+# else
+#  define ST_NBLOCKS(Statbuf) (st_blocks ((Statbuf).st_size))
 # endif
 #endif
 
@@ -420,19 +466,29 @@ extern int errno;
 #else
 voidstar malloc ();
 voidstar realloc ();
-# if HAVE_GETCWD
-char *getcwd ();
-# endif
 char *getenv ();
 #endif
 
 #include <stdio.h>
 
-#ifndef _POSIX_VERSION
-# if MSDOS
-#  include <io.h>
-# else
+#if DOSWIN
+# include <io.h>
+# include <time.h>
+#else
+# ifndef _POSIX_VERSION
 off_t lseek ();
+# endif
+#endif
+
+#ifndef SEEK_SET
+# ifdef L_SET
+#  define SEEK_SET L_SET	/* absolute offset */
+#  define SEEK_CUR L_INCR	/* relative to current offset */
+#  define SEEK_END L_XTND	/* relative to end of file */
+# else
+#  define SEEK_SET 0		/* absolute offset */
+#  define SEEK_CUR 1		/* relative to current offset */
+#  define SEEK_END 2		/* relative to end of file */
 # endif
 #endif
 
@@ -442,6 +498,18 @@ off_t lseek ();
 # undef HAVE_VALLOC
 # define DMALLOC_FUNC_CHECK
 # include <dmalloc.h>
+#endif
+
+#if HAVE_UTIME_H
+# include <utime.h>
+#elif DOSWIN
+# include <sys/utime.h>
+#else
+struct utimbuf
+  {
+    long actime;
+    long modtime;
+  };
 #endif
 
 /* Prototypes for external functions.  */
@@ -454,26 +522,39 @@ off_t lseek ();
 # endif
 #endif
 
-#if HAVE_LOCALE_H
-# include <locale.h>
-#endif
-#if !HAVE_SETLOCALE
-# define setlocale(Category, Locale)
+#if HAVE_STDBOOL_H
+# include <stdbool.h>
+#else
+typedef enum {false = 0, true = 1} bool;
 #endif
 
 #if ENABLE_NLS
-# include <libintl.h>
+# if HAVE_LIBINTL_H
+#  include <libintl.h>
+# else
+#  include <gettext.h>
+# endif
+# if !HAVE_SETLOCALE
+#  define setlocale(Category, Locale)
+# endif
 # define _(Text) gettext (Text)
+# define N_(Text) Text
 #else
-# define bindtextdomain(Domain, Directory)
-# define textdomain(Domain)
+# define setlocale(Category, Locale)
+# define bindtextdomain(Package, Localedir)
+# define textdomain(Package)
 # define _(Text) Text
+# define N_(Text) Text
 #endif
-#define N_(Text) Text
 
 /* Library modules.  */
 
 #include "error.h"
+
+char *getuser PARAMS ((uid_t));
+uid_t *getuidbyname PARAMS ((char *));
+char *getgroup PARAMS ((gid_t));
+gid_t *getgidbyname PARAMS ((char *));
 
 #if !HAVE_STRSTR
 char *strstr PARAMS ((const char *, const char *));
@@ -489,4 +570,30 @@ voidstar valloc PARAMS ((size_t));
 
 voidstar xmalloc PARAMS ((size_t));
 voidstar xrealloc PARAMS ((voidstar, size_t));
+char *xgetcwd PARAMS ((void));
 char *xstrdup PARAMS ((const char *));
+
+/* When interrupted system calls are automatically restarted, we have little
+   to worry about incomplete reads or writes.  A few users report that POSIX
+   requires (?) some system calls to *not* be restartable.  In such cases,
+   we ought to loop on input/output operations until the transfer is fully
+   done, so pipes and disks are dependable, despite interruptions.
+
+   It is not clear whether this should apply or not to tape drives, where
+   partial writes yield shorter physical records.  Since exact blocking is
+   needed, shorter records are errors, and might not be reported as such.
+   For now, I just guess that writing a physical tape record should be an
+   atomic operation as much in the operating system than in the electronic
+   and mechanics of the beast.  Otherwise, restarting an interrupted call
+   would require prior tape repositioning, it is hard to believe that tape
+   driver writers would force such complexities on programming users.
+
+   Does someone know better about all this?  */
+
+#if HAVE_RESTARTABLE_SYSCALLS
+# define full_read(Desc, Buffer, Size) read (Desc, Buffer, Size)
+# define full_write(Desc, Buffer, Size) write (Desc, Buffer, Size)
+#else
+ssize_t full_read PARAMS ((int, char *, size_t));
+ssize_t full_write PARAMS ((int, const char *, size_t));
+#endif

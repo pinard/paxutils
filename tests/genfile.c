@@ -1,5 +1,5 @@
 /* Generate a file containing some preset patterns.
-   Copyright © 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright © 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
    François Pinard <pinard@iro.umontreal.ca>, 1995.
 
    This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,21 @@
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* 1995-06-08, goutier@JSP.UMontreal.CA, programme `genr':
+
+   zero =    00000000000000000000
+   ones =    77777777777777777777
+   inf =     37770000000000000000
+   nginf =   40000000000000000000
+   indef =   17770000000000000000
+   nginf =   60000000000000000000
+   altzero = 25252525252525252525
+   altones = 52525252525252525252
+
+   adr=0;  ajouter l'adresse dans les 30 bits du bas de chaque mot.
+*/
+
+/* Declarations.  */
 #include "system.h"
 
 #include <getopt.h>
@@ -61,7 +76,7 @@ usage (int status)
 	     program_name);
   else
     {
-      printf (_("Generate data files for GNU tar test suite.\n"));
+      printf (_("Generate data files for `tar' test suite.\n"));
       printf (_("\
 \n\
 Usage: %s [OPTION]...\n"), program_name);
@@ -153,7 +168,7 @@ main (int argc, char *const *argv)
 
   if (show_version)
     {
-      printf ("genfile (GNU %s) %s\n", PACKAGE, VERSION);
+      printf ("genfile (Free %s) %s\n", PACKAGE, VERSION);
       fputs (_("\
 \n\
 Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.\n"),

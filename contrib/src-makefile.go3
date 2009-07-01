@@ -1,0 +1,168 @@
+#  Generated automatically from Makefile.in by configure.
+# Makefile for tar sources.
+# Copyright (C) 1994 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+PACKAGE = tar
+VERSION = 1.11.8
+PROGRAMS = tar
+
+SHELL = /bin/sh
+exec_prefix = 
+prefix = /usr/local
+srcdir = .
+subdir = src
+top_srcdir = ..
+transform = s,x,x,
+
+CC = gcc -posix
+CFLAGS = -g -O
+CPPFLAGS = 
+DEFS = -DHAVE_CONFIG_H
+INSTALL = ../install
+INSTALL_DATA = install
+INSTALL_PROGRAM = install
+INTLDEPS = 
+LDFLAGS = 
+LIBS = 
+TOUCH = echo timestamp >
+
+bindir = $(exec_prefix)/bin
+datadir = $(prefix)/share
+libexecdir = $(exec_prefix)/libexec
+localedir = $(datadir)/locale
+
+COMPILE = $(CC) -c $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
+LINK = $(CC) $(LDFLAGS) -o $@
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+.c.o:
+	$(COMPILE) $<
+
+ANSI2KNR = 
+o = .o
+
+.SUFFIXES: ._c ._o
+.c._c:
+	./ansi2knr $< > $*.tmp && mv $*.tmp $@
+._c._o:
+	@echo $(COMPILE) $<
+	@rm -f _$*.c
+	@ln $< _$*.c && $(COMPILE) _$*.c && mv _$*.o $@ && rm _$*.c
+.c._o:
+	./ansi2knr $< > $*.tmp && mv $*.tmp $*._c
+	@echo $(COMPILE) $*._c
+	@rm -f _$*.c
+	@ln $*._c _$*.c && $(COMPILE) _$*.c && mv _$*.o $@ && rm _$*.c
+
+INCLUDES = -I.. -I../intl -I$(srcdir) -I$(top_srcdir)/lib
+
+gen_SOURCES = genfile.c
+gen_OBJECTS = genfile$o
+
+rmt_SOURCES = rmt.c
+rmt_OBJECTS = rmt$o
+
+tar_SOURCES = buffer.c create.c diffarch.c extract.c gnu.c list.c \
+mangle.c names.c port.c rtapelib.c tar.c update.c 
+tar_OBJECTS = buffer$o create$o diffarch$o extract$o gnu$o list$o \
+mangle$o names$o port$o rtapelib$o tar$o update$o
+
+HEADERS = open3.h rmt.h system.h tar.h
+SOURCES = $(gen_SOURCES) $(rmt_SOURCES) $(tar_SOURCES)
+OBJECTS = $(gen_OBJECTS) $(rmt_OBJECTS) $(tar_OBJECTS)
+
+DISTFILES = Makefile.in ansi2knr.c ansi2knr.1 checktar.sh \
+$(HEADERS) $(SOURCES)
+
+all: genfile $(PROGRAMS)
+
+rmt: $(rmt_OBJECTS) $(INTLDEPS) ../lib/libtar.a
+	$(LINK) $(rmt_OBJECTS) $(INTLDEPS) ../lib/libtar.a $(LIBS)
+
+tar: $(tar_OBJECTS) $(INTLDEPS) ../lib/libtar.a
+	$(LINK) $(tar_OBJECTS) $(INTLDEPS) ../lib/libtar.a $(LIBS)
+
+check: tar genfile
+	PATH=`pwd`:$$PATH $(SHELL) $(srcdir)/checktar.sh
+
+genfile: $(gen_OBJECTS) $(INTLDEPS) ../lib/libtar.a
+	$(LINK) $(gen_OBJECTS) $(INTLDEPS) ../lib/libtar.a $(LIBS)
+
+$(OBJECTS): $(ANSI2KNR) ../config.h system.h ../intl/libgettext.h tar.h
+buffer$o diffarch$o rtapelib$o update$o: rmt.h
+buffer$o tar$o: ../lib/regex.h ../lib/rx.h
+tar$o: ../lib/fnmatch.h
+
+ansi2knr: ansi2knr.o
+	$(LINK) ansi2knr.o $(LIBS)
+
+install: $(PROGRAMS)
+	for name in $(PROGRAMS); do \
+	  if test $$name = rmt; then dir=$(libexecdir); \
+	  else dir=$(bindir); fi; \
+	  $(top_srcdir)/mkinstalldirs $$dir; \
+          $(INSTALL_PROGRAM) $$name \
+		$$dir/`echo $$name | sed '$(transform)'`; \
+	done
+
+uninstall:
+	for name in $(PROGRAMS); do \
+	  if test $$name = rmt; then dir=$(libexecdir); \
+	  else dir=$(bindir); fi; \
+          rm -f $(dir)/`echo $$name | sed '$(transform)'`; \
+	done
+
+id: ID
+
+ID: $(HEADERS) $(SOURCES)
+	here=`pwd`; cd $(srcdir) && mkid -f$$here/ID $$here/config.h \
+	  $(HEADERS) $(SOURCES)
+
+tags: TAGS
+
+TAGS: $(HEADERS) $(SOURCES)
+	here=`pwd`; cd $(srcdir) && etags -o $$here/TAGS $$here/config.h \
+	  $(HEADERS) $(SOURCES) -i ../lib/TAGS
+
+mostlyclean:
+	rm -f *.o _*.c _*.o *._c *._o core core.*
+
+clean: mostlyclean
+	rm -f genfile tar rmt
+
+distclean: clean
+	rm -f ansi2knr ID TAGS
+	rm -f Makefile
+
+maintainer-clean: distclean
+	@echo "This command is intended only for maintainers to use;"
+	@echo "rebuilding the deleted files may require special tools."
+
+distdir = ../$(PACKAGE)-$(VERSION)/$(subdir)
+dist: $(DISTFILES)
+	for file in $(DISTFILES); do \
+	  ln $(srcdir)/$$file $(distdir) 2> /dev/null \
+	    || cp -p $(srcdir)/$$file $(distdir); \
+	done
+
+Makefile: Makefile.in ../config.status
+	cd .. && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

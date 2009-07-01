@@ -1,5 +1,5 @@
-/* GNU dump extensions to tar.
-   Copyright (C) 1988, 92, 93, 94, 96, 97 Free Software Foundation, Inc.
+/* Dump extensions to tar.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -29,8 +29,8 @@ time_t time ();
 
 struct accumulator
 {
-  int allocated;
-  int length;
+  size_t allocated;
+  size_t length;
   char *pointer;
 };
 
@@ -80,15 +80,15 @@ delete_accumulator (struct accumulator *accumulator)
 
 static void
 add_to_accumulator (struct accumulator *accumulator,
-		    const char *data, int size)
+		    const char *data, size_t size)
 {
   if (accumulator->length + size > accumulator->allocated)
     {
       accumulator->allocated = accumulator->length + size + ACCUMULATOR_SLACK;
       accumulator->pointer = (char *)
-	xrealloc (accumulator->pointer, (size_t) accumulator->allocated);
+	xrealloc (accumulator->pointer, accumulator->allocated);
     }
-  memcpy (accumulator->pointer + accumulator->length, data, (size_t) size);
+  memcpy (accumulator->pointer + accumulator->length, data, size);
   accumulator->length += size;
 }
 
@@ -102,9 +102,9 @@ struct directory
   {
     struct directory *next;	/* next entry in list */
     const char *name;		/* path name of directory */
-    int device_number;		/* device number for directory */
-    int inode_number;		/* inode number for directory */
-    int allnew;
+    dev_t device_number;	/* device number for directory */
+    ino_t inode_number;		/* inode number for directory */
+    bool all_new;
     const char *dir_text;
   };
 static struct directory *directory_list = NULL;
@@ -128,7 +128,7 @@ note_directory (char *name, dev_t device_number, ino_t inode_number,
   directory->inode_number = inode_number;
   directory->name = xstrdup (name);
   directory->dir_text = text;
-  directory->allnew = 0;
+  directory->all_new = false;
 }
 
 /*------------------------------------------------------------------------.
@@ -166,7 +166,7 @@ compare_dirents (const voidstar first, const voidstar second)
 `---*/
 
 char *
-get_directory_contents (char *path, int device)
+get_directory_contents (char *path, dev_t device)
 {
   struct accumulator *accumulator;
 
@@ -176,10 +176,10 @@ get_directory_contents (char *path, int device)
     DIR *dirp = opendir (path);	/* for scanning directory */
     struct dirent *entry;	/* directory entry being scanned */
     char *name_buffer;		/* directory, `/', and directory member */
-    int name_buffer_size;	/* allocated size of name_buffer, minus 2 */
-    int name_length;		/* used length in name_buffer */
+    size_t name_buffer_size;	/* allocated size of name_buffer, minus 2 */
+    size_t name_length;		/* used length in name_buffer */
     struct directory *directory; /* for checking if already already seen */
-    int all_children;
+    bool all_children;
 
     if (dirp == NULL)
       {
@@ -189,42 +189,42 @@ get_directory_contents (char *path, int device)
     errno = 0;			/* FIXME: errno should be read-only */
 
     name_buffer_size = strlen (path) + NAME_FIELD_SIZE;
-    name_buffer = xmalloc ((size_t) (name_buffer_size + 2));
+    name_buffer = xmalloc (name_buffer_size + 2);
     strcpy (name_buffer, path);
     if (path[strlen (path) - 1] != '/')
       strcat (name_buffer, "/");
     name_length = strlen (name_buffer);
 
     directory = find_directory (path);
-    all_children = directory ? directory->allnew : 0;
+    all_children = directory ? directory->all_new : false;
 
     accumulator = new_accumulator ();
 
     while (entry = readdir (dirp), entry)
       {
-	struct stat stat_data;
+	struct stat stat_info;
 
 	/* Skip `.' and `..'.  */
 
 	if (is_dot_or_dotdot (entry->d_name))
 	  continue;
 
-	if ((int) NAMLEN (entry) + name_length >= name_buffer_size)
+	if (NAMLEN (entry) + name_length >= name_buffer_size)
 	  {
-	    while ((int) NAMLEN (entry) + name_length >= name_buffer_size)
+	    while (NAMLEN (entry) + name_length >= name_buffer_size)
 	      name_buffer_size += NAME_FIELD_SIZE;
 	    name_buffer = (char *)
-	      xrealloc (name_buffer, (size_t) (name_buffer_size + 2));
+	      xrealloc (name_buffer, name_buffer_size + 2);
 	  }
 	strcpy (name_buffer + name_length, entry->d_name);
 
 	if (dereference_option
 #ifdef AIX
-	    ? statx (name_buffer, &stat_data, STATSIZE, STX_HIDDEN)
-	    : statx (name_buffer, &stat_data, STATSIZE, STX_HIDDEN | STX_LINK)
+	    ? statx (name_buffer, &stat_info, STATSIZE, STX_HIDDEN)
+	    : statx (name_buffer, &stat_info, STATSIZE, STX_HIDDEN | STX_LINK)
 #else
-	    ? stat (name_buffer, &stat_data)
-	    : lstat (name_buffer, &stat_data)
+	    ? stat (name_buffer, &stat_info)
+	    : lstat (name_buffer, &stat_info)
 #endif
 	    )
 	  {
@@ -232,44 +232,47 @@ get_directory_contents (char *path, int device)
 	    continue;
 	  }
 
-	if ((one_file_system_option && device != stat_data.st_dev)
+	if ((one_file_system_option && device != stat_info.st_dev)
 	    || (exclude_option && check_exclude (name_buffer)))
-	  add_to_accumulator (accumulator, "N", 1);
+	  add_to_accumulator (accumulator, "N", (size_t) 1);
 
 #ifdef AIX
-	else if (S_ISHIDDEN (stat_data.st_mode))
+	else if (S_ISHIDDEN (stat_info.st_mode))
 	  {
-	    add_to_accumulator (accumulator, "D", 1);
+	    add_to_accumulator (accumulator, "D", (size_t) 1);
 	    strcat (entry->d_name, "A");
 	    entry->d_namlen++;
 	  }
 #endif
 
-	else if (S_ISDIR (stat_data.st_mode))
+	else if (S_ISDIR (stat_info.st_mode))
 	  {
 	    if (directory = find_directory (name_buffer), directory)
 	      {
-		/* Devices having the high bit set are NFS devices, which are
-		   attributed somewhat randomly in automounting situations.
-		   For avoiding spurious incremental redumping of directories,
-		   we have to plainly consider all NFS devices as equal,
-		   relying on the i-node only to establish differences.  */
+		/* The same file can have two different devices if an NFS
+		   directory is mounted in multiple locations, which is
+		   relatively common when automounting.  For avoiding
+		   spurious incremental redumping of directories, we have to
+		   plainly consider all NFS devices as equal, relying on the
+		   i-node only to establish differences.
+
+		   Devices having the high bit set usually are NFS devices.  */
 
 		/* FIXME: Göran Uddeborg <goeran@uddeborg.pp.se> says, on
 		   1996-09-20, that SunOS 5/Solaris 2 uses unsigned long for
 		   the device number type.  */
 
 		if ((((short) directory->device_number >= 0
-		      || (short) stat_data.st_dev >= 0)
-		     && directory->device_number != stat_data.st_dev)
-		    || directory->inode_number != stat_data.st_ino)
+		      || (short) stat_info.st_dev >= 0)
+		     && directory->device_number != stat_info.st_dev)
+		    || directory->inode_number != stat_info.st_ino)
 		  {
 		    if (verbose_option)
 		      WARN ((0, 0, _("Directory %s has been renamed"),
 			     name_buffer));
-		    directory->allnew = 1;
-		    directory->device_number = stat_data.st_dev;
-		    directory->inode_number = stat_data.st_ino;
+		    directory->all_new = true;
+		    directory->device_number = stat_info.st_dev;
+		    directory->inode_number = stat_info.st_ino;
 		  }
 		directory->dir_text = "";
 	      }
@@ -277,30 +280,26 @@ get_directory_contents (char *path, int device)
 	      {
 		if (verbose_option)
 		  WARN ((0, 0, _("Directory %s is new"), name_buffer));
-		note_directory (name_buffer, stat_data.st_dev, stat_data.st_ino,
-				"");
+		note_directory (name_buffer,
+				stat_info.st_dev, stat_info.st_ino, "");
 		directory = find_directory (name_buffer);
-		directory->allnew = 1;
+		directory->all_new = true;
 	      }
 	    if (all_children && directory)
-	      directory->allnew = 1;
+	      directory->all_new = true;
 
-	    add_to_accumulator (accumulator, "D", 1);
+	    add_to_accumulator (accumulator, "D", (size_t) 1);
 	  }
 
 	else
-	  if (!all_children
-	      && stat_data.st_mtime < newer_mtime_option
-	      && (!after_date_option
-		  || stat_data.st_ctime < newer_ctime_option))
-	    add_to_accumulator (accumulator, "N", 1);
+	  if (all_children || FILE_IS_NEW_ENOUGH (&stat_info))
+	    add_to_accumulator (accumulator, "Y", (size_t) 1);
 	  else
-	    add_to_accumulator (accumulator, "Y", 1);
+	    add_to_accumulator (accumulator, "N", (size_t) 1);
 
-	add_to_accumulator (accumulator,
-			    entry->d_name, (int) (NAMLEN (entry) + 1));
+	add_to_accumulator (accumulator, entry->d_name, NAMLEN (entry) + 1);
       }
-    add_to_accumulator (accumulator, "\000\000", 2);
+    add_to_accumulator (accumulator, "\000\000", (size_t) 2);
 
     free (name_buffer);
     closedir (dirp);
@@ -353,20 +352,20 @@ get_directory_contents (char *path, int device)
   }
 }
 
-/*----------------------------------------------------------------------.
-| Add all the files in PATH, which is a directory, to the namelist.  If |
-| any of the files is a directory, recurse on the subdirectory.	        |
-`----------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Add all the files in PATH, which is a directory, to the list of names.  If |
+| any of the files is a directory, recurse on the subdirectory.              |
+`---------------------------------------------------------------------------*/
 
 static void
-add_hierarchy_to_namelist (char *path, int device)
+add_hierarchy_to_namelist (char *path, dev_t device)
 {
   char *buffer = get_directory_contents (path, device);
 
   {
     struct name *name;
 
-    for (name = namelist; name; name = name->next)
+    for (name = name_list_head; name; name = name->next)
       if (strcmp (name->name, path) == 0)
 	  break;
     if (name)
@@ -375,14 +374,14 @@ add_hierarchy_to_namelist (char *path, int device)
 
   if (buffer)
     {
-      int name_length = strlen (path);
-      int allocated_length = (name_length >= NAME_FIELD_SIZE
-			      ? name_length + NAME_FIELD_SIZE
-			      : NAME_FIELD_SIZE);
-      char *name_buffer = xmalloc ((size_t) (allocated_length + 1));
+      size_t name_length = strlen (path);
+      size_t allocated_length = (name_length >= NAME_FIELD_SIZE
+				 ? name_length + NAME_FIELD_SIZE
+				 : NAME_FIELD_SIZE);
+      char *name_buffer = xmalloc (allocated_length + 1);
 				/* FIXME: + 2 above?  */
       char *string;
-      int string_length;
+      size_t string_length;
 
       strcpy (name_buffer, path);
       if (name_buffer[name_length - 1] != '/')
@@ -401,10 +400,10 @@ add_hierarchy_to_namelist (char *path, int device)
 		  while (name_length + string_length >= allocated_length)
 		    allocated_length += NAME_FIELD_SIZE;
 		  name_buffer = (char *)
-		    xrealloc (name_buffer, (size_t) (allocated_length + 1));
+		    xrealloc (name_buffer, allocated_length + 1);
 		}
 	      strcpy (name_buffer + name_length, string + 1);
-	      addname (name_buffer);
+	      add_name (name_buffer);
 	      add_hierarchy_to_namelist (name_buffer, device);
 	    }
 	}
@@ -420,8 +419,6 @@ add_hierarchy_to_namelist (char *path, int device)
 static void
 read_directory_file (void)
 {
-  dev_t device_number;
-  ino_t inode_number;
   char *strp;
   FILE *fp;
   char buf[512];
@@ -430,25 +427,20 @@ read_directory_file (void)
   if (path == NULL)
     path = xmalloc (PATH_MAX);
   time (&time_now);
-  if (listed_incremental_option[0] != '/')
-    {
-#if HAVE_GETCWD
-      if (!getcwd (path, PATH_MAX))
-	FATAL_ERROR ((0, 0, _("Could not get current directory")));
-#else
-      char *getwd ();
-
-      if (!getwd (path))
-	FATAL_ERROR ((0, 0, _("Could not get current directory: %s"), path));
+  if (listed_incremental_option[0] != '/'
+#if DOSWIN
+      /* The case of DOSWIN absolute file name with a drive letter.  */
+      && !(listed_incremental_option[0] && listed_incremental_option[1] == ':')
 #endif
+      )
+    {
+      char *current_directory = xgetcwd ();
 
-      if (strlen (path) + 1 + strlen (listed_incremental_option) + 1 > PATH_MAX)
-	ERROR ((TAREXIT_FAILURE, 0, _("File name %s/%s too long"),
-		path, listed_incremental_option));
+      if (!current_directory)
+	FATAL_ERROR ((0, 0, _("Could not get current directory")));
 
-      strcat (path, "/");
-      strcat (path, listed_incremental_option);
-      listed_incremental_option = path;
+      listed_incremental_option
+	= concat_with_slash (current_directory, listed_incremental_option);
     }
   fp = fopen (listed_incremental_option, "r");
   if (fp == 0 && errno != ENOENT)
@@ -460,19 +452,22 @@ read_directory_file (void)
     return;
   fgets (buf, sizeof (buf), fp);
 
-  /* FIXME: Using after_date_option as a first time flag looks fairly
-     dubious to me!  So, using -N with incremental might be buggy just
-     because of the next few lines.  I saw a few unexplained, almost harsh
-     advices, from other GNU people, about *not* using -N with incremental
-     dumps, and here might lie (part of) the reason.  */
-  if (!after_date_option)
+  /* FIXME: Using newer_ctime_option as a first time flag looks fairly dubious
+     to me!  So, using -N with incremental might be buggy just because of the
+     next few lines.  I saw a few unexplained, almost harsh advices from FSF
+     people about *not* using -N with incremental dumps, and here might lie
+     (part of) the reason.  */
+  if (!newer_ctime_option)
     {
-      newer_mtime_option = atol (buf);
-      after_date_option = 1;
+      time_option_threshold = atol (buf);
+      newer_ctime_option = true;
     }
 
   while (fgets (buf, sizeof (buf), fp))
     {
+      dev_t device_number;
+      ino_t inode_number;
+
       strp = &buf[strlen (buf)];
       if (strp[-1] == '\n')
 	strp[-1] = '\0';
@@ -513,7 +508,7 @@ write_dir_file (void)
       ERROR ((0, errno, _("Cannot write to %s"), listed_incremental_option));
       return;
     }
-  fprintf (fp, "%lu\n", time_now);
+  fprintf (fp, "%lu\n", (unsigned long) time_now);
   for (directory = directory_list; directory; directory = directory->next)
     {
       if (!directory->dir_text)
@@ -521,13 +516,17 @@ write_dir_file (void)
       str = quote_copy_string (directory->name);
       if (str)
 	{
-	  fprintf (fp, "%u %u %s\n", directory->device_number,
-		   directory->inode_number, str);
+	  fprintf (fp, "%lu %lu %s\n",
+		   (unsigned long) directory->device_number,
+		   (unsigned long) directory->inode_number,
+		   str);
 	  free (str);
 	}
       else
-	fprintf (fp, "%u %u %s\n", directory->device_number,
-		 directory->inode_number, directory->name);
+	fprintf (fp, "%lu %lu %s\n",
+		 (unsigned long) directory->device_number,
+		 (unsigned long) directory->inode_number,
+		 directory->name);
     }
   if (fclose (fp) == EOF)
     ERROR ((0, errno, "%s", listed_incremental_option));
@@ -540,16 +539,16 @@ write_dir_file (void)
 static int
 compare_names (char *param1, char *param2)
 {
-  struct name *n1 = (struct name *) param1;
-  struct name *n2 = (struct name *) param2;
+  struct name *name1 = (struct name *) param1;
+  struct name *name2 = (struct name *) param2;
 
-  if (n1->found)
-    return n2->found ? strcmp (n1->name, n2->name) : -1;
+  if (name1->match_found)
+    return name2->match_found ? strcmp (name1->name, name2->name) : -1;
 
-  if (n2->found)
+  if (name2->match_found)
     return 1;
 
-  return strcmp (n1->name, n2->name);
+  return strcmp (name1->name, name2->name);
 }
 
 /*-------------------------------------------------------------------------.
@@ -562,23 +561,23 @@ collect_and_sort_names (void)
 {
   struct name *name;
   struct name *next_name;
-  int num_names;
-  struct stat statbuf;
+  int counter;
+  struct stat stat_info;
 
   name_gather ();
 
   if (listed_incremental_option)
     read_directory_file ();
 
-  if (!namelist)
-    addname (".");
+  if (!name_list_head)
+    add_name (".");
 
-  for (name = namelist; name; name = next_name)
+  for (name = name_list_head; name; name = next_name)
     {
       next_name = name->next;
-      if (name->found || name->dir_contents)
+      if (name->match_found || name->dir_contents)
 	continue;
-      if (name->regexp)		/* FIXME: just skip regexps for now */
+      if (name->is_wildcard)	/* FIXME: just skip wildcards for now */
 	continue;
       if (name->change_dir)
 	if (chdir (name->change_dir) < 0)
@@ -589,32 +588,32 @@ collect_and_sort_names (void)
 
       if (
 #ifdef AIX
-	  statx (name->name, &statbuf, STATSIZE, STX_HIDDEN | STX_LINK)
+	  statx (name->name, &stat_info, STATSIZE, STX_HIDDEN | STX_LINK)
 #else
-	  lstat (name->name, &statbuf) < 0
+	  lstat (name->name, &stat_info) < 0
 #endif
 	  )
 	{
 	  ERROR ((0, errno, _("Cannot stat %s"), name->name));
 	  continue;
 	}
-      if (S_ISDIR (statbuf.st_mode))
+      if (S_ISDIR (stat_info.st_mode))
 	{
-	  name->found = 1;
-	  add_hierarchy_to_namelist (name->name, statbuf.st_dev);
+	  name->match_found = true;
+	  add_hierarchy_to_namelist (name->name, stat_info.st_dev);
 	}
     }
 
-  num_names = 0;
-  for (name = namelist; name; name = name->next)
-    num_names++;
-  namelist = (struct name *)
-    merge_sort ((voidstar) namelist, num_names,
-		(char *) (&(namelist->next)) - (char *) namelist,
+  counter = 0;
+  for (name = name_list_head; name; name = name->next)
+    counter++;
+  name_list_head = (struct name *)
+    merge_sort ((voidstar) name_list_head, counter,
+		(char *) (&(name_list_head->next)) - (char *) name_list_head,
 		compare_names);
 
-  for (name = namelist; name; name = name->next)
-    name->found = 0;
+  for (name = name_list_head; name; name = name->next)
+    name->match_found = false;
 
   if (listed_incremental_option)
     write_dir_file ();
@@ -627,7 +626,7 @@ collect_and_sort_names (void)
 `---*/
 
 void
-gnu_restore (int skipcrud)
+incremental_restore (int skipcrud)
 {
   char *current_dir;
   char *archive_dir;
@@ -636,11 +635,12 @@ gnu_restore (int skipcrud)
   DIR *dirp;
   struct dirent *d;
   char *cur, *arc;
-  long size, copied;
+  long size;
+  size_t size_to_copy;
   union block *data_block;
   char *to;
 
-#define CURRENT_FILE_NAME (skipcrud + current_file_name)
+#define CURRENT_FILE_NAME (skipcrud + current.name)
 
   dirp = opendir (CURRENT_FILE_NAME);
 
@@ -649,7 +649,7 @@ gnu_restore (int skipcrud)
       /* The directory doesn't exist now.  It'll be created.  In any
 	 case, we don't have to delete any files out of it.  */
 
-      skip_file ((long) current_stat.st_size);
+      skip_file (current.stat.st_size);
       return;
     }
 
@@ -659,29 +659,29 @@ gnu_restore (int skipcrud)
       if (is_dot_or_dotdot (d->d_name))
 	continue;
 
-      add_to_accumulator (accumulator, d->d_name, (int) (NAMLEN (d) + 1));
+      add_to_accumulator (accumulator, d->d_name, NAMLEN (d) + 1);
     }
   closedir (dirp);
-  add_to_accumulator (accumulator, "", 1);
+  add_to_accumulator (accumulator, "", (size_t) 1);
 
   current_dir = get_accumulator (accumulator);
-  archive_dir = (char *) xmalloc ((size_t) current_stat.st_size);
+  archive_dir = (char *) xmalloc ((size_t) current.stat.st_size);
   to = archive_dir;
-  for (size = current_stat.st_size; size > 0; size -= copied)
+  for (size = current.stat.st_size; size > 0; size -= size_to_copy)
     {
       data_block = find_next_block ();
       if (!data_block)
 	{
-	  ERROR ((0, 0, _("Unexpected EOF in archive")));
+	  ERROR ((0, 0, _("Unexpected end of file in archive")));
 	  break;		/* FIXME: What happens then?  */
 	}
-      copied = available_space_after (data_block);
-      if (copied > size)
-	copied = size;
-      memcpy (to, data_block->buffer, (size_t) copied);
-      to += copied;
+      size_to_copy = available_space_after (data_block);
+      if (size_to_copy > size)
+	size_to_copy = size;
+      memcpy (to, data_block->buffer, size_to_copy);
+      to += size_to_copy;
       set_next_block_after ((union block *)
-			    (data_block->buffer + copied - 1));
+			    (data_block->buffer + size_to_copy - 1));
     }
 
   for (cur = current_dir; *cur; cur += strlen (cur) + 1)
@@ -694,15 +694,19 @@ gnu_restore (int skipcrud)
 	}
       if (*arc == '\0')
 	{
-	  p = new_name (CURRENT_FILE_NAME, cur);
-	  if (interactive_option && !confirm ("delete", p))
+	  p = concat_with_slash (CURRENT_FILE_NAME, cur);
+	  if (interactive_option && !confirm (_("delete %s?"), p))
 	    {
 	      free (p);
 	      continue;
 	    }
 	  if (verbose_option)
-	    fprintf (stdlis, _("%s: Deleting %s\n"), program_name, p);
-	  if (!remove_any_file (p, 1))
+	    {
+	      if (checkpoint_option)
+		flush_checkpoint_line ();
+	      fprintf (stdlis, _("%s: Deleting %s\n"), program_name, p);
+	    }
+	  if (!remove_any_file (p, true))
 	    ERROR ((0, errno, _("Error while deleting %s"), p));
 	  free (p);
 	}

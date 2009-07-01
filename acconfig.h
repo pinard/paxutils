@@ -1,10 +1,13 @@
-/* Special definitions for GNU tar, processed by autoheader.
-   Copyright © 1994, 1997 Free Software Foundation, Inc.
+/* Special definitions for paxutils, processed by autoheader.
+   Copyright © 1994, 1997, 1998 Free Software Foundation, Inc.
    François Pinard <pinard@iro.umontreal.ca>, 1993.
 */
 
-/* This is unconditionally defined for setting a GNU environment.  */
-#undef _GNU_SOURCE
+/* Define if tar format support should be included.  (It doesn't work) */
+#undef CPIO_USE_GNU_TAR
+
+/* Define if internal debugging code should be enabled.  */
+#undef DEBUG_CPIO
 
 /* Define to a string giving the full name of the default archive file.  */
 #undef DEFAULT_ARCHIVE
@@ -26,8 +29,8 @@
 /* Define to 1 if NLS is requested.  */
 #undef ENABLE_NLS
 
-/* Define as 1 if you have catgets and don't want to use GNU gettext.  */
-#undef HAVE_CATGETS
+/* Define as 1 if you have dcgettext.  */
+#undef HAVE_DCGETTEXT
 
 /* Define to 1 if you have getgrgid(3).  */
 #undef HAVE_GETGRGID
@@ -35,23 +38,26 @@
 /* Define to 1 if you have getpwuid(3).  */
 #undef HAVE_GETPWUID
 
-/* Define as 1 if you have gettext and don't want to use GNU gettext.  */
+/* Define as 1 if you have gettext.  */
 #undef HAVE_GETTEXT
-
-/* Define if your locale.h file contains LC_MESSAGES.  */
-#undef HAVE_LC_MESSAGES
-
-/* Define to 1 if you have the valloc function.  */
-#undef HAVE_VALLOC
-
-/* Define to 1 if some rsh exists, or if you have <netdb.h>.  */
-#undef HAVE_RTAPELIB
 
 /* Define to 1 if mknod function is available.  */
 #undef HAVE_MKNOD
 
+/* Define if your locale.h file contains LC_MESSAGES.  */
+#undef HAVE_LC_MESSAGES
+
+/* Define to 1 if printf() supports "%llu" format.  */
+#undef HAVE_PRINTF_LLU
+
+/* Define to 1 if some rsh exists, or if you have <netdb.h>.  */
+#undef HAVE_RTAPELIB
+
 /* Define to 1 if stpcpy function is available.  */
 #undef HAVE_STPCPY
+
+/* Define to 1 if you have the valloc function.  */
+#undef HAVE_VALLOC
 
 /* Define if `union wait' is the type of the first arg to wait functions.  */
 #undef HAVE_UNION_WAIT
@@ -86,3 +92,32 @@
 
 /* Define to 1 if GNU regex should be used instead of GNU rx.  */
 #undef WITH_REGEX
+
+/* Define to rpl_malloc if the replacement function should be used.  */
+#undef malloc
+
+/* Define to type of major device number, if not otherwise defined.  */
+#undef major_t
+
+/* Define to type of minor device number, if not otherwise defined.  */
+#undef minor_t
+
+/* Define to rpl_realloc if the replacement function should be used.  */
+#undef realloc
+
+/* Define to type of signed memory size, if not otherwise defined.  */
+#undef ssize_t
+
+@BOTTOM@
+
+/* This is recommended for all GNU sources.  We conditionalize it in
+   case some library file defines it.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+
+/* Long longs are of no use if we cannot print them easily.  */
+#if !HAVE_PRINTF_LLU
+# undef SIZEOF_UNSIGNED_LONG_LONG
+# define SIZEOF_UNSIGNED_LONG_LONG 0
+#endif

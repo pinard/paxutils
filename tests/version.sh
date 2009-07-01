@@ -5,11 +5,12 @@
 PATH=../src:$PATH
 
 if test -n "`$PACKAGE --version | sed -n s/$PACKAGE.*$VERSION/OK/p`"; then
-  banner="Regression testing for GNU $PACKAGE, version $VERSION"
+  banner="Regression testing for Free $PACKAGE, version $VERSION"
   dashes=`echo $banner | sed s/./=/g`
-  echo $dashes
-  echo $banner
-  echo $dashes
+  echo "$dashes"
+  echo "$banner"
+  echo "$dashes"
+  exit 77
 else
   echo '=============================================================='
   echo 'WARNING: Not using the proper version, *all* checks dubious...'

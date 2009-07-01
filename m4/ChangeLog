@@ -1,0 +1,11 @@
+1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
+
+	* gettext.m4: Much adjusted to match changed or new Makefiles.
+
+1998-04-21  François Pinard  <pinard@iro.umontreal.ca>
+
+	* malloc.m4, realloc.m4: New files, from elsewhere.
+	* echo.m4, gettext.m4, imalloc.m4, microsoft.m4, printllu.m4: New,
+	out of acinclude.m4.
+	* Makefile.am: New file.
+

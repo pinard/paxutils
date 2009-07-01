@@ -1,0 +1,9 @@
+1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
+
+	* README, Makefile.am, gtar.1: New files.
+
+1995-11-29  François Pinard  <pinard@iro.umontreal.ca>
+
+	* src-makefile.go3, lib-makefile.go3, config.sta, config.go3: New
+	files.
+	Reported by Yasushi Suzudo.

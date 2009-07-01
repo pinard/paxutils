@@ -1,5 +1,5 @@
 /* backupfile.h -- declarations for making Emacs style backup file names
-   Copyright (C) 1990 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1997, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,31 +12,44 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation,
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* When to make backup files.  */
+/* When to make backup files. */
 enum backup_type
 {
-  /* Never make backups.  */
+  /* Never make backups. */
   none,
 
-  /* Make simple backups of every file.  */
+  /* Make simple backups of every file. */
   simple,
 
   /* Make numbered backups of files that already have numbered backups,
-     and simple backups of the others.  */
+     and simple backups of the others. */
   numbered_existing,
 
-  /* Make numbered backups of every file.  */
+  /* Make numbered backups of every file. */
   numbered
 };
 
-extern enum backup_type backup_type;
-extern char *simple_backup_suffix;
+#define VALID_BACKUP_TYPE(Type)		\
+  ((Type) == none			\
+   || (Type) == simple			\
+   || (Type) == numbered_existing	\
+   || (Type) == numbered)
 
-#ifdef __STDC__
-char *find_backup_file_name (const char *file);
-#else
-char *find_backup_file_name ();
+extern char const *simple_backup_suffix;
+
+#ifndef PARAMS
+# if defined PROTOTYPES || (defined __STDC__ && __STDC__)
+#  define PARAMS(Args) Args
+# else
+#  define PARAMS(Args) ()
+# endif
 #endif
+
+char *base_name PARAMS ((char const *));
+char *find_backup_file_name PARAMS ((char const *, enum backup_type));
+enum backup_type get_version PARAMS ((char const *));
+void addext PARAMS ((char *, char const *, int));

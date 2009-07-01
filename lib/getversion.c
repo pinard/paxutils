@@ -1,5 +1,5 @@
 /* getversion.c -- select backup filename type
-   Copyright (C) 1990 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ static const enum backup_type backup_types[] =
 
 enum backup_type
 get_version (version)
-     char *version;
+     const char *version;
 {
   int i;
 

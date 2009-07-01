@@ -1,10 +1,22 @@
-Authors of GNU tar.
+Authors of tar.
 
 The following contributions warranted legal paper exchanges with the
 Free Software Foundation.  Also see files ChangeLog and THANKS.
 
 TAR     Jay Fenlason
 Assigns his changes.
+
+CPIO  David J. MacKenzie  US 1967   1990-06-18
+Assigns mt.
+
+CPIO	Philip Nelson	US 1955	1990-02-06
+Assigns the program.
+
+CPIO	John Oleynick	US 1965	1992-05-04
+Assigns changes (System V.4 extensions, regression tests, bug-fixes).
+
+CPIO	Rutgers University  1992-05-04
+Disclaims changes made by John Oleynick to cpio.
 
 TAR     Richard E Salz          1993-03-11
 Disclaims changes to getdate.y.
@@ -26,3 +38,18 @@ thomas@gnu.ai.mit.edu
 TAR	Thomas Michael Innis Bushnell	US 1967	1997-04-09
 Assigns changes to manual.
 thomas@gnu.ai.mit.edu
+
+TAR     Eli Zaretskii   Israel 1954     1997-12-18
+Assigns changes to manual.
+eliz@gnu.org, eliz@is.elta.co.il
+
+TAR     Eli Zaretskii   Israel 1954     1997-12-18
+Assigns changes.
+eliz@gnu.org, eliz@is.elta.co.il
+
+TAR     Daniel Hagerty  US 1975 1998-03-31
+Assigns past and future changes to manual.
+hag@ai.mit.edu
+
+TAR     Douglas D. Edwards      US 1957 1998-04-22
+Assigns past and future changes to manual.

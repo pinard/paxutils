@@ -1,5 +1,5 @@
 /* Functions for communicating with a remote tape drive.
-   Copyright (C) 1988, 1992, 1994, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 96, 97, 98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* The man page rmt(8) for /etc/rmt documents the remote mag tape protocol
-   which rdump and rrestore use.  Unfortunately, the man page is *WRONG*.
-   The author of the routines I'm including originally wrote his code just
-   based on the man page, and it didn't work, so he went to the rdump source
-   to figure out why.  The only thing he had to change was to check for the
-   'F' return code in addition to the 'E', and to separate the various
-   arguments with \n instead of a space.  I personally don't think that this
-   is much of a problem, but I wanted to point it out. -- Arnold Robbins
+/* The man page rmt(8) documents the remote mag tape protocol which rdump
+   and rrestore use.  Unfortunately, the man page is wrong.  The author of
+   the routines I'm including originally wrote his code just based on the
+   man page, and it didn't work, so he went to the rdump source to figure
+   out why.  The only thing he had to change was to check for the 'F' return
+   code in addition to the 'E', and to separate the various arguments with
+   \n instead of a space.  I personally don't think that this is much of a
+   problem, but I wanted to point it out. -- Arnold Robbins
 
    Originally written by Jeff Lee, modified some by Arnold Robbins.  Redone
    as a library that can replace open, read, write, etc., by Fred Fish, with
@@ -32,21 +32,6 @@
 
 #include "system.h"
 
-/* Try hard to get EOPNOTSUPP defined.  486/ISC has it in net/errno.h,
-   3B2/SVR3 has it in sys/inet.h.  Otherwise, like on MSDOS, use EINVAL.  */
-
-#ifndef EOPNOTSUPP
-# if HAVE_NET_ERRNO_H
-#  include <net/errno.h>
-# endif
-# if HAVE_SYS_INET_H
-#  include <sys/inet.h>
-# endif
-# ifndef EOPNOTSUPP
-#  define EOPNOTSUPP EINVAL
-# endif
-#endif
-
 #include <signal.h>
 
 #if HAVE_NETDB_H
@@ -55,8 +40,13 @@
 
 #include "rmt.h"
 
-/* FIXME: Just to shut up -Wall.  */
+/* I once declared `rexec' below just to shut up -Wall.  However, the UNICOS
+   compiler barfs if a function without an ANSI prototype is declared after
+   <unistd.h> provided the ANSI prototype.  Should I go as far as running a
+   configure test merely to avoid a warning? :-)  */
+#if FIXME
 int rexec ();
+#endif
 
 /* Exit status if exec errors.  */
 #define EXIT_ON_EXEC_ERROR 128
@@ -88,6 +78,16 @@ static int to_remote[MAXUNIT][2] = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
 
 /* Temporary variable used by macros in rmt.h.  */
 char *rmt_path__;
+
+/* The list of remote rmt programs to try.  */
+
+const char *rmt_program_array[] =
+{
+  "/zorglub/rmt",		/* FIXME! */
+  "/sbin/rmt",
+  "/etc/rmt",
+  NULL
+};
 
 
 /*----------------------------------------------------------------------.
@@ -95,7 +95,7 @@ char *rmt_path__;
 `----------------------------------------------------------------------*/
 
 static void
-_rmt_shutdown (int handle, int errno_value)
+do_shutdown (int handle, int errno_value)
 {
   close (READ_SIDE (handle));
   close (WRITE_SIDE (handle));
@@ -106,20 +106,21 @@ _rmt_shutdown (int handle, int errno_value)
 
 /*-------------------------------------------------------------------------.
 | Attempt to perform the remote tape command specified in BUFFER on remote |
-| tape connection HANDLE.  Return 0 if successful, -1 on error.		   |
+| tape connection HANDLE.  Return 0 if successful, -1 on error.  FIXME: 0  |
+| and -1 are poor choices.                                                 |
 `-------------------------------------------------------------------------*/
 
 static int
 do_command (int handle, const char *buffer)
 {
-  int length;
+  size_t length;
   RETSIGTYPE (*pipe_handler) ();
 
   /* Save the current pipe handler and try to make the request.  */
 
   pipe_handler = signal (SIGPIPE, SIG_IGN);
   length = strlen (buffer);
-  if (write (WRITE_SIDE (handle), buffer, (size_t) length) == length)
+  if (full_write (WRITE_SIDE (handle), buffer, length) == length)
     {
       signal (SIGPIPE, pipe_handler);
       return 0;
@@ -128,13 +129,13 @@ do_command (int handle, const char *buffer)
   /* Something went wrong.  Close down and go home.  */
 
   signal (SIGPIPE, pipe_handler);
-  _rmt_shutdown (handle, EIO);
+  do_shutdown (handle, EIO);
   return -1;
 }
 
 /*----------------------------------------------------------------------.
 | Read and return the status from remote tape connection HANDLE.  If an |
-| error occurred, return -1 and set errno.			        |
+| error occurred, return -1 and set errno.                              |
 `----------------------------------------------------------------------*/
 
 static int
@@ -150,9 +151,9 @@ get_status (int handle)
        counter < COMMAND_BUFFER_SIZE;
        counter++, cursor++)
     {
-      if (read (READ_SIDE (handle), cursor, 1) != 1)
+      if (full_read (READ_SIDE (handle), cursor, 1) != 1)
 	{
-	  _rmt_shutdown (handle, EIO);
+	  do_shutdown (handle, EIO);
 	  return -1;
 	}
       if (*cursor == '\n')
@@ -164,7 +165,7 @@ get_status (int handle)
 
   if (counter == COMMAND_BUFFER_SIZE)
     {
-      _rmt_shutdown (handle, EIO);
+      do_shutdown (handle, EIO);
       return -1;
     }
 
@@ -186,13 +187,13 @@ get_status (int handle)
       {
 	char character;
 
-	while (read (READ_SIDE (handle), &character, 1) == 1)
+	while (full_read (READ_SIDE (handle), &character, 1) == 1)
 	  if (character == '\n')
 	    break;
       }
 
       if (*cursor == 'F')
-	_rmt_shutdown (handle, errno);
+	do_shutdown (handle, errno);
 
       return -1;
     }
@@ -201,7 +202,7 @@ get_status (int handle)
 
   if (*cursor != 'A')
     {
-      _rmt_shutdown (handle, EIO);
+      do_shutdown (handle, EIO);
       return -1;
     }
 
@@ -212,31 +213,30 @@ get_status (int handle)
 
 #if HAVE_NETDB_H
 
-/*-------------------------------------------------------------------------.
-| Execute /etc/rmt as user USER on remote system HOST using rexec.  Return |
-| a file descriptor of a bidirectional socket for stdin and stdout.  If	   |
-| USER is NULL, use the current username.				   |
-| 									   |
-| By default, this code is not used, since it requires that the user have  |
-| a .netrc file in his/her home directory, or that the application	   |
-| designer be willing to have rexec prompt for login and password info.	   |
-| This may be unacceptable, and .rhosts files for use with rsh are much	   |
-| more common on BSD systems.						   |
-`-------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------.
+| Execute the rmt program as user USER on remote system HOST using rexec.   |
+| Return a file descriptor of a bidirectional socket for stdin and stdout.  |
+| If USER is NULL, use the current username.                                |
+|                                                                           |
+| By default, this code is not used, since it requires that the user have   |
+| a .netrc file in his/her home directory, or that the application          |
+| designer be willing to have rexec prompt for login and password info.     |
+| This may be unacceptable, and .rhosts files for use with rsh are much     |
+| more common on BSD systems.                                               |
+`--------------------------------------------------------------------------*/
 
 static int
-_rmt_rexec (char *host, char *user)
+do_rexec (char *host, char *user)
 {
   int saved_stdin = dup (fileno (stdin));
   int saved_stdout = dup (fileno (stdout));
   struct servent *rexecserv;
   int result;
 
-  /* When using cpio -o < filename, stdin is no longer the tty.  But the
-     rexec subroutine reads the login and the passwd on stdin, to allow
-     remote execution of the command.  So, reopen stdin and stdout on
-     /dev/tty before the rexec and give them back their original value
-     after.  */
+  /* When using cpio -o < filename, stdin is no longer the tty.  But the rexec
+     subroutine reads the login and the passwd on stdin, to allow remote
+     execution of the command.  So, reopen stdin and stdout on /dev/tty before
+     the rexec and give them back their original value after.  */
 
   if (freopen ("/dev/tty", "r", stdin) == NULL)
     freopen ("/dev/null", "r", stdin);
@@ -246,8 +246,18 @@ _rmt_rexec (char *host, char *user)
   if (rexecserv = getservbyname ("exec", "tcp"), !rexecserv)
     error (EXIT_ON_EXEC_ERROR, 0, _("exec/tcp: Service not available"));
 
-  result = rexec (&host, rexecserv->s_port, user, NULL,
-		   "/etc/rmt", (int *) NULL);
+  {
+    const char **rmt_cursor;
+
+    for (rmt_cursor = rmt_program_array; *rmt_cursor; rmt_cursor++)
+      {
+	result = rexec (&host, rexecserv->s_port, user, NULL,
+			*rmt_cursor, (int *) NULL);
+	if (result >= 0)
+	  break;
+      }
+  }
+
   if (fclose (stdin) == EOF)
     error (0, errno, _("stdin"));
   fdopen (saved_stdin, "r");
@@ -335,7 +345,7 @@ rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
 
   /* Execute the remote command using rexec.  */
 
-  READ_SIDE (remote_pipe_number) = _rmt_rexec (remote_host, remote_user);
+  READ_SIDE (remote_pipe_number) = do_rexec (remote_host, remote_user);
   if (READ_SIDE (remote_pipe_number) < 0)
     {
       free (path_copy);
@@ -347,7 +357,7 @@ rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
 #else /* not HAVE_NETDB_H */
   {
     const char *remote_shell_basename;
-    int status;
+    pid_t child;
 
     /* Identify the remote command to be executed.  */
 
@@ -376,14 +386,14 @@ rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
 	return -1;
       }
 
-    status = fork ();
-    if (status == -1)
+    child = fork ();
+    if (child == -1)
       {
 	free (path_copy);
 	return -1;
       }
 
-    if (status == 0)
+    if (child == 0)
       {
 	/* Child.  */
 
@@ -397,17 +407,22 @@ rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
 	close (from_remote[remote_pipe_number][PREAD]);
 	close (from_remote[remote_pipe_number][PWRITE]);
 
-#if !MSDOS
+#if !DOSWIN
 	setuid (getuid ());
 	setgid (getgid ());
 #endif
 
-	if (remote_user)
-	  execl (remote_shell, remote_shell_basename, remote_host,
-		 "-l", remote_user, "/etc/rmt", (char *) 0);
-	else
-	  execl (remote_shell, remote_shell_basename, remote_host,
-		 "/etc/rmt", (char *) 0);
+	{
+	  const char **rmt_cursor;
+
+	  for (rmt_cursor = rmt_program_array; *rmt_cursor; rmt_cursor++)
+	    if (remote_user)
+	      execl (remote_shell, remote_shell_basename, remote_host,
+		     "-l", remote_user, *rmt_cursor, (char *) 0);
+	    else
+	      execl (remote_shell, remote_shell_basename, remote_host,
+		     *rmt_cursor, (char *) 0);
+	}
 
 	/* Bad problems if we get here.  */
 
@@ -431,7 +446,7 @@ rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
     if (do_command (remote_pipe_number, command_buffer) == -1
 	|| get_status (remote_pipe_number) == -1)
       {
-	_rmt_shutdown (remote_pipe_number, errno);
+	do_shutdown (remote_pipe_number, errno);
 	free (path_copy);
 	return -1;
       }
@@ -455,7 +470,7 @@ rmt_close__ (int handle)
     return -1;
 
   status = get_status (handle);
-  _rmt_shutdown (handle, errno);
+  do_shutdown (handle, errno);
   return status;
 }
 
@@ -478,10 +493,10 @@ rmt_read__ (int handle, char *buffer, unsigned int length)
 
   for (counter = 0; counter < status; counter += length, buffer += length)
     {
-      length = read (READ_SIDE (handle), buffer, (size_t) (status - counter));
+      length = full_read (READ_SIDE (handle), buffer, (size_t) (status - counter));
       if (length <= 0)
 	{
-	  _rmt_shutdown (handle, EIO);
+	  do_shutdown (handle, EIO);
 	  return -1;
 	}
     }
@@ -505,7 +520,7 @@ rmt_write__ (int handle, char *buffer, unsigned int length)
     return -1;
 
   pipe_handler = signal (SIGPIPE, SIG_IGN);
-  if (write (WRITE_SIDE (handle), buffer, length) == length)
+  if (full_write (WRITE_SIDE (handle), buffer, length) == length)
     {
       signal (SIGPIPE, pipe_handler);
       return get_status (handle);
@@ -514,7 +529,7 @@ rmt_write__ (int handle, char *buffer, unsigned int length)
   /* Write error.  */
 
   signal (SIGPIPE, pipe_handler);
-  _rmt_shutdown (handle, EIO);
+  do_shutdown (handle, EIO);
   return -1;
 }
 
@@ -585,10 +600,10 @@ rmt_ioctl__ (int handle, int operation, char *argument)
 
 	for (; status > 0; status -= counter, argument += counter)
 	  {
-	    counter = read (READ_SIDE (handle), argument, (size_t) status);
+	    counter = full_read (READ_SIDE (handle), argument, (size_t) status);
 	    if (counter <= 0)
 	      {
-		_rmt_shutdown (handle, EIO);
+		do_shutdown (handle, EIO);
 		return -1;
 	      }
 	  }

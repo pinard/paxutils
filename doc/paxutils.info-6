@@ -1,0 +1,1062 @@
+This is Info file paxutils.info, produced by Makeinfo version 1.68 from
+the input file paxutils.texi.
+
+START-INFO-DIR-ENTRY
+* pax utilities: (paxutils).	pax and other archiving utilities.
+* cpio: (paxutils)cpio invocation.		Handling cpio archives.
+* pax: (paxutils)pax invocation.		The POSIX archiver.
+* tar: (paxutils)tar invocation.		Making tape (or disk) archives.
+* mt: (paxutils)mt invocation.			Basic tape positioning.
+* rmt: (paxutils)rmt invocation.		The remote tape facility.
+END-INFO-DIR-ENTRY
+
+   This file documents `paxutils' 2.4d.
+
+   Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Checksumming,  Prev: posix,  Up: Portability
+
+Checksumming problems
+---------------------
+
+   SunOS and HP-UX `tar' fail to accept archives created using `tar'
+and containing non-ASCII file names, that is, file names having
+characters with the eighth bit set, because they use signed checksums,
+while `tar' uses unsigned checksums when creating archives, as per
+POSIX standards.  On reading, `tar' computes both checksums and accepts
+either.  It is somewhat worrying that a lot of people may go around
+doing backup of their files using faulty (or at least non-standard)
+software, not learning about it until it's time to restore their
+missing files with an incompatible file extractor, or vice versa.
+
+   `tar' computes checksums both ways, and accepts either on read, so
+`tar' can read Sun tapes even with their wrong checksums.  `tar'
+produces the standard checksum, however, raising incompatibilities with
+Sun.  That is to say, `tar' has not been modified to *produce*
+incorrect archives to be read by buggy `tar's.  We've been told that
+more recent Sun `tar' now reads standard archives, so maybe Sun did a
+similar patch, after all?
+
+   The story seems to be that when Sun first imported `tar' sources on
+their system, they recompiled it without realizing that the checksums
+were computed differently, because of a change in the default signing
+of `char's in their compiler.  So they started computing checksums
+wrongly.  When they later realized their mistake, they merely decided
+to stay compatible with it, and with themselves afterwards.
+Presumably, but we do not really know, HP-UX has chosen that their
+`tar' archives to be compatible with Sun's.  The current standards do
+not favor Sun `tar' format.  In any case, it now falls on the shoulders
+of SunOS and HP-UX users to get a `tar' able to read the good archives
+they receive.
+
+
+File: paxutils.info,  Node: Forced fields,  Next: Compression,  Prev: Portability,  Up: Formats
+
+Options to preset file attributes
+=================================
+
+* Menu:
+
+* mode::                        Presetting permissions
+* owner::                       Forcing a given owner
+* group::                       Forcing a given group
+* numeric-owner::               Using numeric owner and group
+
+
+File: paxutils.info,  Node: mode,  Next: owner,  Prev: Forced fields,  Up: Forced fields
+
+Presetting permissions
+----------------------
+
+   When adding files to an archive, `tar' will use PERMISSIONS for the
+archive members, rather than the permissions from the files.  The
+program `chmod' and this `tar' option share the same syntax for what
+PERMISSIONS might be.  *Note Permissions: (filetutils)File permissions.
+This reference also has useful information for those not especially
+familiar with the Unix permission system.
+
+   Of course, PERMISSIONS might be plainly specified as an octal number.
+However, using generic symbolic modifications to mode bits allows more
+flexibility.  For example, the value `a+rw' adds read and write
+permissions for everybody, while retaining executable bits on
+directories or on any other file already marked as executable.
+
+
+File: paxutils.info,  Node: owner,  Next: group,  Prev: mode,  Up: Forced fields
+
+Forcing a given owner
+---------------------
+
+   The `--owner=USER' option specifies that `tar' should use USER as
+the owner of members when creating archives, instead of the user
+associated with the source file.  USER is first decoded as a user
+symbolic name, but if this interpretation fails, it has to be a decimal
+numeric user ID.
+
+   There is no value indicating a missing number, and `0' usually means
+`root'.  Some people like to force `0' as the value to offer in their
+distributions for the owner of files, because the `root' user is
+anonymous anyway, so that might as well be the owner of anonymous
+archives.
+
+   `tar' on MS-DOS/MS-Windows allows USER to be *any* string.  These
+systems don't support file ownership, so `tar' allows them to give away
+files to anybody.  If USER includes only digits, it is treated as a
+numeric UID; otherwise, it is treated as a user name.
+
+
+File: paxutils.info,  Node: group,  Next: numeric-owner,  Prev: owner,  Up: Forced fields
+
+Forcing a given group
+---------------------
+
+   Given the `--group=GROUP' option, files added to the `tar' archive
+will have a group ID of GROUP, rather than the group from the source
+file.  GROUP is first decoded as a group symbolic name, but if this
+interpretation fails, it has to be a decimal numeric group ID.  `tar'
+on MS-DOS/MS-Windows allows GROUP to be *any* string.  These systems
+don't support group IDs, so `tar' allows them to give away files to
+anybody.  If GROUP consists only of digits, it is treated as a numeric
+GID; otherwise it is treated as a group name.
+
+
+File: paxutils.info,  Node: numeric-owner,  Prev: group,  Up: Forced fields
+
+Using numeric owner and group
+-----------------------------
+
+   The `--numeric-owner' option allows (ANSI) archives to be written
+without user/group name information, or allows such information to be
+ignored when extracting.  It effectively disables the generation and/or
+use of user/group name information.  This option forces extraction
+using the numeric IDs from the archive, ignoring the names.
+
+   This is useful in certain circumstances, when restoring a backup from
+an emergency floppy with different passwd/group files for example.  It
+is otherwise impossible to extract files with the right ownerships if
+the password file in use during the extraction does not match the one
+belonging to the filesystem(s) being extracted.  This occurs, for
+example, if you are restoring your files after a major crash and had
+booted from an emergency floppy with no password file or put your disk
+into another machine to do the restore.
+
+   The numeric IDs are *always* saved into `tar' archives.  The
+identifying names are added at create time when provided by the system,
+unless `--old-archive' (`-o') is used.  Numeric IDs could be used when
+moving archives between a collection of machines using a centralized
+management for attribution of numeric IDs to users and groups.  This is
+often done via the NIS capabilities.
+
+   When making a `tar' file for distribution to other sites, it is
+sometimes cleaner to use a single owner for all files in the
+distribution, and nicer to specify the write permission bits of the
+members as stored in the archive independently of their actual value on
+the file system.  The way to prepare a clean distribution is usually to
+have some makefile rule creating a directory, copying all needed files
+in that directory, then setting ownership and permissions as wanted
+(there are a lot of possible schemes), and only then making a `tar'
+archive out of this directory, before cleaning everything out.  Of
+course, we could add a lot of options to `tar' for fine-tuning
+permissions and ownership.  This is not the best approach, we think.
+`tar' is already crowded with options, and the approach just explained
+gives you a great deal of control already.
+
+
+File: paxutils.info,  Node: Compression,  Next: Other formats,  Prev: Forced fields,  Up: Formats
+
+Using less space through compression
+====================================
+
+   `tar' has options built in to let you compress and uncompress
+archives or individual members on the command line, at the same time
+that you create or extract them.  Compressing an archive causes it to
+take up less space in the system, but also might introduce a few
+difficulties.
+
+   You can compress your archives using several different methods and
+programs.  When compressing the whole archive, you can also create the
+archive without using one of those options and pipe (`|') the archive
+through a compression program such as `gzip'.  Likewise, instead of
+using options for compressing individual members, one might first have
+the files compressed right on disk, before the archive is later made
+without using related options; the serious drawback is that files are
+left altered (compressed) by this two step process, which users do not
+want in general.
+
+   There are `tar' limitations with compressed archives.  You cannot
+modify whole compressed archives (with `--append' (`-r'), `--update'
+(`-u') or `--delete', for example).  You may also not use them in
+conjunction with `--multi-volume' (`-M') related options.
+
+* Menu:
+
+* Archive compression::         Compressing the whole archive
+* Member compression::          Compressing individual members
+
+
+File: paxutils.info,  Node: Archive compression,  Next: Member compression,  Prev: Compression,  Up: Compression
+
+Compressing the whole archive
+-----------------------------
+
+   The `--gzip' (`-z'), `--compress' (`-Z') and
+`--use-compress-program=PROGRAM' options allow you to compress or
+uncompress a `tar' archive at the same time as you create or extract
+the archive.  These options are useful in saving time over networks, or
+saving space in pipes, and when storage space is at a premium.
+
+   `--gzip' (`-z') runs the `gzip' utility; `--compress' (`-Z') runs
+`compress'; and `--use-compress-program=PROGRAM' allows you to choose a
+compression program that you prefer.  If the selected compression
+utility is not available, `tar' will report an error.
+
+   When any of the above options is specified, `tar' will compress (when
+writing an archive), or uncompress (when reading an archive).  These
+options are used in conjunction with the `--create' (`-c'), `--extract'
+(`--get', `-x'), `--list' (`-t'), and `--compare' (`--diff', `-d')
+subcommands.  However, these options will not work in conjunction with
+the `--append' (`-r'), `--update' (`-u'), `--concatenate'
+(`--catenate', `-A'), and `--delete' subcommands.  *Note Subcommands::,
+for more information on all these.
+
+   In general, compression algorithms work by substituting a string of
+characters for some longer string of characters in the original file.
+The compression program keeps track of which strings in the compressed
+file will substitute for individual longer bits of the file.  If you
+modify a compressed file, the compression program will hopelessly lose
+track of the data that was originally mapped to the compressed form of
+the data, and the file will be corrupted and useless after the
+modification point.
+
+   Similarly, you should not compress a file that will be used as a
+backup on a tape.  If your backup archive is compressed on a tape and
+even a small portion of the tape is damaged in some way, you will be
+unable to recover the contents of the archive following the damage, due
+to the way compression algorithms work (described above).  If a tape
+containing an uncompressed backup archive gets damaged, you can
+probably still recover the data from the rest of the tape; there is no
+corrupted matching algorithm to work around.
+
+   For the `tar' and `gzip' tandem, as in the command `tar tfz
+archive.tar.gz', you need to decompress the full archive to see its
+contents.  However, this may be done without needing disk space, by
+using pipes internally.  (`tar' on MS-DOS and MS-Windows also supports
+this on-the-fly compression with `gzip', but since pipes are simulated
+with disk files on MS-DOS, you *do* need disk space to store the
+uncompressed copy while `tar' runs.  In particular, make sure the disk
+with the directory which is the value of the environment variable
+`TMPDIR' has enough free space.  Many DOS users tend to point it to a
+RAM disk.)
+
+   You can use archive compression options on physical devices (tape
+drives and so forth) and remote files as well as on normal files; data
+to or from such devices or remote files is reblocked by a forked copy
+of the `tar' program to enforce the specified (or default) record size.
+It is also useful to be able to call the compression option from
+within `tar', instead of using external pipes, because compression
+utilities by themselves cannot access remote tape drives.
+
+   It has been reported that if one writes compressed data (through the
+`--gzip' (`-z') or `--compress' (`-Z') options) to a DLT and tries to
+use the DLT compression mode, the data will actually get bigger and one
+will end up with less space on the tape.
+
+   Why does `tar' refuse to compress archives with `--multi-volume'
+(`-M')?  Here is a sort of explanation.  Each tape of a multi-volume
+set should have a volume header entry at its beginning.  When
+compressing, another process (like `gzip', say) takes care of the
+compression.  `gzip' is not able to detect the end of tape and inform
+`tar' of what is going on, so `tar' would produce the new volume
+header.  Even then, `tar' would not be able to withdraw already
+produced bytes up to the exact point where the tape would be full after
+compression (further, `gzip' itself produces write-ahead bytes in its
+own buffers).  On the other hand, `tar' often forks itself *after* gzip
+to reprocess its output, so `gzip' is sort of transparently sandwiched
+between two copies of `tar'.  Maybe some later `tar' version will
+execute the multi-volume spanning code right in the post-processing
+`tar'?
+
+   On the other hand, I wonder if compressed multi-volumes are such a
+good idea.  If one has a huge archive spanned on many volumes, one
+looses all tapes following the first having an error, and all hope with
+them ...
+
+* Menu:
+
+* gzip::                        Using `gzip' compression
+* compress::                    Using `compress' compression
+* use-compress-program::        Using other compression programs
+
+
+File: paxutils.info,  Node: gzip,  Next: compress,  Prev: Archive compression,  Up: Archive compression
+
+Using `gzip' compression
+........................
+
+   You can have archives compressed by using the `--gzip' (`-z') option.
+This will arrange for `tar' to use the `gzip' program to be used to
+compress or uncompress the whole archive when writing or reading it.
+
+   To perform compression and uncompression on the archive, `tar' runs
+the `gzip' utility.  `tar' uses the default compression parameters; if
+you need to override them, avoid the `--gzip' (`-z') option and run the
+`gzip' utility explicitly.  (Or set the `GZIP' environment variable.)
+
+   The following commands, for creating a compressed archive, are
+equivalent:
+
+     $ tar cfz archive.tar.gz subdir
+     $ tar cf - subdir | gzip > archive.tar.gz
+
+They both save all of `subdir' into a `gzip'-ed archive.  Later you can
+do either of:
+
+     $ tar xfz archive.tar.gz
+     $ gunzip < archive.tar.gz | tar xf -
+
+to explode and unpack.
+
+   Although it is possible for `tar' and `gzip' to be done with a
+single call, it is not precisely correct to say that `tar' is to work
+in concert with `gzip' in a way similar to `zip', say.  *Note zip::, for
+more information.
+
+
+File: paxutils.info,  Node: compress,  Next: use-compress-program,  Prev: gzip,  Up: Archive compression
+
+Using `compress' compression
+............................
+
+     *Please note:* The algorithm used by the `compress' program is
+     covered by a patent.  You could be sued for patent infringment
+     merely for running `compress'.  Even if the current patent holder
+     apparently tolerates such infringements, the safest attitude for
+     everybody is to just avoid becoming dependent on this program.
+     So, we recommend that you stop using it.
+
+   The `--compress' (`-Z') option gets the archive to be filtered
+through the `compress' program.  Otherwise, it pretty much behaves like
+`--gzip' (`-z').  *Note gzip::.
+
+   The `compress' option is older than `gzip', and is now obsolescent.
+However, there is still a lot of older `tar' files which have been
+compressed by `compress' in their time, and because of that, it is
+still useful to offer an option in `tar' to read them easily.
+
+
+File: paxutils.info,  Node: use-compress-program,  Prev: compress,  Up: Archive compression
+
+Using other compression programs
+................................
+
+   The `--use-compress-program=PROGRAM' option asks for the archive to
+be filtered through PROGRAM.  For example, option `--gzip' (`-z') is
+pretty much like writing `--use=gzip', and option `--compress' (`-Z')
+is like writing `--use=compress'.  With this option, you might use any
+program of your choice, for doing either compression, encryption, or
+cyclic redundancy check processing, say, provided that the said program
+acts as a filter (that is, it reads its standard input and produces
+results on its standard output) and that it accepts a `-d' option.
+This option is used by `tar' when calling PROGRAM in contexts where
+decompression would normally be done (as when listing or extracting the
+archive); it is not used in contexts where compression would normally
+be done (as when creating the archive).
+
+   To combine many features at once, like compression and redundancy
+checking, for example, one can provide a single shell script for
+PROGRAM.  When the `-d' option is not given to the script, it
+compresses its standard input, and pipes the result into a program
+computing and adding redundancy at regular intervals.(1) If the `-d'
+option is given, the script does the reverse operation (in reverse
+order as well), that is, it checks its standard input for redundancy
+and possibly recovers lost data while removing the redundancy
+information, piping the result into the appropriate decompression
+program.
+
+   ---------- Footnotes ----------
+
+   (1) It is so sad that `ecc' had to be withdrawn because of a
+serious, unrepairable algorithmic flaw.
+
+
+File: paxutils.info,  Node: Member compression,  Prev: Archive compression,  Up: Compression
+
+Compressing individual members
+------------------------------
+
+   There are pending suggestions for having a per-volume or per-file
+compression in `tar', and these suggestions will be addressed.  This
+will allow for viewing the contents without decompression, and for
+resynchronizing decompression at every volume or file, in case of
+corrupted archives.  Doing so, we might sacrifice maximum compression
+to some extent, but in case of partial tape loss, recovery might become
+possible, which would be a great advantage.
+
+   In the meantime, the only compressionlike technique available for
+individual archive members is related to sparse file processing, which
+only takes care of big strings of zero bytes in certain contexts, thus
+making compression very slight in the average case.
+
+* Menu:
+
+* sparse::                      Archiving sparse files
+
+
+File: paxutils.info,  Node: sparse,  Prev: Member compression,  Up: Member compression
+
+Archiving sparse files
+......................
+
+   Files in the filesystem occasionally have "holes".  A hole in a file
+is a section of the file's contents which was never written.  The
+contents of a hole read as all zeros.  On many operating systems,
+actual disk storage is not allocated for holes, but they are counted in
+the length of the file.  If you archive such a file, `tar' could create
+an archive longer than the original.  To have `tar' attempt to
+recognize the holes in a file, use `--sparse' (`-S').  When you use the
+`--sparse' (`-S') option, then, for any file using less disk space than
+would be expected from its length, `tar' searches the file for
+consecutive stretches of zeros.  It then records in the archive for the
+file where the consecutive stretches of zeros are, and only archives
+the "real contents" of the file.  On extraction (using `--sparse'
+(`-S') is not needed on extraction) any such files have holes created
+wherever the continuous stretches of zeros were found.  Thus, if you
+use `--sparse' (`-S'), `tar' archives won't take more space than the
+original.
+
+   For example, the `--sparse' (`-S') option is useful when many `dbm'
+files are being backed up.  Using this option dramatically decreases the
+amount of space needed to store such a file.
+
+     *Please note:* Always use `--sparse' (`-S') when performing file
+     system backups, to avoid archiving the expanded forms of files
+     stored sparsely in the system.
+
+     Even if your system has no sparse files currently, some may be
+     created in the future.  If you use `--sparse' (`-S') while making
+     file system backups as a matter of course, you can be assured the
+     archive will never take more space on the media than the files
+     take on disk (otherwise, archiving a disk filled with sparse files
+     might take hundreds of tapes).  *Note incremental
+     listed-incremental::.
+
+   Programs like `dump' do not have to read the entire file; by
+examining the file system directly, they can determine in advance
+exactly where the holes are and thus avoid reading through them.  The
+only data they need read are the actual allocated data blocks.  `tar'
+uses a more portable and straightforward archiving approach; it would
+be fairly difficult for it to do otherwise.  On 1990-12-10, Elizabeth
+Zwicky wrote(1) to `comp.unix.internals':
+
+     What I did say is that you cannot tell the difference between a
+     hole and an equivalent number of `NUL's without reading raw blocks.
+     `st_blocks' at best tells you how many holes there are; it doesn't
+     tell you *where*.  Just as programs may, conceivably, care what
+     `st_blocks' is (care to name one that does?), they may also care
+     where the holes are (I have no examples of this one either, but
+     it's equally imaginable).
+
+     I conclude from this that good archivers are not portable.  One can
+     arguably conclude that if you want a portable program, you can in
+     good conscience restore files with as many holes as possible,
+     since you can't get it right.
+
+   Users should be well aware that at archive creation time, `tar'
+still has to read the whole disk file to locate the "holes", and so,
+even if sparse files use little space on disk and in the archive, they
+may sometimes require an inordinate amount of time for reading and
+examining all-zero blocks of a file.  Although it works, it's painfully
+slow for a large (sparse) file, even though the resulting `tar' archive
+may be small.  (One user reports that dumping a `core' file of over 400
+megabytes, but with only about 3 megabytes of actual data, took about 9
+minutes on a Sun Sparstation ELC, with full CPU utilisation.)  This
+reading is required in all cases, even if the `--sparse' (`-S') option
+is not used.(2)
+
+   In some later `tar' version, the `--sparse' (`-S') option might be
+removed as such, and the testing and treatment of sparse files may be
+done automatically with any special option calling for *any* extension.
+The matter is not fully decided yet.
+
+   ---------- Footnotes ----------
+
+   (1) This quote comes from a reply from Elizabeth, after someone
+*falsely* attributed to her the sentence: `One has to be pretty
+intimate with the disk, to know where the holes are ...'
+
+   (2) Well!  When `--sparse' (`-S') is selected while creating an
+archive, the current `tar' algorithm requires sparse files to be read
+twice, not once.  We hope to develop a new archive format for saving
+sparse files in which one pass will be sufficient.
+
+
+File: paxutils.info,  Node: Other formats,  Prev: Compression,  Up: Formats
+
+Other non-`tar' formats
+=======================
+
+* Menu:
+
+* cpio::                        Comparison of `tar' and `cpio'
+* zip::                         Comparison of `tar' and `zip'
+
+
+File: paxutils.info,  Node: cpio,  Next: zip,  Prev: Other formats,  Up: Other formats
+
+Comparison of `tar' and `cpio'
+------------------------------
+
+   The `cpio' archive formats, like `tar', have maximum pathname
+lengths.  The binary and old ASCII formats have a max path length of
+256, and the new ASCII and CRC ASCII formats have a max path length of
+1024.  This `cpio' can read and write archives with arbitrary pathname
+lengths, but other `cpio' implementations may crash unexplainedly
+trying to read them.
+
+   `tar' handles symbolic links in the form in which it comes in BSD;
+`cpio' doesn't handle symbolic links in the form in which it comes in
+System V prior to SVR4, and some vendors may have added symlinks to
+their system without enhancing `cpio' to know about them.  Others may
+have enhanced it in a way other than the way we did it at Sun, and
+which was adopted by AT&T (and which is, we think, also present in the
+`cpio' that Berkeley picked up from AT&T and put into a later BSD
+release--we think we gave them our changes).
+
+   (SVR4 does some funny stuff with `tar'; basically, its `cpio' can
+handle `tar' format input, and write it on output, and it probably
+handles symbolic links.  They may not have bothered doing anything to
+enhance `tar' as a result.)
+
+   `cpio' handles special files; traditional `tar' doesn't.
+
+   `tar' comes with V7, System III, System V, and BSD source; `cpio'
+comes only with System III, System V, and later BSD (4.3-tahoe and
+later).
+
+   `tar''s way of handling multiple hard links to a file can handle
+file systems that support 32-bit inumbers (e.g., the BSD file system);
+`cpio''s way requires you to play some games (in its "binary" format,
+i-numbers are only 16 bits, and in its "portable ASCII" format, they're
+18 bits--it would have to play games with the "file system ID" field of
+the header to make sure that the file system ID/i-number pairs of
+different files were always different), and we don't know which
+`cpio's, if any, play those games.  Those that don't might get confused
+and think two files are the same file when they're not, and make hard
+links between them.
+
+   `tar''s way of handling multiple hard links to a file places only
+one copy of the link on the tape, but the name attached to that copy is
+the *only* one you can use to retrieve the file; `cpio''s way puts one
+copy for every link, but you can retrieve it using any of the names.
+
+     What type of checksum (if any) is used, and how is this calculated?
+
+   See the attached manual pages for `tar' and `cpio' format.  `tar'
+uses a checksum which is the sum of all the bytes in the `tar' header
+for a file; `cpio' uses no checksum.
+
+     Does anyone know why `cpio' was made when `tar' was present at the
+     Unix scene?
+
+   It wasn't.  `cpio' first showed up in PWB/Unix 1.0; no
+generally-available version of Unix had `tar' at the time.  We don't
+know whether any version that was generally available *within AT&T* had
+`tar', or, if so, whether the people within AT&T who did `cpio' knew
+about it.
+
+   On restore, if there is a corruption on a tape, `tar' will stop at
+that point, while `cpio' will skip over it and try to restore the rest
+of the files.
+
+   The main difference is just in the command syntax and header format.
+
+   `tar' is a little more tape-oriented in that everything is blocked
+to start on a record boundary.
+
+     Are there any differences in the ability to recover crashed
+     archives between the two of them?  (Is there any chance of
+     recovering crashed archives at all?)
+
+   Theoretically, it should be easier under `tar' since the blocking
+lets you find a header with some variation of `dd skip=NN'.  However,
+modern `cpio''s and variations have an option to just search for the
+next file header after an error with a reasonable chance of re-syncing.
+Note that lots of tape driver software won't allow you to continue
+past a media error, which should be the only reason for getting out of
+sync unless a file changed sizes while you were writing the archive.
+
+     If anyone knows why `cpio' was made when `tar' was present at the
+     Unix scene, please tell me about this too.
+
+   Probably because it is more media efficient (by not blocking
+everything and using only the space needed for the headers where `tar'
+always uses 512 bytes per file header) and it knows how to archive
+special files.
+
+   You might want to look at the freely available alternatives.  The
+major ones are `afio', `tar', and `pax', each of which have their own
+extensions with some backwards compatibility.
+
+   Sparse files were `tar'red as sparse files (which you can easily
+test, because the resulting archive gets smaller, and `cpio' can no
+longer read it).
+
+
+File: paxutils.info,  Node: zip,  Prev: cpio,  Up: Other formats
+
+Comparison of `tar' and `zip'
+-----------------------------
+
+   On 1993-01-26, Jean-loup Gailly published on `bug-gnu-utils' a
+useful comparison between the `tar' and `gzip' combination, and `zip'.
+Here are the points of his letter.
+
+   * `tar -z' (that is, `tar' with `gzip') compresses a tar file into a
+     single stream.  To extract one specific member (with `tar xfz
+     foo.tar.z member'), `gunzip' decompresses the whole `tar.z' file
+     and passes that to `tar'.  This method improves compression since
+     `gzip' can take advantage of redundancy between files.
+
+   * `zip' compresses file members independently.  `unzip' is then able
+     to seek directly to the proper location for extraction of a single
+     member.  This method degrades compression but enables recovery in
+     case of damage to a portion of the `zip' file.  If a `tar.z' file
+     is damaged, all data after the error is lost.
+
+   * The current version of `zip' does not store UID and GID, and
+     compresses hard links several times.  `tar' works correctly.
+
+   * `unzip' has many tricks to convert file names from one system to
+     another, restore special file attributes (for VMS and OS/2), and so
+     forth ...  `gzip' is only a data compression program, which should
+     be kept simple.
+
+   Jean-loup adds that he is thinking of adding an optional block size
+parameter to `gzip' to improve error recovery, and refers to the `TODO'
+file in the `gzip' 0.8.1 distribution.
+
+
+File: paxutils.info,  Node: Media,  Next: Backups,  Prev: Formats,  Up: Top
+
+Tapes and other archive media
+*****************************
+
+   Archives are usually written on removable media--tape cartridges, mag
+tapes, or floppy disks.
+
+   The amount of data a tape or disk holds depends not only on its size,
+but also on how it is formatted.  A 2400 foot long reel of mag tape
+holds 40 megabytes of data when formated at 1600 bits per inch.  The
+physically smaller EXABYTE tape cartridge holds 2.3 gigabytes.
+
+   Magnetic media are re-usable--once the archive on a tape is no longer
+needed, the archive can be erased and the tape or disk used over. Media
+quality does deteriorate with use, however.  Most tapes or disks should
+be disgarded when they begin to produce data errors.
+
+   Magnetic media are written and erased using magnetic fields, and
+should be protected from such fields to avoid damage to stored data.
+Sticking a floppy disk to a filing cabinet using a magnet is probably
+not a good idea.
+
+   Format related parameters specify how an archive is written on the
+archive media.  The best choice of format parameters will vary
+depending on the type and number of files being archived, and on the
+media used to store the archive.
+
+   To specify format parameters when accessing or creating an archive,
+you can use the options described in the following sections.  If you do
+not specify any format parameters, `tar' uses default parameters.  You
+cannot modify a compressed archive.  If you create an archive with the
+`--blocking-factor=BLOCKS' (`-b BLOCKS') option specified (*note
+blocking-factor::.), you should specify that blocking factor when
+operating on the archive.  *Note Formats::, for other examples of
+format parameter considerations.
+
+   When you access a previously created `tar' archive using `tar', you
+should specify certain format parameters.  These parameters were
+specified when the archive was created, and `tar' is not always able to
+determine some of the parameters for itself.  The safest procedure is to
+specify them again in order for `tar' to properly read and/or modify
+the contents of the archive.
+
+* Menu:
+
+* Blocking::                    Blocking
+* Many on one::                 Many archives on one tape
+* One on many::                 Using multiple tapes
+* Being careful::               Being even more careful
+* Other tape considerations::   Other tape considerations
+
+
+File: paxutils.info,  Node: Blocking,  Next: Many on one,  Prev: Media,  Up: Media
+
+Blocking
+========
+
+   "Block" and "record" terminology is rather confused, and it is even
+confusing to the expert reader.  Currently, `tar' uses the POSIX
+terminology, in which the terms are exchanged with regard to the IBM
+terminology.  On 1995-06, John Gilmore (the writer of the original
+program which evolved into this current `tar') wrote:
+
+     The nomenclature of tape drives comes from IBM, where we believe
+     they were invented for the IBM 650 or so.  On IBM mainframes, what
+     is recorded on tape are tape blocks.  The logical organization of
+     data is into records.  There are various ways of putting records
+     into blocks, including `F' (fixed sized records), `V' (variable
+     sized records), `FB' (fixed blocked: fixed size records, N to a
+     block), `VB' (variable size records, N to a block), `VSB'
+     (variable spanned blocked: variable sized records that can occupy
+     more than one block), etc.  The `JCL' `DD RECFORM=' parameter
+     specified this to the operating system.
+
+     The Unix man page on `tar' was totally confused about this.  When I
+     wrote `PD TAR', I used the historically correct terminology (`tar'
+     writes data records, which are grouped into blocks).  It appears
+     that the bogus terminology made it into POSIX (no surprise here),
+     and now Franc,ois has migrated that terminology back into the
+     source code too.
+
+* Menu:
+
+* Blocks and records::          Blocks and records
+* blocking-factor::             Setting the blocking factor
+* record-size::                 Setting a record size
+* Media types::                 Per-Media blocking considerations
+* Reblocking::                  Automatic reblocking
+
+
+File: paxutils.info,  Node: Blocks and records,  Next: blocking-factor,  Prev: Blocking,  Up: Blocking
+
+Blocks and records
+------------------
+
+   The term "physical block" means the basic transfer chunk from or to a
+device, after which reading or writing may stop without anything being
+lost.  In this manual, the term "block" usually refers to a physical
+disk block, *assuming* that each disk block is 512 bytes in length.  It
+is true that some disk devices have different physical blocks, but `tar'
+ignores these differences in its own format, which is meant to be
+portable, so a `tar' block is always 512 bytes in length, and "block"
+always means a `tar' block.(1)  The term "physical record" is another
+way of speaking about a physical block, those two terms are somewhat
+interchangeable.
+
+   Contrarily to disks, tapes start and stop often.  An "inter-record
+gap" (IRG), or "gap" for short, is a small landing area on the tape with
+no information on it, used for decelerating the tape to a full stop, and
+for later regaining reading or writing speed.  When the tape driver
+starts reading a record, the record has to be read in its entirety
+without stopping, as a gap is needed to stop the tape motion without
+losing information.  Many such gaps must be managed at regular
+intervals, so the tape soon finds a place to stop when this is needed.
+The recorded data is split into chunks that we call physical tape
+blocks, each of which is sandwiched between two successive gaps.  In
+POSIX `tar' terminology, each physical tape block is called a "record".
+Although each record might have its own length, it is customary to set
+some maximum length for all records on a given tape.  `tar' archives
+may be put on disk or used with pipes, instead of being written to
+tape.  Nevertheless, `tar' tries to read and write the archive one
+record at a time, whatever the medium in use.
+
+   For `tar', a record(2) is made up of an integral number of blocks,
+and this operation of putting many disk blocks into a single record is
+called "blocking".  `tar' blocks are all fixed size (512 bytes), and
+its scheme for putting them into records is to put a whole number of
+them (one or more) into each record.  In a single archive, all `tar'
+records are the same size; at the end of the file there's a block
+containing all zeros, which is how you tell that the remainder of the
+last record(s) is (are) garbage.  The usual number of disk blocks that
+go into a single record is called the "blocking factor" for that tape.
+
+   Using higher blocking (putting more disk blocks per record) will use
+the tape more efficiently, as there will be fewer gaps.  But reading
+such tapes may be more difficult for the system, as more memory will be
+required to receive the whole record at once.  Further, if there is a
+reading error on a huge record, it is less likely that the system will
+succeed in recovering the information.  So blocking should not be too
+low, nor it should be too high.  `tar' uses by default a blocking of 20
+for historical reasons, and it does not really matter when reading or
+writing to disk.  Current tape technology would easily accomodate
+higher blockings.
+
+   ---------- Footnotes ----------
+
+   (1) The term "logical block" often represents the basic chunk of
+allocation of many disk blocks as a single entity, which the operating
+system treats somewhat atomically; this concept is used seldom if at
+all in `tar'.
+
+   (2) The term "logical record" refers to the logical organization of
+many characters into something meaningful to the application.  The term
+"unit record" describes a small set of characters which are transmitted
+whole to or by the application, and often refers to a line of text.
+Those two last terms are unrelated to what we call a "record" in `tar'.
+
+
+File: paxutils.info,  Node: blocking-factor,  Next: record-size,  Prev: Blocks and records,  Up: Blocking
+
+Setting the blocking factor
+---------------------------
+
+   In a standard `tar' file (no options), the block size is 512 bytes
+and the record size is 10240 bytes, for a blocking factor of 20.  In
+fact, the default blocking factor is set when `tar' is compiled, and is
+typically 20.  The output of `tar --help', near the end, shows the
+default blocking factor which was compiled in the `tar' version you are
+using.  Archives with blocking factors larger than 20 cannot be read by
+very old versions of `tar', or by some newer versions of `tar' running
+on old machines with small address spaces.  With this `tar', the
+blocking factor of an archive is limited only by the maximum record
+size of the device containing the archive, or by the amount of available
+virtual memory.
+
+   What the `--blocking-factor=BLOCKS' (`-b BLOCKS') option does is to
+set the blocking factor, that is, to change the record size while
+leaving the block size at 512 bytes.  A blocking factor of 20 was fine
+for ancient 800 or 1600 bpi reel-to-reel tape drives; most tape drives
+these days prefer much bigger records in order to stream and not waste
+tape.  When writing tapes, some tend to use a factor of the order of
+2048, say, giving a record size of around one megabyte.  This is
+acceptable nowadays, as the tape technology is now much more dependable
+that it once was, and errors are much less likely to occur.
+
+   When reading an archive, `tar' can usually figure out the record
+size itself.  To get it to do this, you can use
+`--blocking-factor=BLOCKS' (`-b BLOCKS') to specify a blocking factor
+larger than real one, and `tar' will diagnose the observed record size
+as shorter than expected.  In this indirect way, you can use `tar' to
+learn about the actual record size of the first record on a tape!  The
+diagnostic is not produced when the observed record size matches the
+expected size.
+
+   Further complicating the problem is that some tape drives ignore the
+blocking entirely.  For these, `tar' cannot easily determine the real
+block size.  In such cases, specifying a larger record size in `tar'
+can still improve performance a tiny bit, yet most of the improvement
+has already been provided by the tape system itself.
+
+   If you use a non-default blocking factor when you create an archive,
+you must specify the same blocking factor when you modify that archive.
+Some archive devices will also require you to specify the blocking
+factor when reading that archive; however, this is not typically the
+case.  Usually, you can use `--list' (`-t') without specifying a
+blocking factor--`tar' reports a non-default record size and then lists
+the archive members as it would normally.  To extract files from an
+archive with a non-standard blocking factor (particularly if you're not
+sure what the blocking factor is), you can usually use the
+`--read-full-records' (`-B') option while specifying a blocking factor
+larger then the blocking factor of the archive (for example, `tar
+--extract --read-full-records --blocking-factor=300').  *Note list::,
+for more information on the `--list' (`-t') subcommand.  *Note
+Reading::, for a more detailed explanation of that option.
+
+   If the archive is in a disk file or a pipe, some might sometimes
+want to specify a smaller blocking factor, since a large one will
+result in more `NUL' bytes at the end of the archive, but it might not
+be worth it.  Beware that for the `tar' blocking to be effective, `tar'
+should directly write to the device.  Blocking is effectively defeated
+or overridden when a pipe interposes another step between `tar' and the
+device (like a call to `dd', for instance).
+
+
+File: paxutils.info,  Node: record-size,  Next: Media types,  Prev: blocking-factor,  Up: Blocking
+
+Setting a record size
+---------------------
+
+   The `--record-size=SIZE' option instructs `tar' to use SIZE bytes
+per record when accessing the archive.  The value of SIZE should be
+evenly divisible by 512.  This option is an alternative to using
+`--blocking-factor=BLOCKS' (`-b BLOCKS'), except that the unit for
+`--record-size=SIZE' is a single byte, while the unit for
+`--blocking-factor=BLOCKS' (`-b BLOCKS') is a whole `tar' block.  *Note
+blocking-factor::.
+
+
+File: paxutils.info,  Node: Media types,  Next: Reblocking,  Prev: record-size,  Up: Blocking
+
+Per-Media blocking considerations
+---------------------------------
+
+   When handling various tapes or cartridges, you have to take care of
+selecting a proper blocking, that is, the number of disk blocks you put
+together as a single record on the tape, without intervening tape gaps.
+Strangely, on more than a few systems, the mere fact of not using an
+adequate blocking factor yields rather unexpected or cryptic
+diagnostics, like:
+
+     Cannot write to /dev/dlt: Invalid argument
+
+So, one might have to pay attention to the requirements of device
+drivers.  To make things a bit confusing, it also happens that the
+`tar' bundled by the system is aware of record size idiosyncrasies,
+while `tar' requires an explicit specification for the record size,
+which it cannot guess.  This yields some people to believe that `tar'
+is misbehaving, because by comparison, `the bundled `tar' works OK'.
+Merely using something like `-b 256', say, might resolve the problem.
+
+   `tar' uses a blocking factor of 20 by default for historical
+reasons, and it does not really matter when reading or writing to disk.
+Current tape technology would easily accomodate higher blockings.  Sun
+recommends a blocking of 126 for Exabytes and 96 for DATs.  Another
+source said that Exabyte drives have a physical block size of 8KB, and
+that using `-b 112' solved their problems.  We were told that for some
+DLT drives, the blocking should be a multiple of 4KB, preferably 64KB
+(`-b 128' or `256'), for decent performance.  Other manufacturers may
+use different recommendations for the same tapes.  This might also
+depend of the buffering techniques used by modern tape controllers.
+Some impose a minimum blocking, or a maximum blocking.  Others request
+blocking to be some power of two.
+
+   So there is no fixed rule for blocking.  But blocking at read time
+should ideally be the same as blocking used at write time.  At one
+place we know, with a wide variety of equipment, they found it best to
+use a blocking of 32 to guarantee that their tapes are fully
+interchangeable between all systems they have.
+
+   We were also told that, for recycled tapes, prior erasure (by the
+exact drive unit that will be used to create the archives) sometimes
+lowers the error rates observed at rewriting time.
+
+
+File: paxutils.info,  Node: Reblocking,  Prev: Media types,  Up: Blocking
+
+Automatic reblocking
+--------------------
+
+   When handling compressed archives, `tar' automatically unblocks the
+archives before decompression occurs, or reblocks created archives just
+after compression, as needed.(1)
+
+   When older `gzip' programs are directly given such reblocked
+compressed archives, they may complain like this:
+
+     $ tar cfz - FILE | gzip -t
+     gzip: stdin: decompression OK, trailing garbage ignored
+
+Because of the reblocking, there may be extraneous zero blocks after the
+`gzip' output, which older versions of `gzip' diagnose as garbage.
+Jean-loup and I agreed, to handle this particular case, that newer
+versions of `gzip' would be more tolerant to strings of zeros, and just
+ignore them.  So, diagnostics like above will progressively disappear,
+as various older `gzip' binaries get replaced.  In any case, they are
+innocuous.
+
+   As a special case, if a compressed archive is directly created on a
+local disk, and not through stdout, and if the blocking factor is not
+explicitly specified by the user, then the produced file will not be
+reblocked, and so, might appear as if the last record has not been
+padded to full length.  In all other cases, reblocking occurs.
+
+   ---------- Footnotes ----------
+
+   (1) Prior to `tar' 1.12, unblocking or reblocking did not occur
+unless the `--compress-block' option (or even older:
+`--block-compress') was given.  Such options are now obsolete.
+
+
+File: paxutils.info,  Node: Many on one,  Next: One on many,  Prev: Blocking,  Up: Media
+
+Many archives on one tape
+=========================
+
+   Most tape devices have two entries in the `/dev' directory, or
+entries that come in pairs, which differ only in the minor number for
+this device.  Let's take for example `/dev/tape', which often points to
+the only or usual tape device of a given system.  There might be a
+corresponding `/dev/nrtape' or `/dev/ntape'.  The simpler name is the
+*rewinding* version of the device, while the name having `nr' in it is
+the *no rewinding* version of the same device.
+
+   A rewinding tape device will bring the tape back to its beginning
+point automatically when this device is opened or closed.  Since `tar'
+opens the archive file before using it and closes it afterwards, this
+means that a simple
+
+     $ tar cf /dev/tape DIRECTORY
+
+will reposition the tape to its beginning both before and after saving
+the DIRECTORY contents to it, thus erasing the prior tape contents and
+making it so that any subsequent write subcommand will destroy what has
+just been saved.
+
+   So, a rewinding device is normally meant to hold one and only one
+file.  If you want to put more than one `tar' archive on a given tape,
+you will need to avoid using the rewinding version of the tape device.
+You will also have to pay special attention to tape positioning.
+Errors in positioning may overwrite the valuable data already on your
+tape.  Many people, burned by past experiences, will only use rewinding
+devices and limit themselves to one file per tape, precisely to avoid
+the risk of such errors.  Be fully aware that writing at the wrong
+position on a tape loses all information past this point and most
+probably until the end of the tape, and this destroyed information
+*cannot* be easily recovered, if indeed it can ever be recovered at all.
+
+   To save DIRECTORY-1 as a first archive at the beginning of a tape,
+and leave that tape ready for a second archive, you should use the
+*non-rewinding* tape device:
+
+     $ mt -f /dev/nrtape rewind
+     $ tar cf /dev/nrtape DIRECTORY-1
+
+   "Tape marks" are special magnetic patterns written on the tape media,
+which are later recognizable by the reading hardware.  Tape marks
+consume a *lot* more space on the tape than a usual gap, and the tape
+drive hardware is often able to detect them even while winding the tape
+at higher speed.
+
+   These marks are used after each file, when there are many on a
+single tape.  An empty file (that is to say, two tape marks in a row)
+signals the logical end of the tape, after which no files exist.
+Clever non-rewinding tape device drivers react to the close request
+issued by `tar' by first writing two tape marks after your archive, and
+by backspacing over one of these.  So, if you remove the tape at that
+time from the tape drive, it is properly terminated.  But if you write
+another file at the current position, the second tape mark gets erased
+by the new information, leaving only one tape mark between files.
+
+   So, you may now save DIRECTORY-2 as a second archive after the first
+on the same non-rewinding tape by issuing the command:
+
+     $ tar cf /dev/nrtape DIRECTORY-2
+
+and so on for all the archives you want to put on the same tape.
+
+   Another usual case is that you do not write all the archives the same
+day, and you need to remove and store the tape between two archive
+sessions.  In general, you must remember how many files are already
+saved on your tape.  Suppose your tape already has 16 files on it, and
+you are ready to write the 17th.  You have to take care to skip the
+first 16 tape marks before saving DIRECTORY-17, say, by using these
+commands:
+
+     $ mt -f /dev/nrtape rewind
+     $ mt -f /dev/nrtape fsf 16
+     $ tar cf /dev/nrtape DIRECTORY-17
+
+   In all the previous examples, we put aside blocking considerations,
+but you should do the proper things for that as well.  *Note Blocking::.
+
+* Menu:
+
+* Tape positioning::            Tape positions and tape marks
+* mt invocation::               The `mt' utility
+

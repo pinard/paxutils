@@ -1,5 +1,5 @@
 /* argmatch.c -- find a match for a string in an array
-   Copyright (C) 1990 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1997 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,23 +12,26 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation,
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* Written by David MacKenzie <djm@ai.mit.edu> */
+/* Written by David MacKenzie <djm@gnu.ai.mit.edu> */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 # include <config.h>
 #endif
+
+#include <argmatch.h>
 
 #include <sys/types.h>
 
 #include <stdio.h>
-#ifdef STDC_HEADERS
+#if HAVE_STRING_H
 # include <string.h>
+#else
+# include <strings.h>
 #endif
-
-extern char *program_name;
 
 /* If ARG is an unambiguous match for an element of the
    null-terminated array OPTLIST, return the index in OPTLIST
@@ -36,9 +39,7 @@ extern char *program_name;
    or -2 if it is ambiguous (is a prefix of more than one element).  */
 
 int
-argmatch (arg, optlist)
-     const char *arg;
-     const char *const *optlist;
+argmatch (const char *arg, const char *const *optlist)
 {
   int i;			/* Temporary index in OPTLIST.  */
   size_t arglen;		/* Length of ARG.  */
@@ -75,15 +76,10 @@ argmatch (arg, optlist)
    PROBLEM is the return value from argmatch.  */
 
 void
-invalid_arg (kind, value, problem)
-     const char *kind;
-     const char *value;
-     int problem;
+invalid_arg (const char *kind, const char *value, int problem)
 {
-  fprintf (stderr, "%s: ", program_name);
-  if (problem == -1)
-    fprintf (stderr, "invalid");
-  else				/* Assume -2.  */
-    fprintf (stderr, "ambiguous");
-  fprintf (stderr, " %s `%s'\n", kind, value);
+  const char *fmt = (problem == -1
+		     ? "%s: invalid %s `%s'\n"
+		     : "%s: ambiguous %s `%s'\n");
+  fprintf (stderr, fmt, program_name, kind, value);
 }
