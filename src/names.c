@@ -766,21 +766,21 @@ bool
 check_exclude (const char *name)
 {
   int counter;
+  int namelength;
 
   for (counter = 0; counter < pattern_excludes; counter++)
     if (fnmatch (pattern_exclude_array[counter], name, FNM_LEADING_DIR) == 0)
       return true;
 
+  namelength = strlen (name);
   for (counter = 0; counter < simple_excludes; counter++)
     {
-      /* Accept the output from strstr only if it is the last part of the
-	 string.  FIXME: Find a faster way to do this.  */
+      /* Check if the string matches the tail of name. */
+      int headlength = namelength - strlen (simple_exclude_array[counter]);
 
-      char *string = strstr (name, simple_exclude_array[counter]);
-
-      if (string
-	  && (string == name || string[-1] == '/')
-	  && string[strlen (simple_exclude_array[counter])] == '\0')
+      if (headlength >= 0
+	  && (headlength == 0 || name[headlength - 1] == '/')
+	  && strcmp (simple_exclude_array[counter], name + headlength) == 0)
 	return true;
     }
   return false;

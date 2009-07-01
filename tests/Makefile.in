@@ -79,6 +79,7 @@ POST_UNINSTALL = :
 ALL_LINGUAS = @ALL_LINGUAS@
 ALL_MOFILES = @ALL_MOFILES@
 ALL_POFILES = @ALL_POFILES@
+AT_TESTPATH = @AT_TESTPATH@
 CC = @CC@
 CPP = @CPP@
 ECHO_C = @ECHO_C@
@@ -109,34 +110,24 @@ extra_bin_progs = @extra_bin_progs@
 extra_libexec_progs = @extra_libexec_progs@
 
 AUTOMAKE_OPTIONS = gnits ../src/ansi2knr
-check_PROGRAMS = genfile
-BUILT_SOURCES = preset
-
-TESTS = none.sh
-
-# FIXME: Nothing works, waiting for overhaul.
-PREPONED_TESTS = version.sh ignfail.sh create01.sh extrac01.sh extrac02.sh \
-extrac03.sh extrac04.sh extrac05.sh old.sh volume.sh gzip.sh \
-append01.sh delete01.sh increm01.sh increm02.sh
-
-# Postponed until after the 2.5 release.
-POSTPONED_TESTS = delete02.sh
-
 check_PROGRAMS = echotime genfile rediff swapb swaphw verify wrsparse
 
-EXTRA_DIST = README README2 after before cpiotest $(TESTS) \
-$(PREPONED_TESTS) $(POSTPONED_TESTS)
+SUITE = append.m4 c-append.m4 c-base.m4 c-block.m4 c-crc.m4 \
+c-interop.m4 c-junk.m4 c-long.m4 c-newc.m4 c-nopipe.m4 c-odd.m4	\
+c-owner.m4 c-pass.m4 c-reset.m4 c-skip.m4 c-swap.m4 c-tar.m4 \
+c-unpack.m4 create.m4 delete.m4 exclude.m4 extract.m4 gzip.m4 \
+incremen.m4 volume.m4
+
+EXTRA_DIST = atgeneral.m4 make-structure test-one testsuite \
+testsuite.m4 $(SUITE)
 
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 INCLUDES = -I.. -I$(top_srcdir)/src -I$(top_srcdir)/lib
 LDADD = ../lib/libpu.a
 localedir = $(prefix)/share/locale
-
-# Set this to test a different cpio.
-GCPIO = `cd ../src && pwd`/cpio
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES =  defs preset
+CONFIG_CLEAN_FILES =  atconfig atlocal
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -179,8 +170,8 @@ wrsparse_LDFLAGS =
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(CC) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
-DIST_COMMON =  README ChangeLog Makefile.am Makefile.in TODO defs.in \
-preset.in
+DIST_COMMON =  README ChangeLog Makefile.am Makefile.in TODO atconfig.in \
+atlocal.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -190,7 +181,7 @@ GZIP = --best
 SOURCES = echotime.c genfile.c rediff.c swapb.c swaphw.c verify.c wrsparse.c
 OBJECTS = echotime$U.o genfile$U.o rediff$U.o swapb$U.o swaphw$U.o verify$U.o wrsparse$U.o
 
-all: Makefile
+all: Makefile all-local
 
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
@@ -201,9 +192,9 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-defs: $(top_builddir)/config.status defs.in
+atconfig: $(top_builddir)/config.status atconfig.in
 	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
-preset: $(top_builddir)/config.status preset.in
+atlocal: $(top_builddir)/config.status atlocal.in
 	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 mostlyclean-checkPROGRAMS:
@@ -332,41 +323,16 @@ distdir: $(DISTFILES)
 echotime.o: echotime.c
 genfile.o: genfile.c ../src/system.h ../config.h ../lib/pathmax.h \
 	../lib/gettext.h ../lib/error.h ../lib/getopt.h
-rediff.o: rediff.c
+rediff.o: rediff.c ../lib/regex.h
 swapb.o: swapb.c
 swaphw.o: swaphw.c
-verify.o: verify.c ../config.h ../lib/filetypes.h
+verify.o: verify.c ../config.h ../lib/filetypes.h ../lib/getopt.h
 wrsparse.o: wrsparse.c
 
-check-TESTS: $(TESTS)
-	@failed=0; all=0; \
-	srcdir=$(srcdir); export srcdir; \
-	for tst in $(TESTS); do \
-	  if test -f $$tst; then dir=.; \
-	  else dir="$(srcdir)"; fi; \
-	  if $(TESTS_ENVIRONMENT) $$dir/$$tst; then \
-	    all=`expr $$all + 1`; \
-	    echo "PASS: $$tst"; \
-	  elif test $$? -ne 77; then \
-	    all=`expr $$all + 1`; \
-	    failed=`expr $$failed + 1`; \
-	    echo "FAIL: $$tst"; \
-	  fi; \
-	done; \
-	if test "$$failed" -eq 0; then \
-	  banner="All $$all tests passed"; \
-	else \
-	  banner="$$failed of $$all tests failed"; \
-	fi; \
-	dashes=`echo "$$banner" | sed s/./=/g`; \
-	echo "$$dashes"; \
-	echo "$$banner"; \
-	echo "$$dashes"; \
-	test "$$failed" -eq 0
 info:
 dvi:
 check: all $(check_PROGRAMS)
-	$(MAKE) $(AM_MAKEFLAGS) check-TESTS check-local
+	$(MAKE) $(AM_MAKEFLAGS) check-local
 installcheck:
 install-exec: 
 	@$(NORMAL_INSTALL)
@@ -393,12 +359,11 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 mostlyclean:  mostlyclean-checkPROGRAMS mostlyclean-compile \
 		mostlyclean-kr mostlyclean-tags mostlyclean-generic
 
 clean:  clean-checkPROGRAMS clean-compile clean-kr clean-tags \
-		clean-generic mostlyclean
+		clean-generic mostlyclean clean-local
 
 distclean:  distclean-checkPROGRAMS distclean-compile distclean-kr \
 		distclean-tags distclean-generic clean
@@ -415,18 +380,24 @@ maintainer-clean:  maintainer-clean-checkPROGRAMS \
 clean-checkPROGRAMS maintainer-clean-checkPROGRAMS mostlyclean-compile \
 distclean-compile clean-compile maintainer-clean-compile mostlyclean-kr \
 distclean-kr clean-kr maintainer-clean-kr tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir check-TESTS \
-info dvi check-local installcheck install-exec install-data install \
-uninstall all installdirs mostlyclean-generic distclean-generic \
-clean-generic maintainer-clean-generic clean mostlyclean distclean \
-maintainer-clean
+distclean-tags clean-tags maintainer-clean-tags distdir info dvi \
+check-local installcheck install-exec install-data install uninstall \
+all installdirs mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
-check-local: cpiotest defs
-# FIXME: Nothing works, waiting for overhaul.
-#	srcdir=$(srcdir) GCPIO=$(GCPIO) $(srcdir)/cpiotest
 
-mostlyclean:
-	rm -rf tmp-*
+all-local: atconfig atlocal testsuite
+
+check-local: atconfig atlocal testsuite
+	$(SHELL) $(srcdir)/testsuite
+
+$(srcdir)/testsuite: atgeneral.m4 testsuite.m4 $(SUITE)
+	m4 -I $(srcdir) atgeneral.m4 testsuite.m4 | cat -s > $@-tmp
+	mv $@-tmp $@
+	chmod +x $@
+
+clean-local:
+	rm -f FAIL-*.sh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -1,3 +1,18 @@
+1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am (EXTRA_DIST): Include atconfig.m4, delete echo.m4.
+
+1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atconfig.m4: New file, also subsuming echo.m4.
+	* echo.m4: Deleted.
+
+1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* gettext.m4: Try to use gettext from libc.
+
+	* printllu.m4: Check tar_cv_have_printf_llu even if it is cached.
+
 1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
 
 	* gettext.m4: Much adjusted to match changed or new Makefiles.
@@ -8,4 +23,3 @@
 	* echo.m4, gettext.m4, imalloc.m4, microsoft.m4, printllu.m4: New,
 	out of acinclude.m4.
 	* Makefile.am: New file.
-

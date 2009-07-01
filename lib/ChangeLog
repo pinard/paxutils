@@ -1,3 +1,16 @@
+1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
+
+	* getopt.c, regex.c, xmalloc.c: Include <gettext.h>, not <libintl.h>.
+
+1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* userspec.c: Don't declare strdup if it is defined as a macro.
+
+1998-10-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* regex.h, regex.c: New files, from elsewhere.
+	* Makefile.am: Adjusted.
+
 1998-06-22  François Pinard  <pinard@iro.umontreal.ca>
 
 	* dstring.h: Remove ds_ prefix to field names.
@@ -46,10 +59,8 @@
 	* Makefile.am: Adjusted.
 	Reported by Dieter Nützel, Ed DeRivas, Eli Zaretskii, Erick
 	Branderhorst, Greg Herman, Jim Meyering and John David Anglin.
-
-1998-02-11  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.12a.
+1998-02-11  François Pinard  <pinard@iro.umontreal.ca>
 
 	* getdate.y: New versions, to correct a few problems.
 	Reported by David Liu, Ishikawa Chiaki and William Bader.
@@ -78,8 +89,6 @@
 
 1997-04-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11p.
-
 	The distribution did not have getdate.c updated:
 	* Makefile.am (libtar_a_SOURCES): Use getdate.y, not getdate.c.
 	(EXTRA_DIST): Do not include getdate.y anymore.
@@ -92,8 +101,6 @@
 	Reported by Bruno Haible, Bryant Fujimoto and Wolfram Wagner.
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11o.
 
 	* getdate.h: New file.
 	* Makefile.am: Adjusted.
@@ -115,13 +122,9 @@
 
 1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.14.
-
 	* basename.c: New file.
 
 1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.13.
 
 	* Makefile.am: Use tar_DEPENDENCIES.  Avoid BUILT_SOURCES,
 	put getdate.c instead of getdate.y in tar_SOURCES and keep
@@ -147,8 +150,6 @@
 
 1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.12.
-
 	* execlp.c: Include stdio.h, not only stdio!
 
 1996-09-16  François Pinard  <pinard@iro.umontreal.ca>
@@ -169,14 +170,10 @@
 
 1996-07-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.11.
-
 	* Makefile.am (EXTRA_DIST): Move stpcpy.c there, from tar_SOURCES.
 	Reported by Ulrich Drepper.
 
 1996-04-17  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.10.
 
 	* Makefile.am (EXTRA_DIST): New name for DIST_OTHER.
 
@@ -220,8 +217,6 @@
 	and Minh Tran-Le.
 
 1995-12-29  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.9.
 
 	* Makefile.am: New file.
 

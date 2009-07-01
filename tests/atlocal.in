@@ -1,0 +1,56 @@
+# Configuration definitions for testing `cpio'.		-*- shell-script -*-
+
+# Set to `yes' if your system has BSD style symbolic links.  If you don't
+# have symbolic links, set SYMLINKS to `no' so the test suite will not
+# try to test symbolic links.
+if test '@LN_S@' = 'ln -s'; then
+  SYMLINKS=yes
+else
+  SYMBLINKS=no
+fi
+
+# If your system has a standard version of cpio, set BINCPIO to be
+# its name so the test suite can make sure that it and gcpio can read
+# each others' archives.
+BINCPIO=@TEST_CPIO@
+
+# Set this to be the standard cpio option for the old portable format.
+# This is `-c' on most machines, but `-H odc' on System V.4 machines.
+BINOLDC=@TEST_BOLDC@
+
+# If your system has a standard version of tar, set to its name so the
+# test suite can make sure that cpio can read standard tar archives.
+BINTAR=@TEST_TAR@
+
+# Set to your uid number and name.  On some systems (Linux), `UID' is a
+# readonly variable in sh; that is why we use another name.
+XUID=@TEST_UID@
+UIDNAME=@TEST_UIDNAME@
+
+# Set to your gid number and name.
+GID=@TEST_GID@
+GIDNAME=@TEST_GIDNAME@
+
+# If your system supports multiple groups and you are a member of more
+# than 1 group, set to another group so the test suite can check cpio's
+# ability to set different gid's.
+GID2=@TEST_GID2@
+GID2NAME=@TEST_GID2NAME@
+
+# On some machines (e.g. HP) a flag (eg `-x') must be used to get devices
+# to work.  Set to the name of the flag sans `-', eg `x'.
+DEVFLAG=@TEST_DEVFLAG@
+
+# Set to the path to mkfifo.  Empty if no such.
+MKFIFO=@TEST_MKFIFO@
+
+if test -n "$MKFIFO"; then
+  # This is set to `yes' if the system has fifos, including mkfifo.
+  FIFOS=yes
+  # A version of cpio that can handle fifos.  Empty if no such.
+  # FIXME: unwarranted assumption.
+  FIFOCPIO=$BINCPIO
+else
+  FIFOS=no
+  FIFOCPIO=
+fi

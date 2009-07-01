@@ -1104,6 +1104,16 @@ decode_options (int argc, char *const *argv)
 #endif /* not DEVICE_PREFIX */
       }
 
+  /* Handle any remaining unprocessed arguments as file arguments.  These may
+     exist after `--', as we forced REQUIRE_ORDER in option decoding.  */
+
+  while (optind < argc)
+    {
+      name_add (argv[optind]);
+      input_files++;
+      optind++;
+    }
+
   /* Process trivial options.  */
 
   if (show_version)

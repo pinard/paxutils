@@ -135,6 +135,16 @@ fi
 AC_SUBST($1)])
 
 
+# Single argument says where are built sources to test, relative to the
+# built test directory.  Maybe omitted if the same (flat distribution).
+
+AC_DEFUN(AT_CONFIG,
+[AT_TESTPATH=ifelse($1, , ., $1)
+AC_SUBST(AT_TESTPATH)
+fp_PROG_ECHO
+])
+
+
 # Once this macro is called, you may output with no echo in a Makefile or
 # script using:  echo @ECHO_N@ "STRING_TO_OUTPUT@ECHO_C@".
 
@@ -293,8 +303,8 @@ main ()
   exit (0);
 }
 ], tar_cv_have_printf_llu=yes, tar_cv_have_printf_llu=no,
-  test "$tar_cv_have_printf_llu" = '' && tar_cv_have_printf_llu=cross)
-test "$tar_cv_have_printf_llu" = yes && AC_DEFINE(HAVE_PRINTF_LLU)])
+  test "$tar_cv_have_printf_llu" = '' && tar_cv_have_printf_llu=cross)])
+test "$tar_cv_have_printf_llu" = yes && AC_DEFINE(HAVE_PRINTF_LLU)
 ])
 
 
@@ -465,13 +475,17 @@ AC_DEFUN(fp_WITH_GETTEXT, [
       [  --with-catgets          say that catgets is not supported],
       [AC_MSG_WARN([catgets not supported, --with-catgets ignored])])
 
+    AC_CHECK_FUNCS(gettext)
     AC_CHECK_LIB(intl, gettext, :)
-    if test $ac_cv_lib_intl_gettext = yes; then
+    if test $ac_cv_lib_intl_gettext$ac_cv_func_gettext != nono; then
       AC_MSG_CHECKING(whether the included gettext is preferred)
       AC_ARG_WITH(included-gettext,
 	[  --with-included-gettext compile our provided version of gettext],
 	with_included_gettext=$withval, with_included_gettext=no)
       AC_MSG_RESULT($with_included_gettext)
+      if test $with_included_gettext$ac_cv_func_gettext = nono; then
+        LIBS="$LIBS -lintl"
+      fi
     else
       with_included_gettext=yes
     fi
@@ -480,7 +494,6 @@ AC_DEFUN(fp_WITH_GETTEXT, [
       AC_DEFINE(HAVE_GETTEXT)
       AC_DEFINE(HAVE_DCGETTEXT)
     else
-      LIBS="$LIBS -lintl"
       AC_CHECK_HEADERS(libintl.h)
       AC_CHECK_FUNCS(dcgettext gettext)
     fi

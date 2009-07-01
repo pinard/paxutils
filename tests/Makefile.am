@@ -18,36 +18,31 @@
 # 02111-1307, USA.
 
 AUTOMAKE_OPTIONS = gnits ../src/ansi2knr
-check_PROGRAMS = genfile
-BUILT_SOURCES = preset
-
-TESTS = none.sh
-
-# FIXME: Nothing works, waiting for overhaul.
-PREPONED_TESTS = version.sh ignfail.sh create01.sh extrac01.sh extrac02.sh \
-extrac03.sh extrac04.sh extrac05.sh old.sh volume.sh gzip.sh \
-append01.sh delete01.sh increm01.sh increm02.sh
-
-# Postponed until after the 2.5 release.
-POSTPONED_TESTS = delete02.sh
-
 check_PROGRAMS = echotime genfile rediff swapb swaphw verify wrsparse
 
-EXTRA_DIST = README README2 after before cpiotest $(TESTS) \
-$(PREPONED_TESTS) $(POSTPONED_TESTS)
+SUITE = append.m4 c-append.m4 c-base.m4 c-block.m4 c-crc.m4 \
+c-interop.m4 c-junk.m4 c-long.m4 c-newc.m4 c-nopipe.m4 c-odd.m4	\
+c-owner.m4 c-pass.m4 c-reset.m4 c-skip.m4 c-swap.m4 c-tar.m4 \
+c-unpack.m4 create.m4 delete.m4 exclude.m4 extract.m4 gzip.m4 \
+incremen.m4 volume.m4
+
+EXTRA_DIST = atgeneral.m4 make-structure test-one testsuite \
+testsuite.m4 $(SUITE)
 
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 INCLUDES = -I.. -I$(top_srcdir)/src -I$(top_srcdir)/lib
 LDADD = ../lib/libpu.a
 localedir = $(prefix)/share/locale
 
-# Set this to test a different cpio.
-GCPIO = `cd ../src && pwd`/cpio
-check-local: cpiotest defs
-# FIXME: Nothing works, waiting for overhaul.
-#	srcdir=$(srcdir) GCPIO=$(GCPIO) $(srcdir)/cpiotest
+all-local: atconfig atlocal testsuite
 
-mostlyclean:
-	rm -rf tmp-*
+check-local: atconfig atlocal testsuite
+	$(SHELL) $(srcdir)/testsuite
 
-## create01.sh delete01.sh delete02.sh: genfile
+$(srcdir)/testsuite: atgeneral.m4 testsuite.m4 $(SUITE)
+	m4 -I $(srcdir) atgeneral.m4 testsuite.m4 | cat -s > $@-tmp
+	mv $@-tmp $@
+	chmod +x $@
+
+clean-local:
+	rm -f FAIL-*.sh

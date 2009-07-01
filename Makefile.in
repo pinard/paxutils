@@ -78,6 +78,7 @@ POST_UNINSTALL = :
 ALL_LINGUAS = @ALL_LINGUAS@
 ALL_MOFILES = @ALL_MOFILES@
 ALL_POFILES = @ALL_POFILES@
+AT_TESTPATH = @AT_TESTPATH@
 CC = @CC@
 CPP = @CPP@
 ECHO_C = @ECHO_C@
@@ -144,7 +145,7 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-$(ACLOCAL_M4):  configure.in  m4/echo.m4 m4/gettext.m4 m4/imalloc.m4 \
+$(ACLOCAL_M4):  configure.in  m4/atconfig.m4 m4/gettext.m4 m4/imalloc.m4 \
 		m4/malloc.m4 m4/microsoft.m4 m4/printllu.m4 \
 		m4/realloc.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)

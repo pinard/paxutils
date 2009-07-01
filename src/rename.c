@@ -22,12 +22,7 @@
 
 #include <assert.h>
 #include <ctype.h>
-
-#if WITH_REGEX
-# include <regex.h>
-#else
-# include <rx.h>
-#endif
+#include <regex.h>
 
 #include "extern.h"
 

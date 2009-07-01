@@ -1,3 +1,107 @@
+1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* testsuite.m4: Activate some mix of tests to prerelease.
+
+1998-10-27  François Pinard  <pinard@iro.umontreal.ca>
+
+	* create.m4: Include a check that -- does not prevent later files
+	from being collected.
+	Reported by Nick Cleaton.
+
+1998-10-22  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Save check line into file at-check-line, use it.
+
+	* c-append.m4, c-base.m4, c-block.m4, c-crc.m4, c-interop.m4,
+	c-junk.m4, c-long.m4, c-newc.m4, c-nopipe.m4, c-odd.m4,
+	c-owner.m4, c-pass.m4, c-reset.m4, c-skip.m4, c-swap.m4, c-tar.m4,
+	c-unpack.m4: New files obtained by fragmenting cpio.m4.
+	* testfile.m4: Adapted for including the above.
+	* cpio.m4: Deleted.
+	* Makefile.am (SUITE): Adjusted.
+
+	* verify.c: Revise option processing, base it on getopt_long_only.
+	Add --mtime-lt, which we now need.
+
+	* testsuite.m4:  PREPARE and CPIO_FILTER macros.
+
+1998-10-21  François Pinard  <pinard@iro.umontreal.ca>
+
+	* make-structure: New file.
+	* atgeneral.m4 (AT_CHECK): Handle expout and experr.
+	* cpio.m4: Tedious massaging.
+	* Makefile.am: Adjusted.
+
+	* echotime.c, rediff.c, swapb.c, swaphw.c, verify.c, wrsparse.c:
+	Reformatted a bit, use exit instead of return, other such details.
+	* README2: Deleted, it only duplicates start of above files.
+	* Makefile.am: Adjusted.
+
+1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
+
+	* testsuite.m4: Remove second argument to AT_INIT.
+	* atconfig.in: Use AT_TESTPATH, from configuration.
+	* Makefile.am (all-local, check-local): Depend on atconfig.
+	(check): Find testsuite in distribution, not in build.
+
+	* atgeneral.m4: Don't quote $ before at, this is not needed.
+
+	* atgeneral.m4 (AT_CHECK): Save, then restore stdout and stderr.
+	This is better than forcing stdout and stderr to /dev/null.
+
+	* atconfig.in: Preset at_diff to cmp -s.
+	* atgeneral.m4 (AT_CHECK): Use at_diff instead of cmp -s.
+
+	* test-one: Use atconfig.  Also check that it is around.
+
+	* atgeneral.m4: Implement option -e.
+
+	* Makefile.am (testsuite): Make it executable.
+
+	* atconfig.in: Include atlocal if it exists.
+	* atlocal.in: New file to handle cpio test defines, out of cpio.m4.
+	* Makefile.am (all-local, check-local): Depend on atlocal.
+
+1998-10-16  François Pinard  <pinard@iro.umontreal.ca>
+
+	* test-one: Renamed from test-one.in.
+	* Makefile.am (EXTRA_DIST): Distribute test-one.
+
+	* atconfig.in: New file, containing excerpts of atgeneral.m4.
+	* atgeneral.m4: Adjusted to use configured atconfig.
+	* Makefile.am: Turn testsuite.m4 into testsuite, not testsuite.in.
+	(EXTRA_DIST): Include testsuite.
+
+	* delete.m4: Test the output archive, not the input one.
+	* incremen.m4: Remove spurious action and test.
+	Reported by Jim Meyering.
+
+1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
+
+	* exclude.m4: New file.
+	* Makefile.am, testsuite.m4: Adjusted.
+	Reported by Andreas Schwab.
+
+	* test-one.in: New file.
+
+	* cpio.m4: Made out from regress.sh.
+	* cpiotest, defs.in, regress.sh: Deleted.
+
+1998-10-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4, testsuite.m4: New files.
+	* preset.in, before, after, none.sh: Deleted.
+	* append.m4: Made out from append01.sh.
+	* create.m4: Made out from ignfail.sh and create01.sh.
+	* delete.m4: Made out from delete01.sh and delete02.sh.
+	* extract.m4: Made out from extrac01.sh, extrac02.sh, extrac03.sh,
+	extrac04.sh and extrac05.sh.
+	* gzip.m4: Made out from gzip.sh.
+	* incremen.m4: Made out from increm01.sh and increm02.sh.
+	* volume.m4: Made out from volume.sh.
+	* All previous .sh tests: Deleted.
+	* Makefile.am: Revised.
+
 1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Inactivate all tests, for making the snapshot.
@@ -38,10 +142,8 @@
 1998-02-23  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Not all tests require genfile, list those who do.
-
-1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.12a.
+1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
 	* extrac05.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
@@ -125,8 +227,6 @@
 
 1997-04-22  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11q.
-
 	* extrac03.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
 	Reported by Marc Boucher.
@@ -158,8 +258,6 @@
 
 1997-04-17  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11p.
-
 	* genfile.c (usage): Add a program description.
 	(main): Output --version according to recent GNU standards.
 
@@ -172,10 +270,6 @@
 
 	* genfile.c (pattern): Remove trailing comma for last enum item.
 	Reported by Bruno Haible.
-
-1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11o.
 
 1997-03-29  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -235,8 +329,6 @@
 
 1996-11-06  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.13.
-
 	* childerr.sh, direxist.sh, volcheck.sh: Use sh, not bash.
 	Reported by John David Anglin.
 
@@ -246,8 +338,6 @@
 	* Makefile.am (TESTS): Adjusted.
 
 1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.12.
 
 	* Makefile.am ($(TESTS)): Depend on preset.
 	* version.sh (PATH): Adjust for multi-line --version output.

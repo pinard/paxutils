@@ -1,23 +1,10 @@
 A new pretest for the `pax' utilities is now available as:
 
-   http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4d.tar.gz
+   http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4f.tar.gz
 
-This is pre-alpha software.  I *did* warn you! :-).  The official report
-address for problems is `paxutils-bugs@iro.umontreal.ca', yet pretesters
-are invited to prefer the mailing list `paxutils-forum@iro.umontreal.ca'.
+This is still pre-alpha software.  You are invited to use the mailing list
+mailto:paxutils-forum@iro.umontreal.ca, but you could also write to me either
+at mailto:paxutils-bugs@iro.umontreal.ca or mailto:pinard@iro.umontreal.ca.
 
-The `2.4d' version was selected for this version as it is "greater" than
-both the last pretest for `cpio' and the last pretest for `tar'.  The new
-`pax' program is there to justify the package name: some options are missing,
-and it never suffered real life yet.  You'll also find `mt' and `rmt'.
-
-As a radical experiment in maintenance style, I will prerelease `paxutils'
-more "early and often" than I used to do with `tar', without trying to
-solve everything myself between pretests.  I'll rather count on your help.
-
-This code is pretty unstable as it stands.  I've dummied `make check': do
-*not* count on it (unless you reactivate it yourself in `tests/Makefile').
-I suggest that we all tackle the portability of compilation to start with.
-Those who want to do more are surely welcome to do so, yet you should feel a
-bit like diving in the code, then providing analysis and maybe small diffs.
-Bigger diffs slow us down, as papers should be signed and sent to the FSF.
+The test suite holds `tar' checks and now, a few from the `cpio' series.
+Many checks fail.  Your analysis of problems (and small diffs) are welcome!

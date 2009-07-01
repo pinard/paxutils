@@ -1,5 +1,5 @@
-# Summary of pending email for Free paxutils 2.4d.
-# Last updated on 1998-10-06.
+# Summary of pending email for Free paxutils 2.4f.
+# Last updated on 1998-10-28.
 
 # This file summarises almost all pending email pertaining to this package.
 # I think users deserve to know where maintenance stands for what they use.
@@ -100,6 +100,7 @@
 57. 1998-07-11 Ralf Corsepius: Re: 2 bugs
 58. 1998-07-10 Curtis L. Olson: Re: 2 bugs
 59. 1998-08-26 Geoffrey Noer: Re: TAR for NT
+60. 1998-09-18 Detlev Göbel: Re: Cannot read DAT tape w/tar
 
 ../rmail/0-eli-bugs
  1. 1997-10-05 Eli Zaretskii: tar -A problem in GNU tar 1.12
@@ -232,6 +233,11 @@
  7. 1997-01-12 Fred Fish: filename collisions in latest textutils
  8. 1997-01-12 Jim Meyering: Re: filename collisions in latest textutils
 
+../rmail/1-create-incremental
+ 1. 1998-09-24 John R. Vanderpool: irix 6.4+ incrementals break for gnu tar
+ 2. 1998-10-13 Greg Ercolano: Possible bug in GNU tar 1.12: incremental backups
+ 3. 1998-10-13 Greg Ercolano: Re: GNU TAR 1.12: incremental bug report
+
 ../rmail/1-create-names
  1. 1993-02-18 Peter W. Osel: Would these new tar options be useful?
  2. 1993-02-20 Peter W. Osel: Re: Would these new tar options be useful?
@@ -257,6 +263,7 @@
 22. 1997-08-27 Jonathan I. Kamens: tar 1.12 crashing on long paths
 23. 1998-06-18 John R. Vanderpool: Re: problems reading gnu tar root file-syste
 24. 1998-06-30 François Pinard: Re: prefix option for gnu tar
+25. 1998-10-21 Eric.TOMIO@st.com: Problem with gnu tar on solaris
 
 ../rmail/1-create-permissions
  1. 1986-08-19 Stu Heiss: tar
@@ -331,6 +338,7 @@
 58. 1995-10-29 François Pinard: Re: Some GNU tar suggestions: checksums
 59. 1998-09-29 Jeffrey Bailey: Solaris 2.6 and --one-file-system
 60. 1998-09-29 François Pinard: Re: Solaris 2.6 and --one-file-system
+61. 1998-10-16 Pattier Nicolas: GNUtar, symbolic links and Utrix 4.5
 
 ../rmail/1-extract-incremental
  1. 1997-07-26 Robert E. Brown: incremental restore fails
@@ -345,6 +353,10 @@
 10. 1998-04-04 Jens Lautenbacher: is tar really that stupid?
 11. 1998-04-05 Alexandre Oliva: Re: is tar really that stupid?
 12. 1998-05-15 Alexandre Oliva: Re: Problems with exclude file/gnutar
+13. 1998-10-07 Greg Ercolano: gnu tar: bug w/incrementals under linux?
+14. 1998-10-07 Greg Ercolano: gnu tar: bug w/incrementals under linux?
+15. 1998-10-09 Greg Ercolano: GNU TAR 1.12: incremental bug report
+16. 1998-10-12 Greg Ercolano: Re: GNU TAR 1.12: incremental bug report: bug ide
 
 ../rmail/1-extract-interactive
  1. 1998-04-03 Jason K. Schechner: single file restore with gtar
@@ -730,6 +742,7 @@
  5. 1994-11-17 wd: Re: Can DAT drives switch compression on and off?
  6. 1996-09-20 Martin Mares: Re: Prerelease: GNU tar 1.11.12
  7. 1994-06-10 Werner Krebs: improvements to tar 1.11.2
+ 8. 1998-10-09 Jean-loup Gailly: Re: A message for the gzip maintainer - Jean-l
 
 ../rmail/2-gzip-per-file
  1. 1993-04-20 Frank Terhaar-Yonkers: gtar hacks
@@ -785,6 +798,7 @@
 22. 1998-09-11 Julian Seward: Re: bzip2 patch for GNU tar 1.12
 23. 1998-09-26 Ronald F. Guilmette: A gzip related project
 24. 1998-09-27 Ken Pizzini: Re: A message for the gzip maintainer - Jean-loup G
+25. 1998-10-14 SAKAI Kiyotaka: [paxutils-2.4e] bzip2
 
 ../rmail/2-switch-interaction
  1. 1990-11-17 Jay Ts: Re: tar or cpio, which is better?
@@ -1186,6 +1200,8 @@
 70. 1998-09-08 Jeremy Mathers: Re: cpio: --no-absolute-filenames doesn't work a
 71. 1998-09-10 Horst Knobloch: Re: cpio: --no-absolute-filenames doesn't work a
 72. 1998-09-11 Jeremy Mathers: Re: cpio: --no-absolute-filenames doesn't work a
+73. 1998-10-12 François Pinard: cpio - planned changes?
+74. 1998-10-07 Eric LECHOPIER: Solve bug in cpio-2.4.2
 
 ../rmail/3-format-hurd
  1. 1996-08-07 Thomas Bushnell, n/BSG: Backup of Hurd systems
@@ -1577,6 +1593,8 @@
 55. 1998-07-22 Andrew McNabb: Re: planner error
 56. 1998-09-02 Brian Lalor: Exclude files with gtar?
 57. 1998-09-02 Alexandre Oliva: Re: Exclude files with gtar?
+58. 1998-10-07 Jens Krause: Re: syntax exclude.gtar
+59. 1998-10-07 Jens Krause: Re: syntax exclude.gtar
 
 ../rmail/4-exit-statuses
  1* 1993-03-25 Jim Meyering: tar-1.11.2 nit
@@ -1770,6 +1788,9 @@
  7. 1996-11-19 Jim Blandy: dired-tar.el
  8. 1998-05-09 Richard Stallman: A certain amount of coding needed
 
+../rmail/5-library
+ 1. 1998-09-30 François Pinard: Re: Embedded Tar
+
 ../rmail/5-mysteries
  1. 1996-02-22 fulco@sig.uvsq.fr: autre probleme avec tar sur DG
  2. 1996-02-23 Adrian Biland: tar-1.11.8: bug in '--totals' on AIX 4.1.3
@@ -1783,6 +1804,9 @@
  2. 1995-01-24 Koen Holtman: Re: DISCUSSION: afio 2.4.1 new feature
  3. 1995-01-24 Karel Kubat: Re: DISCUSSION: afio 2.4.1 new feature
  4. 1995-01-24 Koen Holtman: Re: DISCUSSION: afio 2.4.1 new feature
+
+../rmail/5-rpm
+ 1. 1998-10-13 Patrick J. Volkerding: Re: about rpm2targz script
 
 ../rmail/5-xtar
  1. 1995-11-01 François Pinard: xtar
@@ -1842,6 +1866,7 @@
  2. 1997-06-23 Erick Branderhorst: gtar 1.12 on solaris 2.4
  3. 1997-07-09 Bruno Haible: GNU tar 1.12 build failure on m68k-sun
  4. 1997-11-14 Erick Branderhorst: solaris 2.6 and tar-1.12
+ 5. 1998-10-12 François Pinard: Re: paxutils pretest -- email stuck
 
 ../rmail/conf-idcache
  1. 1998-05-17 François Pinard: Re: Patch to speeds up tar on Sparc-Linux (and
@@ -1897,6 +1922,8 @@
 ../rmail/conf-utimbuf
  1. 1998-05-16 Jim Meyering: easing acconfig.h maintenance: utimbuf.m4
  2. 1998-05-16 Johan Danielsson: Re: easing acconfig.h maintenance: utimbuf.m4
+ 3. 1998-10-07 Dr Andreas F Muller: Re: Prerelease: GNU recode 3.4i
+ 4. 1998-10-13 François Pinard: Re: Prerelease: GNU recode 3.4i
 
 ../rmail/conf-various
  1. 1997-04-16 François Pinard: tar config

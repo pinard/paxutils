@@ -1,19 +1,21 @@
 * README file for `paxutils'				allout -*- outline -*-
 
-  Here is `paxutils' 2.5.  Please glance through *all* sections of this
+  Here is version 2.4f for Free `pax' utilities.  Glance through this
   `README' file before starting configuration.  Make sure you read files
   `ABOUT-NLS' and `INSTALL' if you are not familiar with them already.
 
-  If you got this distribution in `shar' format, timestamps ought to be
-  properly restored, do not ignore such complaints at `unshar' time.
+  The canonical distribution point for this version is either:
 
-  The canonical distribution point for this version is:
+     http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4f.tar.gz
+     ftp://ftp.iro.umontreal.ca/pub/paxutils/paxutils-2.4f.tar.gz
 
-     http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.5.tar.gz
+  yet the second URL (the FTP one) might disappear one day.  GNU mirrors
+  usually hold a copy of non-pretest releases, the canonical distribution
+  points for last such releases (before the merge occurred) are:
 
-  GNU mirrors also have it, the canonical distribution point for GNU being:
-
-     ftp://ftp.gnu.org/pub/gnu/paxutils-2.5.tar.gz
+     ftp://ftp.gnu.org/pub/gnu/cpio-2.4.tar.gz
+     ftp://ftp.gnu.org/pub/gnu/tar-1.12.shar.gz
+     ftp://ftp.gnu.org/pub/gnu/tar-1.12.tar.gz
 
 .* Introduction
    ------------
@@ -83,6 +85,28 @@
     Do not forget applying the `*-PATCHES' files (all officious)
     appropriately.  Make sure GNU `m4' is fully installed before you start
     installing Autoconf.  Have Perl installed before Automake.
+
+. + Mailing lists and collaboration
+
+    If you feel like receiving releases and pretest announcements for
+    the `paxutils' package (formerly `cpio' or `tar'), send a message to
+    mailto:majordomo@iro.umontreal.ca having, in its body, a line saying:
+
+	subscribe paxutils-announce
+
+    If you rather want to participate actively in discussions, pretesting
+    and development for `paxutils', do just as above, but this time, use:
+
+	subscribe paxutils-forum
+
+    Look into http://www.iro.umontreal.ca/contrib/paxutils/ for various
+    releases, pretests, and related files.  In particular, subdirectory
+    `dist/' contains a weekly mirror of the current unpackaged work files,
+    while subdirectory `rmail/' contains saved or pending correspondence.
+
+    Please do _not_ widely redistribute releases having a letter after
+    the version numbers, as these are meant for pretesting only, and might
+    not be stable enough for other usages.
 
 . + Report addresses
 

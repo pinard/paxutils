@@ -378,9 +378,9 @@ GLOBAL time_t time_option_threshold;
 
 #define FILE_IS_NEW_ENOUGH(Stat) \
   ((!newer_mtime_option							\
-    || time_compare ((Stat)->st_mtime, time_option_threshold) > 0)	\
+    || time_compare ((Stat)->st_mtime, time_option_threshold) >= 0)	\
    && (!newer_ctime_option						\
-       || time_compare ((Stat)->st_ctime, time_option_threshold)) > 0)
+       || time_compare ((Stat)->st_ctime, time_option_threshold) >= 0))
 
 /* Declarations for each module.  */
 

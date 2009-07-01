@@ -788,7 +788,7 @@ dump_file (char *p, dev_t parent_device, bool top_level)
 #else
       if (!link_table)
 	{
-	  link_table = hash_initialize (0, link_hash, link_compare, NULL);
+	  link_table = hash_initialize (0, NULL, link_hash, link_compare, NULL);
 	  if (!link_table)
 	    FATAL_ERROR ((0, 0, _("Memory exhausted")));
 	}

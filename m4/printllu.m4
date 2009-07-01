@@ -23,6 +23,6 @@ main ()
   exit (0);
 }
 ], tar_cv_have_printf_llu=yes, tar_cv_have_printf_llu=no,
-  test "$tar_cv_have_printf_llu" = '' && tar_cv_have_printf_llu=cross)
-test "$tar_cv_have_printf_llu" = yes && AC_DEFINE(HAVE_PRINTF_LLU)])
+  test "$tar_cv_have_printf_llu" = '' && tar_cv_have_printf_llu=cross)])
+test "$tar_cv_have_printf_llu" = yes && AC_DEFINE(HAVE_PRINTF_LLU)
 ])

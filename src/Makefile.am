@@ -46,50 +46,50 @@ LDADD = ../lib/libpu.a
 
 localedir = $(prefix)/share/locale
 
-cpio.o: cpio.c
+cpio.o: cpio.c ../config.status
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/cpio.c
 
-cpio._o: cpio._c
+cpio._o: cpio._c ../config.status
 	@rm -f _cpio.c
 	@ln cpio._c _cpio.c
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _cpio.c
 	@mv _cpio.o $@
 	@rm _cpio.c
 
-mt.o: mt.c
+mt.o: mt.c ../config.status
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/mt.c
 
-mt._o: mt._c
+mt._o: mt._c ../config.status
 	@rm -f _mt.c
 	@ln mt._c _mt.c
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _mt.c
 	@mv _mt.o $@
 	@rm _mt.c
 
-pax.o: pax.c
+pax.o: pax.c ../config.status
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/pax.c
 
-pax._o: pax._c
+pax._o: pax._c ../config.status
 	@rm -f _pax.c
 	@ln pax._c _pax.c
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _pax.c
 	@mv _pax.o $@
 	@rm _pax.c
 
-tar.o: tar.c
+tar.o: tar.c ../config.status
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/tar.c
 
-tar._o: tar._c
+tar._o: tar._c ../config.status
 	@rm -f _tar.c
 	@ln tar._c _tar.c
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _tar.c
 	@mv _tar.o $@
 	@rm _tar.c
 
-rmt.o: rmt.c
+rmt.o: rmt.c ../config.status
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/rmt.c
 
-rmt._o: rmt._c
+rmt._o: rmt._c ../config.status
 	@rm -f _rmt.c
 	@ln rmt._c _rmt.c
 	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _rmt.c

@@ -1,5 +1,5 @@
 /* xmalloc.c -- malloc with out of memory checking
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 97 Free Software Foundation, Inc.
+   Copyright (C) 1990,91,92,93,94,95,96,97,98 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ void free ();
 #endif
 
 #if ENABLE_NLS
-# include <libintl.h>
+# include <gettext.h>
 # define _(Text) gettext (Text)
 #else
 # define textdomain(Domain)

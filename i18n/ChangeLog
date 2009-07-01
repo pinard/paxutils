@@ -1,3 +1,8 @@
+1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* Makefile.am (install-data-local): Use $(mkinstalldirs), not
+	$(MKINSTALLDIRS).  Find the files in $(srcdir).
+
 1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: New file.
@@ -18,7 +23,7 @@
 1998-02-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* no.po: Updated.
-
+
 1997-06-26  François Pinard  <pinard@iro.umontreal.ca>
 
 	* ko.po: Updated.
@@ -45,13 +50,7 @@
 
 1997-04-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11p.
-
 	* fr.po: Updated.
-
-1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease 1.11o.
 
 1997-03-26  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -68,16 +67,12 @@
 
 1996-11-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.14.
-
 	* POTFILES.in: Adjust for changes in src/.
 
 1996-09-05  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.12.
-
 	* pl.po: New file.
-
+
 1995-06-17  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Release 1.11.8.

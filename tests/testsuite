@@ -1,0 +1,1986 @@
+#!/bin/sh
+# Validation suite for Free `pax' utilities.
+# Copyright © 1998 Progiciels Bourbeau-Pinard inc.
+# François Pinard <pinard@iro.umontreal.ca>, 1998.
+
+at_usage="Usage: $0 OPTION...
+
+  -v  Explain the purpose of each group of tests
+  -e  Stop if a test fails, then do not clean up"
+
+while test $# -gt 0; do
+  case "$1" in
+    -v) at_verbose=1; shift ;;
+    -e) at_stop_on_error=1 shift ;;
+    *) echo 1>&2 "$at_usage"; exit 1 ;;
+  esac
+done
+
+. ./atconfig
+
+if test -n "`pax --version | sed -n s/$at_package.*$at_version/OK/p`"; then
+  at_banner="Testing suite for Free $at_package, version $at_version"
+  at_dashes=`echo $at_banner | sed s/./=/g`
+  echo "$at_dashes"
+  echo "$at_banner"
+  echo "$at_dashes"
+else
+  echo '======================================================='
+  echo 'ERROR: Not using the proper version, no tests performed'
+  echo '======================================================='
+  exit 1
+fi
+
+at_failed_list=
+at_test_count=0
+
+echo
+echo 'cpio tests.'
+echo
+
+# We may get many "truncating inode number" diagnostics in case the
+# build directory has high-numbered inodes, CPIO_FILTER gets rid of them.
+# One might prefer testing on a less used filesystem?  I'm not sure.
+
+# Prior cleanup should ideally not be needed.
+rm -rf structure unpacked
+rm -f struct-list archive arch-oldc arch-newc
+rm -f arch-inst arch-c-inst
+
+# Uncomment to hide our `cpio' by system's one, on the search PATH.
+# export PATH=/usr/bin:$PATH
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if default cpio creation and listing merely works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "1. c-base.m4:3          $at_c"
+  (
+# Snippet (s1(
+
+# The test group starts at `c-base.m4:3'.  An error occurred while
+# testing if default cpio creation and listing merely works.
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+
+echo 13 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat struct-list | cpio -o > archive || exit 1
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 21 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -t < archive || exit 1
+cp struct-list expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 29 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tv < archive | sed -e 's/ -> .*//' -e 's/^.* //'
+cp struct-list expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s1)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 1"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c1(
+
+rm -rf $cleanup archive expout stdout stderr
+# Snippet )c1)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if old portable cpio creation and listing merely works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "2. c-base.m4:33         $at_c"
+  (
+# Snippet (s2(
+
+# The test group starts at `c-base.m4:33'.  An error occurred while
+# testing if old portable cpio creation and listing merely works.
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+
+echo 43 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat struct-list | cpio -o -c > arch-oldc || exit 1
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 51 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -t -c < arch-oldc || exit 1
+cp struct-list expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 59 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -t < arch-oldc || exit 1
+cp struct-list expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 67 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tv -c < arch-oldc | sed -e 's/ -> .*//' -e 's/^.* //'
+cp struct-list expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s2)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 2"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c2(
+
+rm -rf $cleanup arch-oldc expout stdout stderr
+# Snippet )c2)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if installed cpio creation merely works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "3. c-base.m4:71         $at_c"
+  (
+# Snippet (s3(
+
+# The test group starts at `c-base.m4:71'.  An error occurred while
+# testing if installed cpio creation merely works.
+
+test -n "$BINCPIO" || exit 77
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+
+echo 83 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat struct-list | $BINCPIO -o$DEVFLAG > arch-inst || exit 1
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 90 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat struct-list | $BINCPIO -o$DEVFLAG $BINOLDC > arch-c-inst || exit 1
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s3)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 3"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c3(
+
+rm -rf $cleanup arch-inst arch-c-inst stdout stderr
+# Snippet )c3)
+  fi
+fi
+
+# FIXME: struct-list gets deleted by the above check, while it should not.
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+
+cleanup=
+if test ! -f archive; then
+  cat struct-list | cpio -o > archive 2> /dev/null
+  cleanup="$cleanup archive"
+fi
+if test ! -f arch-oldc; then
+  cat struct-list | cpio -o -c > arch-oldc 2> /dev/null
+  cleanup="$cleanup arch-oldc"
+fi
+
+if test -n "$BINCPIO"; then
+  cleanup=
+if test ! -f arch-inst; then
+  cat struct-list | $BINCPIO -o$DEVFLAG > arch-inst 2> /dev/null
+  cleanup="$cleanup arch-inst"
+fi
+if test ! -f arch-c-inst; then
+  cat struct-list | $BINCPIO -o$DEVFLAG $BINOLDC > arch-c-inst 2> /dev/null
+  cleanup="$cleanup arch-c-inst"
+fi
+
+fi
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if installed cpio can unpack our archive'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "4. c-unpack.m4:3        $at_c"
+  (
+# Snippet (s4(
+
+# The test group starts at `c-unpack.m4:3'.  An error occurred while
+# testing if installed cpio can unpack our archive.
+
+test -n "$BINCPIO" || exit 77
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+if test ! -f archive; then
+  cat struct-list | cpio -o > archive 2> /dev/null
+  cleanup="$cleanup archive"
+fi
+
+mkdir unpacked
+
+echo 21 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+sleep 1
+cd unpacked
+  $BINCPIO -id$DEVFLAG < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-lt $TIME < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 31 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  $BINCPIO -idum$DEVFLAG < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s4)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 4"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c4(
+
+rm -rf $cleanup unpacked stdout stderr
+# Snippet )c4)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if we can unpack our own archive'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "5. c-unpack.m4:35       $at_c"
+  (
+# Snippet (s5(
+
+# The test group starts at `c-unpack.m4:35'.  An error occurred while
+# testing if we can unpack our own archive.
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+if test ! -f archive; then
+  cat struct-list | cpio -o > archive 2> /dev/null
+  cleanup="$cleanup archive"
+fi
+
+mkdir unpacked
+
+echo 51 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+sleep 1
+cd unpacked
+  cpio -id < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-lt $TIME < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 61 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s5)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 5"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c5(
+
+rm -rf $cleanup unpacked stdout stderr
+# Snippet )c5)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+# Test blocking.  It will not do much good on a pipe, but because it will
+# cause all reads and writes to use the same blocksize it will help exercise
+# `sparse.c'.
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing option -C'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "6. c-block.m4:7         $at_c"
+  (
+# Snippet (s6(
+
+# The test group starts at `c-block.m4:7'.  An error occurred while
+# testing option -C.
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+if test ! -f archive; then
+  cat struct-list | cpio -o > archive 2> /dev/null
+  cleanup="$cleanup archive"
+fi
+
+mkdir unpacked
+
+echo 21 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum -C 1 < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 31 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum -C 256 < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 41 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum --block-size=20 < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s6)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 6"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c6(
+
+rm -rf $cleanup unpacked stdout stderr
+# Snippet )c6)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing option -B'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "7. c-block.m4:45        $at_c"
+  (
+# Snippet (s7(
+
+# The test group starts at `c-block.m4:45'.  An error occurred while
+# testing option -B.
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+if test ! -f archive; then
+  cat struct-list | cpio -o > archive 2> /dev/null
+  cleanup="$cleanup archive"
+fi
+
+mkdir unpacked
+
+echo 59 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idm -B < ../archive || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 70 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  # Probably should verify linked message.
+  cpio -idumv < ../archive 2>&1 | grep -v 'cpio.*linked to' 1>&2
+cd ..
+cp struct-list experr
+echo 'NN blocks' >> experr
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+$at_diff experr stderr || exit 1
+
+# Snippet )s7)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 7"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c7(
+
+rm -rf $cleanup unpacked stdout stderr
+# Snippet )c7)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+# Inter-operability checks.
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing interoperability with installed cpio'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "8. c-interop.m4:5       $at_c"
+  (
+# Snippet (s8(
+
+# The test group starts at `c-interop.m4:5'.  An error occurred while
+# testing interoperability with installed cpio.
+
+test -n "$BINCPIO" || exit 77
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+if test ! -f arch-oldc; then
+  cat struct-list | cpio -o -c > arch-oldc 2> /dev/null
+  cleanup="$cleanup arch-oldc"
+fi
+if test ! -f arch-inst; then
+  cat struct-list | $BINCPIO -o$DEVFLAG > arch-inst 2> /dev/null
+  cleanup="$cleanup arch-inst"
+fi
+if test ! -f arch-c-inst; then
+  cat struct-list | $BINCPIO -o$DEVFLAG $BINOLDC > arch-c-inst 2> /dev/null
+  cleanup="$cleanup arch-c-inst"
+fi
+
+mkdir unpacked
+
+echo 23 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+sleep 1
+cd unpacked
+  cpio -id < ../arch-inst || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-lt $TIME < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 33 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum < ../arch-inst || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 45 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+sleep 1
+cd unpacked
+  $BINCPIO -id$DEVFLAG $BINOLDC < ../arch-oldc || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-lt $TIME < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 55 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  $BINCPIO -idum$DEVFLAG $BINOLDC < ../arch-oldc || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 67 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+sleep 1
+cd unpacked
+  cpio -id -c < ../arch-c-inst || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-lt $TIME < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 77 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum -c < ../arch-c-inst || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s8)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 8"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c8(
+
+rm -rf $cleanup unpacked stdout stderr
+# Snippet )c8)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing cpio interoperability with self'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "9. c-interop.m4:81      $at_c"
+  (
+# Snippet (s9(
+
+# The test group starts at `c-interop.m4:81'.  An error occurred while
+# testing cpio interoperability with self.
+
+cleanup=
+if test ! -d structure; then
+  $at_srcdir/make-structure
+  cleanup="$cleanup structure"
+fi
+if test ! -f struct-list; then
+  find structure -depth -print > struct-list
+  cleanup="$cleanup struct-list"
+fi
+if test ! -f arch-oldc; then
+  cat struct-list | cpio -o -c > arch-oldc 2> /dev/null
+  cleanup="$cleanup arch-oldc"
+fi
+
+mkdir unpacked
+
+echo 97 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+sleep 1
+cd unpacked
+  cpio -id -c < ../arch-oldc || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-lt $TIME < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+echo 107 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unpacked
+  cpio -idum -c < ../arch-oldc || exit 1
+cd ..
+verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s9)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 9"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c9(
+
+rm -rf $cleanup unpacked stdout stderr
+# Snippet )c9)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  rm -rf structure unpacked
+  rm -f struct-list archive arch-oldc arch-newc
+  rm -f arch-inst arch-c-inst
+fi
+
+echo
+echo 'tar tests.'
+echo
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing that -- does not stop option decoding'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "10. create.m4:3         $at_c"
+  (
+# Snippet (s10(
+
+# The test group starts at `create.m4:3'.  An error occurred while
+# testing that -- does not stop option decoding.
+
+echo 11 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+
+touch file1 file2
+tar cvf archive file1 -- file2
+
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "file1
+file2
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s10)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 10"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c10(
+
+rm -rf archive file1 file2 stdout stderr
+# Snippet )c10)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if an interrupted write gets restarted on POSIX systems'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "11. create.m4:14        $at_c"
+  (
+# Snippet (s11(
+
+# The test group starts at `create.m4:14'.  An error occurred while
+# testing if an interrupted write gets restarted on POSIX systems.
+
+# Skip test when fork is not available, like on DOSish systems.
+# I do not know how to do this right, so just exclude DOSish for now.
+# But cleanup does not occur, then!  FIXME!
+test -z "$COMSPEC" || exit 77
+test -z "$ComSpec" || exit 77
+
+genfile -l 100000 > file
+
+echo 36 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+( tar cf - file &
+  process=$!
+  sleep 2
+  kill -STOP $process
+  sleep 1
+  kill -CONT $process
+) |
+( sleep 5
+  cat > /dev/null
+)
+
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s11)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 11"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c11(
+
+rm -rf file stdout stderr
+# Snippet )c11)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if old archives receive directories'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "12. create.m4:40        $at_c"
+  (
+# Snippet (s12(
+
+# The test group starts at `create.m4:40'.  An error occurred while
+# testing if old archives receive directories.
+
+echo 52 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+mkdir directory
+tar cfvo archive directory
+tar tf archive
+set +e
+
+exec 1>&5 2>&6
+echo $at_n "directory/
+directory/
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s12)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 12"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c12(
+
+rm -rf archive directory stdout stderr
+# Snippet )c12)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if --ignore-failed-read handles unreadable directories'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "13. create.m4:56        $at_c"
+  (
+# Snippet (s13(
+
+# The test group starts at `create.m4:56'.  An error occurred while
+# testing if --ignore-failed-read handles unreadable directories.
+
+## Skip test when root.  These few lines (which warranted a few emails! :-)
+## are kept here, but commented, as a reference for possible later use.
+#
+#touch file
+#set - x`ls -l file`
+#if test $3 = root; then
+#  rm file
+#  exit 77
+#else
+#  rm file
+#fi
+
+# Skip test when directory permissions are not enforced, like when
+# on AFS filesystems, or DOSish systems.  It also takes care of
+# the root case, so the check above does not need to be done anymore.
+
+mkdir directory
+chmod 000 directory
+if touch 2>/dev/null directory/file; then
+  rm -rf directory
+  exit 77
+else
+  chmod 700 directory
+  rm -rf directory
+fi
+
+touch file
+mkdir directory
+touch directory/file
+
+echo 98 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+chmod 000 file
+tar cf archive file
+status=$?
+chmod 600 file
+test $status = 2 || exit 1
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Cannot add file file: Permission denied
+tar: Processed all files possible, despite earlier errors
+$at_c" | $at_diff - stderr || exit 1
+
+echo 108 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+chmod 000 file
+tar cf archive --ignore-failed-read file || exit 1
+status=$?
+chmod 600 file
+test $status = 0 || exit 1
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Cannot add file file: Permission denied
+$at_c" | $at_diff - stderr || exit 1
+
+echo 119 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+chmod 000 directory
+tar cf archive directory
+status=$?
+chmod 700 directory
+test $status = 2 || exit 1
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Cannot add directory directory: Permission denied
+tar: Processed all files possible, despite earlier errors
+$at_c" | $at_diff - stderr || exit 1
+
+echo 129 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+chmod 000 directory
+tar cf archive --ignore-failed-read directory || exit 1
+status=$?
+chmod 700 directory
+test $status = 0 || exit 1
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Cannot add directory directory: Permission denied
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s13)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 13"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c13(
+
+rm -rf archive directory file stdout stderr
+# Snippet )c13)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if diagnostic is suppressed when directory already exists'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "14. extract.m4:3        $at_c"
+  (
+# Snippet (s14(
+
+# The test group starts at `extract.m4:3'.  An error occurred while
+# testing if diagnostic is suppressed when directory already exists.
+
+echo 13 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+mkdir directory
+touch directory/file
+tar cf archive directory
+tar xf archive
+set +e
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s14)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 14"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c14(
+
+rm -rf archive directory stdout stderr
+# Snippet )c14)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if symlinks can be extracted over existing files'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "15. extract.m4:17       $at_c"
+  (
+# Snippet (s15(
+
+# The test group starts at `extract.m4:17'.  An error occurred while
+# testing if symlinks can be extracted over existing files.
+
+# Skip test when file links are not available, like on DOSish systems.
+test -z "$COMSPEC" || exit 77
+test -z "$ComSpec" || exit 77
+
+echo 33 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+touch file
+ln -s file link 2> /dev/null || exit 77
+tar cf archive link
+rm link
+touch link
+tar xf archive
+set +e
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s15)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 15"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c15(
+
+rm -rf archive file link stdout stderr
+# Snippet )c15)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if paths going up and down avoid extraction loops'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "16. extract.m4:37       $at_c"
+  (
+# Snippet (s16(
+
+# The test group starts at `extract.m4:37'.  An error occurred while
+# testing if paths going up and down avoid extraction loops.
+
+echo 45 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+mkdir directory
+tar cfv archive directory/../directory
+
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "directory/../directory/
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+echo 49 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar xfv archive
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "directory/../directory/
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s16)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 16"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c16(
+
+rm -rf archive directory stdout stderr
+# Snippet )c16)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing that intermediate directories does not give protection errors'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "17. extract.m4:53       $at_c"
+  (
+# Snippet (s17(
+
+# The test group starts at `extract.m4:53'.  An error occurred while
+# testing that intermediate directories does not give protection errors.
+
+# While creating intermediate directories, there was a protection error
+# while attemping to create short prefix directories owned by root.
+
+mkdir directory
+echo x > directory/file
+echo 61 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar cfP archive `pwd`/directory/file
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+rm -rf directory
+echo 64 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar xfP archive `pwd`/directory/file
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s17)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 17"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c17(
+
+rm -rf archive directory stdout stderr
+# Snippet )c17)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if --recursive-unlink works as expected'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "18. extract.m4:68       $at_c"
+  (
+# Snippet (s18(
+
+# The test group starts at `extract.m4:68'.  An error occurred while
+# testing if --recursive-unlink works as expected.
+
+echo 83 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+echo OK > contents
+tar cf archive contents
+rm contents
+mkdir contents
+touch contents/file
+tar xf archive --recursive-unlink
+cat contents
+set +e
+
+exec 1>&5 2>&6
+echo $at_n "OK
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s18)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 18"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c18(
+
+rm -rf archive contents stdout stderr
+# Snippet )c18)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if exclude correctly checks the last occurrence of the string'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "19. exclude.m4:3        $at_c"
+  (
+# Snippet (s19(
+
+# The test group starts at `exclude.m4:3'.  An error occurred while
+# testing if exclude correctly checks the last occurrence of the string.
+
+echo 11 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+mkdir test-directory
+touch test-directory/test
+tar cvf archive --exclude=test test-directory
+
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "test-directory/
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s19)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 19"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c19(
+
+rm -rf archive test-directory stdout stderr
+# Snippet )c19)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if append works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "20. append.m4:3         $at_c"
+  (
+# Snippet (s20(
+
+# The test group starts at `append.m4:3'.  An error occurred while
+# testing if append works.
+
+echo 17 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+touch file1
+touch file2
+tar cf archive file1
+tar rf archive file2
+tar tf archive
+set +e
+
+exec 1>&5 2>&6
+echo $at_n "file1
+file2
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s20)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 20"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c20(
+
+rm -rf archive file1 file2 stdout stderr
+# Snippet )c20)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if deleting a member after a big one leaves a good archive'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "21. delete.m4:3         $at_c"
+  (
+# Snippet (s21(
+
+# The test group starts at `delete.m4:3'.  An error occurred while
+# testing if deleting a member after a big one leaves a good archive.
+
+echo 16 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+genfile -l 50000 > file1
+genfile -l 1024 > file2
+tar cf archive file1 file2
+tar f archive --delete file2
+tar tf archive
+set +e
+
+exec 1>&5 2>&6
+echo $at_n "file1
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s21)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 21"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c21(
+
+rm -rf archive file1 file2 stdout stderr
+# Snippet )c21)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if deleting a member with the archive from stdin works correctly'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "22. delete.m4:20        $at_c"
+  (
+# Snippet (s22(
+
+# The test group starts at `delete.m4:20'.  An error occurred while
+# testing if deleting a member with the archive from stdin works correctly.
+
+echo 36 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+genfile -l 3073 -p zeros > 1
+cp 1 2
+cp 2 3
+tar cf archive 1 2 3
+tar tf archive
+cat archive | tar f - --delete 2 > archive2
+set +e
+
+exec 1>&5 2>&6
+echo $at_n "1
+2
+3
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+echo 41 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar tf archive2
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "1
+3
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s22)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 22"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c22(
+
+rm -rf archive archive2 1 2 3 stdout stderr
+# Snippet )c22)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if directories older than the listed entry are processed'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "23. incremen.m4:3       $at_c"
+  (
+# Snippet (s23(
+
+# The test group starts at `incremen.m4:3'.  An error occurred while
+# testing if directories older than the listed entry are processed.
+
+# Cover for the DOS 2-seconds granularity in file timestamps.
+
+mkdir directory
+touch directory/file
+sleep 2
+
+echo 15 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar cfv archive --listed=list directory
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "directory/
+directory/file
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+sleep 3
+touch directory/file
+
+echo 23 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar cfv archive --listed=list directory
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+echo $at_n "directory/
+directory/file
+$at_c" | $at_diff - stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s23)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 23"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c23(
+
+rm -rf archive directory stdout stderr
+# Snippet )c23)
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if existing directories are incrementally emptied at restore time'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "24. incremen.m4:27      $at_c"
+  (
+# Snippet (s24(
+
+# The test group starts at `incremen.m4:27'.  An error occurred while
+# testing if existing directories are incrementally emptied at restore time.
+
+echo 55 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+
+mkdir before
+cd before
+mkdir dir-a
+echo alpha > dir-a/file-1
+echo beta > file-2
+tar cfg ../archiv-1 ../listed .
+echo gamma > file-3
+mkdir dir-b
+echo delta > dir-b/file-4
+rm dir-a/file-1 file-2
+rmdir dir-a
+tar cfg ../archiv-2 ../listed .
+cd ..
+
+mkdir after
+cd after
+tar xfg ../archiv-1 ../listed
+tar xfg ../archiv-2 ../listed
+cd ..
+
+set +e
+diff -r before after
+
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s24)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 24"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c24(
+
+rm -rf archiv-1 archiv-2 before after stdout stderr
+# Snippet )c24)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if tar detects that its gzip child failed'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "25. gzip.m4:3           $at_c"
+  (
+# Snippet (s25(
+
+# The test group starts at `gzip.m4:3'.  An error occurred while
+# testing if tar detects that its gzip child failed.
+
+# Skip test when /dev/null is not available.
+# Hmph!  Seems it was only for DOS, where DJGPP now supports it.
+#test -r /dev/null && exit 77
+
+echo 15 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar xfvz /dev/null
+test $? = 2 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "
+gzip: stdin: unexpected end of file
+tar: Child returned status 1
+tar: Processed all files possible, despite earlier errors
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s25)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 25"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c25(
+
+rm -rf stdout stderr
+# Snippet )c25)
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  if test -n "$at_verbose"; then
+    echo 'testing if volume labels are checked on read by fnmatch'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "26. volume.m4:3         $at_c"
+  (
+# Snippet (s26(
+
+# The test group starts at `volume.m4:3'.  An error occurred while
+# testing if volume labels are checked on read by fnmatch.
+
+# Skip test when /dev/null is not available.
+# Hmph!  Seems it was only for DOS, where DJGPP now supports it.
+test -r /dev/null || exit 77
+
+echo 17 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+set -e
+tar cfVT archive label /dev/null
+tar xfV archive label
+tar xfV archive 'la?el'
+tar xfV archive 'l*l'
+set +e
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+echo 22 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar xfV archive lab
+test $? = 2 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Volume \`label' does not match \`lab'
+tar: Error is not recoverable: exiting now
+$at_c" | $at_diff - stderr || exit 1
+
+echo 27 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar xfV archive bel
+test $? = 2 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Volume \`label' does not match \`bel'
+tar: Error is not recoverable: exiting now
+$at_c" | $at_diff - stderr || exit 1
+
+echo 32 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar xfV archive babel
+test $? = 2 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "tar: Volume \`label' does not match \`babel'
+tar: Error is not recoverable: exiting now
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s26)
+  )
+  case $? in
+    0) echo ok
+       at_test_count=`expr $at_test_count + 1`
+       ;;
+    77) echo ignored
+	;;
+    *) echo "FAILED before line `cat at-check-line`"
+       at_test_count=`expr $at_test_count + 1`
+       at_failed_list="$at_failed_list 26"
+       ;;
+  esac
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c26(
+
+rm -rf archive stdout stderr
+# Snippet )c26)
+  fi
+fi
+
+# Wrap up the testing suite with summary statistics.
+
+rm -f at-check-line
+at_fail_count=0
+if test -z "$at_failed_list"; then
+  at_banner="All $at_test_count tests were successful"
+else
+  for at_group in $at_failed_list; do
+    at_fail_count=`expr $at_fail_count + 1`
+    ( echo '#!/bin/sh'
+      sed -n "/^# Snippet ((/,/^# Snippet ))/p" atconfig
+      sed -n "/^# Snippet (c$at_group(/,/^# Snippet )c$at_group)/p" $0
+      sed -n "/^# Snippet (s$at_group(/,/^# Snippet )s$at_group)/p" $0
+      echo 'exit 0'
+    ) | grep -v '^# Snippet' > FAIL-$at_group.sh
+    chmod +x FAIL-$at_group.sh
+    echo "FAIL-$at_group.sh:1: debugging script"
+  done
+  if test -n "$at_stop_on_error"; then
+    at_banner="ERROR: One test failed, inhibiting subsequent tests"
+  else
+    at_banner="ERROR: $at_fail_count of $at_test_count tests failed"
+  fi
+fi
+at_dashes=`echo $at_banner | sed s/./=/g`
+echo "$at_dashes"
+echo "$at_banner"
+echo "$at_dashes"
+
+test -z "$at_failed_list" || exit 1
+exit 0

@@ -262,9 +262,11 @@ process_copy_in (void)
 	  while (*p == '/')
 	    ++p;
 	  if (*p == '\0')
-	    {
-	      strcpy (file_hdr.c_name, ".");
-	    }
+	    strcpy (file_hdr.c_name, ".");
+	  else if (archive_format == arf_tar || archive_format == arf_ustar
+		   || archive_format == arf_gnutar)
+	    /* read_in_tar_header doesn't allocate the name dynamically.  */
+	    file_hdr.c_name = p;
 	  else
 	    {
 	      char *non_abs_name;

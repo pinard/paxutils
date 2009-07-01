@@ -33,9 +33,9 @@ if USE_NLS
 	for file in $$files; do \
 	  base=`basename $$file`; \
 	  langdir=$(localedir)/`echo $$base | sed 's/\.mo$$//'`/LC_MESSAGES; \
-	  $(MKINSTALLDIRS) $$langdir; \
-	  echo " $(INSTALL_DATA) $$file $$langdir/$(PACKAGE).mo"; \
-	  $(INSTALL_DATA) $$file $$langdir/$(PACKAGE).mo; \
+	  $(mkinstalldirs) $$langdir; \
+	  echo " $(INSTALL_DATA) $(srcdir)/$$file $$langdir/$(PACKAGE).mo"; \
+	  $(INSTALL_DATA) $(srcdir)/$$file $$langdir/$(PACKAGE).mo; \
 	done
 endif
 

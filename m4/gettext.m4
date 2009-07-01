@@ -18,13 +18,17 @@ AC_DEFUN(fp_WITH_GETTEXT, [
       [  --with-catgets          say that catgets is not supported],
       [AC_MSG_WARN([catgets not supported, --with-catgets ignored])])
 
+    AC_CHECK_FUNCS(gettext)
     AC_CHECK_LIB(intl, gettext, :)
-    if test $ac_cv_lib_intl_gettext = yes; then
+    if test $ac_cv_lib_intl_gettext$ac_cv_func_gettext != nono; then
       AC_MSG_CHECKING(whether the included gettext is preferred)
       AC_ARG_WITH(included-gettext,
 	[  --with-included-gettext compile our provided version of gettext],
 	with_included_gettext=$withval, with_included_gettext=no)
       AC_MSG_RESULT($with_included_gettext)
+      if test $with_included_gettext$ac_cv_func_gettext = nono; then
+        LIBS="$LIBS -lintl"
+      fi
     else
       with_included_gettext=yes
     fi
@@ -33,7 +37,6 @@ AC_DEFUN(fp_WITH_GETTEXT, [
       AC_DEFINE(HAVE_GETTEXT)
       AC_DEFINE(HAVE_DCGETTEXT)
     else
-      LIBS="$LIBS -lintl"
       AC_CHECK_HEADERS(libintl.h)
       AC_CHECK_FUNCS(dcgettext gettext)
     fi

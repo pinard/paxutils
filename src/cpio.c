@@ -55,7 +55,7 @@ static struct option long_opts[] =
   {"list", 0, &table_flag, true},
   {"make-directories", 0, &create_dir_flag, true},
   {"message", 1, 0, 'M'},
-  {"no-absolute-names", 0, 0, OPTION_NOABSFILE},
+  {"no-absolute-filenames", 0, 0, OPTION_NOABSFILE},
   {"no-preserve-owner", 0, 0, OPTION_NOPRESERVE},
   {"nonmatching", 0, &copy_matching_files, false},
   {"numeric-uid-gid", 0, &numeric_uid, true},
@@ -183,7 +183,7 @@ Main operation mode:\n\
  -S, --swap-halfwords     swap halfwords of each word in files (copy-in)\n"),
 	 fp);
   fputs (_("\
- --sparse                 write sparse files (copy-out, copy-pass)\n"), fp);
+ --sparse                 write sparse files (copy-in, copy-pass)\n"), fp);
   fputs (_("\
  -t, --list               print table of contents of input\n"), fp);
   fputs (_("\
@@ -195,7 +195,7 @@ Main operation mode:\n\
   fputs (_("\
  --version                print version information and exit\n"), fp);
 
-  fputs (_("\nReport bugs to <bug-gnu-utils@prep.ai.mit.edu>\n"), fp);
+  fputs (_("\nReport bugs to <paxutils-bugs@iro.umontreal.ca>\n"), fp);
 
   exit (status);
 }
@@ -330,6 +330,10 @@ process_args (int argc, char *argv[])
 	  numeric_uid = true;
 	  break;
 
+	case OPTION_NOABSFILE:	/* --no-absolute-filenames */
+	  no_abs_paths_flag = true;
+	  break;
+
 	case OPTION_NOPRESERVE:	/* --no-preserve-owner */
 	  if (set_owner_flag || set_group_flag)
 	    error (2, 0, _("only one of --no-preserve-owner and -R allowed"));
@@ -429,8 +433,11 @@ process_args (int argc, char *argv[])
 	  usage (stdout, 0);
 	  break;
 
+	case '?':
 	default:
-	  error (2, 0, _("unrecognized option -- `%c'"), c);
+	  fprintf (stderr, _("Try `%s --help' for more information.\n"),
+		   program_name);
+	  exit (2);
 	}
     }
 
@@ -456,7 +463,6 @@ process_args (int argc, char *argv[])
       archive_des = 0;
       /* FIXME should indicate particular error.  */
       if (link_flag || reset_time_flag || xstat != lstat || append_flag
-	  || sparse_flag
 	  || output_archive_name
 	  || (archive_name && input_archive_name))
 	error (2, 0, _("option conflicts with -i"));
@@ -472,7 +478,7 @@ process_args (int argc, char *argv[])
       archive_des = 1;
       /* FIXME should indicate particular error.  */
       if (argc != optind || create_dir_flag || rename_flag
-	  || table_flag || unconditional_flag || link_flag
+	  || sparse_flag || table_flag || unconditional_flag || link_flag
 	  || retain_time_flag || no_chown_flag || set_owner_flag
 	  || set_group_flag || swap_bytes_flag || swap_halfwords_flag
 	  || (append_flag && !(archive_name || output_archive_name))

@@ -224,7 +224,7 @@ print_header (struct tar_entry *entry)
     flush_checkpoint_line ();
 
   if (block_number_option)
-    fprintf (stdlis, _("block %10ul: "),
+    fprintf (stdlis, _("block %10lu: "),
 	     (unsigned long) current_block_ordinal ());
 
   if (verbose_option <= 1)
@@ -453,7 +453,7 @@ print_for_mkdir (char *pathname, int length, mode_t mode)
 	flush_checkpoint_line ();
 
       if (block_number_option)
-	fprintf (stdlis, _("block %10ul: "),
+	fprintf (stdlis, _("block %10lu: "),
 		 (unsigned long) current_block_ordinal ());
 
       if (name = quote_copy_string (pathname), name)

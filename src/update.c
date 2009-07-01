@@ -86,7 +86,7 @@ append_file (char *path)
       set_next_block_after (start + (size_read - 1) / BLOCKSIZE);
 
       if (size_read != size_to_read)
-	FATAL_ERROR ((0, 0, _("%s: File shrunk by %ul bytes, (yark!)"),
+	FATAL_ERROR ((0, 0, _("%s: File shrunk by %lu bytes, (yark!)"),
 		      path, (unsigned long) bytes_left));
     }
 

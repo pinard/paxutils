@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4d.
+   This file documents `paxutils' 2.4f.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -277,7 +277,7 @@ number to the standard output, then immediately exits successfully,
 without doing anything else, ignoring all other options.  For example,
 `tar --version' might return:
 
-     tar (Free paxutils) 2.4d
+     tar (Free paxutils) 2.4f
 
 The first occurrence of `tar' in the result above is the program name
 in the package (for example, `rmt' is another program), while the
@@ -342,7 +342,7 @@ menu (with `m tar <RET>').
 provided.  Currently, it doesn't tell much more than `tar --help' does.
 Other `man' pages exist for `tar', written at the time `tar' did not
 install any `man' pages on its own.  The string `tar (Free paxutils)
-2.4d' appears in the title of the *normal* `man' page.
+2.4f' appears in the title of the *normal* `man' page.
 
 
 File: paxutils.info,  Node: verbose,  Next: checkpoint,  Prev: help,  Up: Documentation and help

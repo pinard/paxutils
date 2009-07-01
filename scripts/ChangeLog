@@ -6,8 +6,6 @@
 
 1996-04-17  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.10.
-
 	* Makefile.am (EXTRA_DIST): New name for DIST_OTHER.
 
 1996-01-14  François Pinard  <pinard@iro.umontreal.ca>
@@ -24,8 +22,6 @@
 	Reported by Cesar Romani and Ulrich Drepper.
 
 1995-06-21  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease 1.11.9.
 
 	* Makefile.in: Distribute the ChangeLog, now recovered!
 	Reported by Andreas Schwab.
@@ -47,13 +43,9 @@
 
 1995-02-05  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease 1.11.7.
-
 	* Makefile.in (maintainer-clean): New name for realclean.
 
 1994-12-03  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease 1.11.6.
 
 	* ChangeLog: Replaced by a warning for now.  It has
 	seemingly been overwritten by the weekly script :-(.
@@ -67,8 +59,6 @@
 	(Makefile): Have ./config.status create this Makefile only.
 
 1994-06-30  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease 1.11.5.
 
 	* ChangeLog: Initialized by moving entries related to
 	scripts out of this ChangeLog.

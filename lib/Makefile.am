@@ -26,12 +26,12 @@ modechange.h realloc.c rename.c rmdir.c stpcpy.c stpncpy.c strstr.c
 
 noinst_HEADERS = argmatch.h backupfile.h dstring.h error.h filetypes.h \
 fnmatch.h getopt.h getdate.h getpagesize.h gettext.h hash.h makepath.h \
-pathmax.h save-cwd.h xalloc.h
+pathmax.h regex.h save-cwd.h xalloc.h
 
 libpu_a_SOURCES = addext.c argmatch.c backupfile.c basename.c \
 dstring.c error.c filemode.c getdate.y getopt.c getopt1.c getversion.c \
-hash.c idcache.c makepath.c modechange.c msleep.c octal.c save-cwd.c \
-stripslash.c userspec.c xgetcwd.c xmalloc.c xstrdup.c
+hash.c idcache.c makepath.c modechange.c msleep.c octal.c regex.c \
+save-cwd.c stripslash.c userspec.c xgetcwd.c xmalloc.c xstrdup.c
 
 ## INCLUDES = -I.. -I$(srcdir) -I../intl
 INCLUDES = -I.. -I$(srcdir)

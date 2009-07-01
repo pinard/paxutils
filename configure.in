@@ -17,9 +17,10 @@
 # 02111-1307, USA.
 
 AC_INIT(src/pax.c)
-AM_CONFIG_HEADER(config.h)
 AC_PREREQ(2.12)
-AM_INIT_AUTOMAKE(paxutils, 2.4d)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(paxutils, 2.4f)
+AT_CONFIG(../src)
 ALL_LINGUAS="cs de es fr it ko nl no pl pt sl sv"
 
 extra_bin_progs=
@@ -31,7 +32,6 @@ AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
 AC_AIX
 AC_MINIX
-fp_PROG_ECHO
 AC_PROG_RANLIB
 AC_PROG_YACC
 
@@ -349,6 +349,6 @@ AC_SUBST(TEST_DEVFLAG)
 # End of test suite section.
 # ======================================================================
 
-AC_OUTPUT(Makefile contrib/Makefile doc/Makefile i18n/Makefile
-lib/Makefile m4/Makefile scripts/Makefile src/Makefile
-tests/Makefile tests/defs tests/preset)
+AC_OUTPUT(Makefile contrib/Makefile doc/Makefile i18n/Makefile lib/Makefile
+m4/Makefile scripts/Makefile src/Makefile tests/Makefile tests/atconfig
+tests/atlocal)

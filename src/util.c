@@ -32,13 +32,6 @@
 #include <io.h>
 #endif
 
-#ifdef HAVE_SYS_MTIO_H
-#ifdef HAVE_SYS_IO_TRIOCTL_H
-#include <sys/io/trioctl.h>
-#endif
-#include <sys/mtio.h>
-#endif
-
 static void tape_fill_input_buffer PARAMS ((int in_des, int num_bytes));
 static int disk_fill_input_buffer PARAMS ((int in_des, int num_bytes));
 static void hash_insert ();
@@ -737,8 +730,8 @@ find_inode_file (unsigned long node_num, unsigned long major_num,
 	   temp = (temp + 1) % hash_size)
 	{
 	  if (hash_table[temp]->inode == node_num
-	      && hash_table[start]->major_num == major_num
-	      && hash_table[start]->minor_num == minor_num)
+	      && hash_table[temp]->major_num == major_num
+	      && hash_table[temp]->minor_num == minor_num)
 	    return hash_table[temp]->file_name;
 	}
     }

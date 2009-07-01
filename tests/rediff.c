@@ -1,41 +1,43 @@
-/*
- * rediff.c - A simple 'diff'-like program that accepts regular expressions.
- * $ cat foo
- * abc
- * def
- * gHi
- * $ cat foore
- * [aA][bB][cC]
- * d.f
- * ghi
- * $ ./rediff foore foo
- * < ghi
- * --------------------
- * > gHi
- * 
- * Regular expressions may only occur in the first file.  It might be
- * nice if rediff printed line numbers and could recognize when lines
- * were inserted or deleted.
- */
+/*----------------------------------------------------------------.
+| A simple 'diff'-like program that accepts regular expressions.  |
+`----------------------------------------------------------------*/
+
+/* $ cat foo
+   abc
+   def
+   gHi
+   $ cat foore
+   [aA][bB][cC]
+   d.f
+   ghi
+   $ ./rediff foore foo
+   < ghi
+   --------------------
+   > gHi
+*/
+
+/* Regular expressions may only occur in the first file.  It might be nice if
+   rediff printed line numbers and could recognize when lines were inserted or
+   deleted.  */
 
 #include <stdio.h>
 #include <sys/types.h>
 
 #include "regex.h"
 
-char *program_name;	/* if we have to use cpio's alloca(), it calls 
+char *program_name;	/* if we have to use cpio's alloca(), it calls
 			   xmalloc () which calls error() which wants
 			   program_name.  */
 
 main (argc, argv)
-  int	argc;
-  char	*argv [];
+  int argc;
+  char *argv [];
 {
-  FILE	*fp1, *fp2;
-  char	buf1 [4096], buf2 [4096];
-  int	rc;
-  char  *s1, *s2;
-  int	diffs;
+  FILE *fp1, *fp2;
+  char buf1 [4096], buf2 [4096];
+  int rc;
+  char *s1, *s2;
+  int diffs;
 
   program_name = argv [0];
 
@@ -51,9 +53,7 @@ main (argc, argv)
 	}
     }
   else
-    {
-      fp1 = stdin;
-    }
+    fp1 = stdin;
 
   if (strcmp (argv [2], "-") != 0)
     {
@@ -107,14 +107,13 @@ main (argc, argv)
   if (s2)
     {
       fprintf (stderr, "> %s", buf2);
-	while (s1 = fgets (buf2, 4096, fp2) )
-	  fprintf (stderr, "> %s", buf2);
+      while (s1 = fgets (buf2, 4096, fp2) )
+	fprintf (stderr, "> %s", buf2);
     }
   fclose (fp1);
   fclose (fp2);
   if (diffs != 0)
-    return (2);
-  return (0);
-}
+    exit (2);
 
-	
+  exit (0);
+}

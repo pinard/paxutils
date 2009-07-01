@@ -60,6 +60,7 @@ POST_UNINSTALL = :
 ALL_LINGUAS = @ALL_LINGUAS@
 ALL_MOFILES = @ALL_MOFILES@
 ALL_POFILES = @ALL_POFILES@
+AT_TESTPATH = @AT_TESTPATH@
 CC = @CC@
 CPP = @CPP@
 ECHO_C = @ECHO_C@
@@ -89,7 +90,7 @@ YACC = @YACC@
 extra_bin_progs = @extra_bin_progs@
 extra_libexec_progs = @extra_libexec_progs@
 
-EXTRA_DIST = echo.m4 gettext.m4 imalloc.m4 malloc.m4 microsoft.m4 \
+EXTRA_DIST = atconfig.m4 gettext.m4 imalloc.m4 malloc.m4 microsoft.m4 \
 printllu.m4 realloc.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h

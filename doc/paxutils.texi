@@ -2017,7 +2017,7 @@ that are unreadable.  @xref{cpio Options}.
 @example
 cpio @{-o|--create@} [-0acvABLV] [-C bytes] [-H format]
 [-M message] [-O [[user@@]host:]archive] [-F [[user@@]host:]archive]
-[--file=[[user@@]host:]archive] [--format=format] [--sparse]
+[--file=[[user@@]host:]archive] [--format=format]
 [--message=message][--null] [--reset-access-time] [--verbose]
 [--dot] [--append] [--block-size=blocks] [--dereference]
 [--io-size=bytes] [--help] [--version] < name-list [> archive]
@@ -2044,8 +2044,8 @@ cpio @{-i|--extract@} [-bcdfmnrtsuvBSV] [-C bytes] [-E file]
 [--numeric-uid-gid] [--rename] [--list] [--swap-bytes] [--swap]
 [--dot] [--unconditional] [--verbose] [--block-size=blocks]
 [--swap-halfwords] [--io-size=bytes] [--pattern-file=file]
-[--format=format] [--owner=[user][:.][group]]
-[--no- preserve-owner] [--message=message] [--help] [--version]
+[--format=format] [--owner=[user][:.][group]] [--sparse]
+[--no-preserve-owner] [--message=message] [--help] [--version]
 [--no-absolute-filenames] [--only-verify-crc] [--quiet] [--silent]
 [pattern...] [< archive]
 @end example
@@ -2272,7 +2272,7 @@ be used in copy-in mode.
 
 @item --sparse
 Write files with large blocks of zeros as sparse files.  This option is
-used in copy-out and copy-pass modes.
+used in copy-in and copy-pass modes.
 
 @item --list
 @itemx -t

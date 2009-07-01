@@ -1,3 +1,72 @@
+1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* system.h: Declare stpcpy.
+	Reported by Sakai Kiyotaka.
+
+	* util.c: Do not include <mtio.h>, as system.h did it already.
+	Reported by Alexandre Oliva, Nelson H. F. Beebe and Sakai Kiyotaka.
+
+	* cpio.c (usage): Correct bug reporting address.
+	* pax.c (usage): Idem.
+	Reported by Howard Bampton.
+
+1998-10-27  François Pinard  <pinard@iro.umontreal.ca>
+
+	* create.c (dump_file): Adjust call to hash_initialize to provide
+	a NULL for new tuning argument.
+
+	* tar.c (decode_options): Handle arguments after --.
+	Reported by Nick Cleaton.
+
+1998-10-21  François Pinard  <pinard@iro.umontreal.ca>
+
+	* buffer.c (child_open_for_uncompress): Correct a message.
+	* extract.c (set_stat): Word a message as another, already existing.
+	* list.c (print_header, print_for_mkdir): Use %lu instead of %ul.
+	* update.c (append_file): Idem.
+	Reported by Santiago Vila Doncel.
+
+1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am: Have main programs depend on ../config.status, so a
+	version change in configure.in gets reflected in binaries.
+
+1998-10-13  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* common.h (FILE_IS_NEW_ENOUGH): Fix paren nesting.  Return true
+	also if timestamps are equal.
+
+1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* buffer.c (output_checkpoint_mark): Consistently print 10 dots
+	per group.
+
+	* names.c (check_exclude): Compare the exclude strings only with
+	the last part of the name string.
+
+	* util.c (find_inode_file): Fix index when doing linear search
+	through hash table.
+
+	* cpio.c (process_args): Print a helpful message when processing
+	an unknown option.
+
+	* cpio.c (long_opts): Correct name of --no-absolute-filenames
+	option.
+	(process_args): Handle case OPTION_NOABSFILE.
+
+	* copyin.c (process_copy_in): Don't crash when removing leading
+	slashes from names that comes from tar files.
+
+	* cpio.c (process_args): Reject --sparse in copy-out mode, allow
+	it in copy-in mode.
+	(usage): Update help string.
+
+1998-10-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* rename.c: Always include regex.h, never rx.h.
+	Reported by Alexandre Oliva, Andreas Schwab, Nelson H. F. Beebe
+	and Sakai Kiyotaka.
+
 1998-10-04  François Pinard  <pinard@iro.umontreal.ca>
 
 	* create.c (dump_file): Do not call finish_sparse_file when
@@ -211,10 +280,8 @@
 	* buffer.c, compare.c [MSDOS]: Adjustments for previous variable
 	name changes.
 	Reported by Eli Zaretskii.
-
-1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.12a.
+1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
 	* buffer.c (open_archive): Make sure we don't get handles for
 	local files which are larger than 128, and thus deemed to be
@@ -566,16 +633,16 @@
 
 	* list.c (read_header): If the header is properly POSIX, decode
 	file names the POSIX way.
-	Reported by Amos Gouaux, Andrew Dunstan, Erik E. Rantapaa, Michael
-	Helm, Scott Bertilson, Shimon Facterman, Sriram Srinivasan and
-	Tanya Ruttenberg.
+	Reported by Amos Gouaux, Andrew Dunstan, Eric Tomio, Erik
+	E. Rantapaa, Michael Helm, Robert Zawiasa, Scott Bertilson, Shimon
+	Facterman, Sriram Srinivasan and Tanya Ruttenberg.
 
 	* arith.h (TARLONG_FORMAT): Use %lu instead of %uld as a format
 	for unsigned long.
 	* arith.c (print_tarlong_helper): Idem.
 	Reported by Alexandre Oliva, Andreas Zeller, Brendan O'Dea, Dale
-	Hirchert, Ed DeRivas, Jörg Schilling, Paul Eggert and Robert
-	E. Brown.
+	Hirchert, Ed DeRivas, Garret Brady, Howard Bampton, Jörg
+	Schilling, Paul Eggert and Robert E. Brown.
 
 	Manage so compression work on DOSish systems.
 	* buffer.c [!HAVE_PIPE]: [!HAVE_POPEN]: Include our own popen.h.
@@ -666,8 +733,6 @@
 
 1997-04-22  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11q.
-
 	* extract.c (extract_archive): Check if directory extraction was
 	attempted over an existing directory before attempting recovery,
 	so avoiding extraction loops in cases like DIR/../DIR.
@@ -707,8 +772,6 @@
 
 1997-04-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11p.
-
 	* Makefile.am (tar._o, rmt._o): Revise rules further.
 	Reported by Bruno Haible and Ken Steube.
 
@@ -744,8 +807,6 @@
 	Reported by Bruno Haible and Kaveh R. Ghazi.
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11o.
 
 	* Makefile.am: Duplicate rules for the ansi2knr case.
 	Reported by Kaveh R. Ghazi and Marcus Daniels.
@@ -935,8 +996,6 @@
 
 1996-11-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.14.
-
 	* tar.c (usage): Explain the purpose of the program.
 
 	* tar.c (usage): Clarify the mandatory/optional sentence.
@@ -1017,8 +1076,6 @@
 
 1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.13.
-
 	* tar.c (usage): Do not tie --posix anymore to 1.12.
 
 	* extract.c (set_stat): Until we know better, for the time being,
@@ -1090,8 +1147,6 @@
 	* tar.c (decode_options): Better space --version output.
 
 1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.12
 
 	* Makefile.am (EXTRA_PROGRAMS): Compile rmt properly, instead of
 	letting make use default .c to executable rule.
@@ -1257,8 +1312,6 @@
 
 1996-07-17  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.11.
-
 	* Makefile.am (check-local): Ensure relinking if the service
 	libraries where modified (waiting for Automake to do it!).
 
@@ -1268,8 +1321,6 @@
 	Reported by Santiago Vila Doncel.
 
 1996-07-15  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.10.
 
 	* checktar.sh: Use a more regular WARNING in message.
 
@@ -1555,8 +1606,6 @@
 	* rtapelib.c, rmt.h: Replace all __rmt* symbols by rmt*__.
 
 1995-12-28  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.9.
 
 	* extract.c (extr_init): Initialize variables in any case,
 	instead of partly relying on static initializations.  Remove
@@ -2668,8 +2717,6 @@
 
 1995-05-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.7.
-
 	* Makefile.in (tar): Have $(OBJECTS) depend on system.h.
 
 	* system.h: Many adjustements for GNU gettext.
@@ -2814,8 +2861,6 @@
 	* buffer.c, tar.c [WITH_REGEX]: Check it.
 
 1994-12-03  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.6.
 
 	* rmt.c: Adjust for localization, by including <locale.h> and
 	<libintl.h>, by defining _(), by defining and calling setlocale,
@@ -3047,8 +3092,6 @@
 
 1994-08-21  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.5.
-
 	* Makefile.in: Correct for when a different	build directory.
 
 	* tar.h: Replace W* definitions.  Adapted from make 3.71.
@@ -3129,8 +3172,6 @@
 	Reported by Thomas König.
 
 1994-08-15  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.4.
 
 	* rmt.c (numeric_error): Renamed from error.
 	(string_error): New, to replace ERROR ((...)), unavailable in rmt.c.
@@ -3294,8 +3335,6 @@
 	Ghazi and Robert E. Brown.
 
 1994-08-02  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.3.
 
 	* tar.c (assign_string): New routines.
 	* create.c (dump_file, start_header), extract.c

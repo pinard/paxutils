@@ -23,7 +23,7 @@
 	* help2man: New version.  To be studied later.
 	* Makefile.am (EXTRA_DIST): Adjusted.
 	Reported by Brendan O'Dea.
-
+
 1997-10-17  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* tar.texi: Fix missing cross-references.  Add DOS-specific info.
@@ -48,8 +48,6 @@
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11o.
-
 	* Makefile.am (tar.info): Comment about needed makeinfo version.
 	Reported by Sherwood Botsford.
 
@@ -71,22 +69,16 @@
 
 1996-11-06  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.13.
-
 	* getdate.texi: New file, from elsewhere.
 	* tar.texi: Replace a lot of text by an include of getdate.texi.
 	* Makefile.am: Adjusted.
 
 1996-08-24  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.12.
-
 	* Makefile.am (EXTRA_DIST): Remove texinfo.tex, now that Automake
 	handles it automatically.
 
 1996-07-18  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.11.
 
 	* Makefile.am (tar.info): Remove -I$(srcdir), which was useless.
 
@@ -96,8 +88,6 @@
 	does it automatically.
 
 1996-07-16  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.10.
 
 	* Makefile.am (EXTRA_DIST): Distribute convtexi.pl, for now.
 

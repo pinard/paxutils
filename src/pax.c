@@ -134,7 +134,7 @@ Main operation mode:\n\
   fputs (_("\
  -X, --one-file-system    don't cross file systems\n"), fp);
 
-  fputs (_("\nReport bugs to <bug-gnu-utils@prep.ai.mit.edu>\n"), fp);
+  fputs (_("\nReport bugs to <paxutils-bugs@iro.umontreal.ca>\n"), fp);
 
   exit (status);
 }

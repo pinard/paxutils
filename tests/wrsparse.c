@@ -1,8 +1,10 @@
-/* wrsparse.c - Write some sparse files. */
+/*--------------------------.
+| Write some sparse files.  |
+`--------------------------*/
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+# include <unistd.h>
 #endif
 /* #ifdef HAVE_FCNTL_H */
 #include <fcntl.h>
@@ -12,30 +14,29 @@
 #include <errno.h>
 
 #if STDC_HEADERS || HAVE_STRING_H
-#include <string.h>
+# include <string.h>
 /* An ANSI string.h and pre-ANSI memory.h might conflict.  */
-#if !STDC_HEADERS && HAVE_MEMORY_H
-#include <memory.h>
-#endif /* not STDC_HEADERS and HAVE_MEMORY_H */
-#define index strchr
-#define rindex strrchr
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#define bcmp(s1, s2, n) memcmp ((s1), (s2), (n))
-#define bzero(s, n) memset ((s), 0, (n))
-#else /* not STDC_HEADERS and not HAVE_STRING_H */
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# define index strchr
+# define rindex strrchr
+# define bcopy(s, d, n) memcpy ((d), (s), (n))
+# define bcmp(s1, s2, n) memcmp ((s1), (s2), (n))
+# define bzero(s, n) memset ((s), 0, (n))
+#else
 #include <strings.h>
 /* memory.h and strings.h conflict on some systems.  */
-#endif /* not STDC_HEADERS and not HAVE_STRING_H */
-
+#endif
 
 #define DISKBLOCKSIZE (512)
 
 main(argc, argv)
-  int	argc;
-  char  *argv [];
+     int argc;
+     char *argv [];
 {
-  int	fd, rc;
-  char	buf [DISKBLOCKSIZE];
+  int fd, rc;
+  char buf [DISKBLOCKSIZE];
 
   fd = write_open ("sparse1");
   write (fd, "hi\n", 3);
@@ -93,20 +94,19 @@ main(argc, argv)
 }
 
 bfill (bp, n, value)
-  char 	*bp;
-  int	n;
-  int	value;
+     char *bp;
+     int n;
+     int value;
 {
-  for ( ; n > 0; --n)
+  for (; n > 0; --n)
     *bp++ = value;
-  return;
 }
 
 int
 write_open (filename)
-  char 	*filename;
+     char *filename;
 {
-  int	fd;
+  int fd;
 
   fd = open (filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
   if (fd < 0)

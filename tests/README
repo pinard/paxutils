@@ -1,8 +1,8 @@
 NOTE much of the below is now false.  FIXME.
 
-regress.sh is a regression test suite for gcpio.  Before running it
-you must configure it by hand.  The following shell variables are
-set at the top of the script:
+regress.sh is a regression test suite for gcpio.  Before running it you
+must configure it by hand.  The following shell variables are set at the
+top of the script:
 
 VERBOSE=1
 	By default regress.sh only prints the version number of gcpio
@@ -22,7 +22,7 @@ SYMLINKS=yes
 
 GCPIO=`pwd`/../cpio
 	Set this to be the name of the version gcpio that is being tested.
-	
+
 GNEWC="-H newc"
 	Set this to be the gcpio option for the "new portable" format.  This
 	is currently "-H newc", but may change to "-c" in the future.
@@ -34,7 +34,7 @@ GOLDC="-c"
 BINCPIO=/bin/cpio
 	If your system has a standard version of cpio, set BINCPIO to be
 	its name so regress.sh can make sure that it and gcpio can
-	read each others' archives.  
+	read each others' archives.
 
 BOLDC="-c"
 	Set this to be the standard cpio option for the "old portable"
@@ -64,7 +64,7 @@ GID2NAME=systems
 	more than 1 group, set GID2 and GID2NAME to another group so
 	regress.sh can tests gcpio's ability to set different gid's.
 
-	
+
 Once you have set all the shell variables, you can run regress.sh like
 this:
 
@@ -83,22 +83,19 @@ error: BINCPIO -idum -c < 1.odc.gcpio
     ./tmp3/tmp4 mode match 040777 should be 040755.
 
 In the error above, regress.sh was using BINCPIO (the standard cpio) to
-read an "old portablility" format archive (the odc in the input
-filename; the second component of archive names that regress.sh uses
-usually tell the format, e.g. odc, c, crc, tar, ustar, etc.) that was
-created by gcpio (the third component of archive names used by
-regress.sh usually tell what program created the archive: gcpio, cpio,
-tar, gtar, etc.).  The output was OK, but the mode on one file was not 
-correctly set.
+read an "old portablility" format archive (the odc in the input filename;
+the second component of archive names that regress.sh uses usually tell
+the format, e.g. odc, c, crc, tar, ustar, etc.) that was created by gcpio
+(the third component of archive names used by regress.sh usually tell what
+program created the archive: gcpio, cpio, tar, gtar, etc.).  The output
+was OK, but the mode on one file was not correctly set.
 
-This particular error seems to have been caused by an error in the
-standard cpio program not properly setting the protection of empty
-directories.  The regression tests may turn up other problems with
-the standard cpio and tar.  Some versions of tar do not put empty
-directories into the archives they create.  On some System V.3 systems
-that support symbolic links on top of a System V file system, the
-standard cpio and/or tar has not been modified to handle the symbolic
-links.  You can usually ignore minor errors like this that come
-from using BINCPIO or BINTAR (and using gcpio to read .cpio and .tar
-files created by them).
-
+This particular error seems to have been caused by an error in the standard
+cpio program not properly setting the protection of empty directories.
+The regression tests may turn up other problems with the standard cpio
+and tar.  Some versions of tar do not put empty directories into the
+archives they create.  On some System V.3 systems that support symbolic
+links on top of a System V file system, the standard cpio and/or tar has
+not been modified to handle the symbolic links.  You can usually ignore
+minor errors like this that come from using BINCPIO or BINTAR (and using
+gcpio to read .cpio and .tar files created by them).

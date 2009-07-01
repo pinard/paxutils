@@ -188,7 +188,7 @@ set_stat (char *file_name, struct stat *stat_info, bool symlink_flag)
       if (!symlink_flag)
 
 	if (chown (file_name, stat_info->st_uid, stat_info->st_gid) < 0)
-	  ERROR ((0, errno, _("%s: Cannot chown to uid %lu gid %lu"),
+	  ERROR ((0, errno, _("%s: Cannot change owner to uid %lu, gid %lu"),
 		  file_name,
 		  (unsigned long) stat_info->st_uid,
 		  (unsigned long) stat_info->st_gid));

@@ -1,3 +1,30 @@
+1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Use AT_CONFIG instead of fp_PROG_ECHO.  Create
+	atlocal.  Don't for test-one.
+
+1998-10-16  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Prepare tests/atconfig instead of tests/testsuite.
+
+1998-10-13  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Version 2.4f.
+
+1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in (AC_OUTPUT): Prepare tests/test-one and make it
+	executable.
+
+1998-10-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in (AC_OUTPUT): Prepare tests/testsuite instead of
+	tests/preset, and make it executable.
+
+1998-10-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Version 2.4e.
+
 1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (SUBDIRS): Change po to i18n, and make it earlier.
@@ -77,10 +104,8 @@
 
 	* config.bat: Restore /crlf.
 	Reported by Eli Zaretskii.
-
-1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.12a.
+1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
 	* configure.in (AC_OUTPUT): Create contrib/Makefile.
 	* Makefile.am (SUBDIRS): Visit the contrib/ subdirectory.
@@ -196,8 +221,6 @@
 
 1997-04-22  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11q.
-
 	* configure.in: Use gethostent instead of gethostbyname while
 	checking for -lnsl.  It seems SINIX systems require this.
 	Reported by Bruno Haible.
@@ -209,8 +232,6 @@
 	Reported by Bruno Haible.
 
 1997-04-17  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11p.
 
 	* acinclude.m4 (cl_FUNC_GMALLOC): New macro, yet still unused, as
 	it requires config.guess.  I have to think more about this.
@@ -246,8 +267,6 @@
 	Reported by Larry Schwimmer.
 
 1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11o.
 
 	* configure.in: Do not check for gettimeofday anymore.
 
@@ -297,8 +316,6 @@
 
 1996-11-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.14.
-
 	* Makefile.am (BABYL): Add admin/RMAIL.
 
 	* configure.in: Check for sys/buf.h, as BSD/OS.
@@ -317,8 +334,6 @@
 
 1996-11-08  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.13.
-
 	* configure.in: Replace a missing dirname.
 
 1996-10-07  François Pinard  <pinard@iro.umontreal.ca>
@@ -331,8 +346,6 @@
 	* configure.in: Do not check anymore for regex.
 
 1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.12
 
 	* configure.in: Check echo for newline suppression.
 
@@ -382,8 +395,6 @@
 
 1996-07-18  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.11.
-
 	* configure.in: Use AC_PREREQ(2.10).
 
 1996-07-16  François Pinard  <pinard@iro.umontreal.ca>
@@ -392,8 +403,6 @@
 	Reported by Erick Branderhorst.
 
 1996-07-12  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.10.
 
 	* configure.in (ALL_LINGUAS): Add ko and sl.
 
@@ -475,8 +484,6 @@
 	Ken Raeburn and Minh Tran-Le.
 
 1995-12-29  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.9.
 
 	* Makefile.am: New file.
 
@@ -706,8 +713,6 @@
 
 1995-05-16  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.7.
-
 	* Makefile.in (DISTFILES): Distribute NLS.
 	* configure.in, acconfig.h: Many adjustments for GNU gettext.
 
@@ -771,8 +776,6 @@
 	Reported by Ulrich Drepper.
 
 1994-12-03  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.6.
 
 	* configure.in: Localize, adapting from how it is done in sharutils.
 
@@ -867,8 +870,6 @@
 
 1994-08-21  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Prerelease tar 1.11.5.
-
 	* Makefile.in (BACKLOG, dist, shar): Correct for when a different
 	build directory.
 
@@ -924,10 +925,6 @@
 
 	* configure.in: Use $LIBOBJS, not LIBOJBS, while adding to it.
 	Reported by Demizu Noritoshi and Kaveh R. Ghazi.
-
-1994-08-15  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.4.
 
 1994-08-14  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -993,8 +990,6 @@
 	* configure.in: Check for ST_BLKSIZE and ST_BLOCKS.
 
 1994-08-02  François Pinard  <pinard@iro.umontreal.ca>
-
-	* Prerelease tar 1.11.3.
 
 	* Makefile.in (dist, shar): Distribute the scripts directory.
 

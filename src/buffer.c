@@ -226,21 +226,14 @@ output_checkpoint_mark (void)
       checkpoint_dots = true;
     }
 
+  fputc ('.', stderr);
   if (checkpoint % 100 == 0)
     {
       if (checkpoint % 500 == 0)
-	{
-	  fputc ('.', stderr);
-	  flush_checkpoint_line ();
-	}
+	flush_checkpoint_line ();
       else
-	{
-	  fputc (' ', stderr);
-	  fputc ('.', stderr);
-	}
+	fputc (' ', stderr);
     }
-  else
-    fputc ('.', stderr);
 
   fflush (stderr);
 }
@@ -753,7 +746,7 @@ Write to compression program short %d bytes"),
       if (archive < 0)
 	FATAL_ERROR ((0, errno, _("Cannot open archive %s"),
 		      archive_name_array[0]));
-      xdup2 (archive, STDIN, _("Archive to stdin"));
+      xdup2 (archive, STDIN, _("Archive from stdin"));
       execlp (use_compress_program_option, use_compress_program_option,
 	      "-d", (char *) 0);
       FATAL_ERROR ((0, errno, _("Cannot exec %s"),

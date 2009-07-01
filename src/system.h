@@ -105,6 +105,8 @@ char *alloca ();
 # endif
 #endif
 
+char *stpcpy ();
+
 /* Declare errno.  */
 
 #include <errno.h>

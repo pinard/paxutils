@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4d.
+   This file documents `paxutils' 2.4f.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -33,13 +33,13 @@ translation approved by the Foundation.
 Indirect:
 paxutils.info-1: 1290
 paxutils.info-2: 49928
-paxutils.info-3: 99000
-paxutils.info-4: 148830
-paxutils.info-5: 196927
-paxutils.info-6: 245377
-paxutils.info-7: 294956
-paxutils.info-8: 344429
-paxutils.info-9: 392302
+paxutils.info-3: 98998
+paxutils.info-4: 148828
+paxutils.info-5: 196925
+paxutils.info-6: 245375
+paxutils.info-7: 294954
+paxutils.info-8: 344427
+paxutils.info-9: 392300
 
 Tag Table:
 (Indirect)
@@ -81,167 +81,167 @@ Node: Two mistakes74309
 Node: Looking ahead75400
 Node: cpio invocation76530
 Node: Copy-out mode76863
-Node: Copy-in mode77789
-Node: Copy-pass mode79161
-Node: cpio Options79973
-Node: pax invocation87253
-Node: tar invocation87424
-Node: Synopsis89162
-Node: Using options95488
-Node: Styles97510
-Node: Long options99000
-Node: Short options100902
-Node: Old style102778
-Node: Mixing105590
-Node: Documentation and help108120
-Node: version108761
-Node: help109975
-Node: verbose112586
-Node: checkpoint115195
-Node: show-omitted-dirs115715
-Node: totals116349
-Node: block-number117110
-Node: interactive118480
-Node: Subcommands119806
-Node: list122135
-Node: Reading126410
-Node: read-full-records127061
-Node: ignore-zeros129084
-Node: ignore-failed-read131096
-Node: compare131875
-Node: extract133808
-Node: extract options135213
-Node: Writing138796
-Node: Preventing overwrite138967
-Node: keep-old-files143021
-Node: to-stdout143460
-Node: backup144540
-Node: suffix148331
-Node: Unlinking148830
-Node: unlink-first150176
-Node: recursive-unlink150489
-Node: Attributes150971
-Node: touch151358
-Node: same-owner152426
-Node: same-permissions153610
-Node: no-attributes154618
-Node: Scarce155035
-Node: starting-file155329
-Node: same-order156266
-Node: preserve157140
-Node: create157655
-Node: name-prefix162665
-Node: atime-preserve164611
-Node: remove-files165286
-Node: append165519
-Node: Appending files168253
-Node: Multiple files169925
-Node: update172364
-Node: How to update173432
-Node: Unsuitability of update175331
-Node: Applications176710
-Node: concatenate178434
-Node: Using cat with archives182011
-Node: delete183388
-Node: Choosing185331
-Node: file186175
-Node: Using file190990
-Node: Standard archive196474
-Node: lmh196637
-Node: Remote196927
-Node: force-local198959
-Node: rsh-command199348
-Node: rmt invocation200671
-Node: Selecting Archive Members200824
-Node: files-from202418
-Node: find with files-from203592
-Node: null205993
-Node: Exclusions207691
-Node: exclude208398
-Node: exclude-from209104
-Node: Wildcards209746
-Node: Problems with exclude213332
-Node: Time criteria215530
-Node: after-date217912
-Node: newer-mtime219316
-Node: Walking220282
-Node: no-recursion220565
-Node: one-file-system222344
-Node: Relative223828
-Node: directory224093
-Node: absolute-names226915
-Node: Formats229948
-Node: Portability230360
-Node: Portable names231502
-Node: dereference232656
-Node: old-archive234108
-Node: posix235143
-Node: Checksumming245377
-Node: Forced fields247248
-Node: mode247651
-Node: owner248513
-Node: group249480
-Node: numeric-owner250150
-Node: Compression252407
-Node: Archive compression253843
-Node: gzip258812
-Node: compress260042
-Node: use-compress-program261040
-Node: Member compression262757
-Node: sparse263703
-Node: Other formats268287
-Node: cpio268550
-Node: zip273253
-Node: Media274787
-Node: Blocking277203
-Node: Blocks and records278973
-Node: blocking-factor282744
-Node: record-size286472
-Node: Media types287038
-Node: Reblocking289402
-Node: Many on one290901
-Node: Tape positioning294956
-Node: mt invocation296827
-Node: One on many298626
-Node: Multi-volume archives303327
-Node: multi-volume306287
-Node: tape-length307609
-Node: info-script308096
-Node: volno-file308959
-Node: Being careful309659
-Node: label310005
-Node: verify315396
-Node: Write protection318373
-Node: Other tape considerations319209
-Node: Backups321265
-Node: incremental listed-incremental323920
-Node: incremental324224
-Node: listed-incremental326766
-Node: Backup levels328495
-Node: Full dumps331289
-Node: Incremental dumps336590
-Node: Backup parameters338625
-Node: backup-specs example341040
-Node: Script syntax341901
-Node: Scripted backups342581
-Node: Scripted restoration344429
-Node: All options345977
-Node: Subcommand summary346659
-Node: Option summary348240
-Node: Short option summary362834
-Node: Date input formats364071
-Node: General date syntax366503
-Node: Calendar date item367984
-Node: Time of day item369939
-Node: Timezone item371548
-Node: Day of week item374862
-Node: Relative item in date strings375850
-Node: Pure numbers in date strings377739
-Node: Authors of getdate378722
-Node: Archive format379441
-Node: tar-h381708
-Node: Standard format392302
-Node: Extended format400533
-Node: Index405957
+Node: Copy-in mode77778
+Node: Copy-pass mode79160
+Node: cpio Options79972
+Node: pax invocation87251
+Node: tar invocation87422
+Node: Synopsis89160
+Node: Using options95486
+Node: Styles97508
+Node: Long options98998
+Node: Short options100900
+Node: Old style102776
+Node: Mixing105588
+Node: Documentation and help108118
+Node: version108759
+Node: help109973
+Node: verbose112584
+Node: checkpoint115193
+Node: show-omitted-dirs115713
+Node: totals116347
+Node: block-number117108
+Node: interactive118478
+Node: Subcommands119804
+Node: list122133
+Node: Reading126408
+Node: read-full-records127059
+Node: ignore-zeros129082
+Node: ignore-failed-read131094
+Node: compare131873
+Node: extract133806
+Node: extract options135211
+Node: Writing138794
+Node: Preventing overwrite138965
+Node: keep-old-files143019
+Node: to-stdout143458
+Node: backup144538
+Node: suffix148329
+Node: Unlinking148828
+Node: unlink-first150174
+Node: recursive-unlink150487
+Node: Attributes150969
+Node: touch151356
+Node: same-owner152424
+Node: same-permissions153608
+Node: no-attributes154616
+Node: Scarce155033
+Node: starting-file155327
+Node: same-order156264
+Node: preserve157138
+Node: create157653
+Node: name-prefix162663
+Node: atime-preserve164609
+Node: remove-files165284
+Node: append165517
+Node: Appending files168251
+Node: Multiple files169923
+Node: update172362
+Node: How to update173430
+Node: Unsuitability of update175329
+Node: Applications176708
+Node: concatenate178432
+Node: Using cat with archives182009
+Node: delete183386
+Node: Choosing185329
+Node: file186173
+Node: Using file190988
+Node: Standard archive196472
+Node: lmh196635
+Node: Remote196925
+Node: force-local198957
+Node: rsh-command199346
+Node: rmt invocation200669
+Node: Selecting Archive Members200822
+Node: files-from202416
+Node: find with files-from203590
+Node: null205991
+Node: Exclusions207689
+Node: exclude208396
+Node: exclude-from209102
+Node: Wildcards209744
+Node: Problems with exclude213330
+Node: Time criteria215528
+Node: after-date217910
+Node: newer-mtime219314
+Node: Walking220280
+Node: no-recursion220563
+Node: one-file-system222342
+Node: Relative223826
+Node: directory224091
+Node: absolute-names226913
+Node: Formats229946
+Node: Portability230358
+Node: Portable names231500
+Node: dereference232654
+Node: old-archive234106
+Node: posix235141
+Node: Checksumming245375
+Node: Forced fields247246
+Node: mode247649
+Node: owner248511
+Node: group249478
+Node: numeric-owner250148
+Node: Compression252405
+Node: Archive compression253841
+Node: gzip258810
+Node: compress260040
+Node: use-compress-program261038
+Node: Member compression262755
+Node: sparse263701
+Node: Other formats268285
+Node: cpio268548
+Node: zip273251
+Node: Media274785
+Node: Blocking277201
+Node: Blocks and records278971
+Node: blocking-factor282742
+Node: record-size286470
+Node: Media types287036
+Node: Reblocking289400
+Node: Many on one290899
+Node: Tape positioning294954
+Node: mt invocation296825
+Node: One on many298624
+Node: Multi-volume archives303325
+Node: multi-volume306285
+Node: tape-length307607
+Node: info-script308094
+Node: volno-file308957
+Node: Being careful309657
+Node: label310003
+Node: verify315394
+Node: Write protection318371
+Node: Other tape considerations319207
+Node: Backups321263
+Node: incremental listed-incremental323918
+Node: incremental324222
+Node: listed-incremental326764
+Node: Backup levels328493
+Node: Full dumps331287
+Node: Incremental dumps336588
+Node: Backup parameters338623
+Node: backup-specs example341038
+Node: Script syntax341899
+Node: Scripted backups342579
+Node: Scripted restoration344427
+Node: All options345975
+Node: Subcommand summary346657
+Node: Option summary348238
+Node: Short option summary362832
+Node: Date input formats364069
+Node: General date syntax366501
+Node: Calendar date item367982
+Node: Time of day item369937
+Node: Timezone item371546
+Node: Day of week item374860
+Node: Relative item in date strings375848
+Node: Pure numbers in date strings377737
+Node: Authors of getdate378720
+Node: Archive format379439
+Node: tar-h381706
+Node: Standard format392300
+Node: Extended format400531
+Node: Index405955
 
 End Tag Table
