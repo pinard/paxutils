@@ -1,38 +1,31 @@
-/* Copyright (C) 1991, 1992, 1993 Free Software Foundation, Inc.
+/* Copyright (C) 1991, 1992, 1993, 1996, 1997 Free Software Foundation, Inc.
 
-NOTE: The canonical source of this file is maintained with the GNU C Library.
-Bugs can be reported to bug-glibc@prep.ai.mit.edu.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 2, or (at your option) any
-later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software Foundation,
+  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+/* Enable GNU extensions in fnmatch.h.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE	1
 #endif
 
 #include <errno.h>
 #include <fnmatch.h>
-
 #include <ctype.h>
-
-#if defined (STDC_HEADERS) || !defined (isascii)
-#define ISASCII(c) 1
-#else
-#define ISASCII(c) isascii(c)
-#endif
-
-#define ISUPPER(c) (ISASCII (c) && isupper (c))
 
 
 /* Comment out all this code if we are using the GNU C Library, and are not
@@ -43,12 +36,21 @@ Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    program understand `configure --with-gnu-libc' and omit the object files,
    it is simpler to just do this in the source for each such file.  */
 
-#if defined (_LIBC) || !defined (__GNU_LIBRARY__)
+#if defined _LIBC || !defined __GNU_LIBRARY__
 
 
-#if !defined(__GNU_LIBRARY__) && !defined(STDC_HEADERS)
+# if defined STDC_HEADERS || !defined isascii
+#  define ISASCII(c) 1
+# else
+#  define ISASCII(c) isascii(c)
+# endif
+
+# define ISUPPER(c) (ISASCII (c) && isupper (c))
+
+
+# ifndef errno
 extern int errno;
-#endif
+# endif
 
 /* Match STRING against the filename pattern PATTERN, returning zero if
    it matches, nonzero if not.  */
@@ -61,8 +63,8 @@ fnmatch (pattern, string, flags)
   register const char *p = pattern, *n = string;
   register char c;
 
-/* Note that this evalutes C many times.  */
-#define FOLD(c)	((flags & FNM_CASEFOLD) && ISUPPER (c) ? tolower (c) : (c))
+/* Note that this evaluates C many times.  */
+# define FOLD(c) ((flags & FNM_CASEFOLD) && ISUPPER (c) ? tolower (c) : (c))
 
   while ((c = *p++) != '\0')
     {
@@ -84,6 +86,9 @@ fnmatch (pattern, string, flags)
 	  if (!(flags & FNM_NOESCAPE))
 	    {
 	      c = *p++;
+	      if (c == '\0')
+		/* Trailing \ loses.  */
+		return FNM_NOMATCH;
 	      c = FOLD (c);
 	    }
 	  if (FOLD (*n) != c)
@@ -95,10 +100,24 @@ fnmatch (pattern, string, flags)
 	      (n == string || ((flags & FNM_FILE_NAME) && n[-1] == '/')))
 	    return FNM_NOMATCH;
 
-	  for (c = *p++; c == '?' || c == '*'; c = *p++, ++n)
-	    if (((flags & FNM_FILE_NAME) && *n == '/') ||
-		(c == '?' && *n == '\0'))
-	      return FNM_NOMATCH;
+	  for (c = *p++; c == '?' || c == '*'; c = *p++)
+	    {
+	      if ((flags & FNM_FILE_NAME) && *n == '/')
+		/* A slash does not match a wildcard under FNM_FILE_NAME.  */
+		return FNM_NOMATCH;
+	      else if (c == '?')
+		{
+		  /* A ? needs to match one character.  */
+		  if (*n == '\0')
+		    /* There isn't another character; no match.  */
+		    return FNM_NOMATCH;
+		  else
+		    /* One character of the string is consumed in matching
+		       this ? wildcard, so *??? won't match if there are
+		       less than three characters.  */
+		    ++n;
+		}
+	    }
 
 	  if (c == '\0')
 	    return 0;
@@ -135,7 +154,11 @@ fnmatch (pattern, string, flags)
 		register char cstart = c, cend = c;
 
 		if (!(flags & FNM_NOESCAPE) && c == '\\')
-		  cstart = cend = *p++;
+		  {
+		    if (*p == '\0')
+		      return FNM_NOMATCH;
+		    cstart = cend = *p++;
+		  }
 
 		cstart = cend = FOLD (cstart);
 
@@ -182,8 +205,12 @@ fnmatch (pattern, string, flags)
 
 		c = *p++;
 		if (!(flags & FNM_NOESCAPE) && c == '\\')
-		  /* XXX 1003.2d11 is unclear if this is right.  */
-		  ++p;
+		  {
+		    if (*p == '\0')
+		      return FNM_NOMATCH;
+		    /* XXX 1003.2d11 is unclear if this is right.  */
+		    ++p;
+		  }
 	      }
 	    if (not)
 	      return FNM_NOMATCH;
@@ -206,6 +233,8 @@ fnmatch (pattern, string, flags)
     return 0;
 
   return FNM_NOMATCH;
+
+# undef FOLD
 }
 
 #endif	/* _LIBC or not __GNU_LIBRARY__.  */

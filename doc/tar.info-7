@@ -1,5 +1,5 @@
-This is Info file tar.info, produced by Makeinfo-1.61 from the input
-file tar.texinfo.
+This is Info file tar.info, produced by Makeinfo version 1.67 from the
+input file tar.texi.
 
 START-INFO-DIR-ENTRY
 * tar: (tar).			Making tape (or disk) archives.
@@ -8,7 +8,8 @@ END-INFO-DIR-ENTRY
    This file documents GNU `tar', a utility used to store, backup, and
 transport files.
 
-   Copyright (C) 1992, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1994, 1995, 1996, 1997 Free Software Foundation,
+Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -24,742 +25,965 @@ manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
 
-
-File: tar.info,  Node: Standard,  Next: Extensions,  Prev: Archive Format,  Up: Archive Format
+   This file documents GNU `tar', which is a utility used to store,
+backup, and transport files.  `tar' is a tape (or disk) archiver.  This
+manual documents the release 1.12.
 
-The Standard Format
-===================
+
+File: tar.info,  Node: Blocking,  Next: Many,  Prev: Common Problems and Solutions,  Up: Media
+
+Blocking
+========
 
      *(This message will disappear, once this node revised.)*
 
-   A `tar' archive file contains a series of records.  Each record
-contains `RECORDSIZE' bytes.  Although this format may be thought of as
-being on magnetic tape, other media are often used.
-
-   Each file archived is represented by a header record which describes
-the file, followed by zero or more records which give the contents of
-the file.  At the end of the archive file there may be a record filled
-with binary zeros as an end-of-file marker.  A reasonable system should
-write a record of zeros at the end, but must not assume that such a
-record exists when reading an archive.
-
-   The records may be "blocked" for physical I/O operations.  Each
-block of N records (where N is set by the `--block-size=512-SIZE' (`-b
-512-SIZE') option to `tar') is written with a single `write ()'
-operation.  On magnetic tapes, the result of such a write is a single
-tape record.  When writing an archive, the last block of records should
-be written at the full size, with records after the zero record
-containing all zeroes.  When reading an archive, a reasonable system
-should properly handle an archive whose last block is shorter than the
-rest, or which contains garbage records after a zero record.
-
-   The header record is defined in C as follows.  In the GNU `tar'
-distribution, this is part of file `src/tar.h':
-
-     /* Standard Archive Format - Standard TAR - USTAR.  */
-     
-     /* Header block on tape.
-     
-        We use traditional DP naming conventions here.  A "block" is a big chunk
-        of stuff that we do I/O on.  A "record" is a piece of info that we care
-        about.  Typically many "record"s fit into a "block".  */
-     
-     #define RECORDSIZE      512
-     #define NAMSIZ          100
-     #define TUNMLEN         32
-     #define TGNMLEN         32
-     #define SPARSE_EXT_HDR  21
-     #define SPARSE_IN_HDR   4
-     
-     struct sparse
-       {
-         char offset[12];
-         char numbytes[12];
-       };
-     
-     union record
-       {
-         char charptr[RECORDSIZE];
-     
-         struct header
-           {
-             char arch_name[NAMSIZ];
-             char mode[8];
-             char uid[8];
-             char gid[8];
-             char size[12];
-             char mtime[12];
-             char chksum[8];
-             char linkflag;
-             char arch_linkname[NAMSIZ];
-             char magic[8];
-             char uname[TUNMLEN];
-             char gname[TGNMLEN];
-             char devmajor[8];
-             char devminor[8];
-     
-             /* The following fields were added for GNU and are not standard.  */
-     
-             char atime[12];
-             char ctime[12];
-             char offset[12];
-             char longnames[4];
-             /* Some compilers would insert the pad themselves, so pad was
-                once autoconfigured.  It is simpler to always insert it!  */
-             char pad;
-             struct sparse sp[SPARSE_IN_HDR];
-             char isextended;
-             char realsize[12];      /* true size of the sparse file */
-     #if 0
-             char ending_blanks[12]; /* number of nulls at the end of the file,
-                                        if any */
-     #endif
-           }
-         header;
-     
-         struct extended_header
-           {
-             struct sparse sp[21];
-             char isextended;
-           }
-         ext_hdr;
-       };
-     
-     /* The checksum field is filled with this while the checksum is computed.  */
-     #define CHKBLANKS       "        "      /* 8 blanks, no null */
-     
-     /* The magic field is filled with this value if uname and gname are valid,
-        marking the archive as being in standard POSIX format (though GNU tar
-        itself is not POSIX conforming).  */
-     #define TMAGIC "ustar  "        /* 7 chars and a null */
-     
-     /* The magic field is filled with this if this is a GNU format dump entry.
-        But I suspect this is not true anymore.  */
-     #define GNUMAGIC "GNUtar "      /* 7 chars and a null */
-     
-     /* The linkflag defines the type of file.  */
-     #define LF_OLDNORMAL    '\0'    /* normal disk file, Unix compat */
-     #define LF_NORMAL       '0'     /* normal disk file */
-     #define LF_LINK         '1'     /* link to previously dumped file */
-     #define LF_SYMLINK      '2'     /* symbolic link */
-     #define LF_CHR          '3'     /* character special file */
-     #define LF_BLK          '4'     /* block special file */
-     #define LF_DIR          '5'     /* directory */
-     #define LF_FIFO         '6'     /* FIFO special file */
-     #define LF_CONTIG       '7'     /* contiguous file */
-     /* Further link types may be defined later.  */
-     
-     /* Note that the standards committee allows only capital A through
-        capital Z for user-defined expansion.  This means that defining
-        something as, say '8' is a *bad* idea.  */
-     
-     /* This is a dir entry that contains the names of files that were in the
-        dir at the time the dump was made.  */
-     #define LF_DUMPDIR      'D'
-     
-     /* Identifies the NEXT file on the tape as having a long linkname.  */
-     #define LF_LONGLINK     'K'
-     
-     /* Identifies the NEXT file on the tape as having a long name.  */
-     #define LF_LONGNAME     'L'
-     
-     /* This is the continuation of a file that began on another volume.  */
-     #define LF_MULTIVOL     'M'
-     
-     /* For storing filenames that didn't fit in 100 characters.  */
-     #define LF_NAMES        'N'
-     
-     /* This is for sparse files.  */
-     #define LF_SPARSE       'S'
-     
-     /* This file is a tape/volume header.  Ignore it on extraction.  */
-     #define LF_VOLHDR       'V'
-     
-     #if 0
-     /* The following two blocks of #define's are unused in GNU tar.  */
-     
-     /* Bits used in the mode field - values in octal */
-     #define  TSUID    04000         /* set UID on execution */
-     #define  TSGID    02000         /* set GID on execution */
-     #define  TSVTX    01000         /* save text (sticky bit) */
-     
-     /* File permissions */
-     #define  TUREAD   00400         /* read by owner */
-     #define  TUWRITE  00200         /* write by owner */
-     #define  TUEXEC   00100         /* execute/search by owner */
-     #define  TGREAD   00040         /* read by group */
-     #define  TGWRITE  00020         /* write by group */
-     #define  TGEXEC   00010         /* execute/search by group */
-     #define  TOREAD   00004         /* read by other */
-     #define  TOWRITE  00002         /* write by other */
-     #define  TOEXEC   00001         /* execute/search by other */
-     
-     #endif
-     
-     /* End of Standard Archive Format description.  */
-
-   All characters in header records are represented by using 8-bit
-characters in the local variant of ASCII.  Each field within the
-structure is contiguous; that is, there is no padding used within the
-structure.  Each character on the archive medium is stored contiguously.
-
-   Bytes representing the contents of files (after the header record of
-each file) are not translated in any way and are not constrained to
-represent characters in any character set.  The `tar' format does not
-distinguish text files from binary files, and no translation of file
-contents is performed.
-
-   The `name', `linkname', `magic', `uname', and `gname' are
-null-terminated character strings.  All other fileds are zero-filled
-octal numbers in ASCII.  Each numeric field of width W contains W minus
-2 digits, a space, and a null, except `size', and `mtime', which do not
-contain the trailing null.
-
-   The `name' field is the file name of the file, with directory names
-(if any) preceding the file name, separated by slashes.
-FIXME: how big a name before field overflows?
-
-   The `mode' field provides nine bits specifying file permissions and
-three bits to specify the Set UID, Set GID, and Save Text ("sticky")
-modes.  Values for these bits are defined above.  When special
-permissions are required to create a file with a given mode, and the
-user restoring files from the archive does not hold such permissions,
-the mode bit(s) specifying those special permissions are ignored.
-Modes which are not supported by the operating system restoring files
-from the archive will be ignored.  Unsupported modes should be faked up
-when creating or updating an archive; e.g. the group permission could
-be copied from the *other* permission.
-
-   The `uid' and `gid' fields are the numeric user and group ID of the
-file owners, respectively.  If the operating system does not support
-numeric user or group IDs, these fields should be ignored.
-
-   The `size' field is the size of the file in bytes; linked files are
-archived with this field specified as zero.
-FIXME: xref Modifiers
-   , in particular the `--incremental' (`-G') option.
-
-   The `mtime' field is the modification time of the file at the time
-it was archived.  It is the ASCII representation of the octal value of
-the last time the file was modified, represented as an integer number of
-seconds since January 1, 1970, 00:00 Coordinated Universal Time.
-
-   The `chksum' field is the ASCII representation of the octal value of
-the simple sum of all bytes in the header record.  Each 8-bit byte in
-the header is added to an unsigned integer, initialized to zero, the
-precision of which shall be no less than seventeen bits.  When
-calculating the checksum, the `chksum' field is treated as if it were
-all blanks.
-
-   The `typeflag' field specifies the type of file archived.  If a
-particular implementation does not recognize or permit the specified
-type, the file will be extracted as if it were a regular file.  As this
-action occurs, `tar' issues a warning to the standard error.
-
-   The `atime' and `ctime' fields are used in making incremental
-backups; they store, respectively, the particular file's access time
-and last inode-change time.
-
-   The `offset' is used by the `--multi-volume' (`-M') option, when
-making a multi-volume archive.  The offset is number of bytes into the
-file that we need to restart at to continue the file on the next tape,
-i.e., where we store the location that a continued file is continued at.
-
-   The following fields were added to deal with sparse files.  A file
-is "sparse" if it takes in unallocated blocks which end up being
-represented as zeros, i.e., no useful data.  A test to see if a file is
-sparse is to look at the number blocks allocated for it versus the
-number of characters in the file; if there are fewer blocks allocated
-for the file than would normally be allocated for a file of that size,
-then the file is sparse.  This is the method `tar' uses to detect a
-sparse file, and once such a file is detected, it is treated
-differently from non-sparse files.
-
-   Sparse files are often `dbm' files, or other database-type files
-which have data at some points and emptiness in the greater part of the
-file.  Such files can appear to be very large when an `ls -l' is done
-on them, when in truth, there may be a very small amount of important
-data contained in the file.  It is thus undesirable to have `tar' think
-that it must back up this entire file, as great quantities of room are
-wasted on empty blocks, which can lead to running out of room on a tape
-far earlier than is necessary.  Thus, sparse files are dealt with so
-that these empty blocks are not written to the tape.  Instead, what is
-written to the tape is a description, of sorts, of the sparse file:
-where the holes are, how big the holes are, and how much data is found
-at the end of the hole.  This way, the file takes up potentially far
-less room on the tape, and when the file is extracted later on, it will
-look exactly the way it looked beforehand.  The following is a
-description of the fields used to handle a sparse file:
-
-   The `sp' is an array of `struct sparse'.  Each `struct sparse'
-contains two 12-character strings which represent an offset into the
-file and a number of bytes to be written at that offset.  The offset is
-absolute, and not relative to the offset in preceding array element.
-
-   The header can hold four of these `struct sparse' at the moment; if
-more are needed, they are not stored in the header.
-
-   The `isextended' flag is set when an `extended_header' is needed to
-deal with a file.  Note that this means that this flag can only be set
-when dealing with a sparse file, and it is only set in the event that
-the description of the file will not fit in the alloted room for sparse
-structures in the header.  In other words, an extended_header is needed.
-
-   The `extended_header' structure is used for sparse files which need
-more sparse structures than can fit in the header.  The header can fit
-4 such structures; if more are needed, the flag `isextended' gets set
-and the next record is an `extended_header'.
-
-   Each `extended_header' structure contains an array of 21 sparse
-structures, along with a similar `isextended' flag that the header had.
-There can be an indeterminate number of such `extended_header's to
-describe a sparse file.
-
-`LF_NORMAL'
-`LF_OLDNORMAL'
-     These flags represent a regular file.  In order to be compatible
-     with older versions of `tar', a `typeflag' value of `LF_OLDNORMAL'
-     should be silently recognized as a regular file.  New archives
-     should be created using `LF_NORMAL'.  Also, for backward
-     compatibility, `tar' treats a regular file whose name ends with a
-     slash as a directory.
-
-`LF_LINK'
-     This flag represents a file linked to another file, of any type,
-     previously archived.  Such files are identified in Unix by each
-     file having the same device and inode number.  The linked-to name
-     is specified in the `linkname' field with a trailing null.
-
-`LF_SYMLINK'
-     This represents a symbolic link to another file.  The linked-to
-     name is specified in the `linkname' field with a trailing null.
-
-`LF_CHR'
-`LF_BLK'
-     These represent character special files and block special files
-     respectively.  In this case the `devmajor' and `devminor' fields
-     will contain the major and minor device numbers respectively.
-     Operating systems may map the device specifications to their own
-     local specification, or may ignore the entry.
-
-`LF_DIR'
-     This flag specifies a directory or sub-directory.  The directory
-     name in the `name' field should end with a slash.  On systems where
-     disk allocation is performed on a directory basis, the `size' field
-     will contain the maximum number of bytes (which may be rounded to
-     the nearest disk block allocation unit) which the directory may
-     hold.  A `size' field of zero indicates no such limiting.  Systems
-     which do not support limiting in this manner should ignore the
-     `size' field.
-
-`LF_FIFO'
-     This specifies a FIFO special file.  Note that the archiving of a
-     FIFO file archives the existence of this file and not its contents.
-
-`LF_CONTIG'
-     This specifies a contiguous file, which is the same as a normal
-     file except that, in operating systems which support it, all its
-     space is allocated contiguously on the disk.  Operating systems
-     which do not allow contiguous allocation should silently treat this
-     type as a normal file.
-
-`A' ... `Z'
-     These are reserved for custom implementations.  Some of these are
-     used in the GNU modified format, as described below.
-
-   Other values are reserved for specification in future revisions of
-the P1003 standard, and should not be used by any `tar' program.
-
-   The `magic' field indicates that this archive was output in the
-P1003 archive format.  If this field contains `TMAGIC', the `uname' and
-`gname' fields will contain the ASCII representation of the owner and
-group of the file respectively.  If found, the user and group IDs are
-used rather than the values in the `uid' and `gid' fields.
-
-
-File: tar.info,  Node: Extensions,  Next: cpio,  Prev: Standard,  Up: Archive Format
-
-GNU Extensions to the Archive Format
-====================================
-
-     *(This message will disappear, once this node revised.)*
-
-   The GNU format uses additional file types to describe new types of
-files in an archive.  These are listed below.
-
-`LF_DUMPDIR'
-`'D''
-     This represents a directory and a list of files created by the
-     `--incremental' (`-G') option.  The `size' field gives the total
-     size of the associated list of files.  Each file name is preceded
-     by either a `Y' (the file should be in this archive) or an `N'.
-     (The file is a directory, or is not stored in the archive.)  Each
-     file name is terminated by a null.  There is an additional null
-     after the last file name.
-
-`LF_MULTIVOL'
-`'M''
-     This represents a file continued from another volume of a
-     multi-volume archive created with the `--multi-volume' (`-M')
-     option.  The original type of the file is not given here.  The
-     `size' field gives the maximum size of this piece of the file
-     (assuming the volume does not end before the file is written out).
-     The `offset' field gives the offset from the beginning of the
-     file where this part of the file begins.  Thus `size' plus
-     `offset' should equal the original size of the file.
-
-`LF_SPARSE'
-`'S''
-     This flag indicates that we are dealing with a sparse file.  Note
-     that archiving a sparse file requires special operations to find
-     holes in the file, which mark the positions of these holes, along
-     with the number of bytes of data to be found after the hole.
-
-`LF_VOLHDR'
-`'V''
-     This file type is used to mark the volume header that was given
-     with the `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option when
-     the archive was created.  The `name' field contains the `name'
-     given after the `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL')
-     option.  The `size' field is zero.  Only the first file in each
-     volume of an archive should have this type.
-
-   You may have trouble reading a GNU format archive on a non-GNU
-system if the options `--incremental' (`-G'), `--multi-volume' (`-M'),
-`--sparse' (`-S'), or `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') were
-used when writing the archive.  In general, if `tar' does not use the
-GNU-added fields of the header, other versions of `tar' should be able
-to read the archive.  Otherwise, the `tar' program will give an error,
-the most likely one being a checksum error.
-
-
-File: tar.info,  Node: cpio,  Prev: Extensions,  Up: Archive Format
-
-Comparison of `tar' and `cpio'
-==============================
-
-     *(This message will disappear, once this node revised.)*
-
-   Here is a summary of differences between `tar' and `cpio'.  The
-accuracy of the following information has not been verified.  The
-following people contributed to this section, mainly through a survey
-conducted in 1991.  The remainder of this section does not otherwise
-try to relate topics to people.
-
-     Bent Bertelsen          dmdata@login.dkuug.dk
-     David Hoopes            talgras!david
-     Guy Harris              guy@auspex.com
-     Kai Petzke              wpp@marie.physik.tu-berlin.de
-     Kristen Nielsen         dmdata@login.dkuug.dk
-     Leslie Mikesell         les@chinet.chi.il.us
-
-FIXME: Reorganize the following material
-
-   `tar' handles symbolic links in the form in which it comes in BSD;
-`cpio' doesn't handle symbolic links in the form in which it comes in
-System V prior to SVR4, and some vendors may have added symlinks to
-their system without enhancing `cpio' to know about them.  Others may
-have enhanced it in a way other than the way I did it at Sun, and which
-was adopted by AT&T (and which is, I think, also present in the `cpio'
-that Berkeley picked up from AT&T and put into a later BSD release--I
-think I gave them my changes).
-
-   (SVR4 does some funny stuff with `tar'; basically, its `cpio' can
-handle `tar' format input, and write it on output, and it probably
-handles symbolic links.  They may not have bothered doing anything to
-enhance `tar' as a result.)
-
-   `cpio' handles special files; traditional `tar' doesn't.
-
-   `tar' comes with V7, System III, System V, and BSD source; `cpio'
-comes only with System III, System V, and later BSD (4.3-tahoe and
-later).
-
-   `tar''s way of handling multiple hard links to a file can handle
-file systems that support 32-bit inumbers (e.g., the BSD file system);
-`cpio's way requires you to play some games (in its "binary" format,
-i-numbers are only 16 bits, and in its "portable ASCII" format, they're
-18 bits--it would have to play games with the "file system ID" field of
-the header to make sure that the file system ID/i-number pairs of
-different files were always different), and I don't know which `cpio's,
-if any, play those games.  Those that don't might get confused and
-think two files are the same file when they're not, and make hard links
-between them.
-
-   `tar's way of handling multiple hard links to a file places only one
-copy of the link on the tape, but the name attached to that copy is the
-*only* one you can use to retrieve the file; `cpio's way puts one copy
-for every link, but you can retrieve it using any of the names.
-
-     >What type of check sum (if any) is used, and how is this
-     calculated.
-
-   See the attached manual pages for `tar' and `cpio' format.  `tar'
-uses a checksum which is the sum of all the bytes in the `tar' header
-for a file; `cpio' uses no checksum.
-
-     >If anyone knows why `cpio' was made when `tar' was prasent >at
-     the unix scene,
-
-   It wasn't.  `cpio' first showed up in PWB/UNIX 1.0; no
-generally-available version of UNIX had `tar' at the time.  I don't
-know whether any version that was generally available *within AT&T* had
-`tar', or, if so, whether the people within AT&T who did `cpio' knew
-about it.
-
-   On restore, if there is a corruption on a tape `tar' will stop at
-that point, while `cpio' will skip over it and try to restore the rest
-of the files.
-
-   The main difference is just in the command syntax and header format.
-
-   `tar' is a little more tape-oriented in that everything is blocked
-to start on a block boundary.
-
-     >Is there any differences between the ability to recover crashed
-     >archives between the two of them. (Is there any chance of
-     recovering >crashed archives at all.)
-
-   Theoretically it should be easier under `tar' since the blocking
-lets you find a header with some variation of `dd skip=NN'.  However,
-modern `cpio''s and variations have an option to just search for the
-next file header after an error with a reasonable chance of re-syncing.
-However, lots of tape driver software won't allow you to continue past
-a media error which should be the only reason for getting out of sync
-unless a file changed sizes while you were writing the archive.
-
-     >If anyone knows why `cpio' was made when `tar' was prasent >at
-     the unix scene, please tell me about this too.
-
-   Probably because it is more media efficient (by not blocking
-everything and using only the space needed for the headers where `tar'
-always uses 512 bytes per file header) and it knows how to archive
-special files.
-
-   You might want to look at the freely available alternatives.  The
-major ones are `afio', GNU `tar', and `pax', each of which have their
-own extensions with some backwards compatibility.
-
-   Sparse files were `tar'red as sparse files (which you can easily
-test, because the resulting archive gets smaller, and GNU `cpio' can no
-longer read it).
-
-
-File: tar.info,  Node: Index,  Prev: Archive Format,  Up: Top
-
-Index
-*****
+   "Block" and "record" terminology is rather confused, and it is also
+confusing to the expert reader.  On the other hand, readers who are new
+to the field have a fresh mind, and they may safely skip the next two
+paragraphs, as the remainder of this manual uses those two terms in a
+quite consistent way.
+
+   John Gilmore, the writer of the public domain `tar' from which GNU
+`tar' was originally derived, wrote (June 1995):
+
+     The nomenclature of tape drives comes from IBM, where I believe
+     they were invented for the IBM 650 or so.  On IBM mainframes, what
+     is recorded on tape are tape blocks.  The logical organization of
+     data is into records.  There are various ways of putting records
+     into blocks, including `F' (fixed sized records), `V' (variable
+     sized records), `FB' (fixed blocked: fixed size records, N to a
+     block), `VB' (variable size records, N to a block), `VSB'
+     (variable spanned blocked: variable sized records that can occupy
+     more than one block), etc.  The `JCL' `DD RECFORM=' parameter
+     specified this to the operating system.
+
+     The Unix man page on `tar' was totally confused about this.  When
+     I wrote `PD TAR', I used the historically correct terminology
+     (`tar' writes data records, which are grouped into blocks).  It
+     appears that the bogus terminology made it into POSIX (no surprise
+     here), and now Franc,ois has migrated that terminology back into
+     the source code too.
+
+   The term "physical block" means the basic transfer chunk from or to
+a device, after which reading or writing may stop without anything
+being lost.  In this manual, the term "block" usually refers to a disk
+physical block, *assuming* that each disk block is 512 bytes in length.
+It is true that some disk devices have different physical blocks, but
+`tar' ignore these differences in its own format, which is meant to be
+portable, so a `tar' block is always 512 bytes in length, and "block"
+always mean a `tar' block.  The term "logical block" often represents
+the basic chunk of allocation of many disk blocks as a single entity,
+which the operating system treats somewhat atomically; this concept is
+only barely used in GNU `tar'.
+
+   The term "physical record" is another way to speak of a physical
+block, those two terms are somewhat interchangeable.  In this manual,
+the term "record" usually refers to a tape physical block, *assuming*
+that the `tar' archive is kept on magnetic tape.  It is true that
+archives may be put on disk or used with pipes, but nevertheless, `tar'
+tries to read and write the archive one "record" at a time, whatever
+the medium in use.  One record is made up of an integral number of
+blocks, and this operation of putting many disk blocks into a single
+tape block is called "reblocking", or more simply, "blocking".  The
+term "logical record" refers to the logical organization of many
+characters into something meaningful to the application.  The term
+"unit record" describes a small set of characters which are transmitted
+whole to or by the application, and often refers to a line of text.
+Those two last terms are unrelated to what we call a "record" in GNU
+`tar'.
+
+   When writing to tapes, `tar' writes the contents of the archive in
+chunks known as "records".  To change the default blocking factor, use
+the `--blocking-factor=512-SIZE' (`-b 512-SIZE') option.  Each record
+will then be composed of 512-SIZE blocks.  (Each `tar' block is 512
+bytes.  *Note Standard::.)  Each file written to the archive uses at
+least one full record.  As a result, using a larger record size can
+result in more wasted space for small files.  On the other hand, a
+larger record size can often be read and written much more efficiently.
+
+   Further complicating the problem is that some tape drives ignore the
+blocking entirely.  For these, a larger record size can still improve
+performance (because the software layers above the tape drive still
+honor the blocking), but not as dramatically as on tape drives that
+honor blocking.
+
+   When reading an archive, `tar' can usually figure out the record
+size on itself.  When this is the case, and a non-standard record size
+was used when the archive was created, `tar' will print a message about
+a non-standard blocking factor, and then operate normally.  On some
+tape devices, however, `tar' cannot figure out the record size itself.
+On most of those, you can specify a blocking factor (with
+`--blocking-factor=512-SIZE' (`-b 512-SIZE')) larger than the actual
+blocking factor, and then use the `--read-full-records' (`-B') option.
+(If you specify a blocking factor with `--blocking-factor=512-SIZE'
+(`-b 512-SIZE') and don't use the `--read-full-records' (`-B') option,
+then `tar' will not attempt to figure out the recording size itself.)
+On some devices, you must always specify the record size exactly with
+`--blocking-factor=512-SIZE' (`-b 512-SIZE') when reading, because
+`tar' cannot figure it out.  In any case, use `--list' (`-t') before
+doing any extractions to see whether `tar' is reading the archive
+correctly.
+
+   `tar' blocks are all fixed size (512 bytes), and its scheme for
+putting them into records is to put a whole number of them (one or
+more) into each record.  `tar' records are all the same size; at the
+end of the file there's a block containing all zeros, which is how you
+tell that the remainder of the last record(s) are garbage.
+
+   In a standard `tar' file (no options), the block size is 512 and the
+record size is 10240, for a blocking factor of 20.  What the
+`--blocking-factor=512-SIZE' (`-b 512-SIZE') option does is sets the
+blocking factor, changing the record size while leaving the block size
+at 512 bytes.  20 was fine for ancient 800 or 1600 bpi reel-to-reel
+tape drives; most tape drives these days prefer much bigger records in
+order to stream and not waste tape.  When writing tapes for myself,
+some tend to use a factor of the order of 2048, say, giving a record
+size of around one megabyte.
+
+   If you use a blocking factor larger than 20, older `tar' programs
+might not be able to read the archive, so we recommend this as a limit
+to use in practice.  GNU `tar', however, will support arbitrarily large
+record sizes, limited only by the amount of virtual memory or the
+physical characteristics of the tape device.
 
 * Menu:
 
-* abbreviations for months:             Calendar date item.
-* absolute file names:                  Device.
-* Adding archives to an archive:        Combining Archives.
-* Adding files to an archive:           Adding to an Existing Archive.
-* Age, excluding files by:              Characteristics.
-* ago in date strings:                  Relative item in date strings.
-* Alaska-Hawaii Time:                   Timezone item.
-* am in date strings:                   Time of day item.
-* archive:                              What tar Does.
-* Archive contents, list of:            Listing Archive Members.
-* Archive creation:                     Creating a New Archive.
-* archive member:                       What tar Does.
-* Archive members, list of:             Listing Archive Members.
-* Archive Name:                         Changing the Archive Name.
-* Atlantic Standard Time:               Timezone item.
-* authors of getdate:                   Authors of getdate.
-* Azores Time:                          Timezone item.
-* Baghdad Time:                         Timezone item.
-* beginning of time, for Unix:          Date input formats.
-* Bellovin, Steven M.:                  Authors of getdate.
-* Berets, Jim:                          Authors of getdate.
-* Berry, K.:                            Authors of getdate.
-* Block Size:                           Blocking Factor.
-* Blocking Factor:                      Blocking Factor.
-* Blocks, incomplete:                   Archive Reading Options.
-* bug reports:                          Bug reports.
-* Bytes per block:                      Blocking Factor.
-* calendar date item:                   Calendar date item.
-* case, ignored in dates:               General date syntax.
-* Central Alaska Time:                  Timezone item.
-* Central European Time:                Timezone item.
-* Central Standard Time:                Timezone item.
-* China Coast Time:                     Timezone item.
-* comments, in dates:                   General date syntax.
-* Compressed archives:                  Compressed Archives.
-* Concatenating Archives:               Combining Archives.
-* corrupted archives <1>:               Full Dumps.
-* corrupted archives:                   Type Options.
-* DAT blocking:                         Blocking Factor.
-* date format, ISO 8601:                Calendar date item.
-* date input formats:                   Date input formats.
-* day in date strings:                  Relative item in date strings.
-* day of week item:                     Day of week item.
-* daylight savings time:                Timezone item.
-* Deleting files from an archive:       Removing Archive Members.
-* Directing output:                     Changing the Archive Name.
-* directory arguments:                  Basic tar Operations.
-* Directory, changing in mid-stream:    Changing Directory.
-* Disk space, running out of:           Scarce Disk Space.
-* displacement of dates:                Relative item in date strings.
-* Double-checking a write operation:    Write Verification.
-* dumps, full:                          Full Dumps.
-* dumps, incremental:                   Inc Dumps.
-* East Australian Standard Time:        Timezone item.
-* Eastern European Time:                Timezone item.
-* Eastern Standard Time:                Timezone item.
-* End-of-archive entries, ignoring:     Archive Reading Options.
-* entry:                                What tar Does.
-* epoch, for Unix:                      Date input formats.
-* Error message, record number of:      Checking Progress.
-* Exabyte blocking:                     Blocking Factor.
-* Excluding file by age:                Characteristics.
-* Excluding files by file system:       Characteristics.
-* Excluding files by name and pattern:  Characteristics.
-* exit status:                          Synopsis.
-* Extraction:                           Extracting Archive Members.
-* extraction:                           What tar Does.
-* Feedback from tar:                    Checking Progress.
-* file name:                            What tar Does.
-* File Name arguments, alternatives:    Reading Names from a File.
-* File names, excluding files by:       Characteristics.
-* File names, using symbolic links:     Symbolic Links.
-* File system boundaries, not crossing: Characteristics.
-* first in date strings:                General date syntax.
-* Format Options:                       Format Variations.
-* Format Parameters:                    Format Variations.
-* Format, old style:                    Old V7 and POSIX.
-* fortnight in date strings:            Relative item in date strings.
-* French Winter Time:                   Timezone item.
-* full dumps:                           Full Dumps.
-* general date syntax:                  General date syntax.
-* getdate:                              Date input formats.
-* Getting more information during the operation: Checking Progress.
-* Greenwich Mean Time:                  Timezone item.
-* Guam Standard Time:                   Timezone item.
-* Hawaii Standard Time:                 Timezone item.
-* hour in date strings:                 Relative item in date strings.
-* Ignoring end-of-archive entries:      Archive Reading Options.
-* incompleteness of this manual:        Authors.
-* incremental dumps:                    Inc Dumps.
-* Information during operation:         Checking Progress.
-* Information on progress and status of operations: Checking Progress.
-* Interactive operation:                Interactive Operation.
-* International Date Line East:         Timezone item.
-* International Date Line West:         Timezone item.
-* ISO 8601 date format:                 Calendar date item.
-* items in date strings:                General date syntax.
-* Japan Standard Time:                  Timezone item.
-* Labeling an archive:                  Archive Label.
-* Labelling multi-volume archives:      Matching Format Parameters.
-* Labels on the archive media:          Archive Label.
-* Large lists of file names on small machines: Archive Reading Options.
-* last in date strings:                 General date syntax.
-* last DAY:                             Day of week item.
-* Lists of file names:                  Reading Names from a File.
-* MacKenzie, David:                     Authors of getdate.
-* member:                               What tar Does.
-* member name:                          What tar Does.
-* Meyering, Jim:                        Authors of getdate.
-* Middle European Time:                 Timezone item.
-* Middle European Winter Time:          Timezone item.
-* Middle of the archive, starting in the: Scarce Disk Space.
-* midnight in date strings:             Time of day item.
-* minute in date strings:               Relative item in date strings.
-* minutes, timezone correction by:      Time of day item.
-* Modes of extracted files:             File Writing Options.
-* Modification time, excluding files by: Characteristics.
-* Modification times of extracted files: File Writing Options.
-* Modifying archives:                   Basic tar Operations.
-* month in date strings:                Relative item in date strings.
-* month names in date strings:          Calendar date item.
-* months, written-out:                  General date syntax.
-* Mountain Standard Time:               Timezone item.
-* Multi-volume archives:                Multi-Volume Archives.
-* Names of the files in an archive:     Listing Archive Members.
-* Naming an archive:                    Changing the Archive Name.
-* New Zealand Standard Time:            Timezone item.
-* next in date strings:                 General date syntax.
-* next DAY:                             Day of week item.
-* Nome Standard Time:                   Timezone item.
-* noon in date strings:                 Time of day item.
-* now in date strings:                  Relative item in date strings.
-* ntape device:                         Many.
-* Number of bytes per block:            Blocking Factor.
-* Number of records per block:          Blocking Factor.
-* numbers, written-out:                 General date syntax.
-* Old style archives:                   Old V7 and POSIX.
-* Old style format:                     Old V7 and POSIX.
-* option syntax, traditional:           Old Options.
-* Options to specify archive format.:   Format Variations.
-* Options when reading archives:        Archive Reading Options.
-* ordinal numbers:                      General date syntax.
-* Overwriting old files, prevention:    File Writing Options.
-* Pacific Standard Time:                Timezone item.
-* Permissions of extracted files:       File Writing Options.
-* Pinard, F.:                           Authors of getdate.
-* pm in date strings:                   Time of day item.
-* Progress information:                 Checking Progress.
-* Protecting old files:                 File Writing Options.
-* pure numbers in date strings:         Pure numbers in date strings.
-* Reading incomplete blocks:            Archive Reading Options.
-* Record number where error occured:    Checking Progress.
-* Records per block:                    Blocking Factor.
-* relative items in date strings:       Relative item in date strings.
-* remote tape drive:                    Device.
-* Removing files from an archive:       Removing Archive Members.
-* reporting bugs:                       Bug reports.
-* Resurrecting files from an archive:   Extracting Archive Members.
-* Retrieving files from an archive:     Extracting Archive Members.
-* return status:                        Synopsis.
-* rmt:                                  Device.
-* Running out of space:                 Archive Reading Options.
-* Running out of space during extraction: Scarce Disk Space.
-* Salz, Rich:                           Authors of getdate.
-* Small memory:                         Archive Reading Options.
-* Space on the disk, recovering from lack of: Scarce Disk Space.
-* Sparse Files:                         Sparse Files.
-* Specifying archive members:           Changing the Archive Name.
-* Specifying files to act on:           Changing the Archive Name.
-* Standard input and output:            Changing the Archive Name.
-* Standard output, writing extracted files to: File Writing Options.
-* Status information:                   Checking Progress.
-* Storing archives in compressed format: Compressed Archives.
-* Swedish Winter Time:                  Timezone item.
-* Symbolic link as file name:           Symbolic Links.
-* tape blocking:                        Blocking Factor.
-* tape marks:                           Many.
-* tape positioning:                     Many.
-* tar:                                  What tar Does.
-* tar archive:                          What tar Does.
-* tar entry:                            What tar Does.
-* tar file:                             What tar Does.
-* tar to standard input and output:     Changing the Archive Name.
-* this in date strings:                 Relative item in date strings.
-* time of day item:                     Time of day item.
-* timezone correction:                  Time of day item.
-* timezone item:                        Timezone item.
-* today in date strings:                Relative item in date strings.
-* tomorrow in date strings:             Relative item in date strings.
-* Ultrix 3.1 and write failure:         Device.
-* Universal Coordinated Time:           Timezone item.
-* unpacking:                            What tar Does.
-* Updating an archive:                  Adding to an Existing Archive.
-* USSR Zone:                            Timezone item.
-* uuencode:                             Modifiers Options.
-* Verbose operation:                    Checking Progress.
-* Verifying a write operation:          Write Verification.
-* Verifying the currency of an archive: Comparing.
-* Version of the tar program:           Checking Progress.
-* week in date strings:                 Relative item in date strings.
-* West African Time:                    Timezone item.
-* West Australian Standard Time:        Timezone item.
-* Western European Time:                Timezone item.
-* Where is the archive?:                Changing the Archive Name.
-* Working directory, specifying:        Changing Directory.
-* Writing extracted files to standard output: File Writing Options.
-* Writing new archives:                 Creating a New Archive.
-* year in date strings:                 Relative item in date strings.
-* yesterday in date strings:            Relative item in date strings.
+* Format Variations::           Format Variations
+* Blocking Factor::             The Blocking Factor of an Archive
 
+
+File: tar.info,  Node: Format Variations,  Next: Blocking Factor,  Prev: Blocking,  Up: Blocking
+
+Format Variations
+-----------------
+
+     *(This message will disappear, once this node revised.)*
+
+   Format parameters specify how an archive is written on the archive
+media.  The best choice of format parameters will vary depending on the
+type and number of files being archived, and on the media used to store
+the archive.
+
+   To specify format parameters when accessing or creating an archive,
+you can use the options described in the following sections.  If you do
+not specify any format parameters, `tar' uses default parameters.  You
+cannot modify a compressed archive.  If you create an archive with the
+`--blocking-factor=512-SIZE' (`-b 512-SIZE') option specified
+(*note Blocking Factor::.), you must specify that blocking-factor when
+operating on the archive.  *Note Formats::, for other examples of
+format parameter considerations.
+
+
+File: tar.info,  Node: Blocking Factor,  Prev: Format Variations,  Up: Blocking
+
+The Blocking Factor of an Archive
+---------------------------------
+
+     *(This message will disappear, once this node revised.)*
+
+   The data in an archive is grouped into blocks, which are 512 bytes.
+Blocks are read and written in whole number multiples called "records".
+The number of blocks in a record (ie. the size of a record in units of
+512 bytes) is called the "blocking factor".  The
+`--blocking-factor=512-SIZE' (`-b 512-SIZE') option specifies the
+blocking factor of an archive.  The default blocking factor is
+typically 20 (ie.  10240 bytes), but can be specified at installation.
+To find out the blocking factor of an existing archive, use `tar --list
+--file=ARCHIVE-NAME'.  This may not work on some devices.
+
+   Records are separated by gaps, which waste space on the archive
+media.  If you are archiving on magnetic tape, using a larger blocking
+factor (and therefore larger records) provides faster throughput and
+allows you to fit more data on a tape (because there are fewer gaps).
+If you are archiving on cartridge, a very large blocking factor (say
+126 or more) greatly increases performance. A smaller blocking factor,
+on the other hand, may be usefull when archiving small files, to avoid
+archiving lots of nulls as `tar' fills out the archive to the end of
+the record.  In general, the ideal record size depends on the size of
+the inter-record gaps on the tape you are using, and the average size
+of the files you are archiving.  *Note create::, for information on
+writing archives.
+
+   Archives with blocking factors larger than 20 cannot be read by very
+old versions of `tar', or by some newer versions of `tar' running on
+old machines with small address spaces.  With GNU `tar', the blocking
+factor of an archive is limited only by the maximum record size of the
+device containing the archive, or by the amount of available virtual
+memory.
+
+   Also, on some systems, not using adequate blocking factors, as
+sometimes imposed by the device drivers, may yield unexpected
+diagnostics.  For example, this has been reported:
+
+     Cannot write to /dev/dlt: Invalid argument
+
+In such cases, it sometimes happen that the `tar' bundled by the system
+is aware of block size idiosyncrasies, while GNU `tar' requires an
+explicit specification for the block size, which it cannot guess.  This
+yields some people to consider GNU `tar' is misbehaving, because by
+comparison, `the bundle `tar' works OK'.  Adding `-b 256', for example,
+might resolve the problem.
+
+   If you use a non-default blocking factor when you create an archive,
+you must specify the same blocking factor when you modify that archive.
+Some archive devices will also require you to specify the blocking
+factor when reading that archive, however this is not typically the
+case.  Usually, you can use `--list' (`-t') without specifying a
+blocking factor--`tar' reports a non-default record size and then lists
+the archive members as it would normally.  To extract files from an
+archive with a non-standard blocking factor (particularly if you're not
+sure what the blocking factor is), you can usually use the
+`--read-full-records' (`-B') option while specifying a blocking factor
+larger then the blocking factor of the archive (ie. `tar --extract
+--read-full-records --blocking-factor=300'.  *Note list::, for more
+information on the `--list' (`-t') operation.  *Note Reading::, for a
+more detailed explanation of that option.
+
+`--blocking-factor=NUMBER'
+`-b NUMBER'
+     Specifies the blocking factor of an archive.  Can be used with any
+     operation, but is usually not necessary with `--list' (`-t').
+
+   Device blocking
+
+`-b BLOCKS'
+`--blocking-factor=BLOCKS'
+     Set record size to BLOCKS * 512 bytes.
+
+     This option is used to specify a "blocking factor" for the archive.
+     When reading or writing the archive, `tar', will do reads and
+     writes of the archive in records of BLOCK*512 bytes.  This is true
+     even when the archive is compressed.  Some devices requires that
+     all write operations be a multiple of a certain size, and so, `tar'
+     pads the archive out to the next record boundary.
+
+     The default blocking factor is set when `tar' is compiled, and is
+     typically 20.  Blocking factors larger than 20 cannot be read by
+     very old versions of `tar', or by some newer versions of `tar'
+     running on old machines with small address spaces.
+
+     With a magnetic tape, larger records give faster throughput and fit
+     more data on a tape (because there are fewer inter-record gaps).
+     If the archive is in a disk file or a pipe, you may want to specify
+     a smaller blocking factor, since a large one will result in a large
+     number of null bytes at the end of the archive.
+
+     When writing cartridge or other streaming tapes, a much larger
+     blocking factor (say 126 or more) will greatly increase
+     performance.  However, you must specify the same blocking factor
+     when reading or updating the archive.
+
+     Apparently, Exabyte drives have a physical block size of 8K bytes.
+     If we choose our blocksize as a multiple of 8k bytes, then the
+     problem seems to dissapper.  Id est, we are using block size of
+     112 right now, and we haven't had the problem since we switched...
+
+     With GNU `tar' the blocking factor is limited only by the maximum
+     record size of the device containing the archive, or by the amount
+     of available virtual memory.
+
+     However, deblocking or reblocking is virtually avoided in a special
+     case which often occurs in practice, but which requires all the
+     following conditions to be simultaneously true:
+        * the archive is subject to a compression option,
+
+        * the archive is not handled through standard input or output,
+          nor redirected nor piped,
+
+        * the archive is directly handled to a local disk, instead of
+          any special device,
+
+        * `--blocking-factor=512-SIZE' (`-b 512-SIZE') is not
+          explicitely specified on the `tar' invocation.
+
+     In previous versions of GNU `tar', the `--compress-block' option
+     (or even older: `--block-compress') was necessary to reblock
+     compressed archives.  It is now a dummy option just asking not to
+     be used, and otherwise ignored.  If the output goes directly to a
+     local disk, and not through stdout, then the last write is not
+     extended to a full record size.  Otherwise, reblocking occurs.
+     Here are a few other remarks on this topic:
+
+        * `gzip' will complain about trailing garbage if asked to
+          uncompress a compressed archive on tape, there is an option
+          to turn the message off, but it breaks the regularity of
+          simply having to use `PROG -d' for decompression.  It would
+          be nice if gzip was silently ignoring any number of trailing
+          zeros.  I'll ask Jean-loup Gailly, by sending a copy of this
+          message to him.
+
+        * `compress' does not show this problem, but as Jean-loup
+          pointed out to Michael, `compress -d' silently adds garbage
+          after the result of decompression, which tar ignores because
+          it already recognized its end-of-file indicator.  So this bug
+          may be safely ignored.
+
+        * `gzip -d -q' will be silent about the trailing zeros indeed,
+          but will still return an exit status of 2 which tar reports
+          in turn.  `tar' might ignore the exit status returned, but I
+          hate doing that, as it weakens the protection `tar' offers
+          users against other possible problems at decompression time.
+          If `gzip' was silently skipping trailing zeros *and* also
+          avoiding setting the exit status in this innocuous case, that
+          would solve this situation.
+
+        * `tar' should become more solid at not stopping to read a pipe
+          at the first null block encountered.  This inelegantly breaks
+          the pipe.  `tar' should rather drain the pipe out before
+          exiting itself.
+
+`-i'
+`--ignore-zeros'
+     Ignore blocks of zeros in archive (means EOF).
+
+     The `--ignore-zeros' (`-i') option causes `tar' to ignore blocks
+     of zeros in the archive.  Normally a block of zeros indicates the
+     end of the archive, but when reading a damaged archive, or one
+     which was created by `cat'-ing several archives together, this
+     option allows `tar' to read the entire archive.  This option is
+     not on by default because many versions of `tar' write garbage
+     after the zeroed blocks.
+
+     Note that this option causes `tar' to read to the end of the
+     archive file, which may sometimes avoid problems when multiple
+     files are stored on a single physical tape.
+
+`-B'
+`--read-full-records'
+     Reblock as we read (for reading 4.2BSD pipes).
+
+     If `--read-full-records' (`-B') is used, `tar' will not panic if an
+     attempt to read a record from the archive does not return a full
+     record.  Instead, `tar' will keep reading until it has obtained a
+     full record.
+
+     This option is turned on by default when `tar' is reading an
+     archive from standard input, or from a remote machine.  This is
+     because on BSD Unix systems, a read of a pipe will return however
+     much happens to be in the pipe, even if it is less than `tar'
+     requested.  If this option was not used, `tar' would fail as soon
+     as it read an incomplete record from the pipe.
+
+     This option is also useful with the commands for updating an
+     archive.
+
+   Tape blocking
+
+   When handling various tapes or cartridges, you have to take care of
+selecting a proper blocking, that is, the number of disk blocks you put
+together as a single tape block on the tape, without intervening tape
+gaps.  A "tape gap" is a small landing area on the tape with no
+information on it, used for decelerating the tape to a full stop, and
+for later regaining the reading or writing speed.  When the tape driver
+starts reading a record, the record has to be read whole without
+stopping, as a tape gap is needed to stop the tape motion without
+loosing information.
+
+   Using higher blocking (putting more disk blocks per tape block) will
+use the tape more efficiently as there will be less tape gaps.  But
+reading such tapes may be more difficult for the system, as more memory
+will be required to receive at once the whole record.  Further, if
+there is a reading error on a huge record, this is less likely that the
+system will succeed in recovering the information.  So, blocking should
+not be too low, nor it should be too high.  `tar' uses by default a
+blocking of 20 for historical reasons, and it does not really matter
+when reading or writing to disk.  Current tape technology would easily
+accomodate higher blockings.  Sun recommends a blocking of 126 for
+Exabytes and 96 for DATs.  We were told that for some DLT drives, the
+blocking should be a multiple of 4Kb, preferably 64Kb (`-b 128') or 256
+for decent performance.  Other manufacturers may use different
+recommendations for the same tapes.  This might also depends of the
+buffering techniques used inside modern tape controllers.  Some imposes
+a minimum blocking, or a maximum blocking.  Others request blocking to
+be some exponent of two.
+
+   So, there is no fixed rule for blocking.  But blocking at read time
+should ideally be the same as blocking used at write time.  At one place
+I know, with a wide variety of equipment, they found it best to use a
+blocking of 32 to guarantee that their tapes are fully interchangeable.
+
+   I was also told that, for recycled tapes, prior erasure (by the same
+drive unit that will be used to create the archives) sometimes lowers
+the error rates observed at rewriting time.
+
+   I might also use `--number-blocks' instead of `--block-number', so
+`--block' will then expand to `--blocking-factor' unambiguously.
+
+
+File: tar.info,  Node: Many,  Next: Using Multiple Tapes,  Prev: Blocking,  Up: Media
+
+Many Archives on One Tape
+=========================
+
+   Most tape devices have two entries in the `/dev' directory, or
+entries that come in pairs, which differ only in the minor number for
+this device.  Let's take for example `/dev/tape', which often points to
+the only or usual tape device of a given system.  There might be a
+corresponding `/dev/nrtape' or `/dev/ntape'.  The simpler name is the
+*rewinding* version of the device, while the name having `nr' in it is
+the *no rewinding* version of the same device.
+
+   A rewinding tape device will bring back the tape to its beginning
+point automatically when this device is opened or closed.  Since `tar'
+opens the archive file before using it and closes it afterwards, this
+means that a simple:
+
+     $ tar cf /dev/tape DIRECTORY
+
+will reposition the tape to its beginning both prior and after saving
+DIRECTORY contents to it, thus erasing prior tape contents and making
+it so that any subsequent write operation will destroy what has just
+been saved.
+
+   So, a rewinding device is normally meant to hold one and only one
+file.  If you want to put more than one `tar' archive on a given tape,
+you will need to avoid using the rewinding version of the tape device.
+You will also have to pay special attention to tape positioning.
+Errors in positionning may overwrite the valuable data already on your
+tape.  Many people, burnt by past experiences, will only use rewinding
+devices and limit themselves to one file per tape, precisely to avoid
+the risk of such errors.  Be fully aware that writing at the wrong
+position on a tape loses all information past this point and most
+probably until the end of the tape, and this destroyed information
+*cannot* be recovered.
+
+   To save DIRECTORY-1 as a first archive at the beginning of a tape,
+and leave that tape ready for a second archive, you should use:
+
+     $ mt -f /dev/nrtape rewind
+     $ tar cf /dev/nrtape DIRECTORY-1
+
+   "Tape marks" are special magnetic patterns written on the tape
+media, which are later recognizable by the reading hardware.  These
+marks are used after each file, when there are many on a single tape.
+An empty file (that is to say, two tape marks in a row) signal the
+logical end of the tape, after which no file exist.  Usually,
+non-rewinding tape device drivers will react to the close request issued
+by `tar' by first writing two tape marks after your archive, and by
+backspacing over one of these.  So, if you remove the tape at that time
+from the tape drive, it is properly terminated.  But if you write
+another file at the current position, the second tape mark will be
+erased by the new information, leaving only one tape mark between files.
+
+   So, you may now save DIRECTORY-2 as a second archive after the first
+on the same tape by issuing the command:
+
+     $ tar cf /dev/nrtape DIRECTORY-2
+
+and so on for all the archives you want to put on the same tape.
+
+   Another usual case is that you do not write all the archives the same
+day, and you need to remove and store the tape between two archive
+sessions.  In general, you must remember how many files are already
+saved on your tape.  Suppose your tape already has 16 files on it, and
+that you are ready to write the 17th.  You have to take care of skipping
+the first 16 tape marks before saving DIRECTORY-17, say, by using these
+commands:
+
+     $ mt -f /dev/nrtape rewind
+     $ mt -f /dev/nrtape fsf 16
+     $ tar cf /dev/nrtape DIRECTORY-17
+
+   In all the previous examples, we put aside blocking considerations,
+but you should do the proper things for that as well.  *Note Blocking::.
+
+* Menu:
+
+* Tape Positioning::            Tape Positions and Tape Marks
+* mt::                          The `mt' Utility
+
+
+File: tar.info,  Node: Tape Positioning,  Next: mt,  Prev: Many,  Up: Many
+
+Tape Positions and Tape Marks
+-----------------------------
+
+     *(This message will disappear, once this node revised.)*
+
+   Just as archives can store more than one file from the file system,
+tapes can store more than one archive file.  To keep track of where
+archive files (or any other type of file stored on tape) begin and end,
+tape archive devices write magnetic "tape marks" on the archive media.
+Tape drives write one tape mark between files, two at the end of all
+the file entries.
+
+   If you think of data as a series of records "rrrr"'s, and tape marks
+as "*"'s, a tape might look like the following:
+
+     rrrr*rrrrrr*rrrrr*rr*rrrrr**-------------------------
+
+   Tape devices read and write tapes using a read/write "tape head"--a
+physical part of the device which can only access one point on the tape
+at a time.  When you use `tar' to read or write archive data from a
+tape device, the device will begin reading or writing from wherever on
+the tape the tape head happens to be, regardless of which archive or
+what part of the archive the tape head is on.  Before writing an
+archive, you should make sure that no data on the tape will be
+overwritten (unless it is no longer needed).  Before reading an
+archive, you should make sure the tape head is at the beginning of the
+archive you want to read.  (The `restore' script will find the archive
+automatically.  .  ).  *Note mt::, for an explanation of the tape
+moving utility.
+
+   If you want to add new archive file entries to a tape, you should
+advance the tape to the end of the existing file entries, backspace
+over the last tape mark, and write the new archive file.  If you were
+to add two archives to the example above, the tape might look like the
+following:
+
+     rrrr*rrrrrr*rrrrr*rr*rrrrr*rrr*rrrr**----------------
+
+
+File: tar.info,  Node: mt,  Prev: Tape Positioning,  Up: Many
+
+The `mt' Utility
+----------------
+
+     *(This message will disappear, once this node revised.)*
+
+   *Note Blocking Factor::.
+
+   You can use the `mt' utility to advance or rewind a tape past a
+specified number of archive files on the tape.  This will allow you to
+move to the beginning of an archive before extracting or reading it, or
+to the end of all the archives before writing a new one.
+
+   The syntax of the `mt' command is:
+
+     mt [-f TAPENAME] OPERATION [NUMBER]
+
+   where TAPENAME is the name of the tape device, NUMBER is the number
+of times an operation is performed (with a default of one), and
+OPERATION is one of the following:
+
+`eof'
+`weof'
+     Writes NUMBER tape marks at the current position on the tape.
+
+`fsf'
+     Moves tape position forward NUMBER files.
+
+`bsf'
+     Moves tape position back NUMBER files.
+
+`rewind'
+     Rewinds the tape. (Ignores NUMBER).
+
+`offline'
+`rewoff1'
+     Rewinds the tape and takes the tape device off-line. (Ignores
+     NUMBER).
+
+`status'
+     Prints status information about the tape unit.
+
+   If you don't specify a TAPENAME, `mt' uses the environment variable
+TAPE; if TAPE does not exist, `mt' uses the device `/dev/rmt12'.
+
+   `mt' returns a 0 exit status when the operation(s) were successful,
+1 if the command was unrecognized, and 2 if an operation failed.
+
+   If you use `--extract' (`--get', `-x') with the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option specified, `tar'
+will read an archive label (the tape head has to be positioned on it)
+and print an error if the archive label doesn't match the ARCHIVE-NAME
+specified.  ARCHIVE-NAME can be any regular expression.  If the labels
+match, `tar' extracts the archive.  *Note label::.  .   `tar --list
+--label' will cause `tar' to print the label.
+
+
+File: tar.info,  Node: Using Multiple Tapes,  Next: label,  Prev: Many,  Up: Media
+
+Using Multiple Tapes
+====================
+
+     *(This message will disappear, once this node revised.)*
+
+   Often you might want to write a large archive, one larger than will
+fit on the actual tape you are using.  In such a case, you can run
+multiple `tar' commands, but this can be inconvenient, particularly if
+you are using options like `--exclude=PATTERN' or dumping entire
+filesystems.  Therefore, `tar' supports multiple tapes automatically.
+
+   Use `--multi-volume' (`-M') on the command line, and then `tar' will,
+when it reaches the end of the tape, prompt for another tape, and
+continue the archive.  Each tape will have an independent archive, and
+can be read without needing the other.  (As an exception to this, the
+file that `tar' was archiving when it ran out of tape will usually be
+split between the two archives; in this case you need to extract from
+the first archive, using `--multi-volume' (`-M'), and then put in the
+second tape when prompted, so `tar' can restore both halves of the
+file.)
+
+   GNU `tar' multi-volume archives do not use a truly portable format.
+You need GNU `tar' at both end to process them properly.
+
+   When prompting for a new tape, `tar' accepts any of the following
+responses:
+
+`?'
+     Request `tar' to explain possible responses
+
+`q'
+     Request `tar' to exit immediately.
+
+`n FILE NAME'
+     Request `tar' to write the next volume on the file FILE NAME.
+
+`!'
+     Request `tar' to run a subshell.
+
+`y'
+     Request `tar' to begin writing the next volume.
+
+   (You should only type `y' after you have changed the tape; otherwise
+`tar' will write over the volume it just finished.)
+
+   If you want more elaborate behavior than this, give `tar' the
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME') option.  The file SCRIPT-NAME is expected to be a program
+(or shell script) to be run instead of the normal prompting procedure.
+When the program finishes, `tar' will immediately begin writing the
+next volume.  The behavior of the `n' response to the normal
+tape-change prompt is not available if you use
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME').
+
+   The method `tar' uses to detect end of tape is not perfect, and
+fails on some operating systems or on some devices.  You can use the
+`--tape-length=1024-SIZE' (`-L 1024-SIZE') option if `tar' can't detect
+the end of the tape itself.  This option selects `--multi-volume'
+(`-M') automatically.  The SIZE argument should then be the usable size
+of the tape.  But for many devices, and floppy disks in particular,
+this option is never required for real, as far as we know.
+
+   The volume number used by `tar' in its tape-change prompt can be
+changed; if you give the `--volno-file=FILE-OF-NUMBER' option, then
+FILE-OF-NUMBER should be an unexisting file to be created, or else, a
+file already containing a decimal number.  That number will be used as
+the volume number of the first volume written.  When `tar' is finished,
+it will rewrite the file with the now-current volume number.  (This
+does not change the volume number written on a tape label, as per
+*Note label::, it *only* affects the number used in the prompt.)
+
+   If you want `tar' to cycle through a series of tape drives, then you
+can use the `n' response to the tape-change prompt.  This is error
+prone, however, and doesn't work at all with
+`--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME').  Therefore, if you give `tar' multiple
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') options, then the specified
+files will be used, in sequence, as the successive volumes of the
+archive.  Only when the first one in the sequence needs to be used
+again will `tar' prompt for a tape change (or run the info script).
+
+   Multi-volume archives
+
+   With `--multi-volume' (`-M'), `tar' will not abort when it cannot
+read or write any more data.  Instead, it will ask you to prepare a new
+volume.  If the archive is on a magnetic tape, you should change tapes
+now; if the archive is on a floppy disk, you should change disks, etc.
+
+   Each volume of a multi-volume archive is an independent `tar'
+archive, complete in itself.  For example, you can list or extract any
+volume alone; just don't specify `--multi-volume' (`-M').  However, if
+one file in the archive is split across volumes, the only way to extract
+it successfully is with a multi-volume extract command `--extract
+--multi-volume' (`-xM') starting on or before the volume where the file
+begins.
+
+   For example, let's presume someone has two tape drives on a system
+named `/dev/tape0' and `/dev/tape1'.  For having GNU `tar' to switch to
+the second drive when it needs to write the second tape, and then back
+to the first tape, etc., just do either of:
+
+     $ tar --create --multi-volume --file=/dev/tape0 --file=/dev/tape1 FILES
+     $ tar cMff /dev/tape0 /dev/tape1 FILES
+
+* Menu:
+
+* Multi-Volume Archives::       Archives Longer than One Tape or Disk
+* Tape Files::                  Tape Files
+
+
+File: tar.info,  Node: Multi-Volume Archives,  Next: Tape Files,  Prev: Using Multiple Tapes,  Up: Using Multiple Tapes
+
+Archives Longer than One Tape or Disk
+-------------------------------------
+
+     *(This message will disappear, once this node revised.)*
+
+   To create an archive that is larger than will fit on a single unit of
+the media, use the `--multi-volume' (`-M') option in conjunction with
+the `--create' (`-c') option (*note create::.).  A "multi-volume"
+archive can be manipulated like any other archive (provided the
+`--multi-volume' (`-M') option is specified), but is stored on more
+than one tape or disk.
+
+   When you specify `--multi-volume' (`-M'), `tar' does not report an
+error when it comes to the end of an archive volume (when reading), or
+the end of the media (when writing).  Instead, it prompts you to load a
+new storage volume.  If the archive is on a magnetic tape, you should
+change tapes when you see the prompt; if the archive is on a floppy
+disk, you should change disks; etc.
+
+   You can read each individual volume of a multi-volume archive as if
+it were an archive by itself.  For example, to list the contents of one
+volume, use `--list' (`-t'), without `--multi-volume' (`-M') specified.
+To extract an archive member from one volume (assuming it is described
+that volume), use `--extract' (`--get', `-x'), again without
+`--multi-volume' (`-M').
+
+   If an archive member is split across volumes (ie. its entry begins on
+one volume of the media and ends on another), you need to specify
+`--multi-volume' (`-M') to extract it successfully.  In this case, you
+should load the volume where the archive member starts, and use `tar
+--extract --multi-volume'--`tar' will prompt for later volumes as it
+needs them.  *Note extracting archives::, for more information about
+extracting archives.
+
+   `--info-script=SCRIPT-NAME' (`--new-volume-script=SCRIPT-NAME', `-F
+SCRIPT-NAME') is like `--multi-volume' (`-M'), except that `tar' does
+not prompt you directly to change media volumes when a volume is
+full--instead, `tar' runs commands you have stored in SCRIPT-NAME.  For
+example, this option can be used to eject cassettes, or to broadcast
+messages such as `Someone please come change my tape' when performing
+unattended backups.  When SCRIPT-NAME is done, `tar' will assume that
+the media has been changed.
+
+   Multi-volume archives can be modified like any other archive.  To add
+files to a multi-volume archive, you need to only mount the last volume
+of the archive media (and new volumes, if needed).  For all other
+operations, you need to use the entire archive.
+
+   If a multi-volume archive was labeled using `--label=ARCHIVE-LABEL'
+(`-V ARCHIVE-LABEL') (*note label::.) when it was created, `tar' will
+not automatically label volumes which are added later.  To label
+subsequent volumes, specify `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL') again in conjunction with the `--append' (`-r'),
+`--update' (`-u') or `--concatenate' (`--catenate', `-A') operation.
+
+`--multi-volume'
+`-M'
+     Creates a multi-volume archive, when used in conjunction with
+     `--create' (`-c').  To perform any other operation on a
+     multi-volume archive, specify `--multi-volume' (`-M') in
+     conjunction with that operation.
+
+`--info-script=PROGRAM-FILE'
+`-F PROGRAM-FILE'
+     Creates a multi-volume archive via a script.  Used in conjunction
+     with `--create' (`-c').
+
+   Beware that there is *no* real standard about the proper way, for a
+`tar' archive, to span volume boundaries.  If you have a multi-volume
+created by some vendor's `tar', there is almost no chance you could
+read all the volumes with GNU `tar'.  The converse is also true: you
+may not expect multi-volume archives created by GNU `tar' to be fully
+recovered by vendor's `tar'.  Since there is little chance that, in
+mixed system configurations, some vendor's `tar' will work on another
+vendor's machine, and there is a great chance that GNU `tar' will work
+on most of them, your best bet is to install GNU `tar' on all machines
+between which you know exchange of files is possible.
+
+
+File: tar.info,  Node: Tape Files,  Prev: Multi-Volume Archives,  Up: Using Multiple Tapes
+
+Tape Files
+----------
+
+     *(This message will disappear, once this node revised.)*
+
+   To give the archive a name which will be recorded in it, use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option.  This will write a
+special block identifying VOLUME-LABEL as the name of the archive to
+the front of the archive which will be displayed when the archive is
+listed with `--list' (`-t').  If you are creating a multi-volume
+archive with `--multi-volume' (`-M') (), then the volume label will have
+`Volume NNN' appended to the name you give, where NNN is the number of
+the volume of the archive.  (If you use the `--label=ARCHIVE-LABEL'
+(`-V ARCHIVE-LABEL') option when reading an archive, it checks to make
+sure the label on the tape matches the one you give.  *Note label::.
+
+   When `tar' writes an archive to tape, it creates a single tape file.
+If multiple archives are written to the same tape, one after the
+other, they each get written as separate tape files.  When extracting,
+it is necessary to position the tape at the right place before running
+`tar'.  To do this, use the `mt' command.  For more information on the
+`mt' command and on the organization of tapes into a sequence of tape
+files, see *Note mt::.
+
+   People seem to often do:
+
+     --label="SOME-PREFIX `date +SOME-FORMAT`"
+
+   or such, for pushing a common date in all volumes or an archive set.
+
+
+File: tar.info,  Node: label,  Next: verify,  Prev: Using Multiple Tapes,  Up: Media
+
+Including a Label in the Archive
+================================
+
+     *(This message will disappear, once this node revised.)*
+
+`-V NAME'
+`--label=NAME'
+     Create archive with volume name NAME.
+
+   This option causes `tar' to write out a "volume header" at the
+beginning of the archive.  If `--multi-volume' (`-M') is used, each
+volume of the archive will have a volume header of `NAME Volume N',
+where N is 1 for the first volume, 2 for the next, and so on.
+
+   To avoid problems caused by misplaced paper labels on the archive
+media, you can include a "label" entry--an archive member which
+contains the name of the archive--in the archive itself.  Use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option in conjunction with
+the `--create' (`-c') operation to include a label entry in the archive
+as it is being created.
+
+   If you create an archive using both `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL') and `--multi-volume' (`-M'), each volume of the archive
+will have an archive label of the form `ARCHIVE-LABEL Volume N', where
+N is 1 for the first volume, 2 for the next, and so on.  , for
+information on creating multiple volume archives.
+
+   If you list or extract an archive using `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL'), `tar' will print an error if the archive label doesn't
+match the ARCHIVE-LABEL specified, and will then not list nor extract
+the archive.  In those cases, ARCHIVE-LABEL argument is interpreted as
+a globbing-style pattern which must match the actual magnetic volume
+label.  *Note exclude::, for a precise description of how match is
+attempted(1).  If the switch `--multi-volume' (`-M') is being used, the
+volume label matcher will also suffix ARCHIVE-LABEL by ` Volume [1-9]*'
+if the initial match fails, before giving up.  Since the volume
+numbering is automatically added in labels at creation time, it sounded
+logical to equally help the user taking care of it when the archive is
+being read.
+
+   The `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') was once called
+`--volume', but is not available under that name anymore.
+
+   To find out an archive's label entry (or to find out if an archive
+has a label at all), use `tar --list --verbose'.  `tar' will print the
+label first, and then print archive member information, as in the
+example below:
+
+     $ tar --verbose --list --file=iamanarchive
+     V--------- 0 0        0 1992-03-07 12:01 iamalabel--Volume Header--
+     -rw-rw-rw- ringo user 40 1990-05-21 13:30 iamafilename
+
+`--label=ARCHIVE-LABEL'
+`-V ARCHIVE-LABEL'
+     Includes an "archive-label" at the beginning of the archive when
+     the archive is being created, when used in conjunction with the
+     `--create' (`-c') option.  Checks to make sure the archive label
+     matches the one specified (when used in conjunction with the
+     `--extract' (`--get', `-x') option.
+
+   To get a common information on all tapes of a series, use the
+`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') option.  For having this
+information different in each series created through a single script
+used on a regular basis, just manage to get some date string as part of
+the label.  For example:
+
+     $ tar cfMV /dev/tape "Daily backup for `date +%Y-%m-%d`"
+     $ tar --create --file=/dev/tape --multi-volume \
+          --volume="Daily backup for `date +%Y-%m-%d`"
+
+   Also note that each label has its own date and time, which
+corresponds to when GNU `tar' initially attempted to write it, often
+soon after the operator launches `tar' or types the carriage return
+telling that the next tape is ready.  Comparing date labels does give
+an idea of tape throughput only if the delays for rewinding tapes and
+the operator switching them were negligible, which is ususally not the
+case.
+
+   ---------- Footnotes ----------
+
+   (1)  Previous versions of `tar' used full regular expression
+matching, or before that, only exact string matching, instead of
+wildcard matchers.  We decided for the sake of simplicity to use a
+uniform matching device through `tar'.
+
+
+File: tar.info,  Node: verify,  Next: Write Protection,  Prev: label,  Up: Media
+
+Verifying Data as It is Stored
+==============================
+
+`-W'
+`--verify'
+     Attempt to verify the archive after writing.
+
+   This option causes `tar' to verify the archive after writing it.
+Each volume is checked after it is written, and any discrepancies are
+recorded on the standard error output.
+
+   Verification requires that the archive be on a back-space-able
+medium.  This means pipes, some cartridge tape drives, and some other
+devices cannot be verified.
+
+   You can insure the accuracy of an archive by comparing files in the
+system with archive members.  `tar' can compare an archive to the file
+system as the archive is being written, to verify a write operation, or
+can compare a previously written archive, to insure that it is up to
+date.
+
+   To check for discrepancies in an archive immediately after it is
+written, use the `--verify' (`-W') option in conjunction with the
+`--create' (`-c') operation.  When this option is specified, `tar'
+checks archive members against their counterparts in the file system,
+and reports discrepancies on the standard error.  In multi-volume
+archives, each volume is verified after it is written, before the next
+volume is written.
+
+   To verify an archive, you must be able to read it from before the end
+of the last written entry.  This option is useful for detecting data
+errors on some tapes.  Archives written to pipes, some cartridge tape
+drives, and some other devices cannot be verified.
+
+   One can explicitely compare an already made archive with the file
+system by using the `--compare' (`--diff', `-d') option, instead of
+using the more automatic `--verify' (`-W') option.  *Note compare::.
+
+   Note that these two options have a slightly different intent.  The
+`--compare' (`--diff', `-d') option how identical are the logical
+contents of some archive with what is on your disks, while the
+`--verify' (`-W') option is really for checking if the physical
+contents agree and if the recording media itself is of dependable
+quality.  So, for the `--verify' (`-W') operation, `tar' tries to
+defeat all in-memory cache pertaining to the archive, while it lets the
+speed optimization undisturbed for the `--compare' (`--diff', `-d')
+option.  If you nevertheless use `--compare' (`--diff', `-d') for media
+verification, you may have to defeat the in-memory cache yourself,
+maybe by opening and reclosing the door latch of your recording unit,
+forcing some doubt in your operating system about the fact this is
+really the same volume as the one just written or read.
+
+   The `--verify' (`-W') option would not be necessary if drivers were
+indeed able to detect dependably all write failures.  This sometimes
+require many magnetic heads, some able to read after the writes
+occurred.  One would not say that drivers unable to detect all cases
+are necessarily flawed, as long as programming is concerned.
+
+
+File: tar.info,  Node: Write Protection,  Prev: verify,  Up: Media
+
+Write Protection
+================
+
+   Almost all tapes and diskettes, and in a few rare cases, even disks
+can be "write protected", to protect data on them from being changed.
+Once an archive is written, you should write protect the media to
+prevent the archive from being accidently overwritten or deleted.
+(This will protect the archive from being changed with a tape or floppy
+drive--it will not protect it from magnet fields or other physical
+hazards).
+
+   The write protection device itself is usually an integral part of the
+physical media, and can be a two position (write enabled/write
+disabled) switch, a notch which can be popped out or covered, a ring
+which can be removed from the center of a tape reel, or some other
+changeable feature.
 

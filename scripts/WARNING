@@ -1,4 +1,3 @@
-Beware that GNU tar scripts have not been updated in a long while.
-The ChangeLog has been lost.  The Makefile does not install them.
-But we intend to try reinstating them in some future GNU tar release.
-Consider this directory is provided as indicative for the time being.
+GNU tar scripts have not been updated in a long while.  make will
+not not install them.  Please consider the contents of this directory
+are provided as indicative for the time being.

@@ -1,28 +1,28 @@
 /* System dependent definitions for GNU tar.
-   Copyright (C) 1994 Free Software Foundation, Inc.
-  
+   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
-  
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-  
+
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
 /* Declare alloca.  AIX requires this to be the first thing in the file.  */
 
-#ifdef __GNUC__
+#if __GNUC__
 # define alloca __builtin_alloca
 #else
 # if HAVE_ALLOCA_H
@@ -99,33 +99,55 @@ extern int errno;
 
 /* Declare open parameters.  */
 
-#ifdef HAVE_FCNTL_H
+#if HAVE_FCNTL_H
 # include <fcntl.h>
 #else
 # include <sys/file.h>
 #endif
-
+				/* Pick only one of the next three: */
+#ifndef O_RDONLY
+# define O_RDONLY	0	/* only allow read */
+#endif
+#ifndef O_WRONLY
+# define O_WRONLY	1	/* only allow write */
+#endif
+#ifndef O_RDWR
+# define O_RDWR		2	/* both are allowed */
+#endif
+				/* The rest can be OR-ed in to the above: */
+#ifndef O_NDELAY
+# define O_NDELAY	4	/* don't block on opening devices */
+#endif
+#ifndef O_CREAT
+# define O_CREAT	8	/* create file if needed */
+#endif
+#ifndef O_EXCL
+# define O_EXCL		16	/* file cannot already exist */
+#endif
+#ifndef O_TRUNC
+# define O_TRUNC	32	/* truncate file on open */
+#endif
+#ifndef O_APPEND
+# define O_APPEND	64	/* always write at end of file */
+#endif
+				/* MS-DOG forever, with my love! */
 #ifndef	O_BINARY
 # define O_BINARY 0
 #endif
-#ifndef O_CREAT
-# define O_CREAT 0
-#endif
-#ifndef	O_NDELAY
-# define O_NDELAY 0
-#endif
-#ifndef	O_RDONLY
-# define O_RDONLY 0
-#endif
-#ifndef O_RDWR
-# define O_RDWR 2
+				/* Emulate System V 3-argument open call */
+#if EMUL_OPEN3
+# define open open3
 #endif
 
 /* Declare file status routines and bits.  */
 
 #include <sys/stat.h>
 
-#ifdef STAT_MACROS_BROKEN
+#ifndef S_ISLNK
+# define lstat stat
+#endif
+
+#if STAT_MACROS_BROKEN
 # undef S_ISBLK
 # undef S_ISCHR
 # undef S_ISDIR
@@ -139,7 +161,7 @@ extern int errno;
 #endif
 
 /* On MSDOS, there are missing things from <sys/stat.h>.  */
-#ifdef __MSDOS__
+#if MSDOS
 # define S_ISUID 0
 # define S_ISGID 0
 # define S_ISVTX 0
@@ -177,7 +199,7 @@ extern int errno;
 # define S_ISNWK(Mode) (((Mode) & S_IFMT) == S_IFNWK)
 #endif
 
-#ifndef HAVE_MKFIFO
+#if !HAVE_MKFIFO
 # define mkfifo(Path, Mode) (mknod (Path, (Mode) | S_IFIFO, 0))
 #endif
 
@@ -193,7 +215,7 @@ extern int errno;
 #endif
 
 /* Include <unistd.h> before any preprocessor test of _POSIX_VERSION.  */
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 
@@ -201,12 +223,12 @@ extern int errno;
    SVR4, we have to resort to GOT_MAJOR instead of just testing if
    major is #define'd.  */
 
-#ifdef MAJOR_IN_MKDEV
+#if MAJOR_IN_MKDEV
 # include <sys/mkdev.h>
 # define GOT_MAJOR
 #endif
 
-#ifdef MAJOR_IN_SYSMACROS
+#if MAJOR_IN_SYSMACROS
 # include <sys/sysmacros.h>
 # define GOT_MAJOR
 #endif
@@ -217,7 +239,7 @@ extern int errno;
 #endif
 
 #ifndef GOT_MAJOR
-# ifdef __MSDOS__
+# if MSDOS
 #  define major(Device)		(Device)
 #  define minor(Device)		(Device)
 #  define makedev(Major, Minor)	(((Major) << 8) | (Minor))
@@ -243,23 +265,23 @@ extern int errno;
 
 /* Declare directory reading routines and structures.  */
 
-#ifdef __MSDOS__
+#if __TURBOC__
 # include "msd_dir.h"
 # define NAMLEN(dirent) ((dirent)->d_namlen)
 #else
-# ifdef HAVE_DIRENT_H
+# if HAVE_DIRENT_H
 #  include <dirent.h>
 #  define NAMLEN(dirent) (strlen((dirent)->d_name))
 # else
 #  define dirent direct
 #  define NAMLEN(dirent) ((dirent)->d_namlen)
-#  ifdef HAVE_SYS_NDIR_H
+#  if HAVE_SYS_NDIR_H
 #   include <sys/ndir.h>
 #  endif
-#  ifdef HAVE_SYS_DIR_H
+#  if HAVE_SYS_DIR_H
 #   include <sys/dir.h>
 #  endif
-#  ifdef HAVE_NDIR_H
+#  if HAVE_NDIR_H
 #   include <ndir.h>
 #  endif
 # endif
@@ -267,11 +289,11 @@ extern int errno;
 
 /* Declare wait status.  */
 
-#ifdef HAVE_SYS_WAIT_H
+#if HAVE_SYS_WAIT_H
 # include <sys/wait.h>
 #endif
 
-#ifdef HAVE_UNION_WAIT
+#if HAVE_UNION_WAIT
 # define WAIT_T union wait
 # ifndef WTERMSIG
 #  define WTERMSIG(Status)     ((Status).w_termsig)
@@ -304,10 +326,10 @@ extern int errno;
 #ifndef WIFEXITED
 # define WIFEXITED(Status)     (WTERMSIG(Status) == 0)
 #endif
-	 
-/* It is wrong to use RECORDSIZE for buffers when the logical block size
-   is greater than 512 bytes; so ST_BLKSIZE code below, in preparation
-   for some cleanup in this area, later.  FIXME.  */
+
+/* FIXME: It is wrong to use BLOCKSIZE for buffers when the logical block
+   size is greater than 512 bytes; so ST_BLKSIZE code below, in preparation
+   for some cleanup in this area, later.  */
 
 /* Get or fake the disk device blocksize.  Usually defined by sys/param.h
    (if at all).  */
@@ -326,7 +348,7 @@ extern int errno;
    optimal I/O blocksize for the file, in bytes.  Some systems, like
    Sequents, return st_blksize of 0 on pipes.  */
 
-#ifndef HAVE_ST_BLKSIZE
+#if !HAVE_ST_BLKSIZE
 # define ST_BLKSIZE(Statbuf) DEV_BSIZE
 #else
 # define ST_BLKSIZE(Statbuf) \
@@ -339,7 +361,7 @@ extern int errno;
    this loses when mixing HP-UX and BSD filesystems with NFS.  AIX PS/2
    counts st_blocks in 4K units.  */
 
-#ifndef HAVE_ST_BLOCKS
+#if !HAVE_ST_BLOCKS
 # if defined(_POSIX_SOURCE) || !defined(BSIZE)
 #  define ST_NBLOCKS(Statbuf) (((Statbuf).st_size + 512 - 1) / 512)
 # else
@@ -357,14 +379,32 @@ extern int errno;
 # endif
 #endif
 
-#if HAVE_SYS_GENTAPE_H		/* e.g., for ISC */
+/* This is a real challenge to properly get MTIO* symbols :-(.  ISC uses
+   <sys/gentape.h>.  SCO and BSDi uses <sys/tape.h>; BSDi also requires
+   <sys/tprintf.h> and <sys/device.h> for defining tp_dev and tpr_t.  It
+   seems that the rest use <sys/mtio.h>, which itself requires other files,
+   depending on systems.  Pyramid defines _IOW in <sgtty.h>, for example.  */
+
+#if HAVE_SYS_GENTAPE_H
 # include <sys/gentape.h>
 #else
-# if HAVE_SYS_TAPE_H		/* e.g., for SCO */
+# if HAVE_SYS_TAPE_H
+#  if HAVE_SYS_DEVICE_H
+#   include <sys/device.h>
+#  endif
+#  if HAVE_SYS_BUF_H
+#   include <sys/buf.h>
+#  endif
+#  if HAVE_SYS_TPRINTF_H
+#   include <sys/tprintf.h>
+#  endif
 #  include <sys/tape.h>
 # else
 #  if HAVE_SYS_MTIO_H
 #   include <sys/ioctl.h>
+#   if HAVE_SGTTY_H
+#    include <sgtty.h>
+#   endif
 #   if HAVE_SYS_IO_TRIOCTL_H
 #    include <sys/io/trioctl.h>
 #   endif
@@ -375,12 +415,12 @@ extern int errno;
 
 /* Declare standard functions.  */
 
-#ifdef STDC_HEADERS
+#if STDC_HEADERS
 # include <stdlib.h>
 #else
 voidstar malloc ();
 voidstar realloc ();
-# ifdef HAVE_GETCWD
+# if HAVE_GETCWD
 char *getcwd ();
 # endif
 char *getenv ();
@@ -389,7 +429,7 @@ char *getenv ();
 #include <stdio.h>
 
 #ifndef _POSIX_VERSION
-# ifdef __MSDOS__
+# if MSDOS
 #  include <io.h>
 # else
 off_t lseek ();
@@ -398,11 +438,7 @@ off_t lseek ();
 
 #include <pathmax.h>
 
-/* Until getoptold function is declared in getopt.h, we need this here for
-   struct option.  */
-#include <getopt.h>
-
-#ifdef WITH_DMALLOC
+#if WITH_DMALLOC
 # undef HAVE_VALLOC
 # define DMALLOC_FUNC_CHECK
 # include <dmalloc.h>
@@ -410,11 +446,11 @@ off_t lseek ();
 
 /* Prototypes for external functions.  */
 
-#ifndef __P
+#ifndef PARAMS
 # if PROTOTYPES
-#  define __P(Args) Args
+#  define PARAMS(Args) Args
 # else
-#  define __P(Args) ()
+#  define PARAMS(Args) ()
 # endif
 #endif
 
@@ -429,26 +465,28 @@ off_t lseek ();
 # include <libintl.h>
 # define _(Text) gettext (Text)
 #else
+# define bindtextdomain(Domain, Directory)
 # define textdomain(Domain)
 # define _(Text) Text
 #endif
+#define N_(Text) Text
 
 /* Library modules.  */
 
-#ifdef HAVE_VPRINTF
-void error __P ((int, int, const char *, ...));
+#include "error.h"
+
+#if !HAVE_STRSTR
+char *strstr PARAMS ((const char *, const char *));
+#endif
+
+#if HAVE_VALLOC
+# ifndef valloc
+voidstar valloc PARAMS ((size_t));
+# endif
 #else
-void error ();
-#endif
-
-#ifndef HAVE_STRSTR
-char *strstr __P ((const char *, const char *));
-#endif
-
-#ifndef HAVE_VALLOC
 # define valloc(Size) malloc (Size)
 #endif
 
-voidstar xmalloc __P ((size_t));
-voidstar xrealloc __P ((voidstar, size_t));
-char *xstrdup __P ((const char *));
+voidstar xmalloc PARAMS ((size_t));
+voidstar xrealloc PARAMS ((voidstar, size_t));
+char *xstrdup PARAMS ((const char *));

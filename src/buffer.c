@@ -1,24 +1,20 @@
 /* Buffer management for tar.
-   Copyright (C) 1988, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97 Free Software Foundation, Inc.
+   Written by John Gilmore, on 1985-08-25.
 
-   This file is part of GNU Tar.
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any later
+   version.
 
-   GNU Tar is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+   Public License for more details.
 
-   GNU Tar is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with GNU Tar; see the file COPYING.  If not, write to
-   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
-
-/* Buffer management for tar.
-   Written by John Gilmore, on 25 August 1985.  */
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -26,61 +22,72 @@
 #include <time.h>
 time_t time ();
 
-#ifdef	__MSDOS__
-#include <process.h>
+#if MSDOS
+# include <process.h>
 #endif
 
-#ifdef XENIX
-#include <sys/inode.h>
+#if XENIX
+# include <sys/inode.h>
 #endif
 
-#if WITH_REGEX
-# include <regex.h>
-#else
-# include <rx.h>
+#ifndef FNM_LEADING_DIR
+# include <fnmatch.h>
 #endif
 
+#include "common.h"
 #include "rmt.h"
-#include "tar.h"
 
-/* Where we write messages (standard messages, not errors) to.  Stdout
+#define DEBUG_FORK 0		/* if nonzero, childs are born stopped */
+
+#define	STDIN 0			/* standard input  file descriptor */
+#define	STDOUT 1		/* standard output file descriptor */
+
+#define	PREAD 0			/* read file descriptor from pipe() */
+#define	PWRITE 1		/* write file descriptor from pipe() */
+
+/* Number of retries before giving up on read.  */
+#define	READ_ERROR_MAX 10
+
+/* Globbing pattern to append to volume label if initial match failed.  */
+#define VOLUME_LABEL_APPEND " Volume [1-9]*"
+
+/* Variables.  */
+
+static tarlong total_written;	/* bytes written on all volumes */
+static tarlong bytes_written;	/* bytes written on this volume */
+
+/* FIXME: The following four variables should ideally be static to this
+   module.  However, this cannot be done yet, as update.c uses the first
+   three a lot, and compare.c uses the fourth.  The cleanup continues!  */
+
+union block *record_start;	/* start of record of archive */
+union block *record_end;	/* last+1 block of archive record */
+union block *current_block;	/* current block of archive */
+enum access_mode access_mode;	/* how do we handle the archive */
+static struct stat archive_stat; /* stat block for archive file */
+
+static long record_start_block; /* block ordinal at record_start */
+
+/* Where we write list messages (not errors, not interactions) to.  Stdout
    unless we're writing a pipe, in which case stderr.  */
 FILE *stdlis;
 
-#define	STDIN	0		/* standard input  file descriptor */
-#define	STDOUT	1		/* standard output file descriptor */
+static void backspace_output PARAMS ((void));
+static int new_volume PARAMS ((enum access_mode));
+static void write_error PARAMS ((int));
+static void read_error PARAMS ((void));
 
-#define	PREAD	0		/* read  file descriptor from pipe() */
-#define	PWRITE	1		/* write file descriptor from pipe() */
-
-static int backspace_output __P ((void));
-static int new_volume __P ((int));
-static void writeerror __P ((int));
-static void readerror __P ((void));
-
-#ifndef __MSDOS__
-/* Obnoxious test to see if dimwit is trying to dump the archive */
+#if !MSDOS
+/* Obnoxious test to see if dimwit is trying to dump the archive.  */
 dev_t ar_dev;
 ino_t ar_ino;
 #endif
 
-/* The record pointed to by save_rec should not be overlaid when reading
-   in a new tape block.  Copy it to record_save_area first, and change
-   the pointer in *save_rec to point to record_save_area.  Saved_recno
-   records the record number at the time of the save.  This is used by
-   annofile() to print the record number of a file's header record.  */
-static union record **save_rec;
-union record record_save_area;
-static long saved_recno;
-
-/* PID of child program, if flag_compress or remote archive access.  */
-static int childpid = 0;
-
-/* Record number of the start of this block of records  */
-long baserec;
+/* PID of child program, if compress_option or remote archive access.  */
+static int child_pid = 0;
 
 /* Error recovery stuff  */
-static int r_error_count;
+static int read_error_count;
 
 /* Have we hit EOF yet?  */
 static int hit_eof;
@@ -88,31 +95,86 @@ static int hit_eof;
 /* Checkpointing counter */
 static int checkpoint;
 
-/* JF we're reading, but we just read the last record and its time to update */
-extern time_to_start_writing;
+/* We're reading, but we just read the last block and its time to update.  */
+/* As least EXTERN like this one as possible.  FIXME!  */
+extern int time_to_start_writing;
+
 int file_to_switch_to = -1;	/* if remote update, close archive, and use
 				   this descriptor to write to */
 
-static int volno = 1;		/* JF which volume of a multi-volume tape
-				   we're on */
-static int global_volno = 1;	/* volume number to print in external messages */
+static int volno = 1;		/* which volume of a multi-volume tape we're
+				   on */
+static int global_volno = 1;	/* volume number to print in external
+				   messages */
+
+/* The pointer save_name, which is set in function dump_file() of module
+   create.c, points to the original long filename instead of the new,
+   shorter mangled name that is set in start_header() of module create.c.
+   The pointer save_name is only used in multi-volume mode when the file
+   being processed is non-sparse; if a file is split between volumes, the
+   save_name is used in generating the LF_MULTIVOL record on the second
+   volume.  (From Pierce Cantrell, 1991-08-13.)  */
 
 char *save_name;		/* name of the file we are currently writing */
 long save_totsize;		/* total size of file we are writing, only
 				   valid if save_name is non NULL */
 long save_sizeleft;		/* where we are in the file we are writing,
-				   only valid if save_name is non-zero */
+				   only valid if save_name is nonzero */
 
-int write_archive_to_stdout;
+int write_archive_to_stdout = 0;
 
-/* Used by fl_read and fl_write to store the real info about saved names */
-static char real_s_name[NAMSIZ];
+/* Used by flush_read and flush_write to store the real info about saved
+   names.  */
+static char *real_s_name = NULL;
 static long real_s_totsize;
 static long real_s_sizeleft;
+
+/* Functions.  */
 
-/*---------------------------------------------------------.
-| Reset the EOF flag (if set), and re-set ar_record, etc.  |
-`---------------------------------------------------------*/
+#if DEBUG_FORK
+
+static pid_t
+myfork (void)
+{
+  pid_t result = fork();
+
+  if (result == 0)
+    kill (getpid (), SIGSTOP);
+  return result;
+}
+
+# define fork myfork
+
+#endif /* DEBUG FORK */
+
+void
+init_total_written (void)
+{
+  clear_tarlong (total_written);
+  clear_tarlong (bytes_written);
+}
+
+void
+print_total_written (void)
+{
+  fprintf (stderr, _("Total bytes written: "));
+  print_tarlong (total_written, stderr);
+  fprintf (stderr, "\n");
+}
+
+/*--------------------------------------------------------.
+| Compute and return the block ordinal at current_block.  |
+`--------------------------------------------------------*/
+
+long
+current_block_ordinal (void)
+{
+  return record_start_block + (current_block - record_start);
+}
+
+/*------------------------------------------------------------------.
+| If the EOF flag is set, reset it, as well as current_block, etc.  |
+`------------------------------------------------------------------*/
 
 void
 reset_eof (void)
@@ -120,620 +182,725 @@ reset_eof (void)
   if (hit_eof)
     {
       hit_eof = 0;
-      ar_record = ar_block;
-      ar_last = ar_block + blocking;
-      ar_reading = 0;
+      current_block = record_start;
+      record_end = record_start + blocking_factor;
+      access_mode = ACCESS_WRITE;
     }
 }
 
 /*-------------------------------------------------------------------------.
-| Return the location of the next available input or output record.	   |
+| Return the location of the next available input or output block.	   |
 | Return NULL for EOF.  Once we have returned NULL, we just keep returning |
-| it, to avoid accidentally going on to the next file on the "tape".	   |
+| it, to avoid accidentally going on to the next file on the tape.	   |
 `-------------------------------------------------------------------------*/
 
-union record *
-findrec (void)
+union block *
+find_next_block (void)
 {
-  if (ar_record == ar_last)
+  if (current_block == record_end)
     {
       if (hit_eof)
 	return NULL;
       flush_archive ();
-      if (ar_record == ar_last)
+      if (current_block == record_end)
 	{
-	  hit_eof++;
+	  hit_eof = 1;
 	  return NULL;
 	}
     }
-  return ar_record;
+  return current_block;
 }
 
-/*----------------------------------------------------------------------.
-| Indicate that we have used all records up thru the argument.  (should |
-| the arg have an off-by-1?  FIXME)				        |
-`----------------------------------------------------------------------*/
+/*------------------------------------------------------.
+| Indicate that we have used all blocks up thru BLOCK.  |
+| 						        |
+| FIXME: should the arg have an off-by-1?	        |
+`------------------------------------------------------*/
 
 void
-userec (union record *rec)
+set_next_block_after (union block *block)
 {
-  while (rec >= ar_record)
-    ar_record++;
+  while (block >= current_block)
+    current_block++;
 
   /* Do *not* flush the archive here.  If we do, the same argument to
-     userec() could mean the next record (if the input block is exactly
-     one record long), which is not what is intended.  */
+     set_next_block_after could mean the next block (if the input record
+     is exactly one block long), which is not what is intended.  */
 
-  if (ar_record > ar_last)
+  if (current_block > record_end)
     abort ();
 }
 
-/*----------------------------------------------------------------------.
-| Return a pointer to the end of the current records buffer.  All the   |
-| space between findrec() and endofrecs() is available for filling with |
-| data, or taking data from.					        |
-`----------------------------------------------------------------------*/
-
-union record *
-endofrecs (void)
-{
-  return ar_last;
-}
-
-/*--------------------------------------------------------------------.
-| Duplicate a file descriptor into a certain slot.  Equivalent to BSD |
-| "dup2" with error reporting.					      |
-`--------------------------------------------------------------------*/
-
-static void
-dupto (int from, int to, const char *msg)
-{
-  int err;
-
-  if (from != to)
-    {
-      err = close (to);
-      if (err < 0 && errno != EBADF)
-	ERROR ((TAREXIT_FAILURE, errno, _("Cannot close descriptor %d"), to));
-      err = dup (from);
-      if (err != to)
-	ERROR ((TAREXIT_FAILURE, errno, _("Cannot dup %s"), msg));
-      ck_close (from);
-    }
-}
-
-/*---.
-| ?  |
-`---*/
-
-#ifdef __MSDOS__
-static void
-child_open (void)
-{
-  ERROR ((TAREXIT_FAILURE, 0, _("Cannot use compressed or remote archives")))
-}
-
-#else
-static void
-child_open (void)
-{
-  int local_pipe[2];
-  int err = 0;
-
-  int kidpipe[2];
-  int kidchildpid;
-
-#define READ	0
-#define WRITE	1
-
-  ck_pipe (local_pipe);
-
-  childpid = fork ();
-  if (childpid < 0)
-    ERROR ((TAREXIT_FAILURE, errno, _("Cannot fork")));
-
-  if (childpid > 0)
-    {
-
-      /* We're the parent.  Clean up and be happy.  This, at least, is
-	 easy.  */
-
-      if (ar_reading)
-	{
-	  flag_reblock++;
-	  archive = local_pipe[READ];
-	  ck_close (local_pipe[WRITE]);
-	}
-      else
-	{
-	  archive = local_pipe[WRITE];
-	  ck_close (local_pipe[READ]);
-	}
-      return;
-    }
-
-  /* We're the kid.  */
-
-  if (ar_reading)
-    {
-      dupto (local_pipe[WRITE], STDOUT, _("(child) Pipe to stdout"));
-      ck_close (local_pipe[READ]);
-    }
-  else
-    {
-      dupto (local_pipe[READ], STDIN, _("(child) Pipe to stdin"));
-      ck_close (local_pipe[WRITE]);
-    }
-
-  /* We need a child tar only if
-     1: we're reading/writing stdin/out (to force reblocking),
-     2: the file is to be accessed by rmt (compress doesn't know how),
-     3: the file is not a plain file.  */
-
-  if (strcmp (archive_name_array[0], "-") != 0
-      && !_remdev (archive_name_array[0])
-      && isfile (archive_name_array[0]))
-    {
-
-      /* We don't need a child tar.  Open the archive.  */
-
-      if (ar_reading)
-	{
-	  archive = open (archive_name_array[0], O_RDONLY | O_BINARY, 0666);
-	  if (archive < 0)
-	    ERROR ((TAREXIT_FAILURE, errno, _("Cannot open archive %s"),
-		    archive_name_array[0]));
-	  dupto (archive, STDIN, _("Archive to stdin"));
-#if 0
-	  close (archive);
-#endif
-	}
-      else
-	{
-	  archive = creat (archive_name_array[0], 0666);
-	  if (archive < 0)
-	    ERROR ((TAREXIT_FAILURE, errno, _("Cannot open archive %s"),
-		    archive_name_array[0]));
-	  dupto (archive, STDOUT, _("Archive to stdout"));
-#if 0
-	  close (archive);
-#endif
-	}
-    }
-  else
-    {
-
-      /* We need a child tar.  */
-
-      ck_pipe (kidpipe);
-
-      kidchildpid = fork ();
-      if (kidchildpid < 0)
-	ERROR ((TAREXIT_FAILURE, errno, _("Child cannot fork")));
-
-      if (kidchildpid > 0)
-	{
-
-	  /* About to exec compress:  set up the files.  */
-
-	  if (ar_reading)
-	    {
-	      dupto (kidpipe[READ], STDIN, _("((child)) Pipe to stdin"));
-	      ck_close (kidpipe[WRITE]);
-#if 0
-	      dup2 (local_pipe[WRITE], STDOUT);
-#endif
-	    }
-	  else
-	    {
-#if 0
-	      dup2 (local_pipe[READ], STDIN);
-#endif
-	      dupto (kidpipe[WRITE], STDOUT, _("((child)) Pipe to stdout"));
-	      ck_close (kidpipe[READ]);
-	    }
-#if 0
-	  ck_close (local_pipe[READ]);
-	  ck_close (local_pipe[WRITE]);
-	  ck_close (kidpipe[READ]);
-	  ck_close (kidpipe[WRITE]);
-#endif
-	}
-      else
-	{
-
-	  /* Grandchild.  Do the right thing, namely sit here and
-	     read/write the archive, and feed stuff back to compress.  */
-
-	  program_name = _("tar (child)");
-	  if (ar_reading)
-	    {
-	      dupto (kidpipe[WRITE], STDOUT, _("[child] Pipe to stdout"));
-	      ck_close (kidpipe[READ]);
-	    }
-	  else
-	    {
-	      dupto (kidpipe[READ], STDIN, _("[child] Pipe to stdin"));
-	      ck_close (kidpipe[WRITE]);
-	    }
-
-	  if (strcmp (archive_name_array[0], "-") == 0)
-	    {
-	      if (ar_reading)
-		archive = STDIN;
-	      else
-		archive = STDOUT;
-	    }
-	  else
-#if 0
-	    /* This can't happen.  */
-
-	    if (ar_reading==2)
-	       archive
-		 = rmtopen (archive_name_array[0], O_RDWR|O_CREAT | O_BINARY,
-			    0666, flag_rsh_command);
-	    else
-#endif
-	      if (ar_reading)
-		archive = rmtopen (archive_name_array[0], O_RDONLY | O_BINARY,
-				   0666, flag_rsh_command);
-	      else
-		archive = rmtcreat (archive_name_array[0], 0666, flag_rsh_command);
-
-	  if (archive < 0)
-	    ERROR ((TAREXIT_FAILURE, errno, _("Cannot open archive %s"),
-		    archive_name_array[0]));
-
-	  if (ar_reading)
-	    {
-	      while (1)
-		{
-		  char *ptr;
-		  int max, count;
-
-		  r_error_count = 0;
-
-		error_loop:
-		  err = rmtread (archive, ar_block->charptr,
-				 (unsigned int) (blocksize));
-		  if (err < 0)
-		    {
-		      readerror ();
-		      goto error_loop;
-		    }
-		  if (err == 0)
-		    break;
-		  ptr = ar_block->charptr;
-		  max = err;
-		  while (max)
-		    {
-		      count = (max < RECORDSIZE) ? max : RECORDSIZE;
-		      err = write (STDOUT, ptr, (size_t) count);
-		      if (err < 0)
-			ERROR ((TAREXIT_FAILURE, errno, _("\
-Cannot write to compression program")));
-		      
-		      if (err != count)
-			{
-			  ERROR ((0, 0, _("\
-Write to compression program short %d bytes"),
-				     count - err));
-			  count = err;
-			}
-
-		      ptr += count;
-		      max -= count;
-		    }
-		}
-	    }
-	  else
-	    {
-	      while (1)
-		{
-		  int n;
-		  char *ptr;
-
-		  n = blocksize;
-		  ptr = ar_block->charptr;
-		  while (n)
-		    {
-		      err
-			= read (STDIN, ptr,
-				(size_t) ((n < RECORDSIZE) ? n : RECORDSIZE));
-		      if (err <= 0)
-			break;
-		      n -= err;
-		      ptr += err;
-		    }
-
-		  /* EOF */
-
-		  if (err == 0)
-		    {
-		      if (!flag_compress_block)
-			blocksize -= n;
-		      else
-			memset (ar_block->charptr + blocksize - n, 0, (size_t) n);
-		      err = rmtwrite (archive, ar_block->charptr,
-				      (unsigned int) blocksize);
-		      if (err != (blocksize))
-			writeerror (err);
-		      if (!flag_compress_block)
-			blocksize += n;
-		      break;
-		    }
-
-		  if (n)
-		    ERROR ((TAREXIT_FAILURE, errno,
-			       _("Cannot read from compression program")));
-
-		  err = rmtwrite (archive, ar_block->charptr,
-				  (unsigned int) blocksize);
-		  if (err != blocksize)
-		    writeerror (err);
-		}
-	    }
-
-#if 0
-	  close_archive ();
-#endif
-	  exit (exit_status);
-	}
-    }
-
-  /* So we should exec compress (-d).  */
-
-  if (ar_reading)
-    execlp (flag_compressprog, flag_compressprog, "-d", (char *) 0);
-  else
-    execlp (flag_compressprog, flag_compressprog, (char *) 0);
-
-  /* In a previous tar version, _exit was used here instead of exit.  */
-  ERROR ((TAREXIT_FAILURE, errno, _("Cannot exec %s"), flag_compressprog));
-}
-
-/*--------------------------------------------------.
-| Return non-zero if P is the name of a directory.  |
-`--------------------------------------------------*/
+/*------------------------------------------------------------------------.
+| Return the number of bytes comprising the space between POINTER through |
+| the end of the current buffer of blocks.  This space is available for	  |
+| filling with data, or taking data from.  POINTER is usually (but not	  |
+| always) the result previous find_next_block call.			  |
+`------------------------------------------------------------------------*/
 
 int
-isfile (const char *p)
+available_space_after (union block *pointer)
+{
+  return (int) (record_end->buffer - pointer->buffer);
+}
+
+/*------------------------------------------------------------------.
+| Close file having descriptor FD, and abort if close unsucessful.  |
+`------------------------------------------------------------------*/
+
+static void
+xclose (int fd)
+{
+  if (close (fd) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot close file #%d"), fd));
+}
+
+/*-----------------------------------------------------------------------.
+| Duplicate file descriptor FROM into becoming INTO, or else, issue	 |
+| MESSAGE.  INTO is closed first and has to be the next available slot.	 |
+`-----------------------------------------------------------------------*/
+
+static void
+xdup2 (int from, int into, const char *message)
+{
+  if (from != into)
+    {
+      int status = close (into);
+
+      if (status < 0 && errno != EBADF)
+	FATAL_ERROR ((0, errno, _("Cannot close descriptor %d"), into));
+      status = dup (from);
+      if (status != into)
+	FATAL_ERROR ((0, errno, _("Cannot properly duplicate %s"), message));
+      xclose (from);
+    }
+}
+
+#if MSDOS
+
+/*-------------------------------------------------------.
+| Set ARCHIVE for writing, then compressing an archive.	 |
+`-------------------------------------------------------*/
+
+static void
+child_open_for_compress (void)
+{
+  FATAL_ERROR ((0, 0, _("Cannot use compressed or remote archives")));
+}
+
+/*---------------------------------------------------------.
+| Set ARCHIVE for uncompressing, then reading an archive.  |
+`---------------------------------------------------------*/
+
+static void
+child_open_for_uncompress (void)
+{
+  FATAL_ERROR ((0, 0, _("Cannot use compressed or remote archives")));
+}
+
+#else /* not MSDOS */
+
+/*---------------------------------------------------------------------.
+| Return nonzero if NAME is the name of a regular file, or if the file |
+| does not exist (so it would be created as a regular file).	       |
+`---------------------------------------------------------------------*/
+
+static int
+is_regular_file (const char *name)
 {
   struct stat stbuf;
 
-  if (stat (p, &stbuf) < 0)
+  if (stat (name, &stbuf) < 0)
     return 1;
+
   if (S_ISREG (stbuf.st_mode))
     return 1;
+
   return 0;
 }
 
-#endif
+/*-------------------------------------------------------.
+| Set ARCHIVE for writing, then compressing an archive.	 |
+`-------------------------------------------------------*/
 
-/*------------------------------------------------------------------------.
-| Open an archive file.  The argument specifies whether we are reading or |
-| writing.								  |
-`------------------------------------------------------------------------*/
-
-/* JF if the arg is 2, open for reading and writing.  */
-
-void
-open_archive (int reading)
+static void
+child_open_for_compress (void)
 {
-  stdlis = flag_exstdout ? stderr : stdout;
+  int parent_pipe[2];
+  int child_pipe[2];
+  int grandchild_pid;
 
-  if (blocksize == 0)
-    ERROR ((TAREXIT_FAILURE, 0, _("Invalid value for blocksize")));
+  if (pipe (parent_pipe) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot open pipe")));
 
-  if (archive_names == 0)
-    ERROR ((TAREXIT_FAILURE, 0,
-	    _("No archive name given, what should I do?")));
+  child_pid = fork ();
+  if (child_pid < 0)
+    FATAL_ERROR ((0, errno, _("Cannot fork")));
 
-  current_file_name = NULL;
-  current_link_name = NULL;
-  save_name = NULL;
-
-  if (flag_multivol)
+  if (child_pid > 0)
     {
-      ar_block
-	= (union record *) valloc ((unsigned) (blocksize + (2 * RECORDSIZE)));
-      if (ar_block)
-	ar_block += 2;
+      /* The parent tar is still here!  Just clean up.  */
+
+      archive = parent_pipe[PWRITE];
+      xclose (parent_pipe[PREAD]);
+      return;
     }
-  else
-    ar_block = (union record *) valloc ((unsigned) blocksize);
-  if (!ar_block)
-    ERROR ((TAREXIT_FAILURE, 0,
-	    _("Could not allocate memory for blocking factor %d"), blocking));
 
-  ar_record = ar_block;
-  ar_last = ar_block + blocking;
-  ar_reading = reading;
+  /* The new born child tar is here!  */
 
-  if (flag_multivol && flag_verify)
-    ERROR ((TAREXIT_FAILURE, 0, _("Cannot verify multi-volume archives")));
+  program_name = _("tar (child)");
 
-  if (flag_compressprog)
+  xdup2 (parent_pipe[PREAD], STDIN, _("(child) Pipe to stdin"));
+  xclose (parent_pipe[PWRITE]);
+
+  /* Check if we need a grandchild tar.  This happens only if either:
+     a) we are writing stdout: to force reblocking;
+     b) the file is to be accessed by rmt: compressor doesn't know how;
+     c) the file is not a plain file.  */
+
+  if (strcmp (archive_name_array[0], "-") != 0
+      && !_remdev (archive_name_array[0])
+      && is_regular_file (archive_name_array[0]))
     {
-      if (reading == 2 || flag_verify)
-	ERROR ((TAREXIT_FAILURE, 0,
-		_("Cannot update or verify compressed archives")));
-      if (flag_multivol)
-	ERROR ((TAREXIT_FAILURE, 0,
-		_("Cannot use multi-volume compressed archives")));
-      child_open ();
-      if (!reading && strcmp (archive_name_array[0], "-") == 0)
-	stdlis = stderr;
-#if 0
-      child_open (rem_host, rem_file);
-#endif
-    }
-  else if (strcmp (archive_name_array[0], "-") == 0)
-    {
-      flag_reblock++;		/* could be a pipe, be safe */
-      if (flag_verify)
-	ERROR ((TAREXIT_FAILURE, 0, _("Cannot verify stdin/stdout archive")));
-      if (reading == 2)
+      if (backup_option)
+	maybe_backup_file (archive_name_array[0], 1);
+
+      /* We don't need a grandchild tar.  Open the archive and launch the
+	 compressor.  */
+
+      archive = creat (archive_name_array[0], 0666);
+      if (archive < 0)
 	{
-	  archive = STDIN;
-	  stdlis = stderr;
-	  write_archive_to_stdout++;
-	}
-      else if (reading)
-	archive = STDIN;
-      else
-	{
-	  archive = STDOUT;
-	  stdlis = stderr;
-	}
-    }
-  else if (reading == 2 || flag_verify)
-    archive = rmtopen (archive_name_array[0], O_RDWR | O_CREAT | O_BINARY,
-		       0666, flag_rsh_command);
-  else if (reading)
-    archive = rmtopen (archive_name_array[0], O_RDONLY | O_BINARY, 0666,
-		       flag_rsh_command);
-  else
-    archive = rmtcreat (archive_name_array[0], 0666, flag_rsh_command);
+	  int saved_errno = errno;
 
+	  if (backup_option)
+	    undo_last_backup ();
+	  FATAL_ERROR ((0, saved_errno, _("Cannot open archive %s"),
+			archive_name_array[0]));
+	}
+      xdup2 (archive, STDOUT, _("Archive to stdout"));
+      execlp (use_compress_program_option, use_compress_program_option,
+	      (char *) 0);
+      FATAL_ERROR ((0, errno, _("Cannot exec %s"),
+		    use_compress_program_option));
+    }
+
+  /* We do need a grandchild tar.  */
+
+  if (pipe (child_pipe) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot open pipe")));
+
+  grandchild_pid = fork ();
+  if (grandchild_pid < 0)
+    FATAL_ERROR ((0, errno, _("Child cannot fork")));
+
+  if (grandchild_pid > 0)
+    {
+      /* The child tar is still here!  Launch the compressor.  */
+
+      xdup2 (child_pipe[PWRITE], STDOUT, _("((child)) Pipe to stdout"));
+      xclose (child_pipe[PREAD]);
+      execlp (use_compress_program_option, use_compress_program_option,
+	      (char *) 0);
+      FATAL_ERROR ((0, errno, _("Cannot exec %s"),
+		    use_compress_program_option));
+    }
+
+  /* The new born grandchild tar is here!  */
+
+  program_name = _("tar (grandchild)");
+
+  /* Prepare for reblocking the data from the compressor into the archive.  */
+
+  xdup2 (child_pipe[PREAD], STDIN, _("(grandchild) Pipe to stdin"));
+  xclose (child_pipe[PWRITE]);
+
+  if (strcmp (archive_name_array[0], "-") == 0)
+    archive = STDOUT;
+  else
+    archive = rmtcreat (archive_name_array[0], 0666, rsh_command_option);
   if (archive < 0)
-    ERROR ((TAREXIT_FAILURE, errno, _("Cannot open %s"),
-	    archive_name_array[0]));
+    FATAL_ERROR ((0, errno, _("Cannot open archive %s"),
+		  archive_name_array[0]));
 
-#ifndef __MSDOS__
-  if (!_isrmt (archive))
+  /* Let's read out of the stdin pipe and write an archive.  */
+
+  while (1)
     {
-      struct stat tmp_stat;
+      int status = 0;
+      char *cursor;
+      int length;
 
-      fstat (archive, &tmp_stat);
-      if (S_ISREG (tmp_stat.st_mode))
+      /* Assemble a record.  */
+
+      for (length = 0, cursor = record_start->buffer;
+	   length < record_size;
+	   length += status, cursor += status)
 	{
-	  ar_dev = tmp_stat.st_dev;
-	  ar_ino = tmp_stat.st_ino;
+	  int size = record_size - length;
+
+	  if (size < BLOCKSIZE)
+	    size = BLOCKSIZE;
+	  status = read (STDIN, cursor, (size_t) size);
+	  if (status <= 0)
+	    break;
 	}
-    }
-#endif
 
-#ifdef	__MSDOS__
-  setmode (archive, O_BINARY);
-#endif
+      if (status < 0)
+	FATAL_ERROR ((0, errno, _("Cannot read from compression program")));
 
-  if (reading)
-    {
-      ar_last = ar_block;	/* set up for 1st block = # 0 */
-      findrec ();		/* read it in, check for EOF */
+      /* Copy the record.  */
 
-      if (flag_volhdr)
+      if (status == 0)
 	{
-	  union record *label;
-#if 0
-	  char *ptr;
+	  /* We hit the end of the file.  Write last record at
+	     full length, as the only role of the grandchild is
+	     doing proper reblocking.  */
 
-	  if (flag_multivol)
+	  if (length > 0)
 	    {
-	      ptr = xmalloc (strlen (flag_volhdr) + 20);
-	      sprintf (ptr, "%s Volume %d", flag_volhdr, 1);
+	      memset (record_start->buffer + length, 0,
+		      (size_t) record_size - length);
+	      status = rmtwrite (archive, record_start->buffer,
+				 (unsigned int) record_size);
+	      if (status != record_size)
+		write_error (status);
 	    }
-	  else
-	    ptr = flag_volhdr;
-#endif
-	  label = findrec ();
-	  if (!label)
-	    ERROR ((TAREXIT_FAILURE, 0, _("Archive not labelled to match %s"),
-		    flag_volhdr));
-	  if (re_match (label_pattern, label->header.arch_name,
-			(int) strlen (label->header.arch_name), 0, 0)
-	      < 0)
-	    ERROR ((TAREXIT_FAILURE, 0, _("Volume mismatch!  %s!=%s"),
-		    flag_volhdr, label->header.arch_name));
+
+	  /* There is nothing else to read, break out.  */
+	  break;
+	}
+
+      status = rmtwrite (archive, record_start->buffer,
+			 (unsigned int) record_size);
+      if (status != record_size)
+ 	write_error (status);
+    }
+
 #if 0
-	  if (strcmp (ptr, label->header.name))
-	      ERROR ((TAREXIT_FAILURE, 0, _("Volume mismatch!  %s!=%s"),
-		      ptr, label->header.name));
-	  if (ptr != flag_volhdr)
-	    free (ptr);
+  close_archive ();
 #endif
+  exit (exit_status);
+}
+
+/*---------------------------------------------------------.
+| Set ARCHIVE for uncompressing, then reading an archive.  |
+`---------------------------------------------------------*/
+
+static void
+child_open_for_uncompress (void)
+{
+  int parent_pipe[2];
+  int child_pipe[2];
+  int grandchild_pid;
+
+  if (pipe (parent_pipe) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot open pipe")));
+
+  child_pid = fork ();
+  if (child_pid < 0)
+    FATAL_ERROR ((0, errno, _("Cannot fork")));
+
+  if (child_pid > 0)
+    {
+      /* The parent tar is still here!  Just clean up.  */
+
+      read_full_records_option = 1;
+      archive = parent_pipe[PREAD];
+      xclose (parent_pipe[PWRITE]);
+      return;
+    }
+
+  /* The new born child tar is here!  */
+
+  program_name = _("tar (child)");
+
+  xdup2 (parent_pipe[PWRITE], STDOUT, _("(child) Pipe to stdout"));
+  xclose (parent_pipe[PREAD]);
+
+  /* Check if we need a grandchild tar.  This happens only if either:
+     a) we're reading stdin: to force unblocking;
+     b) the file is to be accessed by rmt: compressor doesn't know how;
+     c) the file is not a plain file.  */
+
+  if (strcmp (archive_name_array[0], "-") != 0
+      && !_remdev (archive_name_array[0])
+      && is_regular_file (archive_name_array[0]))
+    {
+      /* We don't need a grandchild tar.  Open the archive and lauch the
+	 uncompressor.  */
+
+      archive = open (archive_name_array[0], O_RDONLY | O_BINARY, 0666);
+      if (archive < 0)
+	FATAL_ERROR ((0, errno, _("Cannot open archive %s"),
+		      archive_name_array[0]));
+      xdup2 (archive, STDIN, _("Archive to stdin"));
+      execlp (use_compress_program_option, use_compress_program_option,
+	      "-d", (char *) 0);
+      FATAL_ERROR ((0, errno, _("Cannot exec %s"),
+		    use_compress_program_option));
+    }
+
+  /* We do need a grandchild tar.  */
+
+  if (pipe (child_pipe) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot open pipe")));
+
+  grandchild_pid = fork ();
+  if (grandchild_pid < 0)
+    FATAL_ERROR ((0, errno, _("Child cannot fork")));
+
+  if (grandchild_pid > 0)
+    {
+      /* The child tar is still here!  Launch the uncompressor.  */
+
+      xdup2 (child_pipe[PREAD], STDIN, _("((child)) Pipe to stdin"));
+      xclose (child_pipe[PWRITE]);
+      execlp (use_compress_program_option, use_compress_program_option,
+	      "-d", (char *) 0);
+      FATAL_ERROR ((0, errno, _("Cannot exec %s"),
+		    use_compress_program_option));
+    }
+
+  /* The new born grandchild tar is here!  */
+
+  program_name = _("tar (grandchild)");
+
+  /* Prepare for unblocking the data from the archive into the uncompressor.  */
+
+  xdup2 (child_pipe[PWRITE], STDOUT, _("(grandchild) Pipe to stdout"));
+  xclose (child_pipe[PREAD]);
+
+  if (strcmp (archive_name_array[0], "-") == 0)
+    archive = STDIN;
+  else
+    archive = rmtopen (archive_name_array[0], O_RDONLY | O_BINARY,
+		       0666, rsh_command_option);
+  if (archive < 0)
+    FATAL_ERROR ((0, errno, _("Cannot open archive %s"),
+		  archive_name_array[0]));
+
+  /* Let's read the archive and pipe it into stdout.  */
+
+  while (1)
+    {
+      char *cursor;
+      int maximum;
+      int count;
+      int status;
+
+      read_error_count = 0;
+
+    error_loop:
+      status = rmtread (archive, record_start->buffer,
+			(unsigned int) (record_size));
+      if (status < 0)
+	{
+	  read_error ();
+	  goto error_loop;
+	}
+      if (status == 0)
+	break;
+      cursor = record_start->buffer;
+      maximum = status;
+      while (maximum)
+	{
+	  count = maximum < BLOCKSIZE ? maximum : BLOCKSIZE;
+	  status = write (STDOUT, cursor, (size_t) count);
+	  if (status < 0)
+	    FATAL_ERROR ((0, errno, _("\
+Cannot write to compression program")));
+
+	  if (status != count)
+	    {
+	      ERROR ((0, 0, _("\
+Write to compression program short %d bytes"),
+		      count - status));
+	      count = status;
+	    }
+
+	  cursor += count;
+	  maximum -= count;
 	}
     }
-  else if (flag_volhdr)
-    {
-      memset ((void *) ar_block, 0, RECORDSIZE);
-      if (flag_multivol)
-	sprintf (ar_block->header.arch_name, "%s Volume 1", flag_volhdr);
-      else
-	strcpy (ar_block->header.arch_name, flag_volhdr);
 
-      assign_string (&current_file_name, ar_block->header.arch_name);
-
-      ar_block->header.linkflag = LF_VOLHDR;
-      to_oct (time (0), 1 + 12, ar_block->header.mtime);
-      finish_header (ar_block);
 #if 0
-      ar_record++;
+  close_archive ();
 #endif
-    }
+  exit (exit_status);
+}
+
+#endif /* not MSDOS */
+
+/*--------------------------------------------------------------------------.
+| Check the LABEL block against the volume label, seen as a globbing	    |
+| pattern.  Return true if the pattern matches.  In case of failure, retry  |
+| matching a volume sequence number before giving up in multi-volume mode.  |
+`--------------------------------------------------------------------------*/
+
+static int
+check_label_pattern (union block *label)
+{
+  char *string;
+  int result;
+
+  if (fnmatch (volume_label_option, label->header.name, 0) == 0)
+    return 1;
+
+  if (!multi_volume_option)
+    return 0;
+
+  string = xmalloc (strlen (volume_label_option)
+		    + sizeof VOLUME_LABEL_APPEND + 1);
+  strcpy (string, volume_label_option);
+  strcat (string, VOLUME_LABEL_APPEND);
+  result = fnmatch (string, label->header.name, 0) == 0;
+  free (string);
+  return result;
 }
 
 /*------------------------------------------------------------------------.
-| Remember a union record * as pointing to something that we need to keep |
-| when reading onward in the file.  Only one such thing can be remembered |
-| at once, and it only works when reading an archive.			  |
+| Open an archive file.  The argument specifies whether we are reading or |
+| writing, or both.							  |
 `------------------------------------------------------------------------*/
 
-/* We calculate "offset" then add it because some compilers end up adding
-   (baserec+ar_record), doing a 9-bit shift of baserec, then subtracting
-   ar_block from that, shifting it back, losing the top 9 bits.  */
-
 void
-saverec (union record **pointer)
+open_archive (enum access_mode access)
 {
-  long offset;
+  int backed_up_flag = 0;
 
-  save_rec = pointer;
-  offset = ar_record - ar_block;
-  saved_recno = baserec + offset;
+  stdlis = to_stdout_option ? stderr : stdout;
+
+  if (record_size == 0)
+    FATAL_ERROR ((0, 0, _("Invalid value for record_size")));
+
+  if (archive_names == 0)
+    FATAL_ERROR ((0, 0, _("No archive name given")));
+
+  current_file_name = NULL;
+  current_link_name = NULL;
+
+  /* FIXME: According to POSIX.1, PATH_MAX may well not be a compile-time
+     constant, and the value from sysconf (_SC_PATH_MAX) may well not be any
+     size that is reasonable to allocate a buffer.  In the GNU system, there
+     is no fixed limit.  The only correct thing to do is to use dynamic
+     allocation.  (Roland McGrath)  */
+
+  if (!real_s_name)
+    real_s_name = (char *) xmalloc (PATH_MAX);
+  /* FIXME: real_s_name is never freed.  */
+
+  save_name = NULL;
+
+  if (multi_volume_option)
+    {
+      record_start
+	= (union block *) valloc ((unsigned) (record_size + (2 * BLOCKSIZE)));
+      if (record_start)
+	record_start += 2;
+    }
+  else
+    record_start = (union block *) valloc ((unsigned) record_size);
+  if (!record_start)
+    FATAL_ERROR ((0, 0, _("Could not allocate memory for blocking factor %d"),
+		  blocking_factor));
+
+  current_block = record_start;
+  record_end = record_start + blocking_factor;
+  /* When updating the archive, we start with reading.  */
+  access_mode = access == ACCESS_UPDATE ? ACCESS_READ : access;
+
+  if (multi_volume_option && verify_option)
+    FATAL_ERROR ((0, 0, _("Cannot verify multi-volume archives")));
+
+  if (use_compress_program_option)
+    {
+      if (multi_volume_option)
+	FATAL_ERROR ((0, 0, _("Cannot use multi-volume compressed archives")));
+      if (verify_option)
+	FATAL_ERROR ((0, 0, _("Cannot verify compressed archives")));
+
+      switch (access)
+	{
+	case ACCESS_READ:
+	  child_open_for_uncompress ();
+	  break;
+
+	case ACCESS_WRITE:
+	  child_open_for_compress ();
+	  break;
+
+	case ACCESS_UPDATE:
+	  FATAL_ERROR ((0, 0, _("Cannot update compressed archives")));
+	  break;
+	}
+
+      if (access == ACCESS_WRITE && strcmp (archive_name_array[0], "-") == 0)
+	stdlis = stderr;
+    }
+  else if (strcmp (archive_name_array[0], "-") == 0)
+    {
+      read_full_records_option = 1; /* could be a pipe, be safe */
+      if (verify_option)
+	FATAL_ERROR ((0, 0, _("Cannot verify stdin/stdout archive")));
+
+      switch (access)
+	{
+	case ACCESS_READ:
+	  archive = STDIN;
+	  break;
+
+	case ACCESS_WRITE:
+	  archive = STDOUT;
+	  stdlis = stderr;
+	  break;
+
+	case ACCESS_UPDATE:
+	  archive = STDIN;
+	  stdlis = stderr;
+	  write_archive_to_stdout = 1;
+	  break;
+	}
+    }
+  else if (verify_option)
+    archive = rmtopen (archive_name_array[0], O_RDWR | O_CREAT | O_BINARY,
+		       0666, rsh_command_option);
+  else
+    switch (access)
+      {
+      case ACCESS_READ:
+	archive = rmtopen (archive_name_array[0], O_RDONLY | O_BINARY, 0666,
+			   rsh_command_option);
+	break;
+
+      case ACCESS_WRITE:
+	if (backup_option)
+	  {
+	    maybe_backup_file (archive_name_array[0], 1);
+	    backed_up_flag = 1;
+	  }
+	archive = rmtcreat (archive_name_array[0], 0666, rsh_command_option);
+	break;
+
+      case ACCESS_UPDATE:
+	archive = rmtopen (archive_name_array[0], O_RDWR | O_CREAT | O_BINARY,
+			   0666, rsh_command_option);
+	break;
+      }
+
+  if (archive < 0)
+    {
+      int saved_errno = errno;
+
+      if (backed_up_flag)
+	undo_last_backup ();
+      FATAL_ERROR ((0, saved_errno, _("Cannot open %s"),
+		    archive_name_array[0]));
+    }
+
+#if !MSDOS
+
+  fstat (archive, &archive_stat);
+
+  /* Detect if outputting to "/dev/null".  */
+  {
+    struct stat dev_null_stat;
+
+    stat ("/dev/null", &dev_null_stat);
+    dev_null_output = (S_ISCHR (archive_stat.st_mode)
+		       && archive_stat.st_rdev == dev_null_stat.st_rdev);
+  }
+
+  if (!_isrmt (archive) && S_ISREG (archive_stat.st_mode))
+    {
+      ar_dev = archive_stat.st_dev;
+      ar_ino = archive_stat.st_ino;
+    }
+
+#endif /* not MSDOS */
+
+#if MSDOS
+  setmode (archive, O_BINARY);
+#endif
+
+  switch (access)
+    {
+    case ACCESS_READ:
+    case ACCESS_UPDATE:
+      record_end = record_start; /* set up for 1st record = # 0 */
+      find_next_block ();	/* read it in, check for EOF */
+
+      if (volume_label_option)
+	{
+	  union block *label = find_next_block ();
+
+	  if (!label)
+	    FATAL_ERROR ((0, 0, _("Archive not labelled to match `%s'"),
+			  volume_label_option));
+	  if (!check_label_pattern (label))
+	    FATAL_ERROR ((0, 0, _("Volume `%s' does not match `%s'"),
+			  label->header.name, volume_label_option));
+	}
+      break;
+
+    case ACCESS_WRITE:
+      if (volume_label_option)
+	{
+	  memset ((void *) record_start, 0, BLOCKSIZE);
+	  if (multi_volume_option)
+	    sprintf (record_start->header.name, "%s Volume 1",
+		     volume_label_option);
+	  else
+	    strcpy (record_start->header.name, volume_label_option);
+
+	  assign_string (&current_file_name, record_start->header.name);
+
+	  record_start->header.typeflag = GNUTYPE_VOLHDR;
+	  to_oct (time (0), 1 + 12, record_start->header.mtime);
+	  finish_header (record_start);
+#if 0
+	  current_block++;
+#endif
+	}
+      break;
+    }
 }
 
 /*--------------------------------------.
 | Perform a write to flush the buffer.  |
 `--------------------------------------*/
 
-#if 0
-   send_buffer_to_file ();
-   if (new_volume)
-     {
-       deal_with_new_volume_stuff ();
-       send_buffer_to_file ();
-     }
-#endif
-
 void
-fl_write (void)
+flush_write (void)
 {
-  int err;
   int copy_back;
-  static long bytes_written = 0;
+  int status;
 
-  if (flag_checkpoint && !(++checkpoint % 10))
+  if (checkpoint_option && !(++checkpoint % 10))
     WARN ((0, 0, _("Write checkpoint %d"), checkpoint));
 
-  if (tape_length && bytes_written >= tape_length * 1024)
+  if (!zerop_tarlong (tape_length_option)
+      && !lessp_tarlong (bytes_written, tape_length_option))
     {
-      errno = ENOSPC;
-      err = 0;
+      errno = ENOSPC;		/* FIXME: errno should be read-only */
+      status = 0;
     }
+  else if (dev_null_output)
+    status = record_size;
   else
-    err = rmtwrite (archive, ar_block->charptr, (unsigned int) blocksize);
-  if (err != blocksize && !flag_multivol)
-    writeerror (err);
-  else if (flag_totals)
-    tot_written += blocksize;
+    status = rmtwrite (archive, record_start->buffer,
+		       (unsigned int) record_size);
+  if (status != record_size && !multi_volume_option)
+    write_error (status);
+  else if (totals_option)
+    add_to_tarlong (total_written, record_size);
 
-  if (err > 0)
-    bytes_written += err;
-  if (err == blocksize)
+  if (status > 0)
+    add_to_tarlong (bytes_written, status);
+
+  if (status == record_size)
     {
-      if (flag_multivol)
+      if (multi_volume_option)
 	{
 	  char *cursor;
 
@@ -746,7 +913,7 @@ fl_write (void)
 	    }
 
 	  cursor = save_name;
-#ifdef __MSDOS__
+#if MSDOS
 	  if (cursor[1] == ':')
 	    cursor += 2;
 #endif
@@ -763,80 +930,91 @@ fl_write (void)
   /* We're multivol.  Panic if we didn't get the right kind of response.  */
 
   /* ENXIO is for the UNIX PC.  */
-  if (err < 0 && errno != ENOSPC && errno != EIO && errno != ENXIO)
-    writeerror (err);
+  if (status < 0 && errno != ENOSPC && errno != EIO && errno != ENXIO)
+    write_error (status);
 
   /* If error indicates a short write, we just move to the next tape.  */
 
-  if (new_volume (0) < 0)
+  if (!new_volume (ACCESS_WRITE))
     return;
-  bytes_written = 0;
-  if (flag_volhdr && real_s_name[0])
+
+  clear_tarlong (bytes_written);
+
+  if (volume_label_option && real_s_name[0])
     {
       copy_back = 2;
-      ar_block -= 2;
+      record_start -= 2;
     }
-  else if (flag_volhdr || real_s_name[0])
+  else if (volume_label_option || real_s_name[0])
     {
       copy_back = 1;
-      ar_block--;
+      record_start--;
     }
   else
     copy_back = 0;
-  if (flag_volhdr)
+
+  if (volume_label_option)
     {
-      memset ((void *) ar_block, 0, RECORDSIZE);
-      sprintf (ar_block->header.arch_name, "%s Volume %d", flag_volhdr, volno);
-      to_oct (time (0), 1 + 12, ar_block->header.mtime);
-      ar_block->header.linkflag = LF_VOLHDR;
-      finish_header (ar_block);
+      memset ((void *) record_start, 0, BLOCKSIZE);
+      sprintf (record_start->header.name, "%s Volume %d", volume_label_option, volno);
+      to_oct (time (0), 1 + 12, record_start->header.mtime);
+      record_start->header.typeflag = GNUTYPE_VOLHDR;
+      finish_header (record_start);
     }
+
   if (real_s_name[0])
     {
       int tmp;
 
-      if (flag_volhdr)
-	ar_block++;
-      memset ((void *) ar_block, 0, RECORDSIZE);
-      strcpy (ar_block->header.arch_name, real_s_name);
-      ar_block->header.linkflag = LF_MULTIVOL;
+      if (volume_label_option)
+	record_start++;
+
+      memset ((void *) record_start, 0, BLOCKSIZE);
+
+      /* FIXME: Michael P Urban writes: [a long name file] is being written
+	 when a new volume rolls around [...]  Looks like the wrong value is
+	 being preserved in real_s_name, though.  */
+
+      strcpy (record_start->header.name, real_s_name);
+      record_start->header.typeflag = GNUTYPE_MULTIVOL;
       to_oct ((long) real_s_sizeleft, 1 + 12,
-	      ar_block->header.size);
+	      record_start->header.size);
       to_oct ((long) real_s_totsize - real_s_sizeleft,
-	      1 + 12, ar_block->header.offset);
-      tmp = flag_verbose;
-      flag_verbose = 0;
-      finish_header (ar_block);
-      flag_verbose = tmp;
-      if (flag_volhdr)
-	ar_block--;
+	      1 + 12, record_start->oldgnu_header.offset);
+      tmp = verbose_option;
+      verbose_option = 0;
+      finish_header (record_start);
+      verbose_option = tmp;
+
+      if (volume_label_option)
+	record_start--;
     }
 
-  err = rmtwrite (archive, ar_block->charptr, (unsigned int) blocksize);
-  if (err != blocksize)
-    writeerror (err);
-  else if (flag_totals)
-    tot_written += blocksize;
+  status = rmtwrite (archive, record_start->buffer,
+		     (unsigned int) record_size);
+  if (status != record_size)
+    write_error (status);
+  else if (totals_option)
+    add_to_tarlong (total_written, record_size);
 
-
-  bytes_written = blocksize;
+  add_to_tarlong (bytes_written, record_size);
   if (copy_back)
     {
-      ar_block += copy_back;
-      memcpy ((void *) ar_record,
-	      (void *) (ar_block + blocking - copy_back),
-	      (size_t) (copy_back * RECORDSIZE));
-      ar_record += copy_back;
+      record_start += copy_back;
+      memcpy ((void *) current_block,
+	      (void *) (record_start + blocking_factor - copy_back),
+	      (size_t) (copy_back * BLOCKSIZE));
+      current_block += copy_back;
 
-      if (real_s_sizeleft >= copy_back * RECORDSIZE)
-	real_s_sizeleft -= copy_back * RECORDSIZE;
-      else if ((real_s_sizeleft + RECORDSIZE - 1) / RECORDSIZE <= copy_back)
+      if (real_s_sizeleft >= copy_back * BLOCKSIZE)
+	real_s_sizeleft -= copy_back * BLOCKSIZE;
+      else if ((real_s_sizeleft + BLOCKSIZE - 1) / BLOCKSIZE <= copy_back)
 	real_s_name[0] = '\0';
       else
 	{
 	  char *cursor = save_name;
-	  
-#ifdef __MSDOS__
+
+#if MSDOS
 	  if (cursor[1] == ':')
 	    cursor += 2;
 #endif
@@ -854,43 +1032,45 @@ fl_write (void)
 /*---------------------------------------------------------------------.
 | Handle write errors on the archive.  Write errors are always fatal.  |
 | Hitting the end of a volume does not cause a write error unless the  |
-| write was the first block of the volume.			       |
+| write was the first record of the volume.			       |
 `---------------------------------------------------------------------*/
 
 static void
-writeerror (int err)
+write_error (int status)
 {
-  if (err < 0)
-    ERROR ((TAREXIT_FAILURE, errno, _("Cannot write to %s"),
-	    *archive_name_cursor));
+  int saved_errno = errno;
+
+  /* It might be useful to know how much was written before the error
+     occured.  Beware that mere printing maybe change errno value.  */
+  if (totals_option)
+    print_total_written ();
+
+  if (status < 0)
+    FATAL_ERROR ((0, saved_errno, _("Cannot write to %s"),
+		  *archive_name_cursor));
   else
-    ERROR ((TAREXIT_FAILURE, 0, _("Only wrote %u of %u bytes to %s"),
-	    err, blocksize, *archive_name_cursor));
+    FATAL_ERROR ((0, 0, _("Only wrote %u of %u bytes to %s"),
+		  status, record_size, *archive_name_cursor));
 }
 
 /*-------------------------------------------------------------------.
 | Handle read errors on the archive.  If the read should be retried, |
-| readerror() returns to the caller.				     |
+| returns to the caller.					     |
 `-------------------------------------------------------------------*/
 
 static void
-readerror (void)
+read_error (void)
 {
-#define	READ_ERROR_MAX	10
-
-  read_error_flag++;		/* tell callers */
-
   WARN ((0, errno, _("Read error on %s"), *archive_name_cursor));
 
-  if (baserec == 0)
-    ERROR ((TAREXIT_FAILURE, 0, _("At beginning of tape, quitting now")));
+  if (record_start_block == 0)
+    FATAL_ERROR ((0, 0, _("At beginning of tape, quitting now")));
 
   /* Read error in mid archive.  We retry up to READ_ERROR_MAX times and
-     then give up on reading the archive.  We set read_error_flag for our
-     callers, so they can cope if they want.  */
+     then give up on reading the archive.  */
 
-  if (r_error_count++ > READ_ERROR_MAX)
-    ERROR ((TAREXIT_FAILURE, 0, _("Too many errors, quitting")));
+  if (read_error_count++ > READ_ERROR_MAX)
+    FATAL_ERROR ((0, 0, _("Too many errors, quitting")));
   return;
 }
 
@@ -899,54 +1079,41 @@ readerror (void)
 `-------------------------------------*/
 
 void
-fl_read (void)
+flush_read (void)
 {
-  int err;			/* result from system call */
+  int status;			/* result from system call */
   int left;			/* bytes left */
   char *more;			/* pointer to next byte to read */
 
-  if (flag_checkpoint && !(++checkpoint % 10))
+  if (checkpoint_option && !(++checkpoint % 10))
     WARN ((0, 0, _("Read checkpoint %d"), checkpoint));
 
   /* Clear the count of errors.  This only applies to a single call to
-     fl_read.  We leave read_error_flag alone; it is only turned off by
-     higher level software.  */
+     flush_read.  */
 
-  r_error_count = 0;		/* clear error count */
+  read_error_count = 0;		/* clear error count */
 
-  /* If we are about to wipe out a record that somebody needs to keep,
-     copy it out to a holding area and adjust somebody's pointer to it.  */
-
-  if (save_rec &&
-      *save_rec >= ar_record &&
-      *save_rec < ar_last)
+  if (write_archive_to_stdout && record_start_block != 0)
     {
-      record_save_area = **save_rec;
-      *save_rec = &record_save_area;
+      status = rmtwrite (1, record_start->buffer, (unsigned int) record_size);
+      if (status != record_size)
+	write_error (status);
     }
-  if (write_archive_to_stdout && baserec != 0)
-    {
-      err = rmtwrite (1, ar_block->charptr, (unsigned int) blocksize);
-      if (err != blocksize)
-	writeerror (err);
-    }
-  if (flag_multivol)
+  if (multi_volume_option)
     if (save_name)
       {
-	if (save_name != real_s_name)
-	  {
-#ifdef __MSDOS__
-	    if (save_name[1] == ':')
-	      save_name += 2;
-#endif
-	    while (*save_name == '/')
-	      save_name++;
+	char *cursor = save_name;
 
-	    strcpy (real_s_name, save_name);
-	    save_name = real_s_name;
-	  }
-	real_s_totsize = save_totsize;
+#if MSDOS
+	if (cursor[1] == ':')
+	  cursor += 2;
+#endif
+	while (*cursor == '/')
+	  cursor++;
+
+	strcpy (real_s_name, cursor);
 	real_s_sizeleft = save_sizeleft;
+	real_s_totsize = save_totsize;
       }
     else
       {
@@ -956,79 +1123,70 @@ fl_read (void)
       }
 
 error_loop:
-  err = rmtread (archive, ar_block->charptr, (unsigned int) blocksize);
-  if (err == blocksize)
+  status = rmtread (archive, record_start->buffer, (unsigned int) record_size);
+  if (status == record_size)
     return;
 
-  if ((err == 0 || (err < 0 && errno == ENOSPC) || (err > 0 && !flag_reblock))
-      && flag_multivol)
+  if ((status == 0
+       || (status < 0 && errno == ENOSPC)
+       || (status > 0 && !read_full_records_option))
+      && multi_volume_option)
     {
-      union record *cursor;
+      union block *cursor;
 
     try_volume:
-      if (new_volume ((command_mode == COMMAND_APPEND
-		       || command_mode == COMMAND_CAT
-		       || command_mode == COMMAND_UPDATE) ? 2 : 1)
-	  < 0)
-	return;
+      switch (subcommand_option)
+	{
+	case APPEND_SUBCOMMAND:
+	case CAT_SUBCOMMAND:
+	case UPDATE_SUBCOMMAND:
+	  if (!new_volume (ACCESS_UPDATE))
+	    return;
+	  break;
+
+	default:
+	  if (!new_volume (ACCESS_READ))
+	    return;
+	  break;
+	}
 
     vol_error:
-      err = rmtread (archive, ar_block->charptr, (unsigned int) blocksize);
-      if (err < 0)
+      status = rmtread (archive, record_start->buffer,
+			(unsigned int) record_size);
+      if (status < 0)
 	{
-	  readerror ();
+	  read_error ();
 	  goto vol_error;
 	}
-      if (err != blocksize)
+      if (status != record_size)
 	goto short_read;
 
-      cursor = ar_block;
+      cursor = record_start;
 
-      if (cursor->header.linkflag == LF_VOLHDR)
+      if (cursor->header.typeflag == GNUTYPE_VOLHDR)
 	{
-	  if (flag_volhdr)
+	  if (volume_label_option)
 	    {
-#if 0
-	      char *ptr;
-
-	      ptr = (char *) xmalloc (strlen (flag_volhdr) + 20);
-	      sprintf (ptr, "%s Volume %d", flag_volhdr, volno);
-#endif
-	      if (re_match (label_pattern, cursor->header.arch_name,
-			    (int) strlen (cursor->header.arch_name),
-			    0, 0) < 0)
+	      if (!check_label_pattern (cursor))
 		{
-		  WARN ((0, 0, _("Volume mismatch!  %s!=%s"),
-			 flag_volhdr, cursor->header.arch_name));
+		  WARN ((0, 0, _("Volume `%s' does not match `%s'"),
+			 cursor->header.name, volume_label_option));
 		  volno--;
 		  global_volno--;
 		  goto try_volume;
 		}
-
-#if 0
-	      if (strcmp (ptr, cursor->header.name))
-		{
-		  WARN ((0, 0, _("Volume mismatch!  %s!=%s"),
-			 ptr, cursor->header.name));
-		  volno--;
-		  global_volno--;
-		  free (ptr);
-		  goto try_volume;
-		}
-	      free (ptr);
-#endif
 	    }
-	  if (flag_verbose)
-	    fprintf (stdlis, _("Reading %s\n"), cursor->header.arch_name);
+	  if (verbose_option)
+	    fprintf (stdlis, _("Reading %s\n"), cursor->header.name);
 	  cursor++;
 	}
-      else if (flag_volhdr)
+      else if (volume_label_option)
 	WARN ((0, 0, _("WARNING: No volume header")));
 
       if (real_s_name[0])
 	{
-	  if (cursor->header.linkflag != LF_MULTIVOL
-	      || strcmp (cursor->header.arch_name, real_s_name))
+	  if (cursor->header.typeflag != GNUTYPE_MULTIVOL
+	      || strcmp (cursor->header.name, real_s_name))
 	    {
 	      WARN ((0, 0, _("%s is not continued on this volume"),
 		     real_s_name));
@@ -1036,19 +1194,20 @@ error_loop:
 	      global_volno--;
 	      goto try_volume;
 	    }
-	  if (real_s_totsize != (from_oct (1 + 12, cursor->header.size)
-				 + from_oct (1 + 12, cursor->header.offset)))
+	  if (real_s_totsize
+	      != (from_oct (1 + 12, cursor->header.size)
+		  + from_oct (1 + 12, cursor->oldgnu_header.offset)))
 	    {
 	      WARN ((0, 0, _("%s is the wrong size (%ld != %ld + %ld)"),
-			 cursor->header.arch_name, save_totsize,
+			 cursor->header.name, save_totsize,
 			 from_oct (1 + 12, cursor->header.size),
-			 from_oct (1 + 12, cursor->header.offset)));
+			 from_oct (1 + 12, cursor->oldgnu_header.offset)));
 	      volno--;
 	      global_volno--;
 	      goto try_volume;
 	    }
 	  if (real_s_totsize - real_s_sizeleft
-	      != from_oct (1 + 12, cursor->header.offset))
+	      != from_oct (1 + 12, cursor->oldgnu_header.offset))
 	    {
 	      WARN ((0, 0, _("This volume is out of sequence")));
 	      volno--;
@@ -1057,58 +1216,58 @@ error_loop:
 	    }
 	  cursor++;
 	}
-      ar_record = cursor;
+      current_block = cursor;
       return;
     }
-  else if (err < 0)
+  else if (status < 0)
     {
-      readerror ();
+      read_error ();
       goto error_loop;		/* try again */
     }
 
 short_read:
-  more = ar_block->charptr + err;
-  left = blocksize - err;
+  more = record_start->buffer + status;
+  left = record_size - status;
 
 again:
-  if ((unsigned) left % RECORDSIZE == 0)
+  if ((unsigned) left % BLOCKSIZE == 0)
     {
-
-      /* FIXME, for size=0, multi vol support.  On the first block, warn
+      /* FIXME: for size=0, multi-volume support.  On the first record, warn
 	 about the problem.  */
 
-      if (!flag_reblock && baserec == 0 && flag_verbose && err > 0)
-	WARN ((0, 0, _("Blocksize = %d records"), err / RECORDSIZE));
+      if (!read_full_records_option && verbose_option
+	  && record_start_block == 0 && status > 0)
+	WARN ((0, 0, _("Record size = %d blocks"), status / BLOCKSIZE));
 
-      ar_last = ar_block + ((unsigned) (blocksize - left)) / RECORDSIZE;
+      record_end
+	= record_start + ((unsigned) (record_size - left)) / BLOCKSIZE;
+
       return;
     }
-  if (flag_reblock)
+  if (read_full_records_option)
     {
-
       /* User warned us about this.  Fix up.  */
 
       if (left > 0)
 	{
 	error2loop:
-	  err = rmtread (archive, more, (unsigned int) left);
-	  if (err < 0)
+	  status = rmtread (archive, more, (unsigned int) left);
+	  if (status < 0)
 	    {
-	      readerror ();
+	      read_error ();
 	      goto error2loop;	/* try again */
 	    }
-	  if (err == 0)
-	    ERROR ((TAREXIT_FAILURE, 0,
-		    _("Archive %s EOF not on block boundary"),
-		    *archive_name_cursor));
-	  left -= err;
-	  more += err;
+	  if (status == 0)
+	    FATAL_ERROR ((0, 0, _("Archive %s EOF not on block boundary"),
+			  *archive_name_cursor));
+	  left -= status;
+	  more += status;
 	  goto again;
 	}
     }
   else
-    ERROR ((TAREXIT_FAILURE, 0, _("Only read %d bytes from archive %s"),
-	    err, *archive_name_cursor));
+    FATAL_ERROR ((0, 0, _("Only read %d bytes from archive %s"),
+		  status, *archive_name_cursor));
 }
 
 /*-----------------------------------------------.
@@ -1118,86 +1277,86 @@ again:
 void
 flush_archive (void)
 {
-  int c;
+  record_start_block += record_end - record_start;
+  current_block = record_start;
+  record_end = record_start + blocking_factor;
 
-  baserec += ar_last - ar_block; /* keep track of block #s */
-  ar_record = ar_block;		/* restore pointer to start */
-  ar_last = ar_block + blocking; /* restore pointer to end */
-
-  if (ar_reading)
+  if (access_mode == ACCESS_READ && time_to_start_writing)
     {
-      if (time_to_start_writing)
+      access_mode = ACCESS_WRITE;
+      time_to_start_writing = 0;
+
+      if (file_to_switch_to >= 0)
 	{
-	  time_to_start_writing = 0;
-	  ar_reading = 0;
+	  int status = rmtclose (archive);
 
-	  if (file_to_switch_to >= 0)
-	    {
-	      if (c = rmtclose (archive), c < 0)
-		WARN ((0, errno, _("WARNING: Cannot close %s (%d, %d)"),
-		       *archive_name_cursor, archive, c));
+	  if (status < 0)
+	    WARN ((0, errno, _("WARNING: Cannot close %s (%d, %d)"),
+		   *archive_name_cursor, archive, status));
 
-	      archive = file_to_switch_to;
-	    }
-	  else
-	    backspace_output ();
-	  fl_write ();
+	  archive = file_to_switch_to;
 	}
       else
-	fl_read ();
+	backspace_output ();
     }
-  else
+
+  switch (access_mode)
     {
-      fl_write ();
+    case ACCESS_READ:
+      flush_read ();
+      break;
+
+    case ACCESS_WRITE:
+      flush_write ();
+      break;
+
+    case ACCESS_UPDATE:
+      abort ();
     }
 }
 
 /*-------------------------------------------------------------------------.
-| Backspace the archive descriptor by one blocks worth.  If its a tape,	   |
+| Backspace the archive descriptor by one record worth.  If its a tape,	   |
 | MTIOCTOP will work.  If its something else, we try to seek on it.  If we |
 | can't seek, we lose!							   |
 `-------------------------------------------------------------------------*/
 
-static int
+static void
 backspace_output (void)
 {
-  off_t cur;
-#if 0
-  int er;
-#endif
-
 #ifdef MTIOCTOP
-  struct mtop t;
+  {
+    struct mtop operation;
 
-  t.mt_op = MTBSR;
-  t.mt_count = 1;
-  if (rmtioctl (archive, MTIOCTOP, (char *) &t) >= 0)
-    return 1;
-  if (errno == EIO && rmtioctl (archive, MTIOCTOP, (char *) &t) >= 0)
-    return 1;
+    operation.mt_op = MTBSR;
+    operation.mt_count = 1;
+    if (rmtioctl (archive, MTIOCTOP, (char *) &operation) >= 0)
+      return;
+    if (errno == EIO && rmtioctl (archive, MTIOCTOP, (char *) &operation) >= 0)
+      return;
+  }
 #endif
 
-  cur = rmtlseek (archive, 0L, 1);
-  cur -= blocksize;
+  {
+    off_t position = rmtlseek (archive, 0L, 1);
 
-  /* Seek back to the beginning of this block and start writing there.  */
+    /* Seek back to the beginning of this record and start writing there.  */
 
-  if (rmtlseek (archive, cur, 0) != cur)
-    {
+    position -= record_size;
+    if (rmtlseek (archive, position, 0) != position)
+      {
+	/* Lseek failed.  Try a different method.  */
 
-      /* Lseek failed.  Try a different method.  */
-
-      WARN ((0, 0, _("\
+	WARN ((0, 0, _("\
 Could not backspace archive file; it may be unreadable without -i")));
 
-      /* Replace the first part of the block with nulls.  */
+	/* Replace the first part of the record with NULs.  */
 
-      if (ar_block->charptr != output_start)
-	memset (ar_block->charptr, 0,
-		(size_t) (output_start - ar_block->charptr));
-      return 2;
-    }
-  return 3;
+	if (record_start->buffer != output_start)
+	  memset (record_start->buffer, 0,
+		  (size_t) (output_start - record_start->buffer));
+      }
+  }
 }
 
 /*-------------------------.
@@ -1207,68 +1366,83 @@ Could not backspace archive file; it may be unreadable without -i")));
 void
 close_archive (void)
 {
-  int child;
-  WAIT_T status;
-  int c;
-
-  if (time_to_start_writing || !ar_reading)
+  if (time_to_start_writing || access_mode == ACCESS_WRITE)
     flush_archive ();
-  if (command_mode == COMMAND_DELETE)
+
+#if !MSDOS
+
+  /* Manage to fully drain a pipe we might be reading, so to not break it on
+     the producer after the EOF block.  FIXME: one of these days, GNU tar
+     might become clever enough to just stop working, once there is no more
+     work to do, we might have to revise this area in such time.  */
+
+  if (access_mode == ACCESS_READ && S_ISFIFO (archive_stat.st_mode))
+    while (rmtread (archive, record_start->buffer, (unsigned int) record_size)
+	   > 0)
+      continue;
+#endif
+
+  if (subcommand_option == DELETE_SUBCOMMAND)
     {
       off_t pos;
 
       pos = rmtlseek (archive, 0L, 1);
-#ifndef __MSDOS__
-      ftruncate (archive, (size_t) pos);
-#else
+#if MSDOS
       rmtwrite (archive, "", 0);
+#else
+      ftruncate (archive, (size_t) pos);
 #endif
     }
-  if (flag_verify)
+  if (verify_option)
     verify_volume ();
 
-  if (c = rmtclose (archive), c < 0)
-    WARN ((0, errno, _("WARNING: Cannot close %s (%d, %d)"),
-	   *archive_name_cursor, archive, c));
+  {
+    int status = rmtclose (archive);
 
-#ifndef	__MSDOS__
+    if (status < 0)
+      WARN ((0, errno, _("WARNING: Cannot close %s (%d, %d)"),
+	     *archive_name_cursor, archive, status));
+  }
 
-  if (childpid)
+#if !MSDOS
+
+  if (child_pid)
     {
+      WAIT_T wait_status;
+      int child;
 
       /* Loop waiting for the right child to die, or for no more kids.  */
 
-      while ((child = wait (&status), child != childpid) && child != -1)
-	;
+      while ((child = wait (&wait_status), child != child_pid)
+	     && child != -1)
+	continue;
 
       if (child != -1)
-	if (WIFSIGNALED (status)
+	if (WIFSIGNALED (wait_status)
 #if 0
-	    && !WIFSTOPPED (status)
+	    && !WIFSTOPPED (wait_status)
 #endif
 	    )
 	  {
-
 	    /* SIGPIPE is OK, everything else is a problem.  */
 
-	    if (WTERMSIG (status) != SIGPIPE)
+	    if (WTERMSIG (wait_status) != SIGPIPE)
 	      ERROR ((0, 0, _("Child died with signal %d%s"),
-		      WTERMSIG (status),
-		      WCOREDUMP (status) ? _(" (core dumped)") : ""));
+		      WTERMSIG (wait_status),
+		      WCOREDUMP (wait_status) ? _(" (core dumped)") : ""));
 	  }
 	else
 	  {
-
 	    /* Child voluntarily terminated -- but why?  /bin/sh returns
-	       SIGPIPE + 120 if its child, then do nothing.  */
+	       SIGPIPE + 128 if its child, then do nothing.  */
 
-	    if (WEXITSTATUS (status) != (SIGPIPE + 128)
-		&& WEXITSTATUS (status))
+	    if (WEXITSTATUS (wait_status) != (SIGPIPE + 128)
+		&& WEXITSTATUS (wait_status))
 	      ERROR ((0, 0, _("Child returned status %d"),
-		      WEXITSTATUS (status)));
+		      WEXITSTATUS (wait_status)));
 	  }
     }
-#endif /* not __MSDOS__ */
+#endif /* !MSDOS */
 
   if (current_file_name)
     free (current_file_name);
@@ -1276,7 +1450,7 @@ close_archive (void)
     free (current_link_name);
   if (save_name)
     free (save_name);
-  free (flag_multivol ? ar_block - 2 : ar_block);
+  free (multi_volume_option ? record_start - 2 : record_start);
 }
 
 /*------------------------------------------------.
@@ -1286,17 +1460,16 @@ close_archive (void)
 void
 init_volume_number (void)
 {
-  FILE *vf;
+  FILE *file = fopen (volno_file_option, "r");
 
-  vf = fopen (flag_volno_file, "r");
-  if (!vf && errno != ENOENT)
-    ERROR ((0, errno, "%s", flag_volno_file));
-
-  if (vf)
+  if (file)
     {
-      fscanf (vf, "%d", &global_volno);
-      fclose (vf);
+      fscanf (file, "%d", &global_volno);
+      if (fclose (file) == EOF)
+	ERROR ((0, errno, "%s", volno_file_option));
     }
+  else if (errno != ENOENT)
+    ERROR ((0, errno, "%s", volno_file_option));
 }
 
 /*-------------------------------------------------------.
@@ -1306,43 +1479,43 @@ init_volume_number (void)
 void
 closeout_volume_number (void)
 {
-  FILE *vf;
+  FILE *file = fopen (volno_file_option, "w");
 
-  vf = fopen (flag_volno_file, "w");
-  if (!vf)
-    ERROR ((0, errno, "%s", flag_volno_file));
-  else
+  if (file)
     {
-      fprintf (vf, "%d\n", global_volno);
-      fclose (vf);
+      fprintf (file, "%d\n", global_volno);
+      if (fclose (file) == EOF)
+	ERROR ((0, errno, "%s", volno_file_option));
     }
+  else
+    ERROR ((0, errno, "%s", volno_file_option));
 }
 
-/*---------------------------------------------------------------------.
-| We've hit the end of the old volume.  Close it and open the next one |
-| Values for type: 0: writing 1: reading 2: updating		       |
-`---------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------.
+| We've hit the end of the old volume.  Close it and open the next one.	 |
+| Return nonzero on success.						 |
+`-----------------------------------------------------------------------*/
 
 static int
-new_volume (int type)
+new_volume (enum access_mode access)
 {
-  int c;
-  char inbuf[80];
-  const char *p;
-  static FILE *read_file = 0;
+  static FILE *read_file = NULL;
   static int looped = 0;
-  WAIT_T status;
 
-  if (!read_file && !flag_run_script_at_end)
-    read_file = (archive == 0) ? fopen (TTY_NAME, "r") : stdin;
+  int status;
+
+  if (!read_file && !info_script_option)
+    /* FIXME: if fopen is used, it will never be closed.  */
+    read_file = archive == STDIN ? fopen (TTY_NAME, "r") : stdin;
 
   if (now_verifying)
-    return -1;
-  if (flag_verify)
+    return 0;
+  if (verify_option)
     verify_volume ();
-  if (c = rmtclose (archive), c < 0)
+
+  if (status = rmtclose (archive), status < 0)
     WARN ((0, errno, _("WARNING: Cannot close %s (%d, %d)"),
-	   *archive_name_cursor, archive, c));
+	   *archive_name_cursor, archive, status));
 
   global_volno++;
   volno++;
@@ -1356,77 +1529,87 @@ new_volume (int type)
 tryagain:
   if (looped)
     {
-
       /* We have to prompt from now on.  */
 
-      if (flag_run_script_at_end)
+      if (info_script_option)
 	{
-	  closeout_volume_number ();
-	  system (info_script);
+	  if (volno_file_option)
+	    closeout_volume_number ();
+	  system (info_script_option);
 	}
       else
 	while (1)
 	  {
-	    fprintf (stdlis,
+	    char input_buffer[80];
+
+	    fprintf (stderr,
 		     _("\007Prepare volume #%d for %s and hit return: "),
 		     global_volno, *archive_name_cursor);
-	    fflush (stdlis);
-	    if (fgets (inbuf, sizeof (inbuf), read_file) == 0)
-	      {
-		fprintf (stdlis, _("EOF?  What does that mean?"));
+	    fflush (stderr);
 
-		if (command_mode != COMMAND_EXTRACT
-		    && command_mode != COMMAND_LIST
-		    && command_mode != COMMAND_DIFF)
+	    if (fgets (input_buffer, sizeof (input_buffer), read_file) == 0)
+	      {
+		fprintf (stderr, _("EOF where user reply was expected"));
+
+		if (subcommand_option != EXTRACT_SUBCOMMAND
+		    && subcommand_option != LIST_SUBCOMMAND
+		    && subcommand_option != DIFF_SUBCOMMAND)
 		  WARN ((0, 0, _("WARNING: Archive is incomplete")));
 
 		exit (TAREXIT_FAILURE);
 	      }
-	    if (inbuf[0] == '\n' || inbuf[0] == 'y' || inbuf[0] == 'Y')
+	    if (input_buffer[0] == '\n'
+		|| input_buffer[0] == 'y'
+		|| input_buffer[0] == 'Y')
 	      break;
 
-	    switch (inbuf[0])
+	    switch (input_buffer[0])
 	      {
 	      case '?':
 		{
-		  fprintf (stdlis, _("\
- n [name]   Give a new filename for the next (and subsequent) volume(s)\n\
+		  fprintf (stderr, _("\
+ n [name]   Give a new file name for the next (and subsequent) volume(s)\n\
  q          Abort tar\n\
  !          Spawn a subshell\n\
  ?          Print this list\n"));
 		}
 		break;
 
-	      case 'q':		/* quit */
+	      case 'q':
+		/* Quit.  */
+
 		fprintf (stdlis, _("No new volume; exiting.\n"));
 
-		if (command_mode != COMMAND_EXTRACT
-		    && command_mode != COMMAND_LIST
-		    && command_mode != COMMAND_DIFF)
+		if (subcommand_option != EXTRACT_SUBCOMMAND
+		    && subcommand_option != LIST_SUBCOMMAND
+		    && subcommand_option != DIFF_SUBCOMMAND)
 		  WARN ((0, 0, _("WARNING: Archive is incomplete")));
 
 		exit (TAREXIT_FAILURE);
 
-	      case 'n':		/* get new file name */
-		{
-		  char *q, *r;
+	      case 'n':
+		/* Get new file name.  */
 
-		  for (q = &inbuf[1]; *q == ' ' || *q == '\t'; q++)
-		    ;
-		  for (r = q; *r; r++)
-		    if (*r == '\n')
-		      *r = '\0';
-		  r = (char *) xmalloc ((size_t) (strlen (q) + 2));
-		  strcpy (r, q);
-		  p = r;
-		  *archive_name_cursor = p;
+		{
+		  char *name = &input_buffer[1];
+		  char *cursor;
+
+		  while (*name == ' ' || *name == '\t')
+		    name++;
+		  cursor = name;
+		  while (*cursor && *cursor != '\n')
+		    cursor++;
+		  *cursor = '\0';
+
+		  /* FIXME: the following allocation is never reclaimed.  */
+		  *archive_name_cursor = xstrdup (name);
 		}
 		break;
 
 	      case '!':
-#ifdef __MSDOS__
+#if MSDOS
 		spawnl (P_WAIT, getenv ("COMSPEC"), "-", 0);
-#else
+#else /* not MSDOS */
 		switch (fork ())
 		  {
 		  case -1:
@@ -1434,100 +1617,68 @@ tryagain:
 		    break;
 
 		  case 0:
-		    p = getenv ("SHELL");
-		    if (p == 0)
-		      p = "/bin/sh";
-		    execlp (p, "-sh", "-i", 0);
-		    /* In a previous tar version, _exit was used here
-		       instead of exit.  */
-		    ERROR ((TAREXIT_FAILURE, errno,
-			    _("Cannot exec a shell %s"), p));
+		    {
+		      const char *shell = getenv ("SHELL");
+
+		      if (shell == NULL)
+			shell = "/bin/sh";
+		      execlp (shell, "-sh", "-i", 0);
+		      FATAL_ERROR ((0, errno, _("Cannot exec a shell %s"),
+				    shell));
+		    }
 
 		  default:
-		    wait (&status);
+		    {
+		      WAIT_T wait_status;
+
+		      wait (&wait_status);
+		    }
 		    break;
 		  }
 
 		/* FIXME: I'm not sure if that's all that has to be done
 		   here.  (jk)  */
 
-#endif
+#endif /* not MSDOS */
 		break;
 	      }
 	  }
     }
 
-  if (type == 2 || flag_verify)
+  if (verify_option)
     archive = rmtopen (*archive_name_cursor, O_RDWR | O_CREAT, 0666,
-		       flag_rsh_command);
-  else if (type == 1)
-    archive = rmtopen (*archive_name_cursor, O_RDONLY, 0666, flag_rsh_command);
-  else if (type == 0)
-    archive = rmtcreat (*archive_name_cursor, 0666, flag_rsh_command);
+		       rsh_command_option);
   else
-    archive = -1;
+    switch (access)
+      {
+      case ACCESS_READ:
+	archive = rmtopen (*archive_name_cursor, O_RDONLY, 0666,
+			   rsh_command_option);
+	break;
+
+      case ACCESS_WRITE:
+	if (backup_option)
+	  maybe_backup_file (*archive_name_cursor, 1);
+	archive = rmtcreat (*archive_name_cursor, 0666, rsh_command_option);
+	break;
+
+      case ACCESS_UPDATE:
+	archive = rmtopen (*archive_name_cursor, O_RDWR | O_CREAT, 0666,
+			   rsh_command_option);
+	break;
+      }
 
   if (archive < 0)
     {
       WARN ((0, errno, _("Cannot open %s"), *archive_name_cursor));
+      if (!verify_option && access == ACCESS_WRITE && backup_option)
+	undo_last_backup ();
       goto tryagain;
     }
-#ifdef __MSDOS__
+
+#if MSDOS
   setmode (archive, O_BINARY);
 #endif
-  return 0;
-}
 
-/*-------------------------------------------------------------------------.
-| This is a useless function that takes a buffer returned by wantbytes and |
-| does nothing with it.  If the function called by wantbytes returns an	   |
-| error indicator (non-zero), this function is called for the rest of the  |
-| file.									   |
-`-------------------------------------------------------------------------*/
-
-/* Yes, I know.  SIZE and DATA are unused in this function, and this
-   might even trigger some compiler warnings.  That's OK!  Relax.  */
-
-int
-no_op (int size, char *data)
-{
-  return 0;
-}
-
-/*-----------------------------------------------------------------------.
-| Some other routine wants SIZE bytes in the archive.  For each chunk of |
-| the archive, call FUNC with the size of the chunk, and the address of	 |
-| the chunk it can work with.						 |
-`-----------------------------------------------------------------------*/
-
-int
-wantbytes (long size, int (*func) ())
-{
-  char *data;
-  long data_size;
-
-  if (flag_multivol)
-    save_sizeleft = size;
-  while (size)
-    {
-      data = findrec ()->charptr;
-      if (data == NULL)
-	{
-
-	  /* Check it.  */
-
-	  ERROR ((0, 0, _("Unexpected EOF on archive file")));
-	  return -1;
-	}
-      data_size = endofrecs ()->charptr - data;
-      if (data_size > size)
-	data_size = size;
-      if ((*func) (data_size, data))
-	func = no_op;
-      userec ((union record *) (data + data_size - 1));
-      size -= data_size;
-      if (flag_multivol)
-	save_sizeleft -= data_size;
-    }
-  return 0;
+  return 1;
 }

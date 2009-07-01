@@ -1,33 +1,44 @@
 /* textdomain.c -- implementation of the textdomain(3) function
-   Copyright (C) 1995 Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <string.h>
+#if defined STDC_HEADERS || defined _LIBC
+# include <stdlib.h>
+#endif
 
-#include "libgettext.h"
+#if defined STDC_HEADERS || defined HAVE_STRING_H || defined _LIBC
+# include <string.h>
+#else
+# include <strings.h>
+# ifndef memcpy
+#  define memcpy(Dst, Src, Num) bcopy (Src, Dst, Num)
+# endif
+#endif
+
+#ifdef _LIBC
+# include <libintl.h>
+#else
+# include "libgettext.h"
+#endif
 
 /* @@ end of prolog @@ */
-
-/* Prototypes for functions of libnlsut.  */
-extern char *xstrdup __P((const char *__str));
 
 /* Name of the default text domain.  */
 extern const char _nl_default_default_domain[];
@@ -36,16 +47,26 @@ extern const char _nl_default_default_domain[];
 extern const char *_nl_current_default_domain;
 
 
+/* Names for the libintl functions are a problem.  They must not clash
+   with existing names and they should follow ANSI C.  But this source
+   code is also used in GNU C Library where the names have a __
+   prefix.  So we have to make a difference here.  */
+#ifdef _LIBC
+# define TEXTDOMAIN __textdomain
+#else
+# define TEXTDOMAIN textdomain__
+#endif
+
 /* Set the current default message catalog to DOMAINNAME.
    If DOMAINNAME is null, return the current default.
    If DOMAINNAME is "", reset to the default of "messages".  */
 char *
-textdomain (domainname)
+TEXTDOMAIN (domainname)
      const char *domainname;
 {
   char *old;
 
-  /* A NULL pointer requests the current setting.  */ 
+  /* A NULL pointer requests the current setting.  */
   if (domainname == NULL)
     return (char *) _nl_current_default_domain;
 
@@ -56,10 +77,24 @@ textdomain (domainname)
       || strcmp (domainname, _nl_default_default_domain) == 0)
     _nl_current_default_domain = _nl_default_default_domain;
   else
-    _nl_current_default_domain = xstrdup (domainname);
+    {
+      /* If the following malloc fails `_nl_current_default_domain'
+	 will be NULL.  This value will be returned and so signals we
+	 are out of core.  */
+      size_t len = strlen (domainname) + 1;
+      char *cp = (char *) malloc (len);
+      if (cp != NULL)
+	memcpy (cp, domainname, len);
+      _nl_current_default_domain = cp;
+    }
 
   if (old != _nl_default_default_domain)
     free (old);
 
   return (char *) _nl_current_default_domain;
 }
+
+#ifdef _LIBC
+/* Alias for function name in GNU C Library.  */
+weak_alias (__textdomain, textdomain);
+#endif

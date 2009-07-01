@@ -1,4 +1,4 @@
-/* rename.c -- BSD compatible directory function for System V
+/* BSD compatible rename and directory rename function for System V.
    Copyright (C) 1988, 1990 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
@@ -12,26 +12,26 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#ifdef HAVE_CONFIG_H
-#if defined (CONFIG_BROKETS)
-/* We use <config.h> instead of "config.h" so that a compilation
-   using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
-   (which it would do because it found this file in $srcdir).  */
-#include <config.h>
-#else
-#include "config.h"
-#endif
+#if HAVE_CONFIG_H
+# include <config.h>
 #endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #include <errno.h>
 #ifndef errno
 extern int errno;
+#endif
+
+#if STAT_MACROS_BROKEN
+# undef S_ISDIR
+#endif
+
+#if !defined(S_ISDIR) && defined(S_IFDIR)
+# define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #endif
 
 /* Rename file FROM to file TO.
@@ -59,7 +59,7 @@ rename (from, to)
   else
     {
       if ((from_stats.st_dev == to_stats.st_dev)
-          && (from_stats.st_ino == to_stats.st_dev))
+          && (from_stats.st_ino == to_stats.st_ino))
         /* `from' and `to' designate the same file on that filesystem. */
         return 0;
 
@@ -72,16 +72,6 @@ rename (from, to)
 /* If MVDIR is defined, it should be the full filename of a setuid root
    program able to link and unlink directories.  If MVDIR is not defined,
    then the capability of renaming directories may be missing.  */
-
-#ifdef	STAT_MACROS_BROKEN
-#ifdef S_ISDIR
-#undef S_ISDIR
-#endif
-#endif	/* STAT_MACROS_BROKEN.  */
-
-#if !defined(S_ISDIR) && defined(S_IFDIR)
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#endif
 
   if (S_ISDIR (from_stats.st_mode))
     {
@@ -106,6 +96,9 @@ rename (from, to)
 	}
     }
   else
+
+#endif /* MVDIR */
+
     {
       if (link (from, to))
 	return -1;
@@ -115,18 +108,5 @@ rename (from, to)
 	  return -1;
 	}
     }
-
-#else /* not MVDIR */
-
-  if (link (from, to))
-    return -1;
-  if (unlink (from) && errno != ENOENT)
-    {
-      unlink (to);
-      return -1;
-    }
-
-#endif /* not MVDIR */
-
   return 0;
 }

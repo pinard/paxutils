@@ -1,7 +1,10 @@
 /* Special definitions for GNU tar, processed by autoheader.
-   Copyright (C) 1994 Free Software Foundation, Inc.
+   Copyright © 1994, 1997 Free Software Foundation, Inc.
    François Pinard <pinard@iro.umontreal.ca>, 1993.
 */
+
+/* This is unconditionally defined for setting a GNU environment.  */
+#undef _GNU_SOURCE
 
 /* Define to a string giving the full name of the default archive file.  */
 #undef DEFAULT_ARCHIVE
@@ -46,7 +49,10 @@
 
 /* Define to 1 if mknod function is available.  */
 #undef HAVE_MKNOD
- 
+
+/* Define to 1 if stpcpy function is available.  */
+#undef HAVE_STPCPY
+
 /* Define if `union wait' is the type of the first arg to wait functions.  */
 #undef HAVE_UNION_WAIT
 
@@ -74,7 +80,7 @@
 /* Define to 1 if using the `glocale' package for message catalogs.  */
 #undef WITH_CATALOGS
 
-/* Define to 1 for better use of the debugging malloc library.  See 
+/* Define to 1 for better use of the debugging malloc library.  See
    site ftp.antaire.com in antaire/src, file dmalloc/dmalloc.tar.gz.  */
 #undef WITH_DMALLOC
 

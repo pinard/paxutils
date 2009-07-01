@@ -13,28 +13,47 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#ifdef HAVE_LOCALE_H
+#if defined HAVE_LOCALE_H || defined _LIBC
 # include <locale.h>
 #endif
 
-#include "libgettext.h"
+#ifdef _LIBC
+# include <libintl.h>
+#else
+# include "libgettext.h"
+#endif
 
 /* @@ end of prolog @@ */
 
-#undef dgettext
+/* Names for the libintl functions are a problem.  They must not clash
+   with existing names and they should follow ANSI C.  But this source
+   code is also used in GNU C Library where the names have a __
+   prefix.  So we have to make a difference here.  */
+#ifdef _LIBC
+# define DGETTEXT __dgettext
+# define DCGETTEXT __dcgettext
+#else
+# define DGETTEXT dgettext__
+# define DCGETTEXT dcgettext__
+#endif
 
 /* Look up MSGID in the DOMAINNAME message catalog of the current
    LC_MESSAGES locale.  */
 char *
-dgettext (domainname, msgid)
+DGETTEXT (domainname, msgid)
      const char *domainname;
      const char *msgid;
 {
-  return dcgettext (domainname, msgid, LC_MESSAGES);
+  return DCGETTEXT (domainname, msgid, LC_MESSAGES);
 }
+
+#ifdef _LIBC
+/* Alias for function name in GNU C Library.  */
+weak_alias (__dgettext, dgettext);
+#endif

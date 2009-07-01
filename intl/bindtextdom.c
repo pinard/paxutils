@@ -1,5 +1,5 @@
 /* bindtextdom.c -- implementation of the bindtextdomain(3) function
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,16 +13,36 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#include <libgettext.h>
-#include <stdlib.h>
-#include <string.h>
+#if defined STDC_HEADERS || defined _LIBC
+# include <stdlib.h>
+#else
+# ifdef HAVE_MALLOC_H
+#  include <malloc.h>
+# else
+void free ();
+# endif
+#endif
 
+#if defined HAVE_STRING_H || defined _LIBC
+# include <string.h>
+#else
+# include <strings.h>
+# ifndef memcpy
+#  define memcpy(Dst, Src, Num) bcopy (Src, Dst, Num)
+# endif
+#endif
+
+#ifdef _LIBC
+# include <libintl.h>
+#else
+# include "libgettext.h"
+#endif
 #include "gettext.h"
 #include "gettextP.h"
 
@@ -34,15 +54,21 @@ extern const char _nl_default_dirname[];
 /* List with bindings of specific domains.  */
 extern struct binding *_nl_domain_bindings;
 
-/* Prototypes for library functions.  */
-void *xmalloc ();
-char *xstrdup ();
 
+/* Names for the libintl functions are a problem.  They must not clash
+   with existing names and they should follow ANSI C.  But this source
+   code is also used in GNU C Library where the names have a __
+   prefix.  So we have to make a difference here.  */
+#ifdef _LIBC
+# define BINDTEXTDOMAIN __bindtextdomain
+#else
+# define BINDTEXTDOMAIN bindtextdomain__
+#endif
 
 /* Specify that the DOMAINNAME message catalog will be found
    in DIRNAME rather than in the system locale data base.  */
 char *
-bindtextdomain (domainname, dirname)
+BINDTEXTDOMAIN (domainname, dirname)
      const char *domainname;
      const char *dirname;
 {
@@ -73,8 +99,19 @@ bindtextdomain (domainname, dirname)
   if (binding != NULL)
     {
       /* The domain is already bound.  Replace the old binding.  */
-      char *new_dirname = strcmp (dirname, _nl_default_dirname) == 0
-			  ? (char *) _nl_default_dirname : xstrdup (dirname);
+      char *new_dirname;
+
+      if (strcmp (dirname, _nl_default_dirname) == 0)
+	new_dirname = (char *) _nl_default_dirname;
+      else
+	{
+	  size_t len = strlen (dirname) + 1;
+	  new_dirname = (char *) malloc (len);
+	  if (new_dirname == NULL)
+	    return NULL;
+
+	  memcpy (new_dirname, dirname, len);
+	}
 
       if (strcmp (binding->dirname, _nl_default_dirname) != 0)
         free (binding->dirname);
@@ -84,13 +121,29 @@ bindtextdomain (domainname, dirname)
   else
     {
       /* We have to create a new binding.  */
+      size_t len;
       struct binding *new_binding =
-	(struct binding *) xmalloc (sizeof (*new_binding));
+	(struct binding *) malloc (sizeof (*new_binding));
 
+      if (new_binding == NULL)
+	return NULL;
 
-      new_binding->domainname = xstrdup (domainname);
-      new_binding->dirname = strcmp (dirname, _nl_default_dirname) == 0
-			     ? (char *) _nl_default_dirname : xstrdup (dirname);
+      len = strlen (domainname) + 1;
+      new_binding->domainname = (char *) malloc (len);
+      if (new_binding->domainname == NULL)
+	  return NULL;
+      memcpy (new_binding->domainname, domainname, len);
+
+      if (strcmp (dirname, _nl_default_dirname) == 0)
+	new_binding->dirname = (char *) _nl_default_dirname;
+      else
+	{
+	  len = strlen (dirname) + 1;
+	  new_binding->dirname = (char *) malloc (len);
+	  if (new_binding->dirname == NULL)
+	    return NULL;
+	  memcpy (new_binding->dirname, dirname, len);
+	}
 
       /* Now enqueue it.  */
       if (_nl_domain_bindings == NULL
@@ -115,3 +168,8 @@ bindtextdomain (domainname, dirname)
 
   return binding->dirname;
 }
+
+#ifdef _LIBC
+/* Alias for function name in GNU C Library.  */
+weak_alias (__bindtextdomain, bindtextdomain);
+#endif

@@ -1,5 +1,5 @@
-This is Info file tar.info, produced by Makeinfo-1.61 from the input
-file tar.texinfo.
+This is Info file tar.info, produced by Makeinfo version 1.67 from the
+input file tar.texi.
 
 START-INFO-DIR-ENTRY
 * tar: (tar).			Making tape (or disk) archives.
@@ -8,7 +8,8 @@ END-INFO-DIR-ENTRY
    This file documents GNU `tar', a utility used to store, backup, and
 transport files.
 
-   Copyright (C) 1992, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1994, 1995, 1996, 1997 Free Software Foundation,
+Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -24,268 +25,585 @@ manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
 
-
-File: tar.info,  Node: Archive Reading Options,  Next: File Writing Options,  Prev: Extracting Archive Members,  Up: Extracting Archive Members
+   This file documents GNU `tar', which is a utility used to store,
+backup, and transport files.  `tar' is a tape (or disk) archiver.  This
+manual documents the release 1.12.
 
-Options to Help Read Archives
------------------------------
+
+File: tar.info,  Node: Full Dumps,  Next: Inc Dumps,  Prev: Backups,  Up: Backups
+
+Using `tar' to Perform Full Dumps
+=================================
 
      *(This message will disappear, once this node revised.)*
 
-FIXME: each option wants its own node.  summary after menu
+   Full dumps should only be made when no other people or programs are
+modifying files in the filesystem.  If files are modified while `tar'
+is making the backup, they may not be stored properly in the archive,
+in which case you won't be able to restore them if you have to.  (Files
+not being modified are written with no trouble, and do not corrupt the
+entire archive.)
 
-   Normally, `tar' will request data in full block increments from an
-archive storage device.  If the device cannot return a full block,
-`tar' will report an error.  However, some devices do not always return
-full blocks, or do not require the last block of an archive to be
-padded out to the next block boundary.  To keep reading until you
-obtain a full block, or to accept an incomplete block if it contains an
-end-of-archive marker, specify the `--read-full-blocks' (`-B') option
-in conjunction with the `--extract' (`-x') or `--list' (`-t')
-operations.
+   You will want to use the `--label=ARCHIVE-LABEL' (`-V
+ARCHIVE-LABEL') option to give the archive a volume label, so you can
+tell what this archive is even if the label falls off the tape, or
+anything like that.
 
-FIXME: xref Listing Contents
-   .
+   Unless the filesystem you are dumping is guaranteed to fit on one
+volume, you will need to use the `--multi-volume' (`-M') option.  Make
+sure you have enough tapes on hand to complete the backup.
 
-   The `--read-full-blocks' (`-B') option is turned on by default when
-`tar' reads an archive from standard input, or from a remote machine.
-This is because on BSD Unix systems, attempting to read a pipe returns
-however much happens to be in the pipe, even if it is less than was
-requested.  If this option were not enabled, `tar' would fail as soon
-as it read an incomplete block from the pipe.
+   If you want to dump each filesystem separately you will need to use
+the `--one-file-system' (`-l') option to prevent `tar' from crossing
+filesystem boundaries when storing (sub)directories.
 
-   If you're not sure of the blocking factor of an archive, you can
-read the archive by specifying `--read-full-blocks' (`-B') and
-`--block-size=512-SIZE' (`-b 512-SIZE'), using a blocking factor larger
-than what the archive uses.  This lets you avoid having to determine
-the blocking factor of an archive.
-FIXME: xref Blocking Factor
-   .
+   The `--incremental' (`-G') option is not needed, since this is a
+complete copy of everything in the filesystem, and a full restore from
+this backup would only be done onto a completely empty disk.
 
-`--read-full-blocks'
-`-B'
-     Use in conjunction with `--extract' (`-x') to read an archive which
-     contains incomplete blocks, or one which has a blocking factor less
-     than the one specified.
+   Unless you are in a hurry, and trust the `tar' program (and your
+tapes), it is a good idea to use the `--verify' (`-W') option, to make
+sure your files really made it onto the dump properly.  This will also
+detect cases where the file was modified while (or just after) it was
+being archived.  Not all media (notably cartridge tapes) are capable of
+being verified, unfortunately.
 
-   Normally `tar' stops reading when it encounters a block of zeros
-between file entries (which usually indicates the end of the archive).
-`--ignore-zeros' (`-i') allows `tar' to completely read an archive
-which contains a block of zeros before the end (i.e. a damaged archive,
-or one which was created by `cat'-ing several archives together).
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') take a
+file name argument always.  If the file doesn't exist, run a level zero
+dump, creating the file.  If the file exists, uses that file to see
+what has changed.
 
-   The `--ignore-zeros' (`-i') option is turned off by default because
-many versions of `tar' write garbage after the end-of-archive entry,
-since that part of the media is never supposed to be read.  GNU `tar'
-does not write after the end of an archive, but seeks to maintain
-compatablity among archiving utilities.
+   `--incremental' (`-G')
 
-`--ignore-zeros'
-`-i'
-     To ignore blocks of zeros (ie. end-of-archive entries) which may be
-     encountered while reading an archive.  Use in conjunction with
-     `--extract' (`-x') or `--list' (`-t').
+   `--incremental' (`-G') handle old GNU-format incremental backup.
 
-   If you are using a machine with a small amount of memory, and you
-need to process large list of file names, you can reduce the amount of
-space `tar' needs to process the list.  To do so, specify the
-`--same-order' (`-s') option and provide an ordered list of file names.
-This option tells `tar' that the NAME arguments provided on the command
-line, or read from a file using the `--files-from=FILE-OF-NAMES' (`-T
-FILE-OF-NAMES') option, are listed in the same order as the files in
-the archive.
+   This option should only be used when creating an incremental backup
+of a filesystem.  When the `--incremental' (`-G') option is used, `tar'
+writes, at the beginning of the archive, an entry for each of the
+directories that will be operated on.  The entry for a directory
+includes a list of all the files in the directory at the time the dump
+was done, and a flag for each file indicating whether the file is going
+to be put in the archive.  This information is used when doing a
+complete incremental restore.
 
-   You can create a file containing an ordered list of files in the
-archive by storing the output produced by `tar --list
---file=ARCHIVE-NAME'.
-FIXME: xref Listing Contents
-   , for information on the `--list' (`-t') operation.
+   Note that this option causes `tar' to create a non-standard archive
+that may not be readable by non-GNU versions of the `tar' program.
 
-   This option is probably never needed on modern computer systems.
+   The `--incremental' (`-G') option means the archive is an incremental
+backup.  Its meaning depends on the command that it modifies.
 
-`--same-order'
-`--preserve-order'
-`-s'
-     To process large lists of file names on machines with small
-     amounts of memory.  Use in conjunction with `--compare' (`-d'),
-     `--list' (`-t') or `--extract' (`-x').
+   If the `--incremental' (`-G') option is used with `--list' (`-t'),
+`tar' will list, for each directory in the archive, the list of files in
+that directory at the time the archive was created.  This information
+is put out in a format that is not easy for humans to read, but which
+is unambiguous for a program: each file name is preceded by either a
+`Y' if the file is present in the archive, an `N' if the file is not
+included in the archive, or a `D' if the file is a directory (and is
+included in the archive).  Each file name is terminated by a null
+character.  The last file is followed by an additional null and a
+newline to indicate the end of the data.
 
-FIXME: we don't need/want --preserve to exist any more
+   If the `--incremental' (`-G') option is used with `--extract'
+(`--get', `-x'), then when the entry for a directory is found, all
+files that currently exist in that directory but are not listed in the
+archive *are deleted from the directory*.
+
+   This behavior is convenient when you are restoring a damaged file
+system from a succession of incremental backups: it restores the entire
+state of the file system to that which obtained when the backup was
+made.  If you don't use `--incremental' (`-G'), the file system will
+probably fill up with files that shouldn't exist any more.
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') handle new
+GNU-format incremental backup.  This option handles new GNU-format
+incremental backup.  It has much the same effect as `--incremental'
+(`-G'), but also the time when the dump is done and the list of
+directories dumped is written to the given FILE. When restoring, only
+files newer than the saved time are restored, and the direcotyr list is
+used to speed up operations.
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') acts like
+`--incremental' (`-G'), but when used in conjunction with `--create'
+(`-c') will also cause `tar' to use the file FILE, which contains
+information about the state of the filesystem at the time of the last
+backup, to decide which files to include in the archive being created.
+That file will then be updated by `tar'.  If the file FILE does not
+exist when this option is specified, `tar' will create it, and include
+all appropriate files in the archive.
+
+   The file, which is archive independent, contains the date it was last
+modified and a list of devices, inode numbers and directory names.
+`tar' will archive files with newer mod dates or inode change times,
+and directories with an unchanged inode number and device but a changed
+directory name.  The file is updated after the files to be archived are
+determined, but before the new archive is actually created.
+
+   GNU `tar' actually writes the file twice: once before the data and
+written, and once after.
 
 
-File: tar.info,  Node: File Writing Options,  Next: Scarce Disk Space,  Prev: Archive Reading Options,  Up: Extracting Archive Members
+File: tar.info,  Node: Inc Dumps,  Next: incremental and listed-incremental,  Prev: Full Dumps,  Up: Backups
 
-Changing How `tar' Writes Files
--------------------------------
-
-FIXME: find a better title
+Using `tar' to Perform Incremental Dumps
+========================================
 
      *(This message will disappear, once this node revised.)*
 
-   Normally, `tar' writes extracted files into the file system without
-regard to the files already on the system--files with the same name as
-archive members are overwritten.  To prevent `tar' from extracting an
-archive member from an archive, if doing so will overwrite a file in
-the file system, use `--keep-old-files' (`-k') in conjunction with the
-`--extract' (`-x') operation.  When this option is specified, `tar'
-reports an error stating the name of the files in conflict, instead of
-writing the file from the archive.
+   Performing incremental dumps is similar to performing full dumps,
+although a few more options will usually be needed.
 
-`--keep-old files'
-`-k'
-     Prevents `tar' from overwriting files in the file system during
-     extraction.
+   You will need to use the `-N DATE' option to tell `tar' to only
+store files that have been modified since DATE.  DATE should be the
+date and time of the last full/incremental dump.
 
-   Normally, `tar' sets the modification times of extracted files to
-the modification times recorded for the files in the archive, but
-limits the permissions of extracted files by the current `umask'
-setting.
+   A standard scheme is to do a *monthly* (full) dump once a month, a
+*weekly* dump once a week of everything since the last monthly and a
+*daily* every day of everything since the last (weekly or monthly) dump.
 
-   To set the modification times of extracted files to the time when
-the files were extracted, use the `--modification-time' (`-m') option in
-conjunction with `--extract' (`-x').
+   Here is a copy of the script used to dump the filesystems of the
+machines here at the Free Software Foundation.  This script is run via
+`cron' late at night when people are least likely to be using the
+machines.  This script dumps several filesystems from several machines
+at once (via NFS).  The operator is responsible for ensuring that all
+the machines will be up at the time the dump happens.  If a machine is
+not running, its files will not be dumped, and the next day's
+incremental dump will *not* store files that would have gone onto that
+dump.
 
-`--modification-time'
-`-m'
-     Sets the modification time of extracted archive members to the time
-     they were extracted, not the time recorded for them in the archive.
-     Use in conjunction with `--extract' (`-x').
+     #!/bin/csh
+     # Dump thingie
+     set now = `date`
+     set then = `cat date.nfs.dump`
+     /u/hack/bin/tar -c -G -v\
+      -f /dev/rtu20\
+      -b 126\
+      -N "$then"\
+      -V "Dump from $then to $now"\
+      /alpha-bits/gp\
+      /gnu/hack\
+      /hobbes/u\
+      /spiff/u\
+      /sugar-bombs/u
+     echo $now > date.nfs.dump
+     mt -f /dev/rtu20 rew
 
-   To set the modes (access permissions) of extracted files to those
-recorded for those files in the archive, use the {No Value For
-"same-persmissions"} option in conjunction with the `--extract' (`-x')
-operation.
-FIXME: mib --- should be aliased to ignore-umask.
+   Output from this script is stored in a file, for the operator to
+read later.
 
-`--preserve-permission'
-`--same-permission'
-`--ignore-umask'
-`-p'
-     Set modes of extracted archive members to those recorded in the
-     archive, instead of current umask settings.  Use in conjunction
-     with `--extract' (`-x').
+   This script uses the file `date.nfs.dump' to store the date/time of
+the last dump.
 
-FIXME: following paragraph needs to be rewritten: why doesnt' this cat
-FIXME: files together, why is this useful.  is it really useful with
-FIXME: more than one file?
-   To write the files extracted to the standard output, instead of
-creating the files on the file system, use `--to-stdout' (`-O') in
-conjunction with `--extract' (`-x').  This option is useful if you are
-extracting files to send them through a pipe, and do not need to
-preserve them in the file system.
-
-`--to-stdout'
-`-O'
-     Writes files to the standard output.  Used in conjunction with
-     `--extract' (`-x').
-
-FIXME: why would you want to do such a thing, how are files separated on
-FIXME: the standard output? is this useful with more that one file?  are
-FIXME: pipes the real reason?
+   Since this is a streaming tape drive, no attempt to verify the
+archive is done.  This is also why the high blocking factor (126) is
+used.  The tape drive must also be rewound by the `mt' command after
+the dump is made.
 
 
-File: tar.info,  Node: Scarce Disk Space,  Prev: File Writing Options,  Up: Extracting Archive Members
+File: tar.info,  Node: incremental and listed-incremental,  Next: Backup Levels,  Prev: Inc Dumps,  Up: Backups
 
-Recovering From Scarce Disk Space
+The Incremental Options
+=======================
+
+     *(This message will disappear, once this node revised.)*
+
+   `--incremental' (`-G') is used in conjunction with `--create' (`-c'),
+`--extract' (`--get', `-x') or `--list' (`-t') when backing up and
+restoring file systems.  An archive cannot be extracted or listed with
+the `--incremental' (`-G') option specified unless it was created with
+the option specified.  This option should only be used by a script, not
+by the user, and is usually disregarded in favor of
+`--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE'), which is
+described below.
+
+   `--incremental' (`-G') in conjunction with `--create' (`-c') causes
+`tar' to write, at the beginning of the archive, an entry for each of
+the directories that will be archived.  The entry for a directory
+includes a list of all the files in the directory at the time the
+archive was created and a flag for each file indicating whether or not
+the file is going to be put in the archive.
+
+   Note that this option causes `tar' to create a non-standard archive
+that may not be readable by non-GNU versions of the `tar' program.
+
+   `--incremental' (`-G') in conjunction with `--extract' (`--get',
+`-x') causes `tar' to read the lists of directory contents previously
+stored in the archive, *delete* files in the file system that did not
+exist in their directories when the archive was created, and then
+extract the files in the archive.
+
+   This behavior is convenient when restoring a damaged file system from
+a succession of incremental backups: it restores the entire state of
+the file system to that which obtained when the backup was made.  If
+`--incremental' (`-G') isn't specified, the file system will probably
+fill up with files that shouldn't exist any more.
+
+   `--incremental' (`-G') in conjunction with `--list' (`-t'), causes
+`tar' to print, for each directory in the archive, the list of files in
+that directory at the time the archive was created.  This information
+is put out in a format that is not easy for humans to read, but which
+is unambiguous for a program: each file name is preceded by either a
+`Y' if the file is present in the archive, an `N' if the file is not
+included in the archive, or a `D' if the file is a directory (and is
+included in the archive).  Each file name is terminated by a null
+character.  The last file is followed by an additional null and a
+newline to indicate the end of the data.
+
+   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') acts like
+`--incremental' (`-G'), but when used in conjunction with `--create'
+(`-c') will also cause `tar' to use the file SNAPSHOT-FILE, which
+contains information about the state of the file system at the time of
+the last backup, to decide which files to include in the archive being
+created.  That file will then be updated by `tar'.  If the file FILE
+does not exist when this option is specified, `tar' will create it, and
+include all appropriate files in the archive.
+
+   The file FILE, which is archive independent, contains the date it
+was last modified and a list of devices, inode numbers and directory
+names.  `tar' will archive files with newer mod dates or inode change
+times, and directories with an unchanged inode number and device but a
+changed directory name.  The file is updated after the files to be
+archived are determined, but before the new archive is actually created.
+
+   Despite it should be obvious that a device has a non-volatile value,
+NFS devices have non-dependable values when an automounter gets in the
+picture.  This led to a great deal of spurious redumping in incremental
+dumps, so it is somewhat useless to compare two NFS devices numbers
+over time.  So `tar' now considers all NFS devices as being equal when
+it comes to comparing directories; this is fairly gross, but there does
+not seem to be a better way to go.
+
+
+File: tar.info,  Node: Backup Levels,  Next: Backup Parameters,  Prev: incremental and listed-incremental,  Up: Backups
+
+Levels of Backups
+=================
+
+     *(This message will disappear, once this node revised.)*
+
+   An archive containing all the files in the file system is called a
+"full backup" or "full dump".  You could insure your data by creating a
+full dump every day.  This strategy, however, would waste a substantial
+amount of archive media and user time, as unchanged files are daily
+re-archived.
+
+   It is more efficient to do a full dump only occasionally.  To back up
+files between full dumps, you can a incremental dump.  A "level one"
+dump archives all the files that have changed since the last full dump.
+
+   A typical dump strategy would be to perform a full dump once a week,
+and a level one dump once a day.  This means some versions of files
+will in fact be archived more than once, but this dump strategy makes
+it possible to restore a file system to within one day of accuracy by
+only extracting two archives--the last weekly (full) dump and the last
+daily (level one) dump.  The only information lost would be in files
+changed or created since the last daily backup.  (Doing dumps more than
+once a day is usually not worth the trouble).
+
+   GNU `tar' comes with scripts you can use to do full and level-one
+dumps.  Using scripts (shell programs) to perform backups and
+restoration is a convenient and reliable alternative to typing out file
+name lists and `tar' commands by hand.
+
+   Before you use these scripts, you need to edit the file
+`backup-specs', which specifies parameters used by the backup scripts
+and by the restore script.  .  .  Once the backup parameters are set,
+you can perform backups or restoration by running the appropriate
+script.
+
+   The name of the restore script is `restore'.  .  The names of the
+level one and full backup scripts are, respectively, `level-1' and
+`level-0'.  The `level-0' script also exists under the name `weekly',
+and the `level-1' under the name `daily'--these additional names can be
+changed according to your backup schedule.  , for more information on
+running the restoration script.  , for more information on running the
+backup scripts.
+
+   *Please Note:* The backup scripts and the restoration scripts are
+designed to be used together.  While it is possible to restore files by
+hand from an archive which was created using a backup script, and to
+create an archive by hand which could then be extracted using the
+restore script, it is easier to use the scripts.  .  *Note Inc Dumps::,
+and *Note Inc Dumps::, before making such an attempt.
+
+
+File: tar.info,  Node: Backup Parameters,  Next: Scripted Backups,  Prev: Backup Levels,  Up: Backups
+
+Setting Parameters for Backups and Restoration
+==============================================
+
+     *(This message will disappear, once this node revised.)*
+
+   The file `backup-specs' specifies backup parameters for the backup
+and restoration scripts provided with `tar'.  You must edit
+`backup-specs' to fit your system configuration and schedule before
+using these scripts.
+
+   , for an explanation of this syntax.
+
+`ADMINISTRATOR'
+     The user name of the backup administrator.
+
+`BACKUP_HOUR'
+     The hour at which the backups are done.  This can be a number from
+     0 to 23, or the string `now'.
+
+`TAPE_FILE'
+     The device `tar' writes the archive to.  This device should be
+     attached to the host on which the dump scripts are run.
+
+`TAPE_STATUS'
+     The command to use to obtain the status of the archive device,
+     including error count.  On some tape drives there may not be such a
+     command; in that case, simply use `TAPE_STATUS=false'.
+
+`BLOCKING'
+     The blocking factor `tar' will use when writing the dump archive.
+     *Note Blocking Factor::.
+
+`BACKUP_DIRS'
+     A list of file systems to be dumped.  You can include any directory
+     name in the list--subdirectories on that file system will be
+     included, regardless of how they may look to other networked
+     machines.  Subdirectories on other file systems will be ignored.
+
+     The host name specifies which host to run `tar' on, and should
+     normally be the host that actually contains the file system.
+     However, the host machine must have GNU `tar' installed, and must
+     be able to access the directory containing the backup scripts and
+     their support files using the same file name that is used on the
+     machine where the scripts are run (ie. what `pwd' will print when
+     in that directory on that machine).  If the host that contains the
+     file system does not have this capability, you can specify another
+     host as long as it can access the file system through NFS.
+
+`BACKUP_FILES'
+     A list of individual files to be dumped.  These should be
+     accessible from the machine on which the backup script is run.
+
+* Menu:
+
+* backup-specs example::        An Example Text of `Backup-specs'
+* Script Syntax::               Syntax for `Backup-specs'
+
+
+File: tar.info,  Node: backup-specs example,  Next: Script Syntax,  Prev: Backup Parameters,  Up: Backup Parameters
+
+An Example Text of `Backup-specs'
 ---------------------------------
 
      *(This message will disappear, once this node revised.)*
 
-   If a previous attempt to extract files failed due to lack of disk
-space, you can use `--starting-file=NAME' (`-K NAME') to start
-extracting only after file NAME when extracting files from the archive.
-This assumes, of course, that there is now free space, or that you are
-now extracting into a different file system.
+   The following is the text of `backup-specs' as it appears at FSF:
 
-`--starting-file=FILE NAME'
-`-K FILE NAME'
-     Starts an operation in the middle of an archive.  Use in
-     conjunction with `--extract' (`-x') or `--list' (`-t').
-
-   If you notice you are running out of disk space during an extraction
-operation, you can also suspend `tar', remove unnecessary files from
-the file system, and then restart the same `tar' operation.  In this
-case, `--starting-file=NAME' (`-K NAME') is not necessary.
-
-FIXME: xref --incremental,  xref --interactive,  xref --exclude
+     # site-specific parameters for file system backup.
+     
+     ADMINISTRATOR=friedman
+     BACKUP_HOUR=1
+     TAPE_FILE=/dev/nrsmt0
+     TAPE_STATUS="mts -t $TAPE_FILE"
+     BLOCKING=124
+     BACKUP_DIRS="
+     	albert:/fs/fsf
+     	apple-gunkies:/gd
+     	albert:/fs/gd2
+     	albert:/fs/gp
+     	geech:/usr/jla
+     	churchy:/usr/roland
+     	albert:/
+     	albert:/usr
+     	apple-gunkies:/
+     	apple-gunkies:/usr
+     	gnu:/hack
+     	gnu:/u
+     	apple-gunkies:/com/mailer/gnu
+     	apple-gunkies:/com/archive/gnu"
+     
+     BACKUP_FILES="/com/mailer/aliases /com/mailer/league*[a-z]"
 
 
-File: tar.info,  Node: Comparing Archives Members with Files,  Next: Matching Format Parameters,  Prev: Extracting Archive Members,  Up: Basic tar Operations
+File: tar.info,  Node: Script Syntax,  Prev: backup-specs example,  Up: Backup Parameters
 
-Comparing Archives Members with Files
-=====================================
+Syntax for `Backup-specs'
+-------------------------
 
      *(This message will disappear, once this node revised.)*
 
-   The `--compare' (`-d') or `--diff' option compares the contents of
-the specified archive members against the files with the same names,
-and reports its findings.  If no members are named on the command line,
-or through `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'), then the
-entire archive is so compared.
+   `backup-specs' is in shell script syntax.  The following conventions
+should be considered when editing the script:
+
+   A quoted string is considered to be contiguous, even if it is on more
+than one line.  Therefore, you cannot include commented-out lines
+within a multi-line quoted string.  BACKUP_FILES and BACKUP_DIRS are
+the two most likely parameters to be multi-line.
+
+   A quoted string typically cannot contain wildcards.  In
+`backup-specs', however, the parameters BACKUP_DIRS and BACKUP_FILES
+can contain wildcards.
 
 
-File: tar.info,  Node: Matching Format Parameters,  Prev: Comparing Archives Members with Files,  Up: Basic tar Operations
+File: tar.info,  Node: Scripted Backups,  Next: Scripted Restoration,  Prev: Backup Parameters,  Up: Backups
 
-Matching the Format Parameters
-==============================
+Using the Backup Scripts
+========================
 
      *(This message will disappear, once this node revised.)*
 
-   Some format parameters must be taken into consideration when
-modifying an archive:
+   The syntax for running a backup script is:
 
-   Compressed archives cannot be modified.
+     `script-name' [TIME-TO-BE-RUN]
 
-   You have to specify the block size of the archive when modifying an
-archive with a non-default block size.
+   where TIME-TO-BE-RUN can be a specific system time, or can be `now'.
+If you do not specify a time, the script runs at the time specified in
+`backup-specs' ().
 
-   Multi-volume archives can be modified like any other archive.  To add
-files to a multi-volume archive, you need to only mount the last volume
-of the archive media (and new volumes, if needed).  For all other
-operations, you need to use the entire archive.
+   You should start a script with a tape or disk mounted.  Once you
+start a script, it prompts you for new tapes or disks as it needs them.
+Media volumes don't have to correspond to archive files--a
+multi-volume archive can be started in the middle of a tape that
+already contains the end of another multi-volume archive.  The
+`restore' script prompts for media by its archive volume, so to avoid
+an error message you should keep track of which tape (or disk) contains
+which volume of the archive.  .  .
 
-   If a multi-volume archive was labeled using `--label=ARCHIVE-LABEL'
-(`-V ARCHIVE-LABEL') (
-FIXME: pxref Archive Label
-   ) when it was created, `tar' will not automatically label volumes
-which are added later.  To label subsequent volumes, specify
-`--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL') again in conjunction with
-the `--append' (`-r'), `--update' (`-u') or `--concatenate' (`-A')
-operation.
-FIXME: example
+   The backup scripts write two files on the file system.  The first is
+a record file in `/etc/tar-backup/', which is used by the scripts to
+store and retrieve information about which files were dumped.  This
+file is not meant to be read by humans, and should not be deleted by
+them.  , for a more detailed explanation of this file.
 
-FIXME: xref somewhere, for more information about format parameters.
+   The second file is a log file containing the names of the file
+systems and files dumped, what time the backup was made, and any error
+messages that were generated, as well as how much space was left in the
+media volume after the last volume of the archive was written.  You
+should check this log file after every backup.  The file name is
+`log-MMM-DDD-YYYY-level-1' or `log-MMM-DDD-YYYY-full'.
+
+   The script also prints the name of each system being dumped to the
+standard output.
 
 
-File: tar.info,  Node: Specifying Names to tar,  Next: Being Careful,  Prev: Basic tar Operations,  Up: Top
+File: tar.info,  Node: Scripted Restoration,  Prev: Scripted Backups,  Up: Backups
 
-Specifying Names to `tar'
-*************************
+Using the Restore Script
+========================
 
      *(This message will disappear, once this node revised.)*
+
+     *Warning:* The GNU `tar' distribution does *not* provide any such
+     `restore' script yet.  This section is only listed here for
+     documentation maintenance purposes.  In any case, all contents is
+     subject to change as things develop.
+
+   To restore files that were archived using a scripted backup, use the
+`restore' script.  The syntax for the script is:
+
+   where ***** are the file systems to restore from, and ***** is a
+regular expression which specifies which files to restore.  If you
+specify -all, the script restores all the files in the file system.
+
+   You should start the restore script with the media containing the
+first volume of the archive mounted.  The script will prompt for other
+volumes as they are needed.  If the archive is on tape, you don't need
+to rewind the tape to to its beginning--if the tape head is positioned
+past the beginning of the archive, the script will rewind the tape as
+needed.  , for a discussion of tape positioning.
+
+   If you specify `--all' as the FILES argument, the `restore' script
+extracts all the files in the archived file system into the active file
+system.
+
+     *Warning:* The script will delete files from the active file
+     system if they were not in the file system when the archive was
+     made.
+
+   *Note Inc Dumps::, and *Note Inc Dumps::, for an explanation of how
+the script makes that determination.
+
+
+File: tar.info,  Node: Choosing,  Next: Date input formats,  Prev: Backups,  Up: Top
+
+Choosing Files and Names for `tar'
+**********************************
+
+     *(This message will disappear, once this node revised.)*
+
+   Certain options to `tar' enable you to specify a name for your
+archive.  Other options let you decide which files to include or exclude
+from the archive, based on when or whether files were modified, whether
+the file names do or don't match specified patterns, or whether files
+are in specified directories.
 
 * Menu:
 
-* Changing the Archive Name::
-* Characteristics::
-* Selection Options::
+* file::                        Choosing the Archive's Name
+* Selecting Archive Members::
+* files::                       Reading Names from a File
+* exclude::                     Excluding Some Files
+* Wildcards::
+* after::                       Operating Only on New Files
+* recurse::                     Descending into Directories
+* one::                         Crossing Filesystem Boundaries
 
 
-File: tar.info,  Node: Changing the Archive Name,  Next: Characteristics,  Prev: Specifying Names to tar,  Up: Specifying Names to tar
+File: tar.info,  Node: file,  Next: Selecting Archive Members,  Prev: Choosing,  Up: Choosing
 
-Changing the Archive Name
-=========================
+Choosing and Naming Archive Files
+=================================
 
      *(This message will disappear, once this node revised.)*
 
-   By default, `tar' uses an archive file name compiled in when `tar'
-was built.  Usually this refers to some physical tape drive on the
-machine.  Often, the installer of `tar' didn't set the default to
-anything meaningful at all.
+   By default, `tar' uses an archive file name that was compiled when
+it was built on the system; usually this name refers to some physical
+tape drive on the machine.  However, the person who installed `tar' on
+the system may not set the default to a meaningful value as far as most
+users are concerned.  As a result, you will usually want to tell `tar'
+where to find (or create) the archive.  The `--file=ARCHIVE-NAME' (`-f
+ARCHIVE-NAME') option allows you to either specify or name a file to
+use as the archive instead of the default archive file location.
 
-   As a result, most uses of `tar' need to tell `tar' where to find (or
-create) the archive.  The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME')
-option selects another file to use as the archive.
+`--file=ARCHIVE-NAME'
+`-f ARCHIVE-NAME'
+     Name the archive to create or operate on.  Use in conjunction with
+     any operation.
+
+   For example, in this `tar' command,
+
+     $ tar -cvf collection.tar blues folk jazz
+
+`collection.tar' is the name of the archive.  It must directly follow
+the `-f' option, since whatever directly follows `-f' *will* end up
+naming the archive.  If you neglect to specify an archive name, you may
+end up overwriting a file in the working directory with the archive you
+create since `tar' will use this file's name for the archive name.
+
+   An archive can be saved as a file in the file system, sent through a
+pipe or over a network, or written to an I/O device such as a tape,
+floppy disk, or CD write drive.
+
+   If you do not name the archive, `tar' uses the value of the
+environment variable `TAPE' as the file name for the archive.  If that
+is not available, `tar' uses a default, compiled-in archive name,
+usually that for tape unit zero (ie. `/dev/tu00').  `tar' always needs
+an archive name.
+
+   If you use `-' as an ARCHIVE-NAME, `tar' reads the archive from
+standard input (when listing or extracting files), or writes it to
+standard output (when creating an archive).  If you use `-' as an
+ARCHIVE-NAME when modifying an archive, `tar' reads the original
+archive from its standard input and writes the entire new archive to
+its standard output.
+
+     $ cd sourcedir; tar -cf - . | (cd targetdir; tar -xf -)
+
+   To specify an archive file on a device attached to a remote machine,
+use the following:
+
+     --file=HOSTNAME:/DEV/FILE NAME
+
+`tar' will complete the remote connection, if possible, and prompt you
+for a username and password.  If you use `--file=@HOSTNAME:/DEV/FILE
+NAME', `tar' will complete the remote connection, if possible, using
+your username as the username on the remote machine.
 
    If the archive file name includes a colon (`:'), then it is assumed
 to be a file on another machine.  If the archive file is
@@ -298,534 +616,500 @@ the `/usr/ucb/rmt' program installed.  If you need to use a file whose
 name includes a colon, then the remote tape drive behavior can be
 inhibited by using the `--force-local' option.
 
-   If the file name you give to `--file=ARCHIVE-NAME' (`-f
-ARCHIVE-NAME') is a single dash (`-'), then `tar' will read the archive
-from (or write it to) standard input (or standard output).
+   When the archive is being created to `/dev/null', GNU `tar' tries to
+minimize input and output operations.  The Amanda backup system, when
+used with GNU `tar', has an initial sizing pass which uses this feature.
 
-   The Name of an Archive
+
+File: tar.info,  Node: Selecting Archive Members,  Next: files,  Prev: file,  Up: Choosing
 
-   An archive can be saved as a file in the file system, sent through a
-pipe or over a network, or written to an I/O device such as a tape or
-disk drive.  To specify the name of the archive, use the
-`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option.
-
-   An archive name can be the name of an ordinary file or the name of an
-I/O device.  `tar' always needs an archive name--if you do not specify
-an archive name, the archive name comes from the environment variable
-`TAPE' or, if that variable is not specified, a default archive name,
-which is usually the name of tape unit zero (ie.  /dev/tu00).
-
-   If you use `-' as an ARCHIVE-NAME, `tar' reads the archive from
-standard input (when listing or extracting files), or writes it to
-standard output (when creating an archive).  If you use `-' as an
-ARCHIVE-NAME when modifying an archive, `tar' reads the original
-archive from its standard input and writes the entire new archive to
-its standard output.
-
-FIXME: does standard input and output redirection work with all
-FIXME: operations?
-FIXME: need example for standard input and output (screen and keyboard?)
-
-   To specify an archive file on a device attached to a remote machine,
-use the following:
-
-     --file=HOSTNAME:/DEV/FILE NAME
-
-`tar' will complete the remote connection, if possible, and prompt you
-for a username and password.  If you use `--file=@HOSTNAME:/DEV/FILE
-NAME', `tar' will complete the remote connection, if possible, using
-your username as the username on the remote machine.
-
-FIXME: is this clear?
-
-`--file=ARCHIVE-NAME'
-`-f ARCHIVE-NAME'
-     Names the archive to create or operate on.  Use in conjunction with
-     any operation.
-
-   Selecting Archive Members
+Selecting Archive Members
+=========================
 
    "File Name arguments" specify which files in the file system `tar'
 operates on, when creating or adding to an archive, or which archive
-members `tar' operates on, when reading or deleting from an archive.  (
-FIXME: pxref Reading and Writing
-   .)
+members `tar' operates on, when reading or deleting from an archive.
+*Note Operations::.
 
    To specify file names, you can include them as the last arguments on
 the command line, as follows:
-     tar OPERATION [OPTION1 OPTION2 ..] [FILE NAME-1 FILE NAME-2 ...]
+     tar OPERATION [OPTION1 OPTION2 ...] [FILE NAME-1 FILE NAME-2 ...]
 
    If you specify a directory name as a file name argument, all the
 files in that directory are operated on by `tar'.
 
-   If you do not specify files when `tar' is invoked, `tar' operates on
-all the non-directory files in the working directory (if the operation
-is `--create' (`-c')), all the archive members in the archive (if a
-read operation is specified), or does nothing (if any other operation
-is specified).
+   If you do not specify files when `tar' is invoked with `--create'
+(`-c'), `tar' operates on all the non-directory files in the working
+directory.  If you specify either `--list' (`-t') or `--extract'
+(`--get', `-x'), `tar' operates on all the archive members in the
+archive.  If you specify any operation other than one of these three,
+`tar' does nothing.
 
-   When specifying the names of files or members to `tar', it by
-default takes the names of the files from the command line.  There are
-other ways, however, to specify file or member names, or to modify the
+   By default, `tar' takes file names from the command line.  However,
+there are other ways to specify file or member names, or to modify the
 manner in which `tar' selects the files or members upon which to
-operate.  In general, these methods work both for specifying the names
-of files and archive members.
+operate; .  In general, these methods work both for specifying the
+names of files and archive members.
 
 
-File: tar.info,  Node: Characteristics,  Next: Selection Options,  Prev: Changing the Archive Name,  Up: Specifying Names to tar
-
-Selecting Files by Characteristic
-=================================
-
-   To avoid crossing file system boundaries when archiving parts of a
-directory tree, use `--one-file-system' (`-l').  This option only
-affects files that are archived because they are in a directory that is
-being archived; files explicitly named on the command line are archived
-regardless of where they reside.
-
-   This option is useful for making full or incremental archival backups
-of a file system.
-
-   If this option is used in conjunction with `--verbose' (`-v'), files
-that are excluded are mentioned by name on the standard error.
-
-`--one-file-system'
-`-l'
-     Prevents `tar' from crossing file system boundaries when
-     archiving.  Use in conjunction with any write operation.
-
-   To avoid operating on files whose names match a particular pattern,
-use the `--exclude=PATTERN' or `--exclude-from=FILE-OF-PATTERNS' (`-X
-FILE-OF-PATTERNS') options.
-
-   When you specify the `--exclude=PATTERN' option, `tar' ignores files
-which match the PATTERN, which can be a single file name or a more
-complex expression.  Thus, if you invoke `tar' with `tar --create
---exclude=*.o', no files whose names end in `.o' are included in the
-archive.
-FIXME: what other things can you use besides "*"?
-
-   `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS') acts like
-`--exclude=PATTERN', but specifies a file FILE containing a list of
-patterns.  `tar' ignores files with names that fit any of these
-patterns.
-
-   You can use either option more than once in a single command.
-
-`--exclude=PATTERN'
-     Causes `tar' to ignore files that match the PATTERN.
-
-`--exclude-from=FILE'
-     Causes `tar' to ignore files that match the patterns listed in
-     FILE.
-FIXME: --exclude-from used to be "--exclude", --exclude didn't used to
-FIXME: exist.
-
-   To operate only on files with modification or status-change times
-after a particular date, use `--after-date=DATE' (`-N DATE').  You can
-use this option with `--create' (`-c') or `--append' (`-r') to insure
-only new files are archived, or with `--extract' (`-x') to insure only
-recent files are resurrected.
-FIXME: or --newer DATE
-
-   `--newer-mtime=DATE' acts like `--after-date=DATE' (`-N DATE') but
-tests just the modification times of the files, ignoring status-change
-times.
-
-FIXME: need example of --newer-mtime with quoted argument
-   Remember that the entire date argument should be quoted if it
-contains any spaces.
-
-   *Please Note:* `--after-date=DATE' (`-N DATE') and
-`--newer-mtime=DATE' should not be used for incremental backups.  Some
-files (such as those in renamed directories) are not selected up
-properly by these options.
-FIXME: xref to incremental backup chapter when node name is decided.
-
-`--after-date=DATE'
-`--newer=DATE'
-`-N DATE'
-     Acts on files only if their modification or inode-changed times are
-     later than DATE.  Use in conjunction with any operation.
-
-`--newer-mtime=DATE'
-     Acts like `--after-date=DATE' (`-N DATE'), but only looks at
-     modification times.
-
-FIXME: following is the getdate date format --- needs to be re-written,
-FIXME: made a sub-node:
-
-   Time/Date Formats Accepted by getdate (omitting obscure
-constructions)
-
-   The input consists of one or more of: time zone day date year in any
-order.
-
-   Those in turn consist of (`|' and `/' mean `or', `[]' means
-`optional'):
-
-   time: H am/pm | H:M [am/pm] | H:M:S [am/pm] zone: timezone-name |
-timezone-name dst day: day-name | day-name, | N day-name date: M/D |
-M/D/Y | month-name D | month-name D, Y | D month-name | D month-name Y
-year: Y
-
-   am can also be a.m., pm can also be p.m.  case and spaces around
-punctuation are not significant.
-FIXME: month and day names can be abbreviated.
-
-* Menu:
-
-* Reading Names from a File::
-* Excluding Some Files::
-* Operating Only on New Files::
-* Crossing Filesystem Boundaries::
-
-
-File: tar.info,  Node: Reading Names from a File,  Next: Excluding Some Files,  Prev: Characteristics,  Up: Characteristics
+File: tar.info,  Node: files,  Next: exclude,  Prev: Selecting Archive Members,  Up: Choosing
 
 Reading Names from a File
--------------------------
+=========================
 
      *(This message will disappear, once this node revised.)*
 
    Instead of giving the names of files or archive members on the
 command line, you can put the names into a file, and then use the
 `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option to `tar'.
-Give the name of the file which contains the list as the argument to
-`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES').  The file names
-should be separated by newlines in the list.  If you give a single dash
-as a file name for `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'),
-that is, you specify `--files-from=-' (`-T -'), then the file names are
+Give the name of the file which contains the list of files to include
+as the argument to `--files-from'.  In the list, the file names should
+be separated by newlines.  You will frequently use this option when you
+have generated the list of files to archive with the `find' utility.
+
+`--files-from=FILE NAME'
+`-T FILE NAME'
+     Get names to extract or create from file FILE NAME.
+
+   If you give a single dash as a file name for `--files-from', (i.e.,
+you specify either `--files-from=-' or `-T -'), then the file names are
 read from standard input.
 
-   If you want to specify names that might contain newlines, use the
-`--null' option.  Then, the file names should be separated by NUL
-characters (ASCII 000) instead of newlines.  In addition, the `--null'
-option turns off the `--directory=DIRECTORY' (`-C DIRECTORY') option (
-FIXME: pxref Changing Directory
-   ).
+   Unless you are running `tar' with `--create', you can not use both
+`--files-from=-' and `--file=-' (`-f -') in the same command.
 
-   Reading a List of File Names from a File
+   The following example shows how to use `find' to generate a list of
+files smaller than 400K in length and put that list into a file called
+`small-files'.  You can then use the `-T' option to `tar' to specify
+the files from that file, `small-files', to create the archive
+`little.tgz'.  (The `-z' option to `tar' compresses the archive with
+`gzip'; *note gzip::. for more information.)
 
-     *(This message will disappear, once this node revised.)*
+     $ find . -size -400 -print > small-files
+     $ tar -c -v -z -T small-files -f little.tgz
 
-   To read file names from a file on the file system, instead of from
-the command line, use the `--files-from=FILE-OF-NAMES' (`-T
-FILE-OF-NAMES') option.  If you specify `-' as FILE, the file names are
-read from standard input.  Note that using both `--files-from=-' (`-T
--') and `--file=-' (`-f -') in the same command will not work unless
-the operation is `--create' (`-c').
-FIXME: xref Archive Name
-   , for an explanation of the `--file=ARCHIVE-NAME' (`-f
-ARCHIVE-NAME') option.
+* Menu:
 
-`--files-from=FILE'
-`-T FILE'
-     Reads file name arguments from a file on the file system, instead
-     of from the command line.  Use in conjunction with any operation.
+* nul::
 
 
-File: tar.info,  Node: Excluding Some Files,  Next: Operating Only on New Files,  Prev: Reading Names from a File,  Up: Characteristics
+File: tar.info,  Node: nul,  Prev: files,  Up: files
 
-Excluding Some Files
---------------------
-
-     *(This message will disappear, once this node revised.)*
-
-   The `--exclude=PATTERN' option will prevent any file or member which
-matches the regular expression PATTERN from being operated on.  For
-example, if you want to create an archive with all the contents of
-`/tmp' except the file `/tmp/foo', you can use the command `tar
---create --file=arch.tar --exclude=foo'.
-
-   If there are many files you want to exclude, you can use the
-`--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS') option.  This
-works just like the `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES')
-option: specify the name of a file as EXCLUDE-LIST which contains the
-list of patterns you want to exclude.
-
-FIXME: xref Regular Expressions
-   for more information on the syntax and meaning of regular
-expressions.
-
-
-File: tar.info,  Node: Operating Only on New Files,  Next: Crossing Filesystem Boundaries,  Prev: Excluding Some Files,  Up: Characteristics
-
-Operating Only on New Files
+`NUL' Terminated File Names
 ---------------------------
 
-     *(This message will disappear, once this node revised.)*
+   The `--null' option causes `--files-from=FILE-OF-NAMES' (`-T
+FILE-OF-NAMES') to read file names terminated by a `NUL' instead of a
+newline, so files whose names contain newlines can be archived using
+`--files-from'.
 
-   The `--after-date=DATE' (`-N DATE') or `--newer=DATE' limits `tar'
-to only operating on files which have been modified after the date
-specified.  (For more information on how to specify a date,
+`--null'
+     Only consider `NUL' terminated file names, instead of files that
+     terminate in a newline.
 
-FIXME: xref Date Formats
-   .)  A file is considered to have changed if the contents have been
-modified, or if the owner, permissions, and so forth, have been changed.
+   The `--null' option is just like the one in GNU `xargs' and `cpio',
+and is useful with the `-print0' predicate of GNU `find'.  In `tar',
+`--null' also causes `--directory=DIRECTORY' (`-C DIRECTORY') options
+to be treated as file names to archive, in case there are any files out
+there called `-C'.
 
-   If you only want `tar' make the date comparison on the basis of the
-actual contents of the file's modification, then use the
-`--newer-mtime=DATE' option.
+   This example shows how to use `find' to generate a list of files
+larger than 800K in length and put that list into a file called
+`long-files'.  The `-print0' option to `find' just just like `-print',
+except that it separates files with a `NUL' rather than with a newline.
+You can then run `tar' with both the `--null' and `-T' options to
+specify that `tar' get the files from that file, `long-files', to
+create the archive `big.tgz'.  The `--null' option to `tar' will cause
+`tar' to recognize the `NUL' separator between files.
 
-   You should never use this option for making incremental dumps.  To
-learn how to use `tar' to make backups,
-FIXME: ref Making Backups
-   .
-
-
-File: tar.info,  Node: Crossing Filesystem Boundaries,  Prev: Operating Only on New Files,  Up: Characteristics
-
-Crossing Filesystem Boundaries
-------------------------------
-
-     *(This message will disappear, once this node revised.)*
-
-   The `--one-file-system' (`-l') option causes `tar' to modify its
-normal behavior in archiving the contents of directories.  If a file in
-a directory is not on the same filesystem as the directory itself
-(because it is a mounted filesystem in its own right), then `tar' will
-not archive that file, or (if it is a directory itself) anything
-beneath it.
-
-   This does not necessarily limit `tar' to only archiving the contents
-of a single filesystem, because all files named on the command line, or
-through the `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option,
-will always be archived.
+     $ find . -size +800 -print0 > long-files
+     $ tar -c -v --null --files-from=long-files --file=big.tar
 
 
-File: tar.info,  Node: Selection Options,  Prev: Characteristics,  Up: Specifying Names to tar
+File: tar.info,  Node: exclude,  Next: Wildcards,  Prev: files,  Up: Choosing
 
-Local file selection
+Excluding Some Files
 ====================
 
      *(This message will disappear, once this node revised.)*
 
-   Local file selection
+   To avoid operating on files whose names match a particular pattern,
+use the `--exclude=PATTERN' or `--exclude-from=FILE-OF-PATTERNS' (`-X
+FILE-OF-PATTERNS') options.
 
-`-C DIR'
-`--directory DIR'
-     Change to directory DIR.
+`--exclude=PATTERN'
+     Causes `tar' to ignore files that match the PATTERN.
 
-     This option causes `tar' to change into the directory DIR before
-     continuing.  This option can be interspersed with the files `tar'
-     is to work on.  For example,
+   The `--exclude=PATTERN' option will prevent any file or member which
+matches the shell wildcards (PATTERN) from being operated on (PATTERN
+can be a single file name or a more complex expression).  For example,
+if you want to create an archive with all the contents of `/tmp' except
+the file `/tmp/foo', you can use the command `tar --create
+--file=arch.tar --exclude=foo'.  You may give multiple `--exclude'
+options.
 
-          tar -c iggy ziggy -C baz melvin
-
-     will place the files `iggy' and `ziggy' from the current directory
-     on the tape, followed by the file `melvin' from the directory
-     `baz'.  This option is especially useful when you have several
-     widely separated files that you want to store in the same
-     directory in the archive.
-
-     Here, the file `melvin' is recorded in the archive under the
-     precise name `melvin', *not* `baz/melvin'.  Thus, the archive will
-     contain three files that all appear to have come from the same
-     directory; if the archive is extracted with plain `tar -x', all
-     three files will be created in the current directory.
-
-     Contrast this with the command:
-
-          tar -c iggy ziggy bar/melvin
-
-     which records the third file in the archive under the name
-     `bar/melvin' so that, if plain `tar -x' is used, the third file
-     will be created in a subdirectory named `bar'.
-
-     Suppose that, without changing your current directory, you want to
-     call `tar' to dump files from `/users/ctd/dipp' say.  Then
-     `--directory=DIRECTORY' (`-C DIRECTORY') is for you.  You could do
-     things like:
-
-          tar cfC archive.tar /users/ctd/dipp .
-
-     (the `.' means the current directory, once the
-     `--directory=DIRECTORY' (`-C DIRECTORY') obeyed).
-
-     Some people might want some option to extract everything from an
-     archive in the current directory, ignore directory structure in
-     the archive.  This is so rarely proper that I doubt such an option
-     would be really useful.  It would only help getting around improper
-     `tar' usage, it might even encourage improper usage.  In general,
-     `--directory=DIRECTORY' (`-C DIRECTORY') might be used to produce
-     archives with a cleaner structure in the first place.
-
-`-T FILENAME'
-`--files-from=FILENAME'
-     Get names to extract or create from file FILENAME.
-
-     Instead of taking the list of files to work on from the command
-     line, the list of files to work on is read from the file FILENAME.
-     If FILENAME is given as `-', the list is read from standard input.
-     Note that using both `-T -' and `-f -' will not work unless you
-     are using the `--create' (`-c') command.
-
-     This is typically useful when you have generated the list of files
-     to archive with `find'.
-
-`--null'
-     This option causes `--files-from=FILE-OF-NAMES' (`-T
-     FILE-OF-NAMES') to read file names terminated by a NUL instead of
-     a newline, so files whose names contain newlines can be archived
-     using `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES').  The
-     `--null' option is just like the one in GNU `xargs' and `cpio',
-     and is useful with the `-print0' predicate of GNU `find'.  In
-     `tar', `--null' also causes `--directory=DIRECTORY' (`-C
-     DIRECTORY') options to be treated as file names to archive, in
-     case there are any files out there called `-C'.
-
-`--exclude=FILE'
-     Exclude file FILE.
-
-`-X FILE'
 `--exclude-from=FILE'
-     Exclude files listed in FILE.
+`-X FILE'
+     Causes `tar' to ignore files that match the patterns listed in
+     FILE.
 
-     This option causes `tar' to read a list of regular expressions (in
-     shell wildcard syntax), one per line, from FILE; `tar' will ignore
-     files matching those regular expressions.  Thus if `tar' is called
-     as `tar -c -X foo .' and the file `foo' contains a single line
-     `*.o', no files whose names end in `.o' will be added to the
-     archive.  Multiple `--exclude=PATTERN' options may be given.
-
-`-P'
-`--absolute-names'
-     Do not strip leading `/'s from file names.
-
-     By default, GNU `tar' drops a leading `/' on input or output.
-     This option turns off this behavior; it's equivalent to changing
-     to the root directory before running `tar' (except it also turns
-     off the usual warning message).
-
-`-l'
-`--one-file-system'
-     Stay in local filesystem when creating archive.
-
-     This option causes `tar' to not cross filesystem boundaries when
-     archiving parts of a directory tree.  This option only affects
-     files that are archived because they are in a directory that is
-     archived; files named on the command line are archived regardless,
-     and they can be from various file systems.
-
-     This option is useful for making full or incremental archival
-     backups of a filesystem, as with the Unix `dump' command.
-
-     Files skipped due to this option are mentioned on standard error.
-
-`-K NAME'
-`--starting-file=NAME'
-     Begin at file NAME in the archive.
-
-     The `--starting-file=NAME' (`-K NAME') option causes `tar' to begin
-     extracting or listing the archive with the file FILENAME, and to
-     consider only the files starting at that point in the archive.
-     This is useful if a previous attempt to extract files failed when
-     it reached FILENAME due to lack of free space.  (Assuming, of
-     course, that there is now free space, or that you are now
-     extracting into a different file system.)
-
-`-N DATE'
-`--newer=DATE'
-`--after-date=DATE'
-     Only store files newer than DATE.
-
-     This option causes `tar' to only work on files whose modification
-     or inode-changed times are newer than the DATE given.  The main
-     use is for creating an archive; then only new files are written.
-     If extracting, only newer files are extracted.
-
-     Remember that the entire date argument must be quoted if it
-     contains any spaces.
-
-     The date is parsed using `getdate'.
-
-   Changing the Names of Members when Archiving
+   Use the `--exclude-from=FILE-OF-PATTERNS' option to read a list of
+shell wildcards, one per line, from FILE; `tar' will ignore files
+matching those regular expressions.  Thus if `tar' is called as
+`tar -c -X foo .' and the file `foo' contains a single line `*.o', no
+files whose names end in `.o' will be added to the archive.
 
 * Menu:
 
-* Changing Directory::
-* Absolute File Names::
+* problems with exclude::
 
 
-File: tar.info,  Node: Changing Directory,  Next: Absolute File Names,  Prev: Selection Options,  Up: Selection Options
+File: tar.info,  Node: problems with exclude,  Prev: exclude,  Up: exclude
 
-Changing Directory
-------------------
+Problems with Using the `exclude' Options
+-----------------------------------------
+
+   Some users find `exclude' options confusing.  Here are some common
+pitfalls:
+
+   * The main operating mode of `tar' will always act on file names
+     listed on the command line, no matter whether or not there is an
+     exclusion which would otherwise affect them.  In the example
+     above, if you create an archive and exclude files that end with
+     `*.o', but explicitly name the file `catc.o' after all the options
+     have been listed, `catc.o' *will* be included in the archive.
+
+   * You can sometimes confuse the meanings of `--exclude=PATTERN' and
+     `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS').  Be
+     careful: use `--exclude=PATTERN' when files to be excluded are
+     given as a pattern on the command line.  Use
+     `--exclude-from=FILE-OF-PATTERNS' to introduce the name of a file
+     which contains a list of patterns, one per line; each of these
+     patterns can exclude zero, one, or many files.
+
+   * When you use `--exclude=PATTERN', be sure to quote the PATTERN
+     parameter, so GNU `tar' sees wildcard characters like `*'.  If you
+     do not do this, the shell might expand the `*' itself using files
+     at hand, so `tar' might receive a list of files instead of one
+     pattern, or none at all, making the command somewhat illegal.
+     This might not correspond to what you want.
+
+     For example, write:
+
+          $ tar -c -f ARCHIVE.TAR -X '*/tmp/*' DIRECTORY
+
+     rather than:
+
+          $ tar -c -f ARCHIVE.TAR -X */tmp/* DIRECTORY
+
+   * You must use use shell syntax, or globbing, rather than `regexp'
+     syntax, when using exclude options in `tar'.  If you try to use
+     `regexp' syntax to describe files to be excluded, your command
+     might fail.
+
+   * In earlier versions of `tar', what is now the
+     `--exclude-from=FILE-OF-PATTERNS' option was called
+     `--exclude-PATTERN' instead.  Now, `--exclude=PATTERN' applies to
+     patterns listed on the command line and
+     `--exclude-from=FILE-OF-PATTERNS' applies to patterns listed in a
+     file.
+
+
+File: tar.info,  Node: Wildcards,  Next: after,  Prev: exclude,  Up: Choosing
+
+Wildcards Patterns and Matching
+===============================
+
+   "Globbing" is the operation by which "wildcard" characters, `*' or
+`?' for example, are replaced and expanded into all existing files
+matching the given pattern.  However, `tar' often uses wildcard
+patterns for matching (or globbing) archive members instead of actual
+files in the filesystem.  Wildcard patterns are also used for verifying
+volume labels of `tar' archives.  This section has the purpose of
+explaining wildcard syntax for `tar'.
+
+   A PATTERN should be written according to shell syntax, using wildcard
+characters to effect globbing.  Most characters in the pattern stand
+for themselves in the matched string, and case is significant: `a' will
+match only `a', and not `A'.  The character `?' in the pattern matches
+any single character in the matched string.  The character `*' in the
+pattern matches zero, one, or more single characters in the matched
+string.  The character `\' says to take the following character of the
+pattern *literally*; it is useful when one needs to match the `?', `*',
+`[' or `\' characters, themselves.
+
+   The character `[', up to the matching `]', introduces a character
+class.  A "character class" is a list of acceptable characters for the
+next single character of the matched string.  For example, `[abcde]'
+would match any of the first five letters of the alphabet.  Note that
+within a character class, all of the "special characters" listed above
+other than `\' lose their special meaning; for example, `[-\\[*?]]'
+would match any of the characters, `-', `\', `[', `*', `?', or `]'.
+(Due to parsing constraints, the characters `-' and `]' must either
+come *first* or *last* in a character class.)
+
+   If the first character of the class after the opening `[' is `!' or
+`^', then the meaning of the class is reversed.  Rather than listing
+character to match, it lists those characters which are *forbidden* as
+the next single character of the matched string.
+
+   Other characters of the class stand for themselves.  The special
+construction `[A-E]', using an hyphen between two letters, is meant to
+represent all characters between A and E, inclusive.
+
+   Periods (`.') or forward slashes (`/') are not considered special
+for wildcard matches.  However, if a pattern completely matches a
+directory prefix of a matched string, then it matches the full matched
+string: excluding a directory also excludes all the files beneath it.
+
+   There are some discussions floating in the air and asking for
+modifications in the way GNU `tar' accomplishes wildcard matches.  We
+perceive any change of semantics in this area as a delicate thing to
+impose on GNU `tar' users.  On the other hand, the GNU project should be
+progressive enough to correct any ill design: compatibility at all price
+is not always a good attitude.  In conclusion, it is *possible* that
+slight amendments be later brought to the previous description.  Your
+opinions on the matter are welcome.
+
+
+File: tar.info,  Node: after,  Next: recurse,  Prev: Wildcards,  Up: Choosing
+
+Operating Only on New Files
+===========================
 
      *(This message will disappear, once this node revised.)*
 
-   The `--directory=DIRECTORY' (`-C DIRECTORY') option causes `tar' to
-change its current working directory to DIRECTORY.  Unlike most
-options, this one is processed at the point it occurs within the list
-of files to be processed.  Consider the following command:
-     tar --create --file=foo.tar -C /etc passwd hosts -C /lib libc.a
+   The `--after-date=DATE' (`--newer=DATE', `-N DATE') option causes
+`tar' to only work on files whose modification or inode-changed times
+are newer than the DATE given.  If you use this option when creating or
+appending to an archive, the archive will only include new files.  If
+you use `--after-date' when extracting an archive, `tar' will only
+extract files newer than the DATE you specify.
 
-   This command will place the files `/etc/passwd', `/etc/hosts', and
-`/lib/libc.a' into the archive.  However, the names of the archive
-members will be exactly what they were on the command line: `passwd',
-`hosts', and `libc.a'.  The `--directory=DIRECTORY' (`-C DIRECTORY')
-option is frequently used to make the archive independent of the
-original name of the directory holding the files.
+   If you only want `tar' to make the date comparison based on
+modification of the actual contents of the file (rather than inode
+changes), then use the `--newer-mtime=DATE' option.
 
-   Note that `--directory=DIRECTORY' (`-C DIRECTORY') options are
-interpreted consecutively.  If `--directory=DIRECTORY' (`-C DIRECTORY')
-option specifies a relative file name, it is interpreted relative to
-the then current directory, which might not be the same as the original
-current working directory of `tar', due to a previous
-`--directory=DIRECTORY' (`-C DIRECTORY') option.
+   You may use these options with any operation.  Note that these
+options differ from the `--update' (`-u') operation in that they allow
+you to specify a particular date against which `tar' can compare when
+deciding whether or not to archive the files.
 
-   When using `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') (
-FIXME: pxref Reading Names from a File
-   ), you can put `-C' options in the file list.  Unfortunately, you
-cannot put `--directory' options in the file list.  (This interpretation
-can be disabled by using the `--null' option.)
+`--after-date=DATE'
+`--newer=DATE'
+`-N DATE'
+     Only store files newer than DATE.
 
-   Changing the Working Directory Within a List of File Names
+     Acts on files only if their modification or inode-changed times are
+     later than DATE.  Use in conjunction with any operation.
+
+`--newer-mtime=DATE'
+     Acts like `--after-date=DATE' (`--newer=DATE', `-N DATE'), but
+     only looks at modification times.
+
+   These options limit `tar' to only operating on files which have been
+modified after the date specified.  A file is considered to have
+changed if the contents have been modified, or if the owner,
+permissions, and so forth, have been changed.  (For more information on
+how to specify a date, see *Note Date input formats::; remember that the
+entire date argument must be quoted if it contains any spaces.)
+
+   Gurus would say that `--after-date=DATE' (`--newer=DATE', `-N DATE')
+tests both the `mtime' (time the contents of the file were last
+modified) and `ctime' (time the file's status was last changed: owner,
+permissions, etc) fields, while `--newer-mtime=DATE' tests only `mtime'
+field.
+
+   To be precise, `--after-date=DATE' (`--newer=DATE', `-N DATE')
+checks *both* `mtime' and `ctime' and processes the file if either one
+is more recent than DATE, while `--newer-mtime=DATE' only checks
+`mtime' and disregards `ctime'.  Neither uses `atime' (the last time the
+contents of the file were looked at).
+
+   Date specifiers can have embedded spaces.  Because of this, you may
+need to quote date arguments to keep the shell from parsing them as
+separate arguments.
+
+     *Please Note:* `--after-date=DATE' (`--newer=DATE', `-N DATE') and
+     `--newer-mtime=DATE' should not be used for incremental backups.
+     Some files (such as those in renamed directories) are not selected
+     properly by these options.  *Note incremental and
+     listed-incremental::.
+
+   To select files newer than the modification time of a file that
+already exists, you can use the `--reference' (`-r') option of GNU
+`date', available in GNU shell utilities 1.13 or later.  It returns the
+timestamp of that already existing file; this timestamp expands to
+become the referent date which `--newer' uses to determine which files
+to archive.  For example, you could say,
+
+     $ tar -cf ARCHIVE.TAR --newer="`date -r FILE`" /home
+
+which tells .
+
+
+File: tar.info,  Node: recurse,  Next: one,  Prev: after,  Up: Choosing
+
+Descending into Directories
+===========================
 
      *(This message will disappear, once this node revised.)*
 
-   To change working directory in the middle of a list of file names,
-either on the command line or in a file specified using
+   Usually, `tar' will recursively explore all directories (either
+those given on the command line or through the
+`--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES') option) for the
+various files they contain.  However, you may not always want `tar' to
+act this way.
+
+   The `--no-recursion' option inhibits `tar''s recursive descent into
+specified directories.  If you specify `--no-recursion', you can use
+the `find' utility for hunting through levels of directories to
+construct a list of file names which you could then pass to `tar'.
+`find' allows you to be more selective when choosing which files to
+archive; see *Note files:: for more information on using `find' with
+`tar', or look.
+
+`--no-recursion'
+     Prevents `tar' from recursively descending directories.
+
+   When you use `--no-recursion', GNU `tar' grabs directory entries
+themselves, but does not descend on them recursively.  Many people use
+`find' for locating files they want to back up, and since `tar'
+*usually* recursively descends on directories, they have to use the
+`! -d' option to `find'  as they usually do not want all the files in a
+directory.  They then use the {No Value For "op-file-from"} option to
+archive the files located via `find'.
+
+   The problem when restoring files archived in this manner is that the
+directories themselves are not in the archive; so the
+`--same-permissions' (`--preserve-permissions', `-p') option does not
+affect them--while users might really like it to.  Specifying
+`--no-recursion' is a way to tell `tar' to grab only the directory
+entries given to it, adding no new files on its own.
+
+
+File: tar.info,  Node: one,  Prev: recurse,  Up: Choosing
+
+Crossing Filesystem Boundaries
+==============================
+
+     *(This message will disappear, once this node revised.)*
+
+   `tar' will normally automatically cross file system boundaries in
+order to archive files which are part of a directory tree.  You can
+change this behavior by running `tar' and specifying
+`--one-file-system' (`-l').  This option only affects files that are
+archived because they are in a directory that is being archived; `tar'
+will still archive files explicitly named on the command line or
+through `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'), regardless
+of where they reside.
+
+`--one-file-system'
+`-l'
+     Prevents `tar' from crossing file system boundaries when
+     archiving.  Use in conjunction with any write operation.
+
+   The `--one-file-system' option causes `tar' to modify its normal
+behavior in archiving the contents of directories.  If a file in a
+directory is not on the same filesystem as the directory itself, then
+`tar' will not archive that file.  If the file is a directory itself,
+`tar' will not archive anything beneath it; in other words, `tar' will
+not cross mount points.
+
+   It is reported that using this option, the mount point is is
+archived, but nothing under it.
+
+   This option is useful for making full or incremental archival
+backups of a file system.  If this option is used in conjunction with
+`--verbose' (`-v'), files that are excluded are mentioned by name on the
+standard error.
+
+* Menu:
+
+* directory::                   Changing Directory
+* absolute::                    Absolute File Names
+
+
+File: tar.info,  Node: directory,  Next: absolute,  Prev: one,  Up: one
+
+Changing the Working Directory
+------------------------------
+
+     *(This message will disappear, once this node revised.)*
+
+   To change the working directory in the middle of a list of file
+names, either on the command line or in a file specified using
 `--files-from=FILE-OF-NAMES' (`-T FILE-OF-NAMES'), use
 `--directory=DIRECTORY' (`-C DIRECTORY').  This will change the working
-directory to the directory DIRECTORY after that point in the list.  For
-example,
+directory to the directory DIRECTORY after that point in the list.
 
-     tar --create iggy ziggy --directory=baz melvin
+`--directory=DIRECTORY'
+`-C DIRECTORY'
+     Changes the working directory in the middle of a command line.
 
-will place the files `iggy' and `ziggy' from the current directory into
-the archive, followed by the file `melvin' from the directory `baz'.
-This option is especially useful when you have several widely separated
-files that you want to store in the same directory in the archive.
+   For example,
 
-   Note that the file `melvin' is recorded in the archive under the
-precise name `melvin', *not* `baz/melvin'.  Thus, the archive will
+     $ tar -c -f jams.tar grape prune -C food cherry
+
+will place the files `grape' and `prune' from the current directory
+into the archive `jams.tar', followed by the file `cherry' from the
+directory `food'.  This option is especially useful when you have
+several widely separated files that you want to store in the same
+archive.
+
+   Note that the file `cherry' is recorded in the archive under the
+precise name `cherry', *not* `food/cherry'.  Thus, the archive will
 contain three files that all appear to have come from the same
 directory; if the archive is extracted with plain `tar --extract', all
 three files will be written in the current directory.
 
-   Contrast this with the command
+   Contrast this with the command,
 
-     tar -c iggy ziggy bar/melvin
+     $ tar -c -f jams.tar grape prune -C food red/cherry
 
-which records the third file in the archive under the name `bar/melvin'
+which records the third file in the archive under the name `red/cherry'
 so that, if the archive is extracted using `tar --extract', the third
-file will be written in a subdirectory named `bar'.
+file will be written in a subdirectory named `orange-colored'.
 
-`--directory=`directory''
-`-C `directory''
-     Changes the working directory.
+   You can use the `--directory' option to make the archive independent
+of the original name of the directory holding the files.  The following
+command places the files `/etc/passwd', `/etc/hosts', and `/lib/libc.a'
+into the archive `foo.tar':
 
-FIXME: need to test how extract deals with this, and add an example
+     $ tar -c -f foo.tar -C /etc passwd hosts -C /lib libc.a
+
+However, the names of the archive members will be exactly what they were
+on the command line: `passwd', `hosts', and `libc.a'.  They will not
+appear to be related by file name to the original directories where
+those files were located.
+
+   Note that `--directory' options are interpreted consecutively.  If
+`--directory' specifies a relative file name, it is interpreted
+relative to the then current directory, which might not be the same as
+the original current working directory of `tar', due to a previous
+`--directory' option.
+
+   When using `--files-from' (*note files::.), you can put `-C' options
+in the file list.  Unfortunately, you cannot put `--directory' options
+in the file list.  (This interpretation can be disabled by using the
+`--null' option.)
 
 
-File: tar.info,  Node: Absolute File Names,  Prev: Changing Directory,  Up: Selection Options
+File: tar.info,  Node: absolute,  Prev: directory,  Up: one
 
 Absolute File Names
 -------------------
 
      *(This message will disappear, once this node revised.)*
+
+`-P'
+`--absolute-names'
+     Do not strip leading slashes from file names.
+
+   By default, GNU `tar' drops a leading `/' on input or output.  This
+option turns off this behavior; it is equivalent to changing to the
+root directory before running `tar' (except it also turns off the usual
+warning message).
 
    When `tar' extracts archive members from an archive, it strips any
 leading slashes (`/') from the member name.  This causes absolute
@@ -838,7 +1122,7 @@ in the archive.  For example, if the archive member has the name
 
    Other `tar' programs do not do this.  As a result, if you create an
 archive whose member names start with a slash, they will be difficult
-for other people with an inferior `tar' program to use.  Therefore, GNU
+for other people with a non-GNU `tar' program to use.  Therefore, GNU
 `tar' also strips leading slashes from member names when putting
 members into the archive.  For example, if you ask `tar' to add the
 file `/bin/ls' to an archive, it will do so, but the member name will
@@ -846,8 +1130,6 @@ be `bin/ls'.
 
    If you use the `--absolute-names' (`-P') option, `tar' will do
 neither of these transformations.
-
-FIXME: is this what this does, or does it just preserve the slash?
 
    To archive or extract files relative to the root directory, specify
 the `--absolute-names' (`-P') option.
@@ -862,341 +1144,24 @@ If you only invoked `tar' from the root directory you would never need
 the `--absolute-names' (`-P') option, but using this option may be more
 convenient than switching to root.
 
-FIXME: should be an example in the tutorial/wizardry section using this
-FIXME: to transfer files between systems.
-
-FIXME: is write access an issue?
-
 `--absolute-names'
      Preserves full file names (inclusing superior dirctory names) when
      archiving files.  Preserves leading slash when extracting files.
 
-
-File: tar.info,  Node: Being Careful,  Next: Format Control,  Prev: Specifying Names to tar,  Up: Top
+   `tar' prints out a message about removing the `/' from file names.
+This message appears once per GNU `tar' invocation.  It represents
+something which ought to be told; ignoring what it means can cause very
+serious surprises, later.
 
-Being Even More Careful
-***********************
+   Some people, nevertheless, do not want to see this message.  Wanting
+to play really dangerously, one may of course redirect `tar' standard
+error to the sink.  For example, under `sh':
 
-* Menu:
+     $ tar -c -f archive.tar /home 2> /dev/null
 
-* Documentation::
-* Checking Progress::
-* Interactive Operation::
-* Write Verification::
-* Comparing::
-* Portability::
-* Write Protection::
+Another solution, both nicer and simpler, would be to change to the `/'
+directory first, and then avoid absolute notation.  For example:
 
-
-File: tar.info,  Node: Documentation,  Next: Checking Progress,  Prev: Being Careful,  Up: Being Careful
-
-GNU `tar' documentation
-=======================
-
-   Being careful, the first thing is really checking that you are using
-GNU `tar', indeed.  The `--version' option will generate a message
-giving confirmation that you are using GNU `tar', with the precise
-version of GNU `tar' you are using.  `tar' identifies itself and prints
-the version number to the standard output, then immediately exits
-successfully, without doing anything else, ignoring all other options.
-For example, `tar --version' might return:
-
-     GNU tar version 1.11.8
-
-   Another thing you might want to do is checking the spelling or
-meaning of some particular `tar' option, without resorting to this
-manual, for once you have carefully read it.  GNU `tar' has a short help
-feature, triggerable through the `--help' option.  By using this
-option, `tar' will print a usage message listing all available options
-on standard output, then exit successfully, without doing anything else
-and ignoring all other options.  Even if this is only a brief summary,
-it may be several screens long.  So, if you are not using some kind of
-scrollable window, you might prefer to use something like:
-
-     tar --help | less
-
-presuming, here, that you like using `less' for a pager.  Other popular
-pagers are `more' and `pg'.
-
-   The perceptive reader would have noticed some contradiction in the
-previous paragraphs.  It is written that both `--version' and `--help'
-print something, and have all other options ignored.  In fact, they
-cannot ignore each other, and one of them has to win.  We do not
-specify which is stronger, here; experiment if you really wonder!
-
-   The short help output is quite succint, and you might have to get
-back to the full documentation for precise points.  If you are reading
-this paragraph, you already have the `tar' manual in some form.  This
-manual is available in printed form, as a kind of small book.  It may
-printed out of the GNU `tar' distribution, provided you have TeX
-already installed somewhere, and a laser printer around.  Just configure
-the distribution, execute the command `make dvi', then print
-`doc/tar.dvi' the usual way (contact your local guru to know how).  If
-GNU `tar' has been conveniently installed at your place, this manual is
-also available in interactive, hypertextual form as an Info file.  Just
-call `info tar' or, if you do not have the `info' program handy, use
-the Info reader provided within GNU Emacs, calling `tar' from the main
-Info menu.
-
-
-File: tar.info,  Node: Checking Progress,  Next: Interactive Operation,  Prev: Documentation,  Up: Being Careful
-
-Checking `tar' progress
-=======================
-
-   Typically, `tar' performs most operations without reporting any
-information to the user except error messages.  When using `tar' with
-many options, particularly ones with complicated or
-difficult-to-predict behavior, it is possible to make serious mistakes.
-`tar' provides several options that make observing `tar' easier.  These
-options cause `tar' to print information as it progresses in its job,
-and you might want to use them just for being more careful about what
-is going on, or merely for entertaining yourself.  If you have
-encountered a problem when operating on an archive, however, you may
-need more information than just an error message in order to solve the
-problem.  The following options can be helpful diagnostic tools.
-
-   Normally, the `--list' (`-t') command to list an archive prints just
-the file names (one per line) and the other commands are silent.  When
-used with most operations, the `--verbose' (`-v') option causes `tar'
-to print the name of each file or archive member as it is processed.
-This and the other options which make `tar' print status information
-can be useful in monitoring `tar'.
-
-   With `--create' (`-c') or `--extract' (`-x'), `--verbose' (`-v')
-used once just prints the names of the files or members as they are
-processed.  Using it twice causes `tar' to print a longer listing
-(reminiscent of `ls -l') for each member.  Since `--list' (`-t')
-already prints the names of the members, `--verbose' (`-v') used once
-with `--list' (`-t') causes `tar' to print an `ls -l' type listing of
-the files in the archive.  The following examples both extract members
-with long list output:
-
-     tar --extract --file=archive.tar --verbose --verbose
-     tar xvv archive.tar
-
-   Verbose output appears on the standard output except when an archive
-is being written to the standard output, as with `tar --create --file=-
---verbose' (`tar cfv -', or even `tar cv'--if the installer let
-standard output be the default archive).  In that case `tar' writes
-verbose output to the standard error stream.
-
-   The `--totals' option--which is only meaningful when used with
-`--create' (`-c')--causes `tar' to print the total amount written to
-the archive, after it has been fully created.
-
-   The `--checkpoint' option prints an occasional message as `tar'
-reads or writes the archive.  In fact, it print directory names while
-reading the archive.  It is designed for those who don't need the more
-detailed (and voluminous) output of `--record-number' (`-R'), but do
-want visual confirmation that `tar' is actually making forward progress.
-FIXME: There is some confusion here.  It seems that -R once wrote a
-FIXME: message at `every' block read or written.
-
-   The `--show-omitted-dirs' option, when reading an archive--with
-`--list' (`-t') or `--extract' (`-x'), for example--causes a message to
-be printed for each directory in the archive which is skipped.  This
-happens regardless of the reason for skipping: the directory might not
-have been named on the command line (implicitly or explicitly), it
-might be excluded by the use of the `--exclude=PATTERN' option, or some
-other reason.
-
-   If `--record-number' (`-R') is used, `tar' prints, along with every
-message it would normally produce, the record number within the archive
-where the message was triggered.  This option is especially useful when
-reading damaged archives, since it helps pinpoint the damaged sections.
-It can also be used with `--list' (`-t') when listing a file-system
-backup tape, allowing you to choose among several backup tapes when
-retrieving a file later, in favor of the tape where the file appears
-earliest (closest to the front of the tape).
-FIXME: xref when the node name is set and the backup section written
-
-
-File: tar.info,  Node: Interactive Operation,  Next: Write Verification,  Prev: Checking Progress,  Up: Being Careful
-
-Asking for Confirmation During Operations
-=========================================
-
-   Typically, `tar' carries out a command without stopping for further
-instructions.  In some situations however, you may want to exclude some
-files and archive members from the operation (for instance if disk or
-storage space is tight).  You can do this by excluding certain files
-automatically (
-FIXME: pxref File Exclusion
-   ), or by performing an operation interactively, using the
-`--interactive' (`-w') option.  `tar' also accepts `--confirmation' for
-this option.
-
-   When the `--interactive' (`-w') option is specified, before reading,
-writing, or deleting files, `tar' first prints a message for each such
-file, telling what operation it intends to take, then asks for
-confirmation on the terminal.  The actions which require confirmation
-include adding a file to the archive, extracting a file from the
-archive, deleting a file from the archive, and deleting a file from
-disk.  To confirm the action, you must type a line of input beginning
-with `y'.  If your input line begins with anything other than `y',
-`tar' skips that file.
-
-   If `tar' is reading the archive from the standard input, `tar' opens
-the file `/dev/tty' to support the interactive communications.
-
-
-File: tar.info,  Node: Write Verification,  Next: Comparing,  Prev: Interactive Operation,  Up: Being Careful
-
-Verifying Data as It is Stored
-==============================
-
-   You can insure the accuracy of an archive by comparing files in the
-system with archive members.  `tar' can compare an archive to the file
-system as the archive is being written, to verify a write operation, or
-can compare a previously written archive, to insure that it is up to
-date.
-
-   To check for discrepancies in an archive immediately after it is
-written, use the `--verify' (`-W') option in conjunction with the
-`--create' (`-c') operation.  When this option is specified, `tar'
-checks archive members against their counterparts in the file system,
-and reports discrepancies on the standard error.  In multi-volume
-archives, each volume is verified after it is written, before the next
-volume is written.
-
-   To verify an archive, you must be able to read it from before the end
-of the last written entry.  This option is useful for detecting data
-errors on some tapes.  Archives written to pipes, some cartridge tape
-drives, and some other devices cannot be verified.
-
-
-File: tar.info,  Node: Comparing,  Next: Portability,  Prev: Write Verification,  Up: Being Careful
-
-Comparing an Archive with the File System
-=========================================
-
-     *(This message will disappear, once this node revised.)*
-
-   `--compare' (`-d') compares archive members in an existing archive
-with their counterparts in the file system, and reports differences in
-file size, mode, owner, modification date and contents.  If a file is
-represented in the archive but does not exist in the file system, `tar'
-reports a difference.
-
-   If you use FILE NAME arguments in conjunction with `tar --compare',
-`tar' compares the archived versions of the files specified with their
-counterparts in the file system.  If you specify a file that is not in
-the archive, `tar' will report an error.  If you don't specify any
-files, `tar' compares all the files in the archive.
-
-   Because `tar' only checks files in the archive against files in the
-file system, and not vice versa, it ignores files in the file system
-that do not exist in the archive.
-
-   The following example compares the archive members `larry', `moe'
-and `curly' in the archive `stooges' with files of the same name in the
-file system.
-
-     tar --compare --file=stooges larry moe curly
-
-If a file, for example `curly', did not exist in the archive, `tar'
-would report an error, as follows:
-
-     curly: does not exist
-
-
-File: tar.info,  Node: Portability,  Next: Write Protection,  Prev: Comparing,  Up: Being Careful
-
-Making `tar' Archives More Portable
-===================================
-
-   Creating a `tar' archive on a particular system, meant to be later
-useful on many other machines and with other versions of `tar', is more
-a challenge than you might think.  `tar' archive formats evolved since
-the first versions of Unix, many such formats are flying around, not
-always comptabile between them.  This section wants to discuss a few
-problems, and give some advice, for making `tar' archives more portable.
-
-   One golden rule is simplicity.  For example, limit your `tar'
-archives to contain only regular files and directories, avoiding other
-kind of special files.  Do not attempt to save sparse files or
-contiguous files as such.  Let's discuss a few more problems, in turn.
-
-* Menu:
-
-* Portable Names::
-* Symbolic Links::
-* Old V7 and POSIX::
-* Checksumming Problems::
-
-
-File: tar.info,  Node: Portable Names,  Next: Symbolic Links,  Prev: Portability,  Up: Portability
-
-Portable Names
---------------
-
-   Use *straight* file and directory names, made up of printable ASCII
-characters, avoiding colons, slashes, backslashes, and other
-*dangerous* characters.  Avoid deep directory nesting.  Accounting for
-oldish System V machines, limit your file and directory names to 14
-characters or less.
-
-   If you intend to have your `tar' archives to be read under MSDOS,
-you should not rely on case distinction for file names, and you might
-use the GNU `doschk' program for helping you further diagnosing illegal
-MSDOS names, which are even more limited than System V's.
-
-
-File: tar.info,  Node: Symbolic Links,  Next: Old V7 and POSIX,  Prev: Portable Names,  Up: Portability
-
-Symbolic Links
---------------
-
-   Normally, when `tar' archives a symbolic link, it writes a record to
-the archive naming the target of the link.  In that way, the `tar'
-archive is a faithful record of the filesystem contents.
-`--dereference' (`-h') is used with `--create' (`-c'), and causes `tar'
-to archive the files symbolic links point to, instead of the links
-themselves.  When this option is used, when `tar' encounters a symbolic
-link, it will archive the linked-to file, instead of simply recording
-the presence of a symbolic link.
-
-   The name under which the file is stored in the file system is not
-recorded in the archive.  To record both the symbolic link name and the
-file name in the system, archive the file under both names.  If all
-links were recorded automatically by `tar', an extracted file might be
-linked to a file name that no longer exists in the file system.
-
-   If a linked-to file is encountered again by `tar' while creating the
-same archive, an entire second copy of it will be stored.  (This
-*might* be considered a bug.)
-
-   So, for portable archives, do not archive symbolic links as such,
-and use `--dereference' (`-h'): many systems do not support symbolic
-links, and moreover, your distribution might be unusable if it contains
-unresolved symbolic links.
-
-
-File: tar.info,  Node: Old V7 and POSIX,  Next: Checksumming Problems,  Prev: Symbolic Links,  Up: Portability
-
-Old V7 and POSIX Archives
--------------------------
-
-   GNU `tar' implements an early draft of the POSIX 1003.1 `ustar'
-standard which is different from the final standard.  Adding support
-for the new changes in a backward-compatible fashion is not trivial.
-
-   Certain old versions of `tar' cannot handle additional information
-recorded by newer `tar' programs.  To create an archive in V7 format
-(not ANSI), which can be read by these old versions, specify the
-`--old-archive' (`-o') option in conjunction with the `--create'
-(`-c').  `tar' also accepts `--portability' for this option.  When you
-specify it, `tar' leaves out information about directories, pipes,
-fifos, contiguous files, and device files, and specifies file ownership
-by group and user IDs instead of group and user names.
-
-   When updating an archive, do not use `--old-archive' (`-o') unless
-the archive was created with using this option.
-
-   In most cases, a *new* format archive can be read by an *old* `tar'
-program without serious trouble, so this option should seldom be
-needed.  On the other hand, most modern `tar's are able to read old
-format archives, so it might be safer for you to always use
-`--old-archive' (`-o') for your distributions.
+     $ (cd / && tar -c -f archive.tar home)
+     $ tar -c -f archive.tar -C  / home
 

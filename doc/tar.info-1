@@ -1,5 +1,5 @@
-This is Info file tar.info, produced by Makeinfo-1.61 from the input
-file tar.texinfo.
+This is Info file tar.info, produced by Makeinfo version 1.67 from the
+input file tar.texi.
 
 START-INFO-DIR-ENTRY
 * tar: (tar).			Making tape (or disk) archives.
@@ -8,7 +8,8 @@ END-INFO-DIR-ENTRY
    This file documents GNU `tar', a utility used to store, backup, and
 transport files.
 
-   Copyright (C) 1992, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1994, 1995, 1996, 1997 Free Software Foundation,
+Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -24,234 +25,258 @@ manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
 
+   This file documents GNU `tar', which is a utility used to store,
+backup, and transport files.  `tar' is a tape (or disk) archiver.  This
+manual documents the release 1.12.
+
 
 File: tar.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
-
-GNU tar
-*******
-
-   This file documents `tar', a utility used to store, backup, and
-transport files.  It is a rudimentary documentation for the GNU tape
-(or disk) archiver.  It covers the release 1.11.8.
-
-   This document has been quickly assembled from random notes and
-sources.  I will of course accept documentation bug reports, but please
-do not torture yourself into systematically reporting all inadequacies
-for unrevised nodes.
 
 * Menu:
 
 * Introduction::
 * Tutorial::
-* Invoking tar::
-* Basic tar Operations::
-* Specifying Names to tar::
-* Being Careful::
-* Format Control::
-* Media::
-* Backups and Restoration::
+* tar invocation::
+* operations::
+* Backups::
+* Choosing::
 * Date input formats::
-* Archive Format::
+* Formats::
+* Media::
 * Index::
 
  -- The Detailed Node Listing --
 
 Introduction
 
-* What tar Does::
-* Authors::
-* Bug reports::
-* Support::
-
-Support considerations
-
-* Stability::
-* Rewriting::
-* Why maintaining::
-* MSDOS::
+* Book Contents::               What this Book Contains
+* Definitions::                 Some Definitions
+* What tar Does::               What `tar' Does
+* Naming tar Archives::         How `tar' Archives are Named
+* posix compliance::
+* Authors::                     GNU `tar' Authors
+* Reports::                     Reporting bugs or suggestions
 
 Tutorial Introduction to `tar'
 
-* How to Create Archives::
-* How to List Archives::
-* How to Extract Members from an Archive::
-* How to Add Files to Existing Archives::
-* How to Delete Members from Archives::
+* assumptions::
+* stylistic conventions::
+* basic tar options::           Basic `tar' Operations and Options
+* frequent operations::
+* Two Frequent Options::
+* create::                      How to Create Archives
+* list::                        How to List Archives
+* extract::                     How to Extract Members from an Archive
+* going further::
+
+Two Frequently Used Options
+
+* file tutorial::
+* verbose tutorial::
+* help tutorial::
 
 How to Create Archives
 
-* Creating Archives of Files bis::
-* Using tar in Verbose Mode bis::
-* How to Archive Directories::
-* Creating an Archive of a Subdirectory bis::
-* Compare bis::
-* Using Compare from the Superior Directory bis::
-
-How to Archive Directories
-
-* Creating an Archive of a Subdirectory bis::
+* prepare for examples::
+* Creating the archive::
+* create verbose::
+* short create::
+* create dir::
 
 How to List Archives
 
-* Listing files in an archive bis::
-* Getting Additional File Information bis::
-* List A Specific File in an Archive bis::
-* Listing the Contents of a Stored Directory ter::
+* list dir::
 
 How to Extract Members from an Archive
 
-* Extracting Files bis::
-* Extracting Files from an Archive ter::
-* Extracting Specific Files ter::
-* Extracting Directories ter::
-
-How to Add Files to Existing Archives
-
-* Append bis::
-* Update bis::
-* Concatenate bis::
+* extracting archives::
+* extracting files::
+* extract dir::
+* failing commands::
 
 Invoking GNU `tar'
 
 * Synopsis::
-* Option Styles::
-* Options::
+* using tar options::
+* Styles::
+* All Options::
+* help::
+* verbose::
+* interactive::
 
-Many Styles for Options
+The Three Option Styles
 
-* Mnemonic Options::
-* Short Options::
-* Old Options::
-* Mixing Styles::
+* Mnemonic Options::            Mnemonic Option Style
+* Short Options::               Short Option Style
+* Old Options::                 Old Option Style
+* Mixing::                      Mixing Option Styles
 
-All Available Options
+All `tar' Options
 
-* Device Options::
-* Blocking Options::
-* Classification Options::
+* Operation Summary::
+* Option Summary::
+* Short Option Summary::
 
-Basic `tar' Operations
+GNU `tar' Operations
 
-* Creating a New Archive::
-* Adding to an Existing Archive::
-* Updating an Archive::
-* Combining Archives::
-* Removing Archive Members::
-* Listing Archive Members::
-* Extracting Archive Members::
-* Comparing Archives Members with Files::
-* Matching Format Parameters::
+* Basic tar::
+* Advanced tar::
+* extract options::
+* backup::
+* Applications::
+* looking ahead::
 
-Extracting Archive Members
+Advanced GNU `tar' Operations
 
-* Archive Reading Options::
-* File Writing Options::
-* Scarce Disk Space::
+* Operations::
+* current state::
+* append::
+* update::
+* concatenate::
+* delete::
+* compare::
 
-Specifying Names to `tar'
+How to Add Files to Existing Archives: `--append'
 
-* Changing the Archive Name::
-* Characteristics::
-* Selection Options::
+* appending files::             Appending Files to an Archive
+* multiple::
 
-Selecting Files by Characteristic
+Updating an Archive
 
-* Reading Names from a File::
-* Excluding Some Files::
-* Operating Only on New Files::
-* Crossing Filesystem Boundaries::
+* how to update::
 
-Local file selection
+Options Used by `--extract'
 
-* Changing Directory::
-* Absolute File Names::
+* Reading::                     Options to Help Read Archives
+* Writing::                     Changing How `tar' Writes Files
+* Scarce::                      Coping with Scarce Resources
 
-Being Even More Careful
+Options to Help Read Archives
 
-* Documentation::
-* Checking Progress::
-* Interactive Operation::
-* Write Verification::
-* Comparing::
-* Portability::
-* Write Protection::
+* read full records::
+* Ignore Zeros::
+* Ignore Failed Read::
 
-Making `tar' Archives More Portable
+Changing How `tar' Writes Files
 
-* Portable Names::
-* Symbolic Links::
-* Old V7 and POSIX::
-* Checksumming Problems::
+* Prevention Overwriting::
+* Keep Old Files::
+* Unlink First::
+* Recursive Unlink::
+* Modification Times::
+* Setting Access Permissions::
+* Writing to Standard Output::
+* remove files::
 
-Controlling the Archive Format
+Options to Prevent Overwriting Files
 
-* Attributes Options::
-* Type Options::
-* Compression::
-* Special Options for Archiving::
-* Archive Structure::
-* Modifiers Options::
+* Keep Old Files::
+* Unlink First::
+* Recursive Unlink::
 
-Using Less Space through Compression
+Coping with Scarce Resources
 
-* Compressed Archives::
-* Dealing with Compressed Archives::
-* Sparse Files::
-
-Tapes and Other Archive Media
-
-* Device::
-* Blocking::
-* Many::
-* Using Multiple Tapes::
-* Archive Label::
-
-Blocking
-
-* Format Variations::
-* Blocking Factor::
-
-Many archives on one tape
-
-* Tape Positioning::
-* mt::
-
-Using Multiple Tapes
-
-* Multi-Volume Archives::
-* Tape Files::
+* Starting File::
+* Same Order::
 
 Performing Backups and Restoring Files
 
-* Full Dumps::
-* Inc Dumps::
-* incremental and listed-incremental::
-* Backup Levels::
-* Backup Parameters::
-* Scripted Backups::
-* Scripted Restoration::
+* Full Dumps::                  Using `tar' to Perform Full Dumps
+* Inc Dumps::                   Using `tar' to Perform Incremental Dumps
+* incremental and listed-incremental::  The Incremental Options
+* Backup Levels::               Levels of Backups
+* Backup Parameters::           Setting Parameters for Backups and Restoration
+* Scripted Backups::            Using the Backup Scripts
+* Scripted Restoration::        Using the Restore Script
 
 Setting Parameters for Backups and Restoration
 
-* backup-specs example::
-* Script Syntax::
+* backup-specs example::        An Example Text of `Backup-specs'
+* Script Syntax::               Syntax for `Backup-specs'
+
+Choosing Files and Names for `tar'
+
+* file::                        Choosing the Archive's Name
+* Selecting Archive Members::
+* files::                       Reading Names from a File
+* exclude::                     Excluding Some Files
+* Wildcards::
+* after::                       Operating Only on New Files
+* recurse::                     Descending into Directories
+* one::                         Crossing Filesystem Boundaries
+
+Reading Names from a File
+
+* nul::
+
+Excluding Some Files
+
+* problems with exclude::
+
+Crossing Filesystem Boundaries
+
+* directory::                   Changing Directory
+* absolute::                    Absolute File Names
 
 Date input formats
 
-* General date syntax::
-* Calendar date item::
-* Time of day item::
-* Timezone item::
-* Day of week item::
-* Relative item in date strings::
-* Pure numbers in date strings::
-* Authors of getdate::
+* General date syntax::         Common rules.
+* Calendar date item::          19 Dec 1994.
+* Time of day item::            9:20pm.
+* Timezone item::               EST, DST, BST, UCT, AHST, ...
+* Day of week item::            Monday and others.
+* Relative item in date strings::  next tuesday, 2 years ago.
+* Pure numbers in date strings::  19931219, 1440.
+* Authors of getdate::          Bellovin, Salz, Berets, et al.
 
-Format of `tar' archives
+Controlling the Archive Format
 
-* Standard::
-* Extensions::
-* cpio::
+* Portability::                 Making `tar' Archives More Portable
+* Compression::                 Using Less Space through Compression
+* Attributes::                  Handling File Attributes
+* Standard::                    The Standard Format
+* Extensions::                  GNU Extensions to the Archive Format
+* cpio::                        Comparison of `tar' and `cpio'
+
+Making `tar' Archives More Portable
+
+* Portable Names::              Portable Names
+* dereference::                 Symbolic Links
+* old::                         Old V7 Archives
+* posix::                       POSIX archives
+* Checksumming::                Checksumming Problems
+
+Using Less Space through Compression
+
+* gzip::                        Creating and Reading Compressed Archives
+* sparse::                      Archiving Sparse Files
+
+Tapes and Other Archive Media
+
+* Device::                      Device selection and switching
+* Remote Tape Server::
+* Common Problems and Solutions::
+* Blocking::                    Blocking
+* Many::                        Many archives on one tape
+* Using Multiple Tapes::        Using Multiple Tapes
+* label::                       Including a Label in the Archive
+* verify::
+* Write Protection::
+
+Blocking
+
+* Format Variations::           Format Variations
+* Blocking Factor::             The Blocking Factor of an Archive
+
+Many Archives on One Tape
+
+* Tape Positioning::            Tape Positions and Tape Marks
+* mt::                          The `mt' Utility
+
+Using Multiple Tapes
+
+* Multi-Volume Archives::       Archives Longer than One Tape or Disk
+* Tape Files::                  Tape Files
 
 
 File: tar.info,  Node: Introduction,  Next: Tutorial,  Prev: Top,  Up: Top
@@ -259,48 +284,120 @@ File: tar.info,  Node: Introduction,  Next: Tutorial,  Prev: Top,  Up: Top
 Introduction
 ************
 
-   This chapter introduces of a few words which will recur all over
-this manual, like "archive", "member", "name", "unpack", etc.  It then
-explains who wrote GNU `tar' and its documentation, and says where to
-send bug reports or comments.
+   Welcome to the GNU `tar' manual.  GNU `tar' is used to create and
+manipulate files ("archives") which are actually collections of many
+other files; the program provides users with an organized and
+systematic method for controlling a large amount of data.
 
 * Menu:
 
-* What tar Does::
-* Authors::
-* Bug reports::
-* Support::
+* Book Contents::               What this Book Contains
+* Definitions::                 Some Definitions
+* What tar Does::               What `tar' Does
+* Naming tar Archives::         How `tar' Archives are Named
+* posix compliance::
+* Authors::                     GNU `tar' Authors
+* Reports::                     Reporting bugs or suggestions
 
 
-File: tar.info,  Node: What tar Does,  Next: Authors,  Prev: Introduction,  Up: Introduction
+File: tar.info,  Node: Book Contents,  Next: Definitions,  Prev: Introduction,  Up: Introduction
 
-What `tar' Does
-===============
+What this Book Contains
+=======================
+
+   The first part of this chapter introduces you to various terms that
+will recur throughout the book.  It also tells you who has worked on GNU
+`tar' and its documentation, and where you should send bug reports or
+comments.
+
+   The second chapter is a tutorial (*note Tutorial::.) which provides a
+gentle introduction for people who are new to using `tar'.  It is meant
+to be self contained, not requiring any reading from subsequent
+chapters to make sense.  It moves from topic to topic in a logical,
+progressive order, building on information already explained.
+
+   Although the tutorial is paced and structured to allow beginners to
+learn how to use `tar', it is not intended solely for beginners.  The
+tutorial explains how to use the three most frequently used operations
+(`create', `list', and `extract') as well as two frequently used
+options (`file' and `verbose').  The other chapters do not refer to the
+tutorial frequently; however, if a section discusses something which is
+a complex variant of a basic concept, there may be a cross reference to
+that basic concept.  (The entire book, including the tutorial, assumes
+that the reader understands some basic concepts of using a Unix-type
+operating system; *note Tutorial::..)
+
+   The third chapter presents the remaining five operations, and
+information about using `tar' options and option syntax.
+
+   The other chapters are meant to be used as a reference.  Each
+chapter presents everything that needs to be said about a specific
+topic.
+
+   One of the chapters (*note Date input formats::.) exists in its
+entirety in other GNU manuals, and is mostly self-contained.  In
+addition, one section of this manual (*note Standard::.) contains a big
+quote which is taken directly from `tar' sources.
+
+   In general, we give both the long and short (abbreviated) option
+names at least once in each section where the relevant option is
+covered, so that novice readers will become familiar with both styles.
+(A few options have no short versions, and the relevant sections will
+indicate this.)
+
+
+File: tar.info,  Node: Definitions,  Next: What tar Does,  Prev: Book Contents,  Up: Introduction
+
+Some Definitions
+================
 
    The `tar' program is used to create and manipulate `tar' archives.
-An "archive" is a single file which contains within it the contents of
-many files.  In addition, the archive identifies the names of the
-files, their owner, and so forth.  (Archives record access permissions,
-user and group, size in bytes, and last modification time.  Some
-archives also record the file names in each archived directory, as well
-as other file and directory information.)
+An "archive" is a single file which contains the contents of many
+files, while still identifying the names of the files, their owner(s),
+and so forth.  (In addition, archives record access permissions, user
+and group, size in bytes, and last modification time.  Some archives
+also record the file names in each archived directory, as well as other
+file and directory information.)  You can use `tar' to "create" a new
+archive in a specified directory.
 
    The files inside an archive are called "members".  Within this
 manual, we use the term "file" to refer only to files accessible in the
-normal ways (by `ls', `cat', and so forth), and the term "members" to
+normal ways (by `ls', `cat', and so forth), and the term "member" to
 refer only to the members of an archive.  Similarly, a "file name" is
 the name of a file, as it resides in the filesystem, and a "member
 name" is the name of an archive member within the archive.
 
+   The term "extraction" refers to the process of copying an archive
+member (or multiple members) into a file in the filesystem.  Extracting
+all the members of an archive is often called "extracting the archive".
+The term "unpack" can also be used to refer to the extraction of many
+or all the members of an archive.  Extracting an archive does not
+destroy the archive's structure, just as creating an archive does not
+destroy the copies of the files that exist outside of the archive.  You
+may also "list" the members in a given archive (this is often thought
+of as "printing" them to the standard output, or the command line), or
+"append" members to a pre-existing archive.  All of these operations
+can be peformed using `tar'.
+
+
+File: tar.info,  Node: What tar Does,  Next: Naming tar Archives,  Prev: Definitions,  Up: Introduction
+
+What `tar' Does
+===============
+
+   The `tar' program provides the ability to create `tar' archives, as
+well as various other kinds of manipulation.  For example, you can use
+`tar' on previously created archives to extract files, to store
+additional files, or to update or list files which were already stored.
+
    Initially, `tar' archives were used to store files conveniently on
-magnetic tape.  The name `tar' comes from this use; it stands for:
+magnetic tape.  The name `tar' comes from this use; it stands for
 `t'ape `ar'chiver.  Despite the utility's name, `tar' can direct its
-output to any available device, as well as store it in a file or direct
-it to another program via a pipe.  `tar' may even access, as archives,
-remote devices or files.
+output to available devices, files, or other programs (using pipes).
+`tar' may even access remote devices or files (as archives).
 
    You can use `tar' archives in many ways.  We want to stress a few of
-them: storage, backup or transportation.
+them: storage, backup, and transportation.
 
 Storage
      Often, `tar' archives are used to store related files for
@@ -309,660 +406,624 @@ Storage
      that all the files relating to a particular program (or set of
      related programs) can be transferred as a single unit.
 
-     A magnetic tape can store several files in sequence, but has no
-     names for them, just relative position on the tape.  A `tar'
-     archive or something like it is one way to store several files on
-     one tape and retain their names.  Even when the basic transfer
-     mechanism can keep track of names, as FTP can, the nuisance of
-     handling multiple files, directories, and multiple links, makes
-     `tar' archives an attractive method.
+     A magnetic tape can store several files in sequence.  However, the
+     tape has no names for these files; it only knows their relative
+     position on the tape.  One way to store several files on one tape
+     and retain their names is by creating a `tar' archive.  Even when
+     the basic transfer mechanism can keep track of names, as FTP can,
+     the nuisance of handling multiple files, directories, and multiple
+     links makes `tar' archives useful.
 
-     Archive files are also used for long-term storage, which you can
-     think of as transportation from one time to another.
+     Archive files are also used for long-term storage.  You can think
+     of this as transportation from the present into the future.  (It
+     is a science-fiction idiom that you can move through time as well
+     as in space; the idea here is that `tar' can be used to move
+     archives in all dimensions, even time!)
 
 Backup
      Because the archive created by `tar' is capable of preserving file
      information and directory structure, `tar' is commonly used for
-     performing full and incremental backups of disks, putting all
-     together bunch of files possibly pertaining to many users and
-     different projects, to secure against accidental destruction of
-     those disks.
-
-     The GNU version of `tar' has special features that allow it to be
-     used to make incremental and full dumps of all the files in a
-     filesystem.
+     performing full and incremental backups of disks.  A backup puts a
+     collection of files (possibly pertaining to many users and
+     projects) together on a disk or a tape.  This guards against
+     accidental destruction of the information in those files.  GNU
+     `tar' has special features that allow it to be used to make
+     incremental and full dumps of all the files in a filesystem.
 
 Transportation
-     Archive files can be used for transporting a group of files from
-     one system to another: put all relevant files into an archive on
-     one computer system, transfer the archive to another, and extract
-     the contents there.  The basic transfer medium might be magnetic
-     tape, Internet FTP, or even electronic mail (though you must
-     encode the archive with `uuencode' or some functional equivalent
-     in order to transport it properly by mail).  Both machines do not
-     have to use the same operating system, as long as they both
-     support the `tar' program.
+     You can create an archive on one system, transfer it to another
+     system, and extract the contents there.  This allows you to
+     transport a group of files from one system to another.
 
-     Piping one `tar' to another is an easy way to copy a directory's
-     contents from one disk to another, while preserving the dates,
-     modes, owners and link structure of all the files therein.  `tar'
-     is also ideal for transferring directories over networks.  We
-     sometimes see a copy of `tar' packing many files into one archive
-     on one machine, and sending the produced archive over a pipe over
-     the network to another copy of `tar' on another machine, reading
-     its archive from the pipe and unpacking all files there.
+
+File: tar.info,  Node: Naming tar Archives,  Next: posix compliance,  Prev: What tar Does,  Up: Introduction
 
-   The `tar' program provides the ability to create `tar' archives, as
-well as for various other kinds of manipulation.  For example, you can
-use `tar' on previously created archives to extract files, to store
-additional files, or to update or list files already stored.  The term
-"extraction" is used to refer to the process of copying an archive
-member into a file in the filesystem.  One might speak of extracting a
-single member.  Extracting all the members of an archive is often
-called extracting the archive.  Also, the term "unpack" is used to
-refer to the extraction of many or all the members of an archive.
+How `tar' Archives are Named
+============================
 
    Conventionally, `tar' archives are given names ending with `.tar'.
 This is not necessary for `tar' to operate properly, but this manual
-follows the convention in order to get the reader used to seeing it.
+follows that convention in order to accustom readers to it and to make
+examples more clear.
 
-   Occasionally, `tar' archives are referred to as `tar' files, archive
-members are referred to as files, or entries.  For people familiar with
-the operation of `tar', this causes no difficulty.  However, this
-manual consistently uses the terminology above in referring to archives
-and archive members, to make it easier to learn how to use `tar'.
+   Often, people refer to `tar' archives as "`tar' files," and archive
+members as "files" or "entries".  For people familiar with the
+operation of `tar', this causes no difficulty.  However, in this
+manual, we consistently refer to "archives" and "archive members" to
+make learning to use `tar' easier for novice users.
 
 
-File: tar.info,  Node: Authors,  Next: Bug reports,  Prev: What tar Does,  Up: Introduction
+File: tar.info,  Node: posix compliance,  Next: Authors,  Prev: Naming tar Archives,  Up: Introduction
+
+POSIX Compliance
+================
+
+We make some of our recommendations throughout this book for one reason
+in addition to what we think of as "good sense".  The main additional
+reason for a recommendation is to be compliant with the POSIX
+standards.  If you set the shell environment variable
+`POSIXLY_CORRECT', GNU `tar' will force you to adhere to these
+standards.  Therefore, if this variable is set and you violate one of
+the POSIX standards in the way you phrase a command, for example, GNU
+`tar' will not allow the command and will signal an error message.  You
+would then have to reorder the options or rephrase the command to
+comply with the POSIX standards.
+
+   There is a chance in the future that, if you set this environment
+variable, your archives will be forced to comply with POSIX standards,
+also.  No GNU `tar' extensions will be allowed.
+
+
+File: tar.info,  Node: Authors,  Next: Reports,  Prev: posix compliance,  Up: Introduction
 
 GNU `tar' Authors
 =================
 
    GNU `tar' was originally written by John Gilmore, and modified by
-many people.  The GNU enhancements were written by Jay Fenlason, and
-the whole package has been further maintained by Michael Bushnell, then
-Franc,ois Pinard, with the help of numerous and kind users.  I wish to
-stress that `tar' is somewhat a collective work, and owe much to all
-those people who reported problems, offerred solutions and other
-insights, or shared their thoughts and suggestions.  Even if we lost
-track of many of those contributors, a partial list can be found in the
-`THANKS' file from the GNU `tar' distribution.
+many people.  The GNU enhancements were written by Jay Fenlason, then
+Joy Kendall, and the whole package has been further maintained by
+Thomas Bushnell, n/BSG, and finally Franc,ois Pinard, with the help of
+numerous and kind users.
 
-   Jay Fenlason put together a draft of a GNU `tar' manual, also
-borrowing notes from the original man page from John Gilmore, this
-draft has been distributed in `tar' versions 1.04 (or even before?)
-through 1.10, then withdrawn in version 1.11.  Michael Bushnell and Amy
-Gorin worked at a tutorial and manual for GNU `tar', and left a few
-unpublished versions of each.  For version 1.11.8, Franc,ois Pinard put
-together a new manual by grabbing from all these sources and merging
-them in a single manual.
+   We wish to stress that `tar' is a collective work, and owes much to
+all those people who reported problems, offered solutions and other
+insights, or shared their thoughts and suggestions.  An impressive, yet
+partial list of those contributors can be found in the `THANKS' file
+from the GNU `tar' distribution.
 
-   I heard that there is another manual in the works, by another team,
-which should say everything about archives and related utilities, and
-which will surely be nicer than this one.  In the meantime, please
-consider this manual is a placeholder for `tar' option list and a few
-random notes the maintainer wants to save somewhere, so users can read
-them.  I wish GNU `tar' users will be happier with this imperfect
-manual than with no documentation at all.
+   Jay Fenlason put together a draft of a GNU `tar' manual, borrowing
+notes from the original man page from John Gilmore.  This draft has
+been distributed in `tar' versions 1.04 (or even before?)   through
+1.10, then withdrawn in version 1.11.  Thomas Bushnell, n/BSG and Amy
+Gorin worked on a tutorial and manual for GNU `tar'.  Franc,ois Pinard
+put version 1.11.8 of the manual together by taking information from
+all these sources and merging them.  Melissa Weisshaus finally edited
+and redesigned the book to create version 1.12.
+
+   For version 1.12, Daniel Hagerty contributed a great deal of
+technical consulting.  In particular, he is the primary author of *Note
+Backups::.
 
 
-File: tar.info,  Node: Bug reports,  Next: Support,  Prev: Authors,  Up: Introduction
+File: tar.info,  Node: Reports,  Prev: Authors,  Up: Introduction
 
 Reporting bugs or suggestions
 =============================
 
-   Please report problems or suggestions about this program to
-`bug-gnu-utils@prep.ai.mit.edu'.  You may also write directly, and less
-officially, to `pinard@iro.umontreal.ca'.  There is a lot of mail
-flowing about `tar', and some accumulated in the past years.  You might
-expect a quick acknowledgement of your invoices, but the proper
-handling of your reports may be delayed for a long while.
-
-   Many nodes of this document have not been revised much, these all
-start with a little comment telling so.  I accept documentation bug
-reports, of course.  But please do not torture yourself into
-systematically reporting all inadequacies for the unrevised nodes of
-this document, unless you really feel like revising them.
+   If you find problems or have suggestions about this program or
+manual, please report them to `bug-gnu-utils@prep.ai.mit.edu'.
 
 
-File: tar.info,  Node: Support,  Prev: Bug reports,  Up: Introduction
-
-Support considerations
-======================
-
-   This informal appendix is for the maintainer to share a few words
-and thoughts, while considering GNU `tar' support.
-
-* Menu:
-
-* Stability::
-* Rewriting::
-* Why maintaining::
-* MSDOS::
-
-
-File: tar.info,  Node: Stability,  Next: Rewriting,  Prev: Support,  Up: Support
-
-Stability of GNU `tar'
-----------------------
-
-   User reports mainly fall in three categories: portability problems,
-execution bugs, and requests for enhancements.  For 1.11.X, the
-emphasis has been on solving portability problems, then trying to make
-GNU `tar' more solid.  Enhancements have fairly low priority, yet I
-sometime slip one in just for taking a kind of rest :-).
-
-   Many bugs have been corrected since 1.11.2.  If you are curious,
-glance through ChangeLog.  I had only very few reports for things that
-*might* be new bugs not present in 1.11.2.  If you are really curious,
-and have access to the FSF machines, see `/gd/gnu/tar/rmail/' hierarchy
-for all reports.  Subdirectories `0', `1', `2' and `3' represent
-decreasing levels in priority.  Most problems in there were reported
-against 1.10, 1.11 or 1.11.2 and still exist.  The only thing I have
-consciously broken between 1.11.2 and 1.11.5 is `--record-number'
-(`-R'), because I wanted some modification to be done to
-`gnulib/error.c', which is outside my control.  This modification is
-now done, but I did not revisit this area yet.
-
-   Here is my candid opinion.  GNU `tar' has many areas of
-unreliability.  See `BACKLOG' for the horrorful picture of the
-situation.  Yet, for most users and usages, GNU `tar' looks very
-dependable.  For me as a mere user, GNU `tar' did not give problems in
-years.  And I think it offers a lot of functionality.  Many problems
-have been solved since 1.11.2, even if true that many more remain to be
-solved.  I'm not discouraged myself and feel positive about maintaining
-it, simply because when I bite, that usually lasts for quite long.  I
-might not have all the time I would want, but I surely have good will
-and am happily surrounded by many collaborating pretesters.  So, I
-still think GNU `tar' is on the winning side in the long run.
-
-
-File: tar.info,  Node: Rewriting,  Next: Why maintaining,  Prev: Stability,  Up: Support
-
-Should we rewrite the thing?
-----------------------------
-
-   Working in `tar' sources is not always pleasurable.  The problem is
-that `tar' sources are very fragile.  Just cleaning around breaks
-things.  The current sequence of prereleases is for slowly trying to
-solidify it, so `tar' becomes more maintainable.  I think that the
-ugliness of sources could be corrected to a certain extent, too.
-
-   A few efforts to replace GNU `tar' have been done already and it
-seems that all failed so far.  A toy program, for me, is another kind
-of failure.  I think people underestimate the number of portability
-problems such a program can raise.  This is not only a matter of
-programming style, there is really a wide variability in systems out
-there.  GNU `tar' has a long history, met a rich variety of porting
-problems, machine peculiarities, system idiosyncrasies, which are
-unrelated to programming style.  My own opinion is that we cannot
-dismiss all the experience gleaned along the years, and saved (if not
-hidden) in GNU `tar' sources, pretending to start anew, from scratch.
-
-   Even if a new program replacing GNU `tar' would be marvelous, GNU
-`tar' stalled for a few years waiting for such a program, and we are
-now faced to nothing, with hundreds of user reports to catch on.  We
-need a working archiver *now*, and cannot live on promises.  Any new
-program will take hundreds of user reports, and many years, to
-stabilize enough to become a plausible `tar' replacement.  I rather
-plan to clean up GNU `tar'.  This alone is a big task for me, because
-GNU `tar' coding is not ideal, and I have to find ways to transform it
-slowly, while having it fully working at all times.
-
-
-File: tar.info,  Node: Why maintaining,  Next: MSDOS,  Prev: Rewriting,  Up: Support
-
-Why maintaining it?
--------------------
-
-   I confess that I am a little afraid of `tar' maintainance.  It is
-difficult for many reasons, the first tree being more evident than the
-others:
-
-   * the algorithmic design was initially oriented for machines having
-     very small memory, it was later much adapted for new features
-     without doing everything necessary for the whole to stay clean;
-
-   * the wide visibility of `tar' forces many stunts at portability;
-
-   * GNU `tar' has to be sensitive to file systems and device variance.
-
-   * GNU central has been seduced by some users promising to write
-     wonderful `tar' replacements, which never came, so development has
-     been put aside for years, while bug reports accumulated;
-
-   * the `tar' manual has been withdrawn, promising users a fine
-     replacement for it, so raising their expectations;
-
-   * maintenance was once split between four maintainers (one for
-     `tar', one for `mt', another for scripts, and a team for
-     documentation), and also, `rtapelib.[ch]' from `tar' is used in
-     `cpio', and synchronisation has not always been easy.
-
-   However, even if difficult, I do feel like doing a careful cleanup,
-so `tar' would become less painful to maintain after a while (and less
-subject to criticism).  And besides, I'm surrounded by a marvelous team
-of pretesters and by many other collaborating users, which I should
-learn to serve better.  Getting more experience with maintainance in
-GNU, I hope being careful enough modifying `tar' so not hurting users
-too much, being aware that `tar' is a sensitive product in GNU.  Once
-cleaned up, I might be happy to return `tar' maintainance to someone
-else...
-
-   `tar' requires more work alone that all my other things together,
-and I have to resist being swallowed whole in it.  This resistance
-makes `tar' development somewhat slower.  Sorry!
-
-
-File: tar.info,  Node: MSDOS,  Prev: Why maintaining,  Up: Support
-
-MSDOS and other systems?
-------------------------
-
-   GNU does not necessarily support non-UNIX systems, that is to say,
-MSDOS is not supported.  It is very true that ports can sometimes be
-very intrusive in the sources, cluttering them significantly with
-conditionals and extra code, and distract GNU maintainers from the main
-development line.
-
-   However, a special argument might be made for `tar'.  Both `tar' and
-`gzip' are the required tools for getting something out of the GNU
-archives, `tar' should be more opened to ports than the GNU rule
-states.  Jean-loup did a tremendous job at porting `gzip' on smaller
-systems.  It would be comfortable that a few other GNU tools be
-available on MSDOS and others, among which `tar'.  These ports for
-`tar' have theoretically no priority at all.  Nevertheless, a port is
-interesting, because `tar' is so central in GNU distributions, and
-`gzip' is already ported.
-
-   Some porting efforts have been done in the past.  There are traces of
-a few exchanges on this subject in `BACKLOG'.  GNU `tar' sources have
-been modified a lot recently at a cosmetic level, and I would certainly
-have a hard time integrating diffs provided by someone else.  If people
-want porting `tar' to MSDOS or other non-UNIX systems, they should be
-committed in supporting their ports after the fact, as I cannot do it
-myself.
-
-
-File: tar.info,  Node: Tutorial,  Next: Invoking tar,  Prev: Introduction,  Up: Top
+File: tar.info,  Node: Tutorial,  Next: tar invocation,  Prev: Introduction,  Up: Top
 
 Tutorial Introduction to `tar'
 ******************************
 
-   This chapter guides you through some basic examples of `tar'
-operations.  If you already know how to use some other version of
-`tar', then you probably don't need to read this chapter.  This chapter
-omits complicated details about many of the ways `tar' works.  See
-later chapters for full information.
-
-   Before proceeding further with this tutorial chapter, be sure you
-understand already and clearly what is meant by "archive" and "archive
-member".
-FIXME: xref What tar Does
-   .
-
-   This chapter guides you through some basic examples of `tar'
-operations.  In the examples, the lines you should type are preceded by
-a `%', which is a typical shell prompt.  We use mnemonic forms of
-operations and options in the examples, and in discussions in the text,
-but short forms produce the same result.
-
-   Most of the options to `tar' come in both long forms and short
-forms.  The options described in this tutorial have the following
-abbreviations (except `--delete', which has no shorthand form):
-
-`--create'
-     `-c'
-
-`--list'
-     `-t'
-
-`--extract'
-     `-x'
-
-`--append'
-     `-r'
-
-`--verbose'
-     `-v'
-
-`--file=ARCHIVE-NAME'
-     `-f ARCHIVE-NAME'
-
-   These options make typing long `tar' commands easier.  For example,
-instead of typing
-     tar --create --file=/tmp/afiles.tar --verbose apple angst asparagus
-   you can type
-     tar -c -f /tmp/afiles.tar -v apple angst asparagus
-
-   For more information on option syntax,
-FIXME: ref Invoking tar
-   .  In discussions in the text, when we present some mnemonic option,
-we also give the corresponding short option within parentheses.
+   This chapter guides you through some basic examples of three `tar'
+operations: `--create', `--list', and `--extract'.  If you already know
+how to use some other version of `tar', then you may not need to read
+this chapter.  This chapter omits most complicated details about how
+`tar' works.
 
 * Menu:
 
-* How to Create Archives::
-* How to List Archives::
-* How to Extract Members from an Archive::
-* How to Add Files to Existing Archives::
-* How to Delete Members from Archives::
+* assumptions::
+* stylistic conventions::
+* basic tar options::           Basic `tar' Operations and Options
+* frequent operations::
+* Two Frequent Options::
+* create::                      How to Create Archives
+* list::                        How to List Archives
+* extract::                     How to Extract Members from an Archive
+* going further::
 
 
-File: tar.info,  Node: How to Create Archives,  Next: How to List Archives,  Prev: Tutorial,  Up: Tutorial
+File: tar.info,  Node: assumptions,  Next: stylistic conventions,  Prev: Tutorial,  Up: Tutorial
+
+Assumptions this Tutorial Makes
+===============================
+
+   This chapter is paced to allow beginners to learn about `tar'
+slowly.  At the same time, we will try to cover all the basic aspects of
+these three operations.  In order to accomplish both of these tasks, we
+have made certain assumptions about your knowledge before reading this
+manual, and the hardware you will be using:
+
+   * Before you start to work through this tutorial, you should
+     understand what the terms "archive" and "archive member" mean
+     (*note Definitions::.).  In addition, you should understand
+     something about how Unix-type operating systems work, and you
+     should know how to use some basic utilities.  For example, you
+     should know how to create, list, copy, rename, edit, and delete
+     files and directories; how to change between directories; and how
+     to figure out where you are in the filesystem.  You should have
+     some basic understanding of directory structure and how files are
+     named according to which directory they are in.  You should
+     understand concepts such as standard output and standard input,
+     what various definitions of the term "argument" mean, the
+     differences between relative and absolute path names, and .
+
+   * This manual assumes that you are working from your own home
+     directory (unless we state otherwise).  In this tutorial, you will
+     create a directory to practice `tar' commands in.  When we show
+     path names, we will assume that those paths are relative to your
+     home directory.  For example, my home directory path is
+     `/home/fsf/melissa'.  All of my examples are in a subdirectory of
+     the directory named by that path name; the subdirectory is called
+     `practice'.
+
+   * In general, we show examples of archives which exist on (or can be
+     written to, or worked with from) a directory on a hard disk.  In
+     most cases, you could write those archives to, or work with them
+     on any other device, such as a tape drive.  However, some of the
+     later examples in the tutorial and next chapter will not work on
+     tape drives.  Additionally, working with tapes is much more
+     complicated than working with hard disks.  For these reasons, the
+     tutorial does not cover working with tape drives.  *Note Media::
+     for complete information on using `tar' archives with tape drives.
+
+
+File: tar.info,  Node: stylistic conventions,  Next: basic tar options,  Prev: assumptions,  Up: Tutorial
+
+Stylistic Conventions
+=====================
+
+   In the examples, `$' represents a typical shell prompt.  It precedes
+lines you should type; to make this more clear, those lines are shown
+in `this font', as opposed to lines which represent the computer's
+response; those lines are shown in `this font', or sometimes `like
+this'.  When we have lines which are too long to be displayed in any
+other way, we will show them like this:
+
+     This is an example of a line which would otherwise not fit in this space.
+
+
+File: tar.info,  Node: basic tar options,  Next: frequent operations,  Prev: stylistic conventions,  Up: Tutorial
+
+Basic `tar' Operations and Options
+==================================
+
+   `tar' can take a wide variety of arguments which specify and define
+the actions it will have on the particular set of files or the archive.
+The main types of arguments to `tar' fall into one of two classes:
+operations, and options.
+
+   Some arguments fall into a class called "operations"; exactly one of
+these is both allowed and required for any instance of using `tar'; you
+may *not* specify more than one.  People sometimes speak of "operating
+modes".  You are in a particular operating mode when you have specified
+the operation which specifies it; there are eight operations in total,
+and thus there are eight operating modes.
+
+   The other arguments fall into the class known as "options".  You are
+not required to specify any options, and you are allowed to specify more
+than one at a time (depending on the way you are using `tar' at that
+time).  Some options are used so frequently, and are so useful for
+helping you type commands more carefully that they are effectively
+"required".  We will discuss them in this chapter.
+
+   You can write most of the `tar' operations and options in any of
+three forms: long (mnemonic) form, short form, and old style.  Some of
+the operations and options have no short or "old" forms; however, the
+operations and options which we will cover in this tutorial have
+corresponding abbreviations.   We will indicate those abbreviations
+appropriately to get you used to seeing them.  (Note that the "old
+style" option forms exist in GNU `tar' for compatibility with Unix
+`tar'.  We present a full discussion of this way of writing options and
+operations appears in *Note Old Options::, and we discuss the other two
+styles of writing options in *Note Mnemonic Options:: and *Note Short
+Options::.)
+
+   In the examples and in the text of this tutorial, we usually use the
+long forms of operations and options; but the "short" forms produce the
+same result and can make typing long `tar' commands easier.  For
+example, instead of typing
+
+     tar --create --verbose --file=afiles.tar apple angst aspic
+
+you can type
+     tar -c -v -f afiles.tar apple angst aspic
+
+or even
+     tar -cvf afiles.tar apple angst aspic
+
+For more information on option syntax, see *Note Advanced tar::.  In
+discussions in the text, when we name an option by its long form, we
+also give the corresponding short option in parentheses.
+
+   The term, "option", can be confusing at times, since "operations"
+are often lumped in with the actual, *optional* "options" in certain
+general class statements.  For example, we just talked about "short and
+long forms of options and operations".  However, experienced `tar'
+users often refer to these by shorthand terms such as, "short and long
+options".  This term assumes that the "operations" are included, also.
+Context will help you determine which definition of "options" to use.
+
+   Similarly, the term "command" can be confusing, as it is often used
+in two different ways.  People sometimes refer to `tar' "commands".  A
+`tar' "command" is the entire command line of user input which tells
+`tar' what to do -- including the operation, options, and any arguments
+(file names, pipes, other commands, etc).  However, you will also
+sometimes hear the term "the `tar' command".  When the word "command"
+is used specifically like this, a person is usually referring to the
+`tar' *operation*, not the whole line.  Again, use context to figure
+out which of the meanings the speaker intends.
+
+
+File: tar.info,  Node: frequent operations,  Next: Two Frequent Options,  Prev: basic tar options,  Up: Tutorial
+
+The Three Most Frequently Used Operations
+=========================================
+
+   Here are the three most frequently used operations (both short and
+long forms), as well as a brief description of their meanings.  The
+rest of this chapter will cover how to use these operations in detail.
+We will present the rest of the operations in the next chapter.
+
+`--create'
+`-c'
+     Create a new `tar' archive.
+
+`--list'
+`-t'
+     List the contents of an archive.
+
+`--extract'
+`-x'
+     Extract one or more members from an archive.
+
+
+File: tar.info,  Node: Two Frequent Options,  Next: create,  Prev: frequent operations,  Up: Tutorial
+
+Two Frequently Used Options
+===========================
+
+   To understand how to run `tar' in the three operating modes listed
+previously, you also need to understand how to use two of the options to
+`tar': `--file' (which takes an archive file as an argument) and
+`--verbose'.  (You are usually not *required* to specify either of
+these options when you run `tar', but they can be very useful in making
+things more clear and helping you avoid errors.)
+
+* Menu:
+
+* file tutorial::
+* verbose tutorial::
+* help tutorial::
+
+
+File: tar.info,  Node: file tutorial,  Next: verbose tutorial,  Prev: Two Frequent Options,  Up: Two Frequent Options
+
+The `--file' Option
+-------------------
+
+`--file=ARCHIVE-NAME'
+`-f ARCHIVE-NAME'
+     Specify the name of an archive file.
+
+   You can specify an argument for the `--file=ARCHIVE-NAME' (`-f
+ARCHIVE-NAME') option whenever you use `tar'; this option determines
+the name of the archive file that `tar' will work on.
+
+   If you don't specify this argument, then `tar' will use a default,
+usually some physical tape drive attached to your machine.  If there is
+no tape drive attached, or the default is not meaningful, then `tar'
+will print an error message.  The error message might look roughly like
+one of the following:
+
+     tar: can't open /dev/rmt8 : No such device or address
+     tar: can't open /dev/rsmt0 : I/O error
+
+To avoid confusion, we recommend that you always specfiy an archive file
+name by using `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') when writing
+your `tar' commands.  For more information on using the
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option, see *Note file::.
+
+
+File: tar.info,  Node: verbose tutorial,  Next: help tutorial,  Prev: file tutorial,  Up: Two Frequent Options
+
+The `--verbose' Option
+----------------------
+
+`--verbose'
+`-v'
+     Show the files being worked on as `tar' is running.
+
+   `--verbose' (`-v') shows details about the results of running `tar'.
+This can be especially useful when the results might not be obvious.
+For example, if you want to see the progress of `tar' as it writes
+files into the archive, you can use the `--verbose' option.  In the
+beginning, you may find it useful to use `--verbose' at all times; when
+you are more accustomed to `tar', you will likely want to use it at
+certain times but not at others.  We will use `--verbose' at times to
+help make something clear, and we will give many examples both using
+and not using `--verbose' to show the differences.
+
+   Sometimes, a single instance of `--verbose' on the command line will
+show a full, `ls' style listing of an archive or files, giving sizes,
+owners, and similar information.  Other times, `--verbose' will only
+show files or members that the particular operation is operating on at
+the time.  In the latter case, you can use `--verbose' twice in a
+command to get a listing such as that in the former case.  For example,
+instead of saying
+
+     tar -cvf afiles.tar apple angst aspic
+
+above, you might say
+
+     tar -cvvf afiles.tar apple angst aspic
+
+This works equally well using short or long forms of options.  Using
+long forms, you would simply write out the mnemonic form of the option
+twice, like this:
+
+     $ tar --create --verbose --verbose ...
+
+Note that you must double the hyphens properly each time.
+
+   Later in the tutorial, we will give examples using
+`--verbose --verbose'.
+
+
+File: tar.info,  Node: help tutorial,  Prev: verbose tutorial,  Up: Two Frequent Options
+
+Getting Help: Using the `--help' Option
+---------------------------------------
+
+`--help'
+     The `--help' option to `tar' prints out a very brief list of all
+     operations and option available for the current version of `tar'
+     available on your system.
+
+
+File: tar.info,  Node: create,  Next: list,  Prev: Two Frequent Options,  Up: Tutorial
 
 How to Create Archives
 ======================
 
      *(This message will disappear, once this node revised.)*
 
-   To create a new archive, use the `--create' (`-c') option to `tar'.
-You can use options to specify the name and format of the archive (as
-well as other characteristics), and you can use file name arguments to
-specify which files and directories are to be put in the archive.
+   One of the basic operations of `tar' is `--create' (`-c'), which you
+use to create a `tar' archive.  We will explain `--create' first
+because, in order to learn about the other operations, you will find it
+useful to have an archive available to practice on.
 
-FIXME: xref Creating
-   , for more information about the `--create' (`-c') operation.
+   To make this easier, in this section you will first create a
+directory containing three files.  Then, we will show you how to create
+an *archive* (inside the new directory).  Both the directory, and the
+archive are specifically for you to practice on.  The rest of this
+chapter and the next chapter will show many examples using this
+directory and the files you will create: some of those files may be
+other directories and other archives.
 
-   To create a new archive, use the `--create' (`-c') option to `tar'.
-You should generally use the `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME')
-option to specify the name the `tar' archive will have.  Then specify
-the names of the files you wish to place in the new archive.  For
-example, to place the files `apple', `angst', and `asparagus' into an
-archive named `afiles.tar', use the following command:
+   The three files you will archive in this example are called `blues',
+`folk', and `jazz'.  The archive is called `collection.tar'.
 
-     tar --create --file=afiles.tar apple angst asparagus
-
-   The order of the arguments is not important when using mnemonic
-option style.  You could also say:
-
-     tar apple --create angst --file=afiles.tar asparagus
-
-   This order is harder to understand however.  In this manual, we will
-list the arguments in a reasonable order to make the commands easier to
-understand, but you can type them in any order you wish.
-
-   If you don't specify the names of any files to put in the archive,
-then `tar' will create an empty archive.  So, the following command
-will create an archive with nothing in it:
-
-     tar --create --file=empty-archive.tar
-
-   Whenever you use `--create' (`-c'), `tar' will erase the current
-contents of the file named by `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME')
-if it exists.  To add files to an existing archive, you need to use a
-different option.
-FIXME: xref Adding to Archives, for information on how to do this.
-
-   When an archive is created through `--create' (`-c'), the member
-names of the members of the archive are exactly the same as the file
-names as you typed them in the `tar' command.  So, the member names of
-`afiles' (as created by the first example above) are `apple', `angst',
-and `asparagus'.  However, suppose an archive were created with this
-command:
-
-     tar --create --file=bfiles.tar ./balloons baboon ./bodacious
-
-   Then, the three files `balloons', `baboon', and `bodacious' would
-get placed in the archive (because `./' is a synonym for the current
-directory), but their member names would be `./balloons', `baboon', and
-`./bodacious'.
-
-   If you want to see the progress of `tar' as it writes files into the
-archive, you can use the `--verbose' (`-v') option.
-
-   If one of the files named with `--create' (`-c') is a directory, then
-the operation of `tar' is more complicated.
-FIXME: xref Tar and Directories,
-FIXME: the last section of this tutorial, for more information.
-
-   If you don't specify the `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME')
-option, then `tar' will use a default.  Usually this default is some
-physical tape drive attached to your machine.  If there is no tape
-drive attached, or the default is not meaningful, then `tar' will print
-an error message.  This error message might look roughly like one of
-the following:
-
-     tar: can't open /dev/rmt8 : No such device or address
-     tar: can't open /dev/rsmt0 : I/O error
-
-   If you get an error like this, mentioning a file you didn't specify
-(`/dev/rmt8' or `/dev/rsmt0' in the examples above), then `tar' is
-using a default value for `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').
-You should generally specify a `--file=ARCHIVE-NAME' (`-f
-ARCHIVE-NAME') argument whenever you use `tar', rather than relying on
-a default.
-
-   To create a new archive, use the `--create' (`-c') option to `tar'.
-You can use options to specify the name and format of the archive (as
-well as other characteristics), and you can use file name arguments to
-specify which files to put in the archive.  If you don't use any
-options or file name arguments, `tar' will use default values.
-FIXME: xref Creating Example
-   , for more information about the `--create' (`-c') option.
+   This section will proceed slowly, detailing how to use `--create' in
+`verbose' mode, and showing examples using both short and long forms.
+In the rest of the tutorial, and in the examples in the next chapter,
+we will proceed at a slightly quicker pace.  This section moves more
+slowly to allow beginning users to understand how `tar' works.
 
 * Menu:
 
-* Creating Archives of Files bis::
-* Using tar in Verbose Mode bis::
-* How to Archive Directories::
-* Creating an Archive of a Subdirectory bis::
-* Compare bis::
-* Using Compare from the Superior Directory bis::
+* prepare for examples::
+* Creating the archive::
+* create verbose::
+* short create::
+* create dir::
 
 
-File: tar.info,  Node: Creating Archives of Files bis,  Next: Using tar in Verbose Mode bis,  Prev: How to Create Archives,  Up: How to Create Archives
+File: tar.info,  Node: prepare for examples,  Next: Creating the archive,  Prev: create,  Up: create
 
-Creating Archives of Files
---------------------------
+Preparing a Practice Directory for Examples
+-------------------------------------------
 
-     *(This message will disappear, once this node revised.)*
+   To follow along with this and future examples, create a new directory
+called `practice' containing files called `blues', `folk' and `jazz'.
+The files can contain any information you like: ideally, they should
+contain information which relates to their names, and be of different
+lengths.  Our examples assume that `practice' is a subdirectory of your
+home directory.
 
-   This example shows you how to create an archive file in your working
-directory containing other files in the same directory.  The three
-files you archive in this example are called `blues', `folk', and
-`jazz'.  The archive file is called `records'.  While the archive in
-this example is written to the file system, it could also be written to
-tape.  (If you want to follow along with this and future examples,
-create a practice subdirectory containing files with these names.  To
-create the directory, type `mkdir practice' at the system prompt.  You
-can create the files using a text editor, such as `emacs').
+   Now `cd' to the directory named `practice'; `practice' is now your
+"working directory".  (*Please note*: Although the full path name of
+this directory is `/HOMEDIR/practice', in our examples we will refer to
+this directory as `practice'; the HOMEDIR is presumed.
 
-   While in the directory containing the files you want to archive, list
-the directory's contents.
+   In general, you should check that the files to be archived exist
+where you think they do (in the working directory) by running `ls'.
+Because you just created the directory and the files and have changed to
+that directory, you probably don't need to do that this time.
 
-   Type:
+   It is very important to make sure there isn't already a file in the
+working directory with the archive name you intend to use (in this case,
+`collection.tar'), or that you don't care about its contents.  Whenever
+you use `create', `tar' will erase the current contents of the file
+named by `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') if it exists.  `tar'
+will not tell you if you are about to overwrite a file unless you
+specify an option which does this .  To add files to an existing
+archive, you need to use a different option, such as `--append' (`-r');
+see *Note append:: for information on how to do this.
 
-     % cd practice
-     % ls
+
+File: tar.info,  Node: Creating the archive,  Next: create verbose,  Prev: prepare for examples,  Up: create
 
-The system responds:
+Creating the Archive
+--------------------
 
-     blues	folk	jazz
-     %
+   To place the files `blues', `folk', and `jazz' into an archive named
+`collection.tar', use the following command:
 
-This is to check that the files to be archived do in fact exist in the
-working directory, and to check that the archive name you have chosen
-isn't already in use.  If it is, `tar' will overwrite the old archive
-and its contents will be lost.
+     $ tar --create --file=collection.tar blues folk jazz
 
-   Then,
-   * Create a new archive by giving `--create' (`-c') to `tar'.
+   The order of the arguments is not very important, *when using long
+option forms*.  You could also say:
 
-   * Explicitly name the archive file being
-     created--`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').  If you don't
-     use this option `tar' will write the archive to the default
-     storage device, which varies from system to system.
+     $ tar blues --create folk --file=collection.tar jazz
 
-   * Specify which files to put into the archive.  If you don't specify
-     any FILE NAME arguments, `tar' will archive everything in the
-     working directory.
+However, you can see that this order is harder to understand; this is
+why we will list the arguments in the order that makes the commands
+easiest to understand (and we encourage you to do the same when you use
+`tar', to avoid errors).
 
-Type:
-     % tar --create --file=records blues folk jazz
+   Note that the part of the command which says,
+`--file=collection.tar' is considered to be *one* argument.  If you
+substituted any other string of characters for ``collection.tar'',
+then that string would become the name of the archive file you create.
 
-If you now list the contents of the working directory (`ls'), you will
-find the archive file listed as well as the files you saw previously.
+   The order of the options becomes more important when you begin to use
+short forms.  With short forms, if you type commands in the wrong order
+(even if you type them correctly in all other ways), you may end up with
+results you don't expect.  For this reason, it is a good idea to get
+into the habit of typing options in the order that makes inherent sense.
+*Note short create:: for more information on this.
 
-     % ls
-     blues folk jazz records
-     %
+   In this example, you type the command as shown above: `--create' is
+the operation which creates the new archive (`collection.tar'), and
+`--file' is the option which lets you give it the name you chose.  The
+files, `blues', `folk', and `jazz', are now members of the archive,
+`collection.tar' (they are "file name arguments" to the `--create'
+operation) .  Now that they are are in the archive, they are called
+*archive members*, not files .
 
-   This example shows you how to create an archive file in the working
-directory containing other files in the working directory.  The three
-files you archive in this example are called `blues', `folk', and
-`jazz'.  The archive file is called `records'.  While the archive in
-this example is written to the file system, it could also be written to
-any other device.
-
-   (If you want to follow along with this and future examples, create a
-directory called `practice' containing files called `blues', `folk' and
-`jazz'.  To create the directory, type `mkdir practice' at the system
-prompt.  It will probably be easiest to create the files using a text
-editor, such as Emacs.)
-
-   First, change into the directory containing the files you want to
-archive:
-
-     % cd practice
-
-   `~/practice' is now your working directory.
-
-   Then, check that the files to be archived do in fact exist in the
-working directory, and make sure there isn't already a file in the
-working directory with the archive name you intend to use.  If you
-specify an archive file name that is already in use, `tar' will
-overwrite the old file and its contents will be lost.
-
-   To list the names of files in the working directory, type:
-
-     % ls
-
-   The system responds:
-
-     blues   folk    jazz
-     %
-
-   Then,
-
-   * Create a new archive by giving the `--create' (`-c') option to
-     `tar'.
-
-   * Explicitly name the archive file being
-     created--`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').  If you don't
-     use this option `tar' will write the archive to the default
-     storage device, which varies from system to system.
-     FIXME: this syntax may change.  OK now--check before printing
-
-     `tar' interprets archive file names relative to the working
-     directory.  Make sure you have write access to the working
-     directory before using `tar'.
-
-   * Specify which files to put into the archive (`tar' interprets file
-     names relative to the working directory).  If you don't use any
-     NAME arguments, `tar' will archive everything in the working
-     directory.
-
-   Type:
-     % tar --create --file=records blues folk jazz
+   When you create an archive, you *must* specify which files you want
+placed in the archive.  If you do not specify any archive members, GNU
+`tar' will complain.
 
    If you now list the contents of the working directory (`ls'), you
 will find the archive file listed as well as the files you saw
-previously.
+previously:
 
-     % ls
-     blues folk jazz records
-     %
+     blues   folk   jazz   collection.tar
+
+Creating the archive `collection.tar' did not destroy the copies of the
+files in the directory.
+
+   Keep in mind that if you don't indicate an operation, `tar' will not
+run and will prompt you for one.  If you don't name any files, `tar'
+will complain.  You must have write access to the working directory, or
+else you will not be able to create an archive in that directory.
+
+   *Caution*: Do not attempt to use `--create' (`-c') to add files to
+an existing archive; it will delete the archive and write a new one.
+Use `--append' (`-r') instead.  *Note append::.
 
 
-File: tar.info,  Node: Using tar in Verbose Mode bis,  Next: How to Archive Directories,  Prev: Creating Archives of Files bis,  Up: How to Create Archives
+File: tar.info,  Node: create verbose,  Next: short create,  Prev: Creating the archive,  Up: create
 
-Using `tar' in Verbose Mode
----------------------------
-
-     *(This message will disappear, once this node revised.)*
+Running `--create' with `--verbose'
+-----------------------------------
 
    If you include the `--verbose' (`-v') option on the command line,
-`tar' will list the files it is acting on as it is working.  The
-example above in verbose mode would be:
+`tar' will list the files it is acting on as it is working.  In verbose
+mode, the `create' example above would appear as:
 
-     % tar --create --file=records --verbose blues folk jazz
+     $ tar --create --verbose --file=collection.tar blues folk jazz
      blues
      folk
      jazz
 
-The first line, which is preceeded by a `%', is the command line.  The
-lines after the first line are generated by `tar' as it works.  In the
-following examples we usually use verbose mode, though it is almost
-never required.
+   This example is just like the example we showed which did not use
+`--verbose', except that `tar' generated the remaining lines .
 
-   If you include the `--verbose' (`-v') option on the command line,
-`tar' will list the files it is acting on as it is working. In verbose
-mode, the creation example above would appear as:
+   In the rest of the examples in this chapter, we will frequently use
+`verbose' mode so we can show actions or `tar' responses that you would
+otherwise not see, and which are important for you to understand.
 
-     % tar --create --file=records --verbose blues folk jazz
+
+File: tar.info,  Node: short create,  Next: create dir,  Prev: create verbose,  Up: create
+
+Short Forms with `create'
+-------------------------
+
+   As we said before, the `--create' (`-c') operation is one of the most
+basic uses of `tar', and you will use it countless times.  Eventually,
+you will probably want to use abbreviated (or "short") forms of
+options.  A full discussion of the three different forms that options
+can take appears in *Note Styles::; for now, here is what the previous
+example (including the `--verbose' (`-v') option) looks like using
+short option forms:
+
+     $ tar -cvf collection.tar blues folk jazz
      blues
      folk
      jazz
 
-   The first line is the command typed in by the user.  The remaining
-lines are generated by `tar'.  In the following examples we usually use
-verbose mode, though it is almost never required.
+As you can see, the system responds the same no matter whether you use
+long or short option forms.
+
+   One difference between using short and long option forms is that,
+although the exact placement of arguments following options is no more
+specific when using short forms, it is easier to become confused and
+make a mistake when using short forms.  For example, suppose you
+attempted the above example in the following way:
+
+     $ tar -cfv collection.tar blues folk jazz
+
+In this case, `tar' will make an archive file called `v', containing
+the files `blues', `folk', and `jazz', because the `v' is the closest
+"file name" to the `-f' option, and is thus taken to be the chosen
+archive file name.  `tar' will try to add a file called
+`collection.tar' to the `v' archive file; if the file `collection.tar'
+did not already exist, `tar' will report an error indicating that this
+file does not exist.  If the file `collection.tar' does already exist
+(e.g., from a previous command you may have run), then `tar' will add
+this file to the archive.  Because the `-v' option did not get
+registered, `tar' will not run under `verbose' mode, and will not
+report its progress.
+
+   The end result is that you may be quite confused about what happened,
+and possibly overwrite a file.  To illustrate this further, we will show
+you how an example we showed previously would look using short forms.
+
+   This example,
+
+     $ tar blues --create folk --file=collection.tar jazz
+
+is confusing as it is.  When shown using short forms, however, it
+becomes much more so:
+
+     $ tar blues -c folk -f collection.tar jazz
+
+It would be very easy to put the wrong string of characters immediately
+following the `-f', but doing that could sacrifice valuable data.
+
+   For this reason, we recommend that you pay very careful attention to
+the order of options and placement of file and archive names,
+especially when using short option forms.  Not having the option name
+written out mnemonically can affect how well you remember which option
+does what, and therefore where different names have to be placed.
+(Placing options in an unusual order can also cause `tar' to report an
+error if you have set the shell environment variable,
+`POSIXLY_CORRECT'; *note posix compliance::. for more information on
+this.)
 
 
-File: tar.info,  Node: How to Archive Directories,  Next: Creating an Archive of a Subdirectory bis,  Prev: Using tar in Verbose Mode bis,  Up: How to Create Archives
+File: tar.info,  Node: create dir,  Prev: short create,  Up: create
 
-How to Archive Directories
---------------------------
-
-     *(This message will disappear, once this node revised.)*
-
-   When the names of files or members specify directories, the
-operation of `tar' is more complex.  Generally, when a directory is
-named, `tar' also operates on all the contents of the directory,
-recursively.  Thus, to `tar', the file name `/' names the entire file
-system.
-
-   To archive the entire contents of a directory, use `--create' (`-c')
-or `--append' (`-r') as usual, and specify the name of the directory.
-For example, to archive all the contents of the current directory, use
-`tar --create --file=ARCHIVE-NAME .'.  Doing this will give the archive
-members names starting with `./'.  To archive the contents of a
-directory named `foodir', use `tar --create --file=ARCHIVE-NAME
-foodir'.  In this case, the member names will all start with `foodir/'.
-
-   If you give `tar' a command such as `tar --create --file=foo.tar .',
-it will report `tar: foo.tar is the archive; not dumped'.  This happens
-because the archive `foo.tar' is created before putting any files into
-it.  Then, when `tar' attempts to add all the files in the directory
-`.' to the archive, it notices that the file `foo.tar' is the same as
-the archive, and skips it.  (It makes no sense to put an archive into
-itself.)  GNU `tar' will continue in this case, and create the archive
-as normal, except for the exclusion of that one file.  Other versions
-of `tar', however, are not so clever, and will enter an infinite loop
-when this happens, so you should not depend on this behavior.  In
-general, make sure that the archive is not inside a directory being
-dumped.
-
-   When extracting files, you can also name directory archive members on
-the command line.  In this case, `tar' extracts all the archive members
-whose names begin with the name of the directory.  As usual, `tar' is
-not particularly clever about interpreting member names.  The command
-`tar --extract --file=ARCHIVE-NAME .' will not extract all the contents
-of the archive, but only those members whose member names begin with
-`./'.
-
-* Menu:
-
-* Creating an Archive of a Subdirectory bis::
-
-
-File: tar.info,  Node: Creating an Archive of a Subdirectory bis,  Next: Compare bis,  Prev: How to Archive Directories,  Up: How to Create Archives
-
-Creating an Archive from the Superior Directory
------------------------------------------------
-
-     *(This message will disappear, once this node revised.)*
+Archiving Directories
+---------------------
 
    You can archive a directory by specifying its directory name as a
 file name argument to `tar'.  The files in the directory will be
@@ -970,16 +1031,18 @@ archived relative to the working directory, and the directory will be
 re-created along with its contents when the archive is extracted.
 
    To archive a directory, first move to its superior directory.  If you
-have been following the tutorial, you should type:
+have followed the previous instructions in this tutorial, you should
+type:
 
-     % cd ..
-     %
+     $ cd ..
+     $
 
-   Once in the superior directory, you can specify the subdirectory as a
-file name argument.  To store the directory `practice' in the archive
-file `music', type:
+This will put you into the directory which contains `practice', i.e.
+your home directory.  Once in the superior directory, you can specify
+the subdirectory, `practice', as a file name argument.  To store
+`practice' in the new archive file `music.tar', type:
 
-     % tar --create --verbose --file=music practice
+     $ tar --create --verbose --file=music.tar practice
 
 `tar' should output:
 
@@ -987,327 +1050,219 @@ file `music', type:
      practice/blues
      practice/folk
      practice/jazz
-     practice/records
+     practice/collection.tar
 
    Note that the archive thus created is not in the subdirectory
-`practice', but rather in the working directory--the directory from
-which `tar' was invoked.  Before trying to archive a directory from its
-superior directory, you should make sure you have write access to the
-superior directory itself, not only the directory you are trying
-archive with `tar'.  Trying to store your home directory in an archive
-by invoking `tar' from the root directory will probably not work.
-FIXME: xref absolute-names
-   (Note also that `records', the original archive file, has itself
-been archived.  `tar' will accept any file as a file to be archived,
-regardless of its content.  When `music' is extracted, the archive file
-`records' will be re-written into the file system).
+`practice', but rather in the current working directory--the directory
+from which `tar' was invoked.  Before trying to archive a directory
+from its superior directory, you should make sure you have write access
+to the superior directory itself, not only the directory you are trying
+archive with `tar'.  For example, you will probably not be able to
+store your home directory in an archive by invoking `tar' from the root
+directory; *Note absolute::.  (Note also that `collection.tar', the
+original archive file, has itself been archived.  `tar' will accept any
+file as a file to be archived, regardless of its content.  When
+`music.tar' is extracted, the archive file `collection.tar' will be
+re-written into the file system).
 
-   You can store a directory in an archive by using the directory name
-as a file name argument to `tar'.  When you specify a directory file,
-`tar' archives the directory file and all the files it contains.  The
-names of the directory and the files it contains are stored in the
-archive relative to the current working directory-when the directory is
-extracted they will be written into the file system relative to the
-working directory at that time.
-FIXME: add an xref to --absolute-names
+   If you give `tar' a command such as
 
-   To archive a directory, first move to its superior directory.  If you
-have been following the tutorial, you should type:
+     $ tar --create --file=foo.tar .
 
-     % cd ..
-     %
-
-   Once in the superior directory, specify the subdirectory using a
-file name argument.  To store the directory file `~/practice' in the
-archive file `music', type:
-
-     % tar --create --verbose --file=music practice
-
-   `tar' should respond:
-
-     practice/
-     practice/blues
-     practice/folk
-     practice/jazz
-     practice/records
-
-   Note that `~/practice/records', another archive file, has itself
-been archived.  `tar' will accept any file as a file to be archived,
-even an archive file.
-
-FIXME: symbolic links and changing directories are now in main body,
-FIXME: not in tutorial.
+`tar' will report `tar: foo.tar is the archive; not dumped'.  This
+happens because `tar' creates the archive `foo.tar' in the current
+directory before putting any files into it.  Then, when `tar' attempts
+to add all the files in the directory `.' to the archive, it notices
+that the file `foo.tar' is the same as the archive, and skips it.  (It
+makes no sense to put an archive into itself.)  GNU `tar' will continue
+in this case, and create the archive normally, except for the exclusion
+of that one file.  (*Please note:* Other versions of `tar' are not so
+clever; they will enter an infinite loop when this happens, so you
+should not depend on this behavior unless you are certain you are
+running GNU `tar'.  )
 
 
-File: tar.info,  Node: Compare bis,  Next: Using Compare from the Superior Directory bis,  Prev: Creating an Archive of a Subdirectory bis,  Up: How to Create Archives
-
-Comparing Files in an Archive with Files in the File System
------------------------------------------------------------
-
-     *(This message will disappear, once this node revised.)*
-
-   While the `--list' (`-t') operation with the `--verbose' (`-v')
-option specified is useful in keeping files in the archive current with
-files in the file system (by allowing the user to compare size and
-modification dates), it is simpler to have `tar' itself compare file
-attributes and report back on file differences.  To do so, use the
-`--compare' (`-d') or `--diff' operation.
-
-   The `--compare' (`-d') operation, as its name implies, causes `tar'
-to compare files and directories in the archive with their counterparts
-(files of the same name) in the file system, and report back
-differences in file size, mode, owner and modification date.  When
-performing the `--compare' (`-d') operation, `tar' acts only on files
-actually in the archive--it will ignore files in the active file system
-that do not exist in the archive.  If `tar' with `--compare' (`-d')
-specified is given, as a file name argument, the name of a file that
-does not exist in the archive, it will return an error message.
-
-   To compare the files in the practice directory with their
-counterparts in the archive file `records', in the same directory, you
-would, while in the `practice' directory:
-
-   * Invoke `tar' and specify the operation to compare files in the
-     archive with their counterparts in the file system--`--compare'
-     (`-d') or `--diff'.
-
-   * Specify the name of the archive where the files to be compared are
-     stored--`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').
-
-   * Specify the names of the files or directories to be compared, as
-     file name arguments (in this case, you are comparing all the files
-     in the archive, so nothing need be specified).
-
-     % tar --compare --file=records
-     %
-
-While it looks like nothing has happened, `tar' has, in fact, done the
-comparison--and found nothing to report.  The same example with the
-`--verbose' (`-v') option specified would list the files in the archive
-as they are being compared with their counterparts of the same name:
-
-     % tar --compare --verbose --file=records
-     blues
-     folk
-     jazz
-     %
-
-   If `tar' had had anything to report, it would have done so as it was
-comparing each file.  If you remove the file `jazz' from the file
-system (`rm jazz'), and modify the file `blues' (for instance, by
-adding text to it with a text editor), the above example would look
-like:
-
-     % tar --compare --verbose --file=records
-     blues
-     blues: mod time differs
-     blues: size differs
-     folk
-     jazz
-     jazz: does not exist
-     %
-
-   You should note again that while `--compare' (`-d') does cause `tar'
-to report back on files in the archive that do not exist in the file
-system, `tar' will ignore files in the active file system that do not
-exist in the archive.  To demonstrate this, create a file in the
-`practice' directory called `rock' (using any text editor).  If you
-generate a directory listing the new file will appear.
-
-     % ls
-     blues	 folk	  records  rock
-
-If you run the `--compare' (`-d') example again you will obtain the
-following:
-
-     % tar --compare --verbose --file=records
-     blues
-     blues: mod time differs
-     blues: size differs
-     folk
-     jazz
-     jazz: does not exist
-     %
-
-   `tar' ignores the file `rock' because `tar' is comparing files in
-the archive to files in the file system, not vice versa.  If `rock' had
-been passed to `tar' explicitly (as a file name argument), `tar' would
-have returned an error message, as follows:
-
-     % tar --compare --verbose --file=records rock
-     tar: rock not found in archive
-     %
-
-   To compare the attributes of archive members with the attributes of
-their counterparts in the file system, use the `--compare' (`-d') or
-`--diff'operation.  While you could use `--list --verbose' (`-tv') to
-manually compare some file attributes, it is simpler to have `tar'
-itself compare file attributes and report back on file differences.
-FIXME: "manually"?  suggestions?
-
-   The `--compare' (`-d') operation, as its name implies, compares
-archive members with files of the same name in the file system, and
-reports back differences in file size, mode, owner and modification
-date. `tar +compare' acts only on archive members-it ignores files in
-the file system that are not stored in the archive.  If you give with
-`--compare' (`-d') a NAME argument that does not correspond to the name
-of an archive member, `tar' responds with an error message.
-
-   To compare archive members in the archive file `records' with files
-in the `~/practice' directory, first change into the `practice'
-directory.  Then:
-
-   * Invoke `tar' and specify the `--compare' (`-d')
-     operation--`--compare' (`-d') or `--diff'.
-
-   * Specify the archive where the files to be compared are
-     stored--`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').
-
-   * Specify the archive members to be compared.  (In this example you
-     are comparing all the archive members in the archive.  Since this
-     is the default, you don't need to use any file name arguments).
-
-     % tar --compare --file=records
-     %
-
-   While it looks like nothing has happened, `tar' has, in fact, done
-the comparison--and found nothing to report.
-
-   Use the `--verbose' (`-v') option to list the names of archive
-members as they are being compared with their counterparts of the same
-name in the file system:
-
-     % tar --compare --verbose --file=records
-     blues
-     folk
-     jazz
-     %
-
-   If `tar' had had anything to report, it would have done so as it was
-comparing each file.
-
-   If you remove the file `jazz' from the file system (`rm jazz'), and
-modify the file `blues' (for instance, by adding text to it with an
-editor such as Emacs), the above example would look like:
-
-     % tar --compare --verbose --file=records
-     blues
-     blues: mod time differs
-     blues: size differs
-     folk
-     jazz
-     jazz: does not exist
-     %
-
-   Note again that while `--compare' (`-d') reports the names of archive
-members that do not have counterparts in the file system, `--compare'
-(`-d') ignores files in the file system that do not have counterparts
-in the archive.  To demonstrate this, create a file in the `practice'
-directory called `rock' (using any text editor).  The new file appears
-when you list the directory's contents:
-
-FIXME: Given an example
-
-
-File: tar.info,  Node: Using Compare from the Superior Directory bis,  Prev: Compare bis,  Up: How to Create Archives
-
-Using Compare from the Superior Directory
------------------------------------------
-
-     *(This message will disappear, once this node revised.)*
-
-   In addition to using `--compare' (`-d') to compare individual files
-in an archive with their counterparts in the file system, you can use
-`--compare' (`-d') to compare archived directories with their
-counterparts in the active file system.  You could re-create the
-examples above using your home directory as the working directory, and
-using the archive file `music' (in which is stored the `practice'
-directory) instead of the archive file `records'.
-
-   First, change into the home directory (`cd ..').  Then, try the
-above example using `music' as the specified archive file, and the
-`practice' subdirectory as a file name argument.
-
-     % tar --compare --verbose --file=music practice
-     practice
-     practice/blues
-     practice/blues: mod time differs
-     practice/blues: size differs
-     practice/folk
-     practice/jazz
-     practice/jazz: does not exist
-     practice/records
-
-   In addition to using `--compare' (`-d') to compare text files, you
-can use `--compare' (`-d') to compare directories.  To illustrate this,
-re-create the examples above using your home directory as the working
-directory, and using the archive file `~/music' instead of the archive
-file `~/practice/records'.
-
-   First, change into your home directory (`cd ~').  Then, try the
-above example using `music' as the specified archive file, and
-`practice' as a file name argument.
-
-     % tar --compare --verbose --file=music practice
-
-   If you have been following along with the tutorial, `tar' will
-respond:
-
-     practice
-     practice/blues
-     practice/blues: mod time differs
-     practice/blues: size differs
-     practice/folk
-     practice/jazz
-     practice/jazz: does not exist
-     practice/records
-
-
-File: tar.info,  Node: How to List Archives,  Next: How to Extract Members from an Archive,  Prev: How to Create Archives,  Up: Tutorial
+File: tar.info,  Node: list,  Next: extract,  Prev: create,  Up: Tutorial
 
 How to List Archives
 ====================
 
-     *(This message will disappear, once this node revised.)*
+   Frequently, you will find yourself wanting to determine exactly what
+a particular archive contains.  You can use the `--list' (`-t')
+operation to get the member names as they currently appear in the
+archive, as well as various attributes of the files at the time they
+were archived.  For example, you can examine the archive
+`collection.tar' that you created in the last section with the command,
 
-   Use `--list' (`-t') to print the names of members stored in an
-archive.  Use a `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option just
-as with `--create' (`-c') to specify the name of the archive.  For
-example, the archive `afiles.tar' created in the last section could be
-examined with the command `tar --list --file=afiles.tar'.  The output
-of `tar' would then be:
+     $ tar --list --file=collection.tar
 
-     apple
-     angst
-     asparagus
+The output of `tar' would then be:
 
-   The archive `bfiles.tar' would list as follows:
+     blues
+     folk
+     jazz
 
-     ./baloons
+The archive `bfiles.tar' would list as follows:
+
+     ./birds
      baboon
-     ./bodacious
+     ./box
 
-   (Of course, `tar --list --file=empty-archive.tar' would produce no
-output.)
+Be sure to use a `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option just
+as with `--create' (`-c') to specify the name of the archive.
 
-   If you use the `--verbose' (`-v') option with `--list' (`-t'), then
-`tar' will print out a listing reminiscent of `ls -l', showing owner,
-file size, and so forth.
+   If you use the `--verbose' (`-v') option with `--list', then `tar'
+will print out a listing reminiscent of `ls -l', showing owner, file
+size, and so forth.
 
-   You can also specify member names when using `--list' (`-t').  In
-this case, `tar' will only list the names of members you identify.  For
-example, `tar --list --file=afiles.tar apple' would only print `apple'.
-It is essential when specifying member names to `tar' that you give
-the exact member names.  For example, `tar --list --file=bfiles
-baloons' would produce no output, because there is no member named
-`baloons', only one named `./baloons'.  While the file names `baloons'
-and `./baloons' name the same file, member names are compared using a
-simplistic name comparison, in which an exact match is necessary.
+   If you had used `--verbose' (`-v') mode, the example above would look
+like:
+
+     $ tar --list --verbose --file=collection.tar folk
+     -rw-rw-rw- myself user 62 1990-05-23 10:55 folk
+
+   You can specify one or more individual member names as arguments when
+using `list'.  In this case, `tar' will only list the names of members
+you identify.  For example, `tar --list --file=afiles.tar apple' would
+only print `apple'.
+
+   Because `tar' preserves paths, file names must be specified as they
+appear in the archive (ie., relative to the directory from which the
+archive was created).  Therefore, it is essential when specifying
+member names to `tar' that you give the exact member names.  For
+example, `tar --list --file=bfiles birds' would produce an error message
+something like `tar: birds: Not found in archive', because there is no
+member named `birds', only one named `./birds'.  While the names
+`birds' and `./birds' name the same file, *member* names are compared
+using a simplistic name comparison, in which an exact match is
+necessary.  *Note absolute::.
+
+   However, `tar --list --file=collection.tar folk' would respond with
+`folk', because `folk' is in the archive file `collection.tar'.  If you
+are not sure of the exact file name, try listing all the files in the
+archive and searching for the one you expect to find; remember that if
+you use `--list' with no file names as arguments, `tar' will print the
+names of all the members stored in the specified archive.
 
 * Menu:
 
-* Listing files in an archive bis::
-* Getting Additional File Information bis::
-* List A Specific File in an Archive bis::
-* Listing the Contents of a Stored Directory ter::
+* list dir::
+
+
+File: tar.info,  Node: list dir,  Prev: list,  Up: list
+
+Listing the Contents of a Stored Directory
+------------------------------------------
+
+     *(This message will disappear, once this node revised.)*
+
+   To get information about the contents of an archived directory, use
+the directory name as a file name argument in conjunction with `--list'
+(`-t').  To find out file attributes, include the `--verbose' (`-v')
+option.
+
+   For example, to find out about files in the directory `practice', in
+the archive file `music.tar', type:
+
+     $ tar --list --verbose --file=music.tar practice
+
+   `tar' responds:
+
+     drwxrwxrwx myself user 0 1990-05-31 21:49 practice/
+     -rw-rw-rw- myself user 42 1990-05-21 13:29 practice/blues
+     -rw-rw-rw- myself user 62 1990-05-23 10:55 practice/folk
+     -rw-rw-rw- myself user 40 1990-05-21 13:30 practice/jazz
+     -rw-rw-rw- myself user 10240 1990-05-31 21:49 practice/collection.tar
+
+   When you use a directory name as a file name argument, `tar' acts on
+all the files (including sub-directories) in that directory.
+
+
+File: tar.info,  Node: extract,  Next: going further,  Prev: list,  Up: Tutorial
+
+How to Extract Members from an Archive
+======================================
+
+     *(This message will disappear, once this node revised.)*
+
+   Creating an archive is only half the job--there is no point in
+storing files in an archive if you can't retrieve them.  The act of
+retrieving members from an archive so they can be used and manipulated
+as unarchived files again is called "extraction".  To extract files
+from an archive, use the `--extract' (`--get', `-x') operation.  As with
+`--create' (`-c'), specify the name of the archive with
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME').  Extracting an archive does
+not modify the archive in any way; you can extract it multiple times if
+you want or need to.
+
+   Using `--extract', you can extract an entire archive, or specific
+files.  The files can be directories containing other files, or not.  As
+with `--create' (`-c') and `--list' (`-t'), you may use the short or the
+long form of the operation without affecting the performance.
+
+* Menu:
+
+* extracting archives::
+* extracting files::
+* extract dir::
+* failing commands::
+
+
+File: tar.info,  Node: extracting archives,  Next: extracting files,  Prev: extract,  Up: extract
+
+Extracting an Entire Archive
+----------------------------
+
+   To extract an entire archive, specify the archive file name only,
+with no individual file names as arguments.  For example,
+
+     $ tar -xvf collection.tar
+
+produces this:
+
+     -rw-rw-rw- me user     28 1996-10-18 16:31 jazz
+     -rw-rw-rw- me user     21 1996-09-23 16:44 blues
+     -rw-rw-rw- me user     20 1996-09-23 16:44 folk
+
+
+File: tar.info,  Node: extracting files,  Next: extract dir,  Prev: extracting archives,  Up: extract
+
+Extracting Specific Files
+-------------------------
+
+   To extract specific archive members, give their exact member names as
+arguments, as printed by `--list' (`-t').  If you had mistakenly deleted
+one of the files you had placed in the archive `collection.tar' earlier
+(say, `blues'), you can extract it from the archive without changing
+the archive's structure.  It will be identical to the original file
+`blues' that you deleted.
+
+   First, make sure you are in the `practice' directory, and list the
+files in the directory.  Now, delete the file, `blues', and list the
+files in the directory again.
+
+   You can now extract the member `blues' from the archive file
+`collection.tar' like this:
+
+     $ tar --extract --file=collection.tar blues
+
+If you list the files in the directory again, you will see that the file
+`blues' has been restored, with its original permissions, creation
+times, and owner.   (These parameters will be identical to those which
+the file had when you originally placed it in the archive; any changes
+you may have made before deleting the file from the file system,
+however, will *not* have been made to the archive member.)  The archive
+file, `collection.tar', is the same as it was before you extracted
+`blues'.  You can confirm this by running `tar' with `--list' (`-t').
+
+   Remember that as with other operations, specifying the exact member
+name is important.  `tar --extract --file=bfiles.tar birds' will fail,
+because there is no member named `birds'.  To extract the member named
+`./birds', you must specify `tar --extract --file=bfiles.tar ./birds'.
+To find the exact member names of the members of an archive, use
+`--list' (`-t') (*note list::.).
+
+   If you give the `--verbose' (`-v') option, then `--extract'
+(`--get', `-x') will print the names of the archive members as it
+extracts them.
 

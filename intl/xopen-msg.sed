@@ -1,4 +1,4 @@
-# po-to-msg.sed - Convert Uniforum style .po file to X/Open style .msg file
+# po2msg.sed - Convert Uniforum style .po file to X/Open style .msg file
 # Copyright (C) 1995 Free Software Foundation, Inc.
 # Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.
 #
@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 #
 # The first directive in the .msg should be the definition of the
@@ -22,21 +22,26 @@
 #
 1 {
   i\
-$set 1 # Automatically created by po-to-msg
+$set 1 # Automatically created by po2msg.sed
   h
   s/.*/0/
   x
 }
 #
 # We copy all comments into the .msg file.  Perhaps they can help.
-# 
+#
 /^#/ s/^#[ 	]*/$ /p
 #
 # We copy the original message as a comment into the .msg file.
 #
 /^msgid/ {
-  /"$/!s/$/ ... (more lines following)"/
-  s/^msgid[ 	]*"\(.*\)"$/$ Original Message: \1/p
+# Does not work now
+#  /"$/! {
+#    s/\\$//
+#    s/$/ ... (more lines following)"/
+#  }
+  s/^msgid[ 	]*"\(.*\)"$/$ Original Message: \1/
+  p
 }
 #
 # The .msg file contains, other then the .po file, only the translations
@@ -47,7 +52,7 @@ $set 1 # Automatically created by po-to-msg
 # of declarations must not be changed.)
 #
 /^msgstr/ {
-  s/msgstr[ 	]*"//
+  s/msgstr[ 	]*"\(.*\)"/\1/
   x
 # The following nice solution is by
 # Bruno <Haible@ma2s2.mathematik.uni-karlsruhe.de>
@@ -72,20 +77,28 @@ $set 1 # Automatically created by po-to-msg
 # Convert the hidden `9' digits to `0's.
   s/_/0/g
   x
+# Bring the line in the format `<number> <message>'
   G
-  s/\(.*\)\n0*\(.*\)/\2 \1/
-# Yes, this jump IS necessary :)
-  ta
-  :a
-  s/\\$/\\/
-  tc
-  bb
-  :c
-  n
-  s/\\$/\\/
-  tc
+  s/^[^\n]*$/& /
+  s/\(.*\)\n\([0-9]*\)/\2 \1/
+# Clear flag from last substitution.
+  tb
+# Append the next line.
   :b
-  s/\(.*\)"$/\1/
-  p
+  N
+# Look whether second part is a continuation line.
+  s/\(.*\n\)"\(.*\)"/\1\2/
+# Yes, then branch.
+  ta
+  P
+  D
+# Note that `D' includes a jump to the start!!
+# We found a continuation line.  But before printing insert '\'.
+  :a
+  s/\(.*\)\(\n.*\)/\1\\\2/
+  P
+# We cannot use the sed command `D' here
+  s/.*\n\(.*\)/\1/
+  tb
 }
 d

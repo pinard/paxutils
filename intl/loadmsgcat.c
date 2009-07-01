@@ -1,5 +1,5 @@
 /* loadmsgcat.c -- load needed message catalogs
-   Copyright (C) 1995 Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,21 +13,25 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
 #include <fcntl.h>
-#include <stdlib.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_UNISTD_H
+#if defined STDC_HEADERS || defined _LIBC
+# include <stdlib.h>
+#endif
+
+#if defined HAVE_UNISTD_H || defined _LIBC
 # include <unistd.h>
 #endif
 
-#ifdef HAVE_MMAP
+#if (defined HAVE_MMAP && defined HAVE_MUNMAP) || defined _LIBC
 # include <sys/mman.h>
 #endif
 
@@ -36,8 +40,17 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* @@ end of prolog @@ */
 
-/* List of already loaded domains.  */
-struct loaded_domain *_nl_loaded_domains;
+#ifdef _LIBC
+/* Rename the non ANSI C functions.  This is required by the standard
+   because some ANSI C functions will require linking with this object
+   file and the name space must not be polluted.  */
+# define fstat  __fstat
+# define open   __open
+# define close  __close
+# define read   __read
+# define mmap   __mmap
+# define munmap __munmap
+#endif
 
 /* We need a sign, whether a new catalog was loaded, which can be associated
    with all translations.  This is important if the translations are
@@ -45,56 +58,35 @@ struct loaded_domain *_nl_loaded_domains;
 int _nl_msg_cat_cntr;
 
 
-/* Prototypes for library functions.  */
-void *xmalloc ();
-
 /* Load the message catalogs specified by FILENAME.  If it is no valid
-   message catalog return null.  */
-struct loaded_domain *
-_nl_load_msg_cat (filename)
-     const char *filename;
+   message catalog do nothing.  */
+void
+_nl_load_domain (domain_file)
+     struct loaded_l10nfile *domain_file;
 {
   int fd;
   struct stat st;
-  struct loaded_domain *retval;
   struct mo_file_header *data = (struct mo_file_header *) -1;
+#if (defined HAVE_MMAP && defined HAVE_MUNMAP && !defined DISALLOW_MMAP) \
+    || defined _LIBC
   int use_mmap = 0;
+#endif
+  struct loaded_domain *domain;
 
-  /* We will create an entry for each file.  Those representing a
-     non-existing or illegal file have the DATA member set to null.
-     This helps subsequent calls to detect this situation without
-     trying to load.  */
-  retval = (struct loaded_domain *) xmalloc (sizeof (*retval));
-  /* Note: FILENAME is allocated in finddomain and can be used here.  */
-  retval->filename = filename;
-  retval->data = NULL;
+  domain_file->decided = 1;
+  domain_file->data = NULL;
 
-  /* Show that one domain is changed.  This might make some cached
-     translation invalid.  */
-  ++_nl_msg_cat_cntr;
-
-  /* Enqueue the new entry.  */
-  if (_nl_loaded_domains == NULL
-      || strcmp (filename, _nl_loaded_domains->filename) < 0)
-    {
-      retval->next = _nl_loaded_domains;
-      _nl_loaded_domains = retval;
-    }
-  else
-    {
-      struct loaded_domain *rp = _nl_loaded_domains;
-
-      while (rp->next != NULL && strcmp (filename, rp->next->filename) > 0)
-	rp = rp->next;
-
-      retval->next = rp->next;
-      rp->next = retval;
-    }
+  /* If the record does not represent a valid locale the FILENAME
+     might be NULL.  This can happen when according to the given
+     specification the locale file name is different for XPG and CEN
+     syntax.  */
+  if (domain_file->filename == NULL)
+    return;
 
   /* Try to open the addressed file.  */
-  fd = open (filename, O_RDONLY);
+  fd = open (domain_file->filename, O_RDONLY);
   if (fd == -1)
-    return retval;
+    return;
 
   /* We must know about the size of the file.  */
   if (fstat (fd, &st) != 0
@@ -102,10 +94,11 @@ _nl_load_msg_cat (filename)
     {
       /* Something went wrong.  */
       close (fd);
-      return retval;
+      return;
     }
 
-#ifdef HAVE_MMAP
+#if (defined HAVE_MMAP && defined HAVE_MUNMAP && !defined DISALLOW_MMAP) \
+    || defined _LIBC
   /* Now we are ready to load the file.  If mmap() is available we try
      this first.  If not available or it failed we try to load it.  */
   data = (struct mo_file_header *) mmap (NULL, st.st_size, PROT_READ,
@@ -126,7 +119,9 @@ _nl_load_msg_cat (filename)
       off_t to_read;
       char *read_ptr;
 
-      data = (struct mo_file_header *) xmalloc (st.st_size);
+      data = (struct mo_file_header *) malloc (st.st_size);
+      if (data == NULL)
+	return;
 
       to_read = st.st_size;
       read_ptr = (char *) data;
@@ -136,7 +131,7 @@ _nl_load_msg_cat (filename)
 	  if (nb == -1)
 	    {
 	      close (fd);
-	      return retval;
+	      return;
 	    }
 
 	  read_ptr += nb;
@@ -152,37 +147,53 @@ _nl_load_msg_cat (filename)
   if (data->magic != _MAGIC && data->magic != _MAGIC_SWAPPED)
     {
       /* The magic number is wrong: not a message catalog file.  */
+#if (defined HAVE_MMAP && defined HAVE_MUNMAP && !defined DISALLOW_MMAP) \
+    || defined _LIBC
       if (use_mmap)
 	munmap ((caddr_t) data, st.st_size);
       else
+#endif
 	free (data);
-      return retval;
+      return;
     }
 
-  retval->data = (char *) data;
-  retval->must_swap = data->magic != _MAGIC;
+  domain_file->data
+    = (struct loaded_domain *) malloc (sizeof (struct loaded_domain));
+  if (domain_file->data == NULL)
+    return;
+
+  domain = (struct loaded_domain *) domain_file->data;
+  domain->data = (char *) data;
+  domain->must_swap = data->magic != _MAGIC;
 
   /* Fill in the information about the available tables.  */
-  switch (W (retval->must_swap, data->revision))
+  switch (W (domain->must_swap, data->revision))
     {
     case 0:
-      retval->nstrings = W (retval->must_swap, data->nstrings);
-      retval->orig_tab = (struct string_desc *)
-	((char *) data + W (retval->must_swap, data->orig_tab_offset));
-      retval->trans_tab = (struct string_desc *)
-	((char *) data + W (retval->must_swap, data->trans_tab_offset));
-      retval->hash_size = W (retval->must_swap, data->hash_tab_size);
-      retval->hash_tab = (nls_uint32 *)
-	((char *) data + W (retval->must_swap, data->hash_tab_offset));
+      domain->nstrings = W (domain->must_swap, data->nstrings);
+      domain->orig_tab = (struct string_desc *)
+	((char *) data + W (domain->must_swap, data->orig_tab_offset));
+      domain->trans_tab = (struct string_desc *)
+	((char *) data + W (domain->must_swap, data->trans_tab_offset));
+      domain->hash_size = W (domain->must_swap, data->hash_tab_size);
+      domain->hash_tab = (nls_uint32 *)
+	((char *) data + W (domain->must_swap, data->hash_tab_offset));
       break;
     default:
       /* This is an illegal revision.  */
+#if (defined HAVE_MMAP && defined HAVE_MUNMAP && !defined DISALLOW_MMAP) \
+    || defined _LIBC
       if (use_mmap)
 	munmap ((caddr_t) data, st.st_size);
       else
+#endif
 	free (data);
-      retval->data = NULL;
+      free (domain);
+      domain_file->data = NULL;
+      return;
     }
 
-  return retval;
+  /* Show that one domain is changed.  This might make some cached
+     translations invalid.  */
+  ++_nl_msg_cat_cntr;
 }

@@ -1,36 +1,32 @@
-/* mangle.c -- encode long filenames
-   Copyright (C) 1988, 1992, 1994 Free Software Foundation, Inc.
+/* Encode long filenames for GNU tar.
+   Copyright (C) 1988, 1992, 1994, 1996, 1997 Free Software Foundation, Inc.
 
-   This file is part of GNU Tar.
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any later
+   version.
 
-   GNU Tar is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+   Public License for more details.
 
-   GNU Tar is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with GNU Tar; see the file COPYING.  If not, write to
-   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
 #include <time.h>
 time_t time ();
 
-#include "tar.h"
-
-extern struct stat hstat;	/* stat struct corresponding */
+#include "common.h"
 
 struct mangled
   {
     struct mangled *next;
     int type;
-    char mangled[NAMSIZ];
+    char mangled[NAME_FIELD_SIZE];
     char *linked_to;
     char normal[1];
   };
@@ -39,85 +35,93 @@ struct mangled
 struct mangled *first_mangle;
 int mangled_num = 0;
 
-/*---.
-| ?  |
-`---*/
+/*---------------------------------------------------------------------.
+| Extract a GNUTYPE_NAMES record contents.  It seems that such are not |
+| produced anymore by GNU tar, but we leave the reading code around    |
+| nevertheless, for salvaging old tapes.			       |
+`---------------------------------------------------------------------*/
 
 void
 extract_mangle (void)
 {
-  char *buf;
-  char *fromtape;
-  char *to;
-  char *ptr, *ptrend;
-  char *nam1, *nam1end;
-  int size;
-  int copied;
+  int size = current_stat.st_size;
+  char *buffer = xmalloc ((size_t) (size + 1));
+  char *copy = buffer;
+  char *cursor = buffer;
 
-  size = hstat.st_size;
-  buf = to = xmalloc ((size_t) (size + 1));
-  buf[size] = '\0';
+  buffer[size] = '\0';
+
   while (size > 0)
     {
-      fromtape = findrec ()->charptr;
-      if (fromtape == 0)
+      union block *block = find_next_block ();
+      int available;
+
+      if (!block)
 	{
 	  ERROR ((0, 0, _("Unexpected EOF in mangled names")));
 	  return;
 	}
-      copied = endofrecs ()->charptr - fromtape;
-      if (copied > size)
-	copied = size;
-      memcpy (to, fromtape, (size_t) copied);
-      to += copied;
-      size -= copied;
-      userec ((union record *) (fromtape + copied - 1));
+      available = available_space_after (block);
+      if (available > size)
+	available = size;
+      memcpy (copy, block->buffer, (size_t) available);
+      copy += available;
+      size -= available;
+      set_next_block_after ((union block *) (block->buffer + available - 1));
     }
-  for (ptr = buf; *ptr; ptr = ptrend)
-    {
-      ptrend = strchr (ptr, '\n');
-      *ptrend++ = '\0';
 
-      if (!strncmp (ptr, "Rename ", 7))
+  while (*cursor)
+    {
+      char *next_cursor;
+      char *name;
+      char *name_end;
+
+      next_cursor = strchr (cursor, '\n');
+      *next_cursor++ = '\0';
+
+      if (!strncmp (cursor, "Rename ", 7))
 	{
-	  nam1 = ptr + 7;
-	  nam1end = strchr (nam1, ' ');
-	  while (strncmp (nam1end, " to ", 4))
+
+	  name = cursor + 7;
+	  name_end = strchr (name, ' ');
+	  while (strncmp (name_end, " to ", 4))
 	    {
-	      nam1end++;
-	      nam1end = strchr (nam1end, ' ');
+	      name_end++;
+	      name_end = strchr (name_end, ' ');
 	    }
-	  *nam1end = '\0';
-	  if (ptrend[-2] == '/')
-	    ptrend[-2] = '\0';
-	  un_quote_string (nam1end + 4);
-	  if (rename (nam1, nam1end + 4))
-	    ERROR ((0, errno, _("Cannot rename %s to %s"), nam1, nam1end + 4));
-	  else if (flag_verbose)
-	    WARN ((0, 0, _("Renamed %s to %s"), nam1, nam1end + 4));
+	  *name_end = '\0';
+	  if (next_cursor[-2] == '/')
+	    next_cursor[-2] = '\0';
+	  unquote_string (name_end + 4);
+	  if (rename (name, name_end + 4))
+	    ERROR ((0, errno, _("Cannot rename %s to %s"), name, name_end + 4));
+	  else if (verbose_option)
+	    WARN ((0, 0, _("Renamed %s to %s"), name, name_end + 4));
 	}
 #ifdef S_ISLNK
-      else if (!strncmp (ptr, "Symlink ", 8))
+      else if (!strncmp (cursor, "Symlink ", 8))
 	{
-	  nam1 = ptr + 8;
-	  nam1end = strchr (nam1, ' ');
-	  while (strncmp (nam1end, " to ", 4))
+	  name = cursor + 8;
+	  name_end = strchr (name, ' ');
+	  while (strncmp (name_end, " to ", 4))
 	    {
-	      nam1end++;
-	      nam1end = strchr (nam1end, ' ');
+	      name_end++;
+	      name_end = strchr (name_end, ' ');
 	    }
-	  *nam1end = '\0';
-	  un_quote_string (nam1);
-	  un_quote_string (nam1end + 4);
-	  if (symlink (nam1, nam1end + 4)
-	      && (unlink (nam1end + 4) || symlink (nam1, nam1end + 4)))
+	  *name_end = '\0';
+	  unquote_string (name);
+	  unquote_string (name_end + 4);
+	  if (symlink (name, name_end + 4)
+	      && (unlink (name_end + 4) || symlink (name, name_end + 4)))
 	    ERROR ((0, errno, _("Cannot symlink %s to %s"),
-		    nam1, nam1end + 4));
-	  else if (flag_verbose)
-	    WARN ((0, 0, _("Symlinked %s to %s"), nam1, nam1end + 4));
+		    name, name_end + 4));
+	  else if (verbose_option)
+	    WARN ((0, 0, _("Symlinked %s to %s"), name, name_end + 4));
 	}
 #endif
       else
-	ERROR ((0, 0, _("Unknown demangling command %s"), ptr));
+	ERROR ((0, 0, _("Unknown demangling command %s"), cursor));
+
+      cursor = next_cursor;
     }
 }

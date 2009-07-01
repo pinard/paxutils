@@ -1,46 +1,36 @@
 /* Remote connection server.
-   Copyright (C) 1994 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
 
-   This file is part of GNU tar.
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any later
+   version.
 
-   GNU tar is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+   Public License for more details.
 
-   GNU tar is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-   You should have received a copy of the GNU General Public License
-   along with GNU tar; see the file COPYING.  If not, write to
-   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+/* Copyright (C) 1983 Regents of the University of California.
+   All rights reserved.
 
-/* Copyright (c) 1983 Regents of the University of California.  All
-   rights reserved.
-   
-   Redistribution and use in source and binary forms are permitted
-   provided that the above copyright notice and this paragraph are
-   duplicated in all such forms and that any documentation, advertising
-   materials, and other materials related to such distribution and use
-   acknowledge that the software was developed by the University of
-   California, Berkeley.  The name of the University may not be used to
-   endorse or promote products derived from this software without
-   specific prior written permission.  THIS SOFTWARE IS PROVIDED ``AS
-   IS'' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT
-   LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE.  */
+   Redistribution and use in source and binary forms are permitted provided
+   that the above copyright notice and this paragraph are duplicated in all
+   such forms and that any documentation, advertising materials, and other
+   materials related to such distribution and use acknowledge that the
+   software was developed by the University of California, Berkeley.  The
+   name of the University may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+   THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+   WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+   MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.  */
 
 #include "system.h"
 
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1983 Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#include <sgtty.h>
 #include <sys/socket.h>
 
 #ifndef EXIT_FAILURE
@@ -50,37 +40,68 @@ static char copyright[] =
 # define EXIT_SUCCESS 0
 #endif
 
-int tape = -1;
+/* Maximum size of a string from the requesting program.  */
+#define	STRING_SIZE 64
 
-char *record = 0;
-int maxrecsize = -1;
+/* Name of executing program.  */
+const char *program_name;
 
-#define	STRING_SIZE	64
-char device[STRING_SIZE];
-char count[STRING_SIZE], mode[STRING_SIZE], pos[STRING_SIZE], op[STRING_SIZE];
+/* File descriptor of the tape device, or negative if none open.  */
+static int tape = -1;
 
-extern char *sys_errlist[];
-char resp[BUFSIZ];
+/* Buffer containing transferred data, and its allocated size.  */
+static char *record_buffer = NULL;
+static int allocated_size = -1;
 
-FILE *debug;
+/* Buffer for constructing the reply.  */
+static char reply_buffer[BUFSIZ];
+
+/* Debugging tools.  */
+
+static FILE *debug_file = NULL;
 
 #define	DEBUG(File) \
-  if (debug) fprintf(debug, File)
+  if (debug_file) fprintf(debug_file, File)
+
 #define	DEBUG1(File, Arg) \
-  if (debug) fprintf(debug, File, Arg)
+  if (debug_file) fprintf(debug_file, File, Arg)
+
 #define	DEBUG2(File, Arg1, Arg2) \
-  if (debug) fprintf(debug, File, Arg1, Arg2)
+  if (debug_file) fprintf(debug_file, File, Arg1, Arg2)
+
+/*------------------------------------------------.
+| Return an error string, given an error number.  |
+`------------------------------------------------*/
+
+#if HAVE_STRERROR
+# ifndef strerror
+char *strerror ();
+# endif
+#else
+static char *
+private_strerror (int errnum)
+{
+  extern const char *const sys_errlist[];
+  extern int sys_nerr;
+
+  if (errnum > 0 && errnum <= sys_nerr)
+    return sys_errlist[errnum];
+  return N_("Unknown system error");
+}
+# define strerror private_strerror
+#endif
 
 /*---.
 | ?  |
 `---*/
 
 static void
-string_error (const char *string)
+report_error_message (const char *string)
 {
   DEBUG1 ("rmtd: E 0 (%s)\n", string);
-  sprintf (resp, "E0\n%s\n", string);
-  write (1, resp, strlen (resp));
+
+  sprintf (reply_buffer, "E0\n%s\n", string);
+  write (1, reply_buffer, strlen (reply_buffer));
 }
 
 /*---.
@@ -88,11 +109,12 @@ string_error (const char *string)
 `---*/
 
 static void
-numeric_error (int num)
+report_numbered_error (int num)
 {
-  DEBUG2 ("rmtd: E %d (%s)\n", num, sys_errlist[num]);
-  sprintf (resp, "E%d\n%s\n", num, sys_errlist[num]);
-  write (1, resp, strlen (resp));
+  DEBUG2 ("rmtd: E %d (%s)\n", num, strerror (num));
+
+  sprintf (reply_buffer, "E%d\n%s\n", num, strerror (num));
+  write (1, reply_buffer, strlen (reply_buffer));
 }
 
 /*---.
@@ -100,20 +122,19 @@ numeric_error (int num)
 `---*/
 
 static void
-getstring (char *bp)
+get_string (char *string)
 {
-  int i;
-  char *cp = bp;
+  int counter;
 
-  for (i = 0; i < STRING_SIZE; i++)
+  for (counter = 0; counter < STRING_SIZE; counter++)
     {
-      if (read (0, cp + i, 1) != 1)
+      if (read (0, string + counter, 1) != 1)
 	exit (EXIT_SUCCESS);
 
-      if (cp[i] == '\n')
+      if (string[counter] == '\n')
 	break;
     }
-  cp[i] = '\0';
+  string[counter] = '\0';
 }
 
 /*---.
@@ -121,25 +142,32 @@ getstring (char *bp)
 `---*/
 
 static void
-checkbuf (int size)
+prepare_record_buffer (int size)
 {
-  if (size <= maxrecsize)
+  if (size <= allocated_size)
     return;
-  if (record)
-    free (record);
-  record = malloc ((size_t) size);
-  if (record == 0)
+
+  if (record_buffer)
+    free (record_buffer);
+
+  record_buffer = malloc ((size_t) size);
+
+  if (record_buffer == NULL)
     {
       DEBUG (_("rmtd: Cannot allocate buffer space\n"));
-      string_error (_("Cannot allocate buffer space"));
-      exit (EXIT_FAILURE);      /* status used to be 4 */
+
+      report_error_message (N_("Cannot allocate buffer space"));
+      exit (EXIT_FAILURE);      /* exit status used to be 4 */
     }
-  maxrecsize = size;
+
+  allocated_size = size;
+
 #ifdef SO_RCVBUF
   while (size > 1024 &&
    setsockopt (0, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof (size)) < 0)
     size -= 1024;
 #else
+  /* FIXME: I do not see any purpose to the following line...  Sigh! */
   size = 1 + ((size - 1) % 1024);
 #endif
 }
@@ -148,174 +176,223 @@ checkbuf (int size)
 | ?  |
 `---*/
 
-const char *program_name;
-
 int
 main (int argc, char *const *argv)
 {
-  int rval;
-  char c;
-  int n, i, cc;
+  char command;
+  int status;
+
+  /* FIXME: Localisation is meaningless, unless --help and --version are
+     locally used.  Localisation would be best accomplished by the calling
+     tar, on messages found within error packets.  */
 
   program_name = argv[0];
   setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+
+  /* FIXME: Implement --help and --version as for any other GNU program.  */
 
   argc--, argv++;
   if (argc > 0)
     {
-      debug = fopen (*argv, "w");
-      if (debug == 0)
+      debug_file = fopen (*argv, "w");
+      if (debug_file == 0)
 	{
-	  numeric_error (errno);
+	  report_numbered_error (errno);
 	  exit (EXIT_FAILURE);
 	}
-      setbuf (debug, (char *) 0);
+      setbuf (debug_file, NULL);
     }
 
 top:
-  errno = 0;
-  rval = 0;
-  if (read (0, &c, 1) != 1)
+  errno = 0;			/* FIXME: errno should be read-only */
+  status = 0;
+  if (read (0, &command, 1) != 1)
     exit (EXIT_SUCCESS);
 
-  switch (c)
+  switch (command)
     {
+      /* FIXME: Maybe 'H' and 'V' for --help and --version output?  */
 
     case 'O':
-      if (tape >= 0)
-	close (tape);
-      getstring (device);
-      getstring (mode);
-      DEBUG2 ("rmtd: O %s %s\n", device, mode);
+      {
+	char device_string[STRING_SIZE];
+	char mode_string[STRING_SIZE];
+
+	get_string (device_string);
+	get_string (mode_string);
+	DEBUG2 ("rmtd: O %s %s\n", device_string, mode_string);
+
+	if (tape >= 0)
+	  close (tape);
 
 #if defined (i386) && defined (AIX)
 
-      /* This is alleged to fix a byte ordering problem.  I'm quite
-	 suspicious if it's right. -- mib.  */
+	/* This is alleged to fix a byte ordering problem.  I'm quite
+	   suspicious if it's right. -- mib.  */
 
-      {
-	int oflag = atoi (mode);
-	int nflag = 0;
+	{
+	  int old_mode = atoi (mode_string);
+	  int new_mode = 0;
 
-	if ((oflag & 3) == 0)
-	  nflag |= O_RDONLY;
-	if (oflag & 1)
-	  nflag |= O_WRONLY;
-	if (oflag & 2)
-	  nflag |= O_RDWR;
-	if (oflag & 0x0008)
-	  nflag |= O_APPEND;
-	if (oflag & 0x0200)
-	  nflag |= O_CREAT;
-	if (oflag & 0x0400)
-	  nflag |= O_TRUNC;
-	if (oflag & 0x0800)
-	  nflag |= O_EXCL;
-	tape = open (device, nflag, 0666);
-      }
+	  if ((old_mode & 3) == 0)
+	    new_mode |= O_RDONLY;
+	  if (old_mode & 1)
+	    new_mode |= O_WRONLY;
+	  if (old_mode & 2)
+	    new_mode |= O_RDWR;
+	  if (old_mode & 0x0008)
+	    new_mode |= O_APPEND;
+	  if (old_mode & 0x0200)
+	    new_mode |= O_CREAT;
+	  if (old_mode & 0x0400)
+	    new_mode |= O_TRUNC;
+	  if (old_mode & 0x0800)
+	    new_mode |= O_EXCL;
+	  tape = open (device_string, new_mode, 0666);
+	}
 #else
-      tape = open (device, atoi (mode), 0666);
+	tape = open (device_string, atoi (mode_string), 0666);
 #endif
-      if (tape < 0)
-	goto ioerror;
-      goto respond;
+	if (tape < 0)
+	  goto ioerror;
+	goto respond;
+      }
 
     case 'C':
-      DEBUG ("rmtd: C\n");
-      getstring (device);	/* discard */
-      if (close (tape) < 0)
-	goto ioerror;
-      tape = -1;
-      goto respond;
+      {
+	char device_string[STRING_SIZE];
+
+	get_string (device_string); /* discard */
+	DEBUG ("rmtd: C\n");
+
+	if (close (tape) < 0)
+	  goto ioerror;
+	tape = -1;
+	goto respond;
+      }
 
     case 'L':
-      getstring (count);
-      getstring (pos);
-      DEBUG2 ("rmtd: L %s %s\n", count, pos);
-      rval = lseek (tape, (off_t) atol (count), atoi (pos));
-      if (rval < 0)
-	goto ioerror;
-      goto respond;
+      {
+	char count_string[STRING_SIZE];
+	char position_string[STRING_SIZE];
+
+	get_string (count_string);
+	get_string (position_string);
+	DEBUG2 ("rmtd: L %s %s\n", count_string, position_string);
+
+	status
+	  = lseek (tape, (off_t) atol (count_string), atoi (position_string));
+	if (status < 0)
+	  goto ioerror;
+	goto respond;
+      }
 
     case 'W':
-      getstring (count);
-      n = atoi (count);
-      DEBUG1 ("rmtd: W %s\n", count);
-      checkbuf (n);
-      for (i = 0; i < n; i += cc)
-	{
-	  cc = read (0, &record[i], n - i);
-	  if (cc <= 0)
-	    {
-	      DEBUG (_("rmtd: Premature eof\n"));
-	      string_error (_("Premature end of file"));
-	      exit (EXIT_FAILURE); /* status used to be 2 */
-	    }
-	}
-      rval = write (tape, record, n);
-      if (rval < 0)
-	goto ioerror;
-      goto respond;
+      {
+	char count_string[STRING_SIZE];
+	int size;
+	int counter;
+
+	get_string (count_string);
+	size = atoi (count_string);
+	DEBUG1 ("rmtd: W %s\n", count_string);
+
+	prepare_record_buffer (size);
+	for (counter = 0; counter < size; counter += status)
+	  {
+	    status = read (0, &record_buffer[counter], size - counter);
+	    if (status <= 0)
+	      {
+		DEBUG (_("rmtd: Premature eof\n"));
+
+		report_error_message (N_("Premature end of file"));
+		exit (EXIT_FAILURE); /* exit status used to be 2 */
+	      }
+	  }
+	status = write (tape, record_buffer, size);
+	if (status < 0)
+	  goto ioerror;
+	goto respond;
+      }
 
     case 'R':
-      getstring (count);
-      DEBUG1 ("rmtd: R %s\n", count);
-      n = atoi (count);
-      checkbuf (n);
-      rval = read (tape, record, n);
-      if (rval < 0)
-	goto ioerror;
-      sprintf (resp, "A%d\n", rval);
-      write (1, resp, strlen (resp));
-      write (1, record, rval);
-      goto top;
+      {
+	char count_string[STRING_SIZE];
+	int size;
+
+	get_string (count_string);
+	DEBUG1 ("rmtd: R %s\n", count_string);
+
+	size = atoi (count_string);
+	prepare_record_buffer (size);
+	status = read (tape, record_buffer, size);
+	if (status < 0)
+	  goto ioerror;
+	sprintf (reply_buffer, "A%d\n", status);
+	write (1, reply_buffer, strlen (reply_buffer));
+	write (1, record_buffer, status);
+	goto top;
+      }
 
     case 'I':
-      getstring (op);
-      getstring (count);
-      DEBUG2 ("rmtd: I %s %s\n", op, count);
-#ifdef MTIOCTOP
       {
-	struct mtop mtop;
+	char operation_string[STRING_SIZE];
+	char count_string[STRING_SIZE];
 
-	mtop.mt_op = atoi (op);
-	mtop.mt_count = atoi (count);
-	if (ioctl (tape, MTIOCTOP, (char *) &mtop) < 0)
-	  goto ioerror;
-	rval = mtop.mt_count;
-      }
+	get_string (operation_string);
+	get_string  (count_string);
+	DEBUG2 ("rmtd: I %s %s\n", operation_string, count_string);
+
+#ifdef MTIOCTOP
+	{
+	  struct mtop mtop;
+
+	  mtop.mt_op = atoi (operation_string);
+	  mtop.mt_count = atoi (count_string);
+	  if (ioctl (tape, MTIOCTOP, (char *) &mtop) < 0)
+	    goto ioerror;
+	  status = mtop.mt_count;
+	}
 #endif
-      goto respond;
+	goto respond;
+      }
 
     case 'S':			/* status */
-      DEBUG ("rmtd: S\n");
       {
-#ifdef MTIOCGET
-	struct mtget mtget;
+	DEBUG ("rmtd: S\n");
 
-	if (ioctl (tape, MTIOCGET, (char *) &mtget) < 0)
-	  goto ioerror;
-	rval = sizeof (mtget);
-	sprintf (resp, "A%d\n", rval);
-	write (1, resp, strlen (resp));
-	write (1, (char *) &mtget, sizeof (mtget));
+#ifdef MTIOCGET
+	{
+	  struct mtget operation;
+
+	  if (ioctl (tape, MTIOCGET, (char *) &operation) < 0)
+	    goto ioerror;
+	  status = sizeof (operation);
+	  sprintf (reply_buffer, "A%d\n", status);
+	  write (1, reply_buffer, strlen (reply_buffer));
+	  write (1, (char *) &operation, sizeof (operation));
+	}
 #endif
 	goto top;
       }
 
     default:
-      DEBUG1 (_("rmtd: Garbage command %c\n"), c);
-      string_error (_("Garbage command"));
-      exit (EXIT_FAILURE);	/* status used to be 3 */
+      DEBUG1 (_("rmtd: Garbage command %c\n"), command);
+
+      report_error_message (N_("Garbage command"));
+      exit (EXIT_FAILURE);	/* exit status used to be 3 */
     }
 
 respond:
-  DEBUG1 ("rmtd: A %d\n", rval);
-  sprintf (resp, "A%d\n", rval);
-  write (1, resp, strlen (resp));
+  DEBUG1 ("rmtd: A %d\n", status);
+
+  sprintf (reply_buffer, "A%d\n", status);
+  write (1, reply_buffer, strlen (reply_buffer));
   goto top;
 
 ioerror:
-  numeric_error (errno);
+  report_numbered_error (errno);
   goto top;
 }

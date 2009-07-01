@@ -1,4 +1,4 @@
-/* mkdir.c -- BSD compatible make directory function for System V
+/* BSD compatible make directory function for System V
    Copyright (C) 1988, 1990 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
@@ -12,11 +12,11 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+#if HAVE_CONFIG_H
+# include <config.h>
 #endif
 
 #include <sys/types.h>
@@ -26,15 +26,13 @@
 extern int errno;
 #endif
 
-#ifdef STAT_MACROS_BROKEN
-#undef S_ISDIR
+#if STAT_MACROS_BROKEN
+# undef S_ISDIR
 #endif
 
 #if !defined(S_ISDIR) && defined(S_IFDIR)
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+# define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #endif
-
-#include "safe-stat.h"
 
 /* mkdir adapted from GNU tar.  */
 
@@ -57,7 +55,7 @@ mkdir (dpath, dmode)
   int cpid, status;
   struct stat statbuf;
 
-  if (SAFE_STAT (dpath, &statbuf) == 0)
+  if (stat (dpath, &statbuf) == 0)
     {
       errno = EEXIST;		/* stat worked, so it already exists.  */
       return -1;

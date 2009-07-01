@@ -1,5 +1,5 @@
 /* xgetcwd.c -- return current directory with unlimited length
-   Copyright (C) 1992 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1996 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,13 +12,13 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 /* Written by David MacKenzie <djm@gnu.ai.mit.edu>.  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+#if HAVE_CONFIG_H
+# include <config.h>
 #endif
 
 #include <stdio.h>
@@ -26,14 +26,15 @@
 #ifndef errno
 extern int errno;
 #endif
+
 #include <sys/types.h>
 #include "pathmax.h"
 
-#ifndef HAVE_GETCWD
-char *getwd ();
-#define getcwd(buf, max) getwd (buf)
-#else
+#if HAVE_GETCWD
 char *getcwd ();
+#else
+char *getwd ();
+# define getcwd(Buf, Max) getwd (Buf)
 #endif
 
 /* Amount to increase buffer size by in each try. */
