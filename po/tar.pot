@@ -1,0 +1,944 @@
+msgid ""
+msgstr "\
+Version: \n\
+Date: 1995-06-17 18:34:18-0400\n\
+From: =?ISO-8859-1?Q?Fran=E7ois_Pinard?= <pinard@icule>\n\
+Directory: /home/pinard/tar\n\
+Xgettext-Options: -ppo -dtar -n -k -k_\n\
+Files: src/genfile.c src/rmt.c src/buffer.c src/create.c src/diffarch.c\n\
+Files: src/extract.c src/gnu.c src/list.c src/mangle.c src/port.c src/rmt.c\n\
+Files: src/rtapelib.c src/tar.c src/update.c\n"
+
+#: src/rtapelib.c:226
+msgid "exec/tcp: Service not available"
+msgstr ""
+
+#: src/genfile.c:49 src/tar.c:959
+msgid "Try `%s --help' for more information.\n"
+msgstr ""
+
+#: src/update.c:99 src/update.c:314
+msgid "Skipping to next header"
+msgstr ""
+
+#: src/diffarch.c:160 src/diffarch.c:380
+msgid "Size"
+msgstr ""
+
+#: src/diffarch.c:398
+msgid "Cannot seek to %ld in file %s"
+msgstr ""
+
+#: src/tar.c:1557
+msgid "You must use a compression option (--gzip, --compress\n\
+or --use-compress-program) with --block-compress"
+msgstr ""
+
+#: src/diffarch.c:526
+msgid "VERIFY FAILURE: %d invalid header(s) detected"
+msgstr ""
+
+#: src/buffer.c:1081
+msgid "Blocksize = %d records"
+msgstr ""
+
+#: src/gnu.c:631
+msgid "%s: Deleting %s\n"
+msgstr ""
+
+#: src/tar.c:1048
+msgid "  -N, --newer=DATE           only store files newer than DATE\n\
+      --after-date=DATE      same as -N\n"
+msgstr ""
+
+#: src/buffer.c:909
+msgid "Read checkpoint %d"
+msgstr ""
+
+#: src/tar.c:1065
+msgid "\n\
+On *this* particular tar, the defaults are -f %s and -b %d.\n"
+msgstr ""
+
+#: src/mangle.c:114
+msgid "Cannot symlink %s to %s"
+msgstr ""
+
+#: src/mangle.c:121
+msgid "Unknown demangling command %s"
+msgstr ""
+
+#: src/buffer.c:886
+msgid "At beginning of tape, quitting now"
+msgstr ""
+
+#: src/mangle.c:117
+msgid "Symlinked %s to %s"
+msgstr ""
+
+#: src/port.c:358
+msgid "%s: Cannot link to %s, copying instead"
+msgstr ""
+
+#: src/tar.c:1025
+msgid "\n\
+Archive format selection:\n\
+  -V, --label=NAME                   create archive with volume name NAME\n\
+  -o, --old-archive, --portability   write a V7 format archive (not ANSI)\n\
+  -z, --gzip, --ungzip               filter the archive through gzip\n\
+  -Z, --compress, --uncompress       filter the archive through compress\n\
+      --use-compress-program=PROG    filter through PROG (must accept -d)\n"
+msgstr ""
+
+#: src/tar.c:1297
+msgid "Options [0-7][lmh] not supported by *this* tar"
+msgstr ""
+
+#: src/buffer.c:233
+msgid "Cannot fork"
+msgstr ""
+
+#: src/buffer.c:1376
+msgid "EOF?  What does that mean?"
+msgstr ""
+
+#: src/genfile.c:57
+msgid "Mandatory arguments to long options are mandatory for short options too.\n\
+\n\
+      --help            display this help and exit\n\
+      --version         output version information and exit\n"
+msgstr ""
+
+#: src/buffer.c:600 src/buffer.c:1472 src/diffarch.c:178 src/gnu.c:113 src/tar.c:798
+msgid "Cannot open %s"
+msgstr ""
+
+#: src/tar.c:964
+msgid "Mandatory or optional arguments to long options are mandatory or optional\n\
+for short options too.\n"
+msgstr ""
+
+#: src/update.c:94 src/update.c:309
+msgid "This does not look like a tar archive"
+msgstr ""
+
+#: src/create.c:551 src/create.c:570 src/create.c:1063
+msgid "Read error at byte %ld, reading %d bytes, in file %s"
+msgstr ""
+
+#: src/buffer.c:563
+msgid "Cannot use multi-volume compressed archives"
+msgstr ""
+
+#: src/create.c:1305
+msgid "File name %s%s too long"
+msgstr ""
+
+#: src/buffer.c:647 src/buffer.c:651 src/buffer.c:1001 src/buffer.c:1011
+msgid "Volume mismatch!  %s!=%s"
+msgstr ""
+
+#: src/buffer.c:213
+msgid "Cannot use compressed or remote archives"
+msgstr ""
+
+#: src/diffarch.c:448 src/diffarch.c:464 src/diffarch.c:678
+msgid "%s: Data differs\n"
+msgstr ""
+
+#: src/tar.c:1005
+msgid "\n\
+Device selection and switching:\n\
+  -f, --file=[HOSTNAME:]FILE     use archive file or device FILE on HOSTNAME\n\
+      --force-local              archive file is local even if has a colon\n\
+      --rsh-command=COMMAND      use remote COMMAND instead of rsh\n\
+  -[0-7][lmh]                    specify drive and density\n\
+  -M, --multi-volume             create/list/extract multi-volume archive\n\
+  -L, --tape-length=NUM          change tape after writing NUM x 1024 bytes\n\
+  -F, --info-script=FILE         run script at end of each tape (implies -M)\n\
+      --new-volume-script=FILE   same as -F FILE\n"
+msgstr ""
+
+#: src/buffer.c:530
+msgid "No archive name given, what should I do?"
+msgstr ""
+
+#: src/buffer.c:1392
+msgid " n [name]   Give a new filename for the next (and subsequent) volume(s)\n\
+ q          Abort tar\n\
+ !          Spawn a subshell\n\
+ ?          Print this list\n"
+msgstr ""
+
+#: src/tar.c:1017
+msgid "\n\
+Device blocking:\n\
+  -b, --block-size=BLOCKS    block size of BLOCKS x 512 bytes\n\
+      --block-compress       block the output of compression for tapes\n\
+  -i, --ignore-zeros         ignore blocks of zeros in archive (means EOF)\n\
+  -B, --read-full-blocks     reblock as we read (for reading 4.2BSD pipes)\n"
+msgstr ""
+
+#: src/extract.c:471 src/extract.c:854
+msgid "Could not change access and modification times of %s"
+msgstr ""
+
+#: src/extract.c:630
+msgid "Could not create directory %s"
+msgstr ""
+
+#: src/list.c:725
+msgid "--Continued at byte %ld--\n"
+msgstr ""
+
+#: src/buffer.c:1433
+msgid "Cannot fork!"
+msgstr ""
+
+#: src/rmt.c:308 src/rmt.c:308
+msgid "Garbage command"
+msgstr ""
+
+#: src/tar.c:1207 src/tar.c:1512 src/tar.c:1519
+msgid "Only one compression option permitted"
+msgstr ""
+
+#: src/tar.c:1631
+msgid "Total bytes written: %d\n"
+msgstr ""
+
+#: src/diffarch.c:439 src/diffarch.c:621 src/diffarch.c:640
+msgid "Cannot read %s"
+msgstr ""
+
+#: src/port.c:820
+msgid "Cannot open a pipe"
+msgstr ""
+
+#: src/tar.c:968
+msgid "\n\
+Main operation mode:\n\
+  -t, --list              list the contents of an archive\n\
+  -x, --extract, --get    extract files from an archive\n\
+  -c, --create            create a new archive\n\
+  -d, --diff, --compare   find differences between archive and file system\n\
+  -r, --append            append files to the end of an archive\n\
+  -u, --update            only append files newer than copy in archive\n\
+  -A, --catenate          append tar files to an archive\n\
+      --concatenate       same as -A\n\
+      --delete            delete from the archive (not on mag tapes!)\n"
+msgstr ""
+
+#: src/create.c:1379
+msgid "%s: Unknown file type; file ignored"
+msgstr ""
+
+#: src/diffarch.c:248
+msgid "Cannot read link %s"
+msgstr ""
+
+#: src/buffer.c:1102
+msgid "Archive %s EOF not on block boundary"
+msgstr ""
+
+#: src/extract.c:686
+msgid "Visible long name error"
+msgstr ""
+
+#: src/extract.c:678
+msgid "Cannot extract `%s' -- file is continued from another volume"
+msgstr ""
+
+#: src/tar.c:1646 src/tar.c:1666
+msgid "Bad regular expression: %s"
+msgstr ""
+
+#: src/rtapelib.c:391
+msgid "Cannot execute remote shell"
+msgstr ""
+
+#: src/diffarch.c:220 src/diffarch.c:551
+msgid "%s: Does not exist\n"
+msgstr ""
+
+#: src/tar.c:1182
+msgid "Invalid date format `%s'"
+msgstr ""
+
+#: src/buffer.c:893
+msgid "Too many errors, quitting"
+msgstr ""
+
+#: src/buffer.c:492
+msgid "Cannot exec %s"
+msgstr ""
+
+#: src/buffer.c:526
+msgid "Invalid value for blocksize"
+msgstr ""
+
+#: src/list.c:764
+msgid "Creating directory:"
+msgstr ""
+
+#: src/buffer.c:883
+msgid "Read error on %s"
+msgstr ""
+
+#: src/buffer.c:284 src/buffer.c:295 src/buffer.c:384
+msgid "Cannot open archive %s"
+msgstr ""
+
+#: src/create.c:708
+msgid "Cannot add file %s"
+msgstr ""
+
+#: src/extract.c:737
+msgid "Cannot change owner of %s to uid %d gid %d"
+msgstr ""
+
+#: src/tar.c:1383
+msgid "Cannot keep old files on this system"
+msgstr ""
+
+#: src/buffer.c:1267
+msgid "Child returned status %d"
+msgstr ""
+
+#: src/extract.c:639
+msgid "Added write and execute permission to directory %s"
+msgstr ""
+
+#: src/tar.c:297
+msgid "Missing filename after -C"
+msgstr ""
+
+#: src/tar.c:1034
+msgid "\n\
+Local file selection:\n\
+  -C, --directory DIR        change to directory DIR\n\
+  -T, --files-from=NAME      get names to extract or create from file NAME\n\
+      --null                 -T reads null-terminated names, disable -C\n\
+      --exclude=FILE         exclude file FILE\n\
+  -X, --exclude-from=FILE    exclude files listed in FILE\n\
+  -P, --absolute-paths       don't strip leading `/'s from file names\n\
+  -h, --dereference          dump instead the files symlinks point to\n\
+  -l, --one-file-system      stay in local file system when creating archive\n\
+  -K, --starting-file=NAME   begin at file NAME in the archive\n"
+msgstr ""
+
+#: src/create.c:524
+msgid "Wrote %ld of %ld bytes to file %s"
+msgstr ""
+
+#: src/extract.c:567 src/extract.c:583
+msgid "Could not make %s"
+msgstr ""
+
+#: src/create.c:742
+msgid "%s: is unchanged; not dumped"
+msgstr ""
+
+#: src/tar.c:1053
+msgid "\n\
+Informative output:\n\
+      --help            print this help, then exit\n\
+      --version         print tar program version number, then exit\n\
+  -v, --verbose         verbosely list files processed\n\
+      --checkpoint      print directory names while reading the archive\n\
+      --totals          print total bytes written while creating archive\n\
+  -R, --record-number   show record number within archive with each message\n\
+  -w, --interactive     ask for confirmation for every action\n\
+      --confirmation    same as -w\n"
+msgstr ""
+
+#: src/buffer.c:718
+msgid "Write checkpoint %d"
+msgstr ""
+
+#: src/buffer.c:1190
+msgid "Could not backspace archive file; it may be unreadable without -i"
+msgstr ""
+
+#: src/create.c:214
+msgid "Removing drive spec from names in the archive"
+msgstr ""
+
+#: src/diffarch.c:108
+msgid "Verify "
+msgstr ""
+
+#: src/create.c:582 src/create.c:1076
+msgid "File %s shrunk by %d bytes, padding with zeros"
+msgstr ""
+
+#: src/tar.c:1326
+msgid "Cannot change directory to %d"
+msgstr ""
+
+#: src/create.c:826 src/create.c:1090 src/create.c:1145 src/create.c:1374
+msgid "Cannot remove %s"
+msgstr ""
+
+#: src/extract.c:486 src/extract.c:865
+msgid "Cannot chown file %s to uid %d gid %d"
+msgstr ""
+
+#: src/extract.c:527
+msgid "Could not link %s to %s"
+msgstr ""
+
+#: src/buffer.c:264
+msgid "(child) Pipe to stdin"
+msgstr ""
+
+#: src/diffarch.c:309
+msgid "%s: Mode or device-type changed\n"
+msgstr ""
+
+#: src/tar.c:981
+msgid "\n\
+Operation mode modificators:\n\
+  -W, --verify               attempt to verify the archive after writing it\n\
+      --remove-files         remove files after adding them to the archive\n\
+  -k, --keep-old-files       don't overwrite existing files from archive\n\
+  -S, --sparse               handle sparse files efficiently\n\
+  -O, --to-stdout            extract files to standard output\n\
+  -G, --incremental          handle old GNU-format incremental backup\n\
+  -g, --listed-incremental   handle new GNU-format incremental backup\n\
+      --ignore-failed-read   do not exit with non-zero on unreadable files\n"
+msgstr ""
+
+#: src/buffer.c:1444
+msgid "Cannot exec a shell %s"
+msgstr ""
+
+#: src/rmt.c:250 src/rmt.c:250
+msgid "rmtd: Premature eof\n"
+msgstr ""
+
+#: src/extract.c:385
+msgid "%d at %d\n"
+msgstr ""
+
+#: src/create.c:598
+msgid "Amount actually written is (I hope) %d.\n"
+msgstr ""
+
+#: src/buffer.c:413
+msgid "Cannot write to compression program"
+msgstr ""
+
+#: src/tar.c:236 src/tar.c:460 src/tar.c:487 src/tar.c:511
+msgid "Cannot change to directory %s"
+msgstr ""
+
+#: src/gnu.c:382
+msgid "Directory %s has been renamed"
+msgstr ""
+
+#: src/extract.c:411 src/extract.c:810
+msgid "Could only write %d of %d bytes to file %s"
+msgstr ""
+
+#: src/list.c:704
+msgid " unknown file type `%c'\n"
+msgstr ""
+
+#: src/port.c:626
+msgid "Cannot close a file #%d"
+msgstr ""
+
+#: src/gnu.c:393
+msgid "Directory %s is new"
+msgstr ""
+
+#: src/buffer.c:348
+msgid "tar (child)"
+msgstr ""
+
+#: src/diffarch.c:501
+msgid "Could not rewind archive file for verify"
+msgstr ""
+
+#: src/genfile.c:54
+msgid "\n\
+Usage: %s [OPTION]...\n"
+msgstr ""
+
+#: src/buffer.c:1255
+msgid "Child died with signal %d%s"
+msgstr ""
+
+#: src/diffarch.c:295
+msgid "%s: Device numbers changed\n"
+msgstr ""
+
+#: src/buffer.c:1022 src/extract.c:670
+msgid "Reading %s\n"
+msgstr ""
+
+#: src/diffarch.c:156
+msgid "Mod time"
+msgstr ""
+
+#: src/extract.c:544
+msgid "Could not create symlink to %s"
+msgstr ""
+
+#: src/buffer.c:312
+msgid "Child cannot fork"
+msgstr ""
+
+#: src/extract.c:178
+msgid "Unknown file type '%c' for %s, extracted as normal file"
+msgstr ""
+
+#: src/buffer.c:554
+msgid "Cannot verify multi-volume archives"
+msgstr ""
+
+#: src/tar.c:1554
+msgid "Multiple archive files requires --multi-volume"
+msgstr ""
+
+#: src/diffarch.c:75
+msgid "Could not allocate memory for diff buffer of %d bytes"
+msgstr ""
+
+#: src/buffer.c:1381 src/buffer.c:1406
+msgid "WARNING: Archive is incomplete"
+msgstr ""
+
+#: src/mangle.c:95
+msgid "Cannot rename %s to %s"
+msgstr ""
+
+#: src/buffer.c:1257
+msgid " (core dumped)"
+msgstr ""
+
+#: src/create.c:1272
+msgid "%s: On a different filesystem; not dumped"
+msgstr ""
+
+#: src/rmt.c:307 src/rmt.c:307
+msgid "rmtd: Garbage command %c\n"
+msgstr ""
+
+#: src/gnu.c:603
+msgid "Unexpected EOF in archive"
+msgstr ""
+
+#: src/list.c:730
+msgid "--Mangled file names--\n"
+msgstr ""
+
+#: src/buffer.c:1033
+msgid "%s is not continued on this volume"
+msgstr ""
+
+#: src/buffer.c:1053
+msgid "This volume is out of sequence"
+msgstr ""
+
+#: src/diffarch.c:256
+msgid "%s: Symlink differs\n"
+msgstr ""
+
+#: src/buffer.c:351
+msgid "[child] Pipe to stdout"
+msgstr ""
+
+#: src/rmt.c:133 src/rmt.c:133
+msgid "rmtd: Cannot allocate buffer space\n"
+msgstr ""
+
+#: src/list.c:127
+msgid "Hmm, this doesn't look like a tar archive"
+msgstr ""
+
+#: src/buffer.c:864 src/gnu.c:158
+msgid "Cannot write to %s"
+msgstr ""
+
+#: src/gnu.c:100 src/tar.c:401
+msgid "Could not get current directory: %s"
+msgstr ""
+
+#: src/buffer.c:468
+msgid "Cannot read from compression program"
+msgstr ""
+
+#: src/tar.c:1614
+msgid "You may not specify more than one of the r, c, t, x, or d options"
+msgstr ""
+
+#: src/list.c:132
+msgid "Skipping to next file header"
+msgstr ""
+
+#: src/buffer.c:1371
+msgid "\007Prepare volume #%d for %s and hit return: "
+msgstr ""
+
+#: src/list.c:207
+msgid "Only wrote %ld of %ld bytes to file %s"
+msgstr ""
+
+#: src/buffer.c:1110
+msgid "Only read %d bytes from archive %s"
+msgstr ""
+
+#: src/tar.c:347 src/tar.c:389
+msgid "Missing file name after -C"
+msgstr ""
+
+#: src/extract.c:503 src/extract.c:663 src/extract.c:874
+msgid "Cannot change mode of file %s to %lo"
+msgstr ""
+
+#: src/gnu.c:235 src/gnu.c:360 src/update.c:123
+msgid "Cannot stat %s"
+msgstr ""
+
+#: src/buffer.c:259
+msgid "(child) Pipe to stdout"
+msgstr ""
+
+#: src/buffer.c:1042
+msgid "%s is the wrong size (%ld != %ld + %ld)"
+msgstr ""
+
+#: src/buffer.c:1401
+msgid "No new volume; exiting.\n"
+msgstr ""
+
+#: src/create.c:751
+msgid "%s is the archive; not dumped"
+msgstr ""
+
+#: src/buffer.c:575
+msgid "Cannot verify stdin/stdout archive"
+msgstr ""
+
+#: src/create.c:795
+msgid "Removing leading / from absolute links"
+msgstr ""
+
+#: src/gnu.c:633
+msgid "Error while deleting %s"
+msgstr ""
+
+#: src/diffarch.c:116
+msgid "Unknown file type '%c' for %s, diffed as normal file"
+msgstr ""
+
+#: src/list.c:721
+msgid "--Volume Header--\n"
+msgstr ""
+
+#: src/create.c:1280 src/gnu.c:323
+msgid "Cannot open directory %s"
+msgstr ""
+
+#: src/extract.c:408 src/extract.c:797 src/extract.c:807
+msgid "Could not write to file %s"
+msgstr ""
+
+#: src/diffarch.c:348
+msgid "%s: No longer a directory\n"
+msgstr ""
+
+#: src/list.c:536 src/list.c:756
+msgid "rec %10ld: "
+msgstr ""
+
+#: src/buffer.c:642
+msgid "Archive not labelled to match %s"
+msgstr ""
+
+#: src/buffer.c:286
+msgid "Archive to stdin"
+msgstr ""
+
+#: src/rmt.c:251 src/rmt.c:251
+msgid "Premature end of file"
+msgstr ""
+
+#: src/diffarch.c:142 src/diffarch.c:370
+msgid "%s: Not a regular file\n"
+msgstr ""
+
+#: src/list.c:196
+msgid "EOF in archive file"
+msgstr ""
+
+#: src/diffarch.c:60
+msgid "%s: %s differs\n"
+msgstr ""
+
+#: src/tar.c:546 src/tar.c:563
+msgid "%s: Not found in archive"
+msgstr ""
+
+#: src/rmt.c:134 src/rmt.c:134
+msgid "Cannot allocate buffer space"
+msgstr ""
+
+#: src/diffarch.c:390 src/tar.c:150 src/update.c:176
+msgid "Cannot open file %s"
+msgstr ""
+
+#: src/buffer.c:321
+msgid "((child)) Pipe to stdin"
+msgstr ""
+
+#: src/diffarch.c:152
+msgid "Uid"
+msgstr ""
+
+#: src/tar.c:1609
+msgid "You must specify one of the r, c, t, x, or d options"
+msgstr ""
+
+#: src/diffarch.c:154
+msgid "Gid"
+msgstr ""
+
+#: src/mangle.c:65
+msgid "Unexpected EOF in mangled names"
+msgstr ""
+
+#: src/tar.c:963
+msgid "Usage: %s [OPTION]... [FILE]...\n"
+msgstr ""
+
+#: src/buffer.c:547
+msgid "Could not allocate memory for blocking factor %d"
+msgstr ""
+
+#: src/tar.c:94
+msgid "Cannot read confirmation from user"
+msgstr ""
+
+#: src/diffarch.c:441 src/diffarch.c:623 src/diffarch.c:642
+msgid "%s: Could only read %d of %ld bytes\n"
+msgstr ""
+
+#: src/list.c:82
+msgid "Omitting %s"
+msgstr ""
+
+#: src/buffer.c:332
+msgid "((child)) Pipe to stdout"
+msgstr ""
+
+#: src/diffarch.c:228
+msgid "%s: Not linked to %s\n"
+msgstr ""
+
+#: src/buffer.c:197
+msgid "Cannot close descriptor %d"
+msgstr ""
+
+#: src/diffarch.c:150 src/diffarch.c:354
+msgid "Mode"
+msgstr ""
+
+#: src/mangle.c:97
+msgid "Renamed %s to %s"
+msgstr ""
+
+#: src/buffer.c:200
+msgid "Cannot dup %s"
+msgstr ""
+
+#: src/buffer.c:1137 src/buffer.c:1231 src/buffer.c:1344
+msgid "WARNING: Cannot close %s (%d, %d)"
+msgstr ""
+
+#: src/gnu.c:223 src/tar.c:283 src/tar.c:657
+msgid "Cannot chdir to %s"
+msgstr ""
+
+#: src/diffarch.c:245
+msgid "%s: No such file or directory\n"
+msgstr ""
+
+#: src/buffer.c:418
+msgid "Write to compression program short %d bytes"
+msgstr ""
+
+#: src/gnu.c:95 src/tar.c:395
+msgid "Could not get current directory"
+msgstr ""
+
+#: src/diffarch.c:205 src/diffarch.c:416 src/extract.c:449
+msgid "Error while closing %s"
+msgstr ""
+
+#: src/list.c:696 src/list.c:700
+msgid " link to %s\n"
+msgstr ""
+
+#: src/buffer.c:1519 src/extract.c:370 src/extract.c:788 src/list.c:367 src/list.c:789
+msgid "Unexpected EOF on archive file"
+msgstr ""
+
+#: src/buffer.c:356
+msgid "[child] Pipe to stdin"
+msgstr ""
+
+#: src/diffarch.c:222 src/diffarch.c:553
+msgid "Cannot stat file %s"
+msgstr ""
+
+#: src/gnu.c:593
+msgid "Cannot allocate %d bytes for restore"
+msgstr ""
+
+#: src/buffer.c:297
+msgid "Archive to stdout"
+msgstr ""
+
+#: src/tar.c:993
+msgid "\n\
+Handling of file attributes:\n\
+      --atime-preserve         don't change access times on dumped files\n\
+  -m, --modification-time      don't extract file modified time\n\
+      --same-owner             create extracted files with the same ownership \n\
+  -p, --same-permissions       extract all protection information\n\
+      --preserve-permissions   same as -p\n\
+  -s, --same-order             sort names to extract to match archive\n\
+      --preserve-order         same as -s\n\
+      --preserve               same as both -p and -s\n"
+msgstr ""
+
+#: src/extract.c:320
+msgid "Could not create file %s"
+msgstr ""
+
+#: src/buffer.c:560
+msgid "Cannot update or verify compressed archives"
+msgstr ""
+
+#: src/buffer.c:867
+msgid "Only wrote %u of %u bytes to %s"
+msgstr ""
+
+#: src/buffer.c:1026
+msgid "WARNING: No volume header"
+msgstr ""
+
+#: src/tar.c:145
+msgid "Too many args with -T option"
+msgstr ""
+
+#: src/list.c:578
+msgid "Visible longname error"
+msgstr ""
+
+#: src/create.c:222 src/extract.c:169
+msgid "Removing leading / from absolute path names in the archive"
+msgstr ""
+
+#: src/tar.c:1438
+msgid "Obsolete option name replaced by --absolute-names"
+msgstr ""
+
+#: src/update.c:109
+msgid "File %s\n"
+msgstr ""
+
+#: src/update.c:197
+msgid "Read error at byte %ld reading %d bytes in file %s"
+msgstr ""
+
+#: src/update.c:202
+msgid "%s: File shrunk by %d bytes, (yark!)"
+msgstr ""
+
+#: src/update.c:289
+msgid "Junk files\n"
+msgstr ""
+
+#: src/update.c:325
+msgid "file %s\n"
+msgstr ""
+
+#: src/update.c:331
+msgid "Skip %ld\n"
+msgstr ""
+
+#: src/update.c:348
+msgid "Out of first loop\n"
+msgstr ""
+
+#: src/update.c:372
+msgid "Saved %d recs, need %d more\n"
+msgstr ""
+
+#: src/update.c:394
+msgid "New block\n"
+msgstr ""
+
+#: src/update.c:401
+msgid "Header type %d\n"
+msgstr ""
+
+#: src/update.c:422
+msgid "Deleting non-header from archive"
+msgstr ""
+
+#: src/update.c:431
+msgid "File %s "
+msgstr ""
+
+#: src/update.c:437
+msgid "Flush it\n"
+msgstr ""
+
+#: src/update.c:444
+msgid "Flushing %d recs from %s\n"
+msgstr ""
+
+#: src/update.c:451
+msgid "Block: %d <= %d  "
+msgstr ""
+
+#: src/update.c:458
+msgid "Block %d left\n"
+msgstr ""
+
+#: src/update.c:464
+msgid "Final %d\n"
+msgstr ""
+
+#: src/update.c:488
+msgid "Need %d kept_in %d keep %d\n"
+msgstr ""
+
+#: src/update.c:500
+msgid "Flush...\n"
+msgstr ""
+
+#: src/update.c:514
+msgid "Copying %d\n"
+msgstr ""
+
+#: src/update.c:526
+msgid "Now new %d  need %d  keep %d  keep_in %d rec %d/%d\n"
+msgstr ""
+
+#: src/update.c:552
+msgid "Write block\n"
+msgstr ""
+
+#: src/update.c:623
+msgid "Fore to %x\n"
+msgstr ""
+
+#: src/update.c:627
+msgid "Could not re-position archive file"
+msgstr ""

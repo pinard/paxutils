@@ -1,0 +1,121 @@
+# Makefile for GNU tar library.
+# Copyright (C) 1994 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+PACKAGE = @PACKAGE@
+VERSION = @VERSION@
+
+SHELL = /bin/sh
+srcdir = @srcdir@
+subdir = lib
+VPATH = @srcdir@
+
+AR = ar
+CC = @CC@
+CFLAGS = @CFLAGS@
+CPPFLAGS = @CPPFLAGS@
+DEFS = @DEFS@
+RANLIB = @RANLIB@
+YACC = @YACC@
+
+prefix = @prefix@
+datadir = $(prefix)/share
+localedir = $(datadir)/locale
+
+COMPILE = $(CC) -c $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+.c.o:
+	$(COMPILE) $<
+
+INCLUDES = -I.. -I$(srcdir)
+
+HEADERS = fnmatch.h getopt.h getpagesize.h insremque.h pathmax.h \
+regex.h rx.h safe-stat.h
+SOURCES = alloca.c fileblocks.c fnmatch.c ftruncate.c gmalloc.c insremque.c \
+memset.c mkdir.c rename.c regex.c rmdir.c rx.c strstr.c \
+error.c getdate.y getopt.c getopt1.c stpcpy.c xgetcwd.c xmalloc.c xstrdup.c
+OBJECTS = @ALLOCA@ @LIBOBJS@ \
+error.o getdate.o getopt.o getopt1.o stpcpy.o xgetcwd.o xmalloc.o xstrdup.o
+
+DISTFILES = Makefile.in $(HEADERS) $(SOURCES) \
+getdate.c
+ 
+all: libtar.a
+
+getdate.c: getdate.y
+	@echo Expect 10 shift/reduce conflicts...
+	cd $(srcdir) && \
+	  $(YACC) $(YFLAGS) getdate.y; \
+	  mv -f y.tab.c getdate.c
+
+libtar.a: $(OBJECTS)
+	rm -f libtar.a
+	$(AR) cru libtar.a $(OBJECTS)
+	$(RANLIB) libtar.a
+
+$(OBJECTS): ../config.h
+
+# Waiting for the unified libintl.[ch] pair...
+#libintl.o: libintl.c libintl.h
+#	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" $(srcdir)/libintl.c
+
+install: all
+
+uninstall:
+
+id: ID
+
+ID: $(HEADERS) $(SOURCES)
+	here=`pwd`; cd $(srcdir) && mkid -f$$here/ID $$here/config.h \
+	  $(HEADERS) $(SOURCES)
+
+tags: TAGS
+
+TAGS: $(HEADERS) $(SOURCES)
+	here=`pwd`; cd $(srcdir) && etags -o $$here/TAGS $$here/config.h \
+	  $(HEADERS) $(SOURCES)
+
+mostlyclean:
+	rm -f *.o
+	rm -f yacc.* y.*
+
+clean: mostlyclean
+	rm -f libtar.a
+
+distclean: clean
+	rm -f ID TAGS
+	rm -f Makefile
+
+maintainer-clean: distclean
+	@echo "This command is intended only for maintainers to use;"
+	@echo "rebuilding the deleted files may require special tools."
+	rm -f getdate.c
+
+distdir = ../$(PACKAGE)-$(VERSION)/$(subdir)
+dist: $(DISTFILES)
+	for file in $(DISTFILES); do \
+	  ln $(srcdir)/$$file $(distdir) 2> /dev/null \
+	    || cp -p $(srcdir)/$$file $(distdir); \
+	done
+
+Makefile: Makefile.in ../config.status
+	cd .. && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

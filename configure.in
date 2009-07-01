@@ -1,56 +1,220 @@
-dnl Process this file with autoconf to produce a configure script.
-AC_INIT(tar.h)
-PROGS="tar"
-AC_SUBST(PROGS)dnl
-AC_PROG_CC
-AC_PROG_CPP
-AC_GCC_TRADITIONAL
+# Configure template for GNU tar.
+# Copyright (C) 1991, 1994, 1995 Free Software Foundation, Inc.
+# Process this file with autoconf to produce a configure script.
+
+AC_INIT(src/tar.c)
+AC_CONFIG_HEADER(config.h)
+AC_CANONICAL_SYSTEM
+AC_ARG_PROGRAM
+
+PACKAGE=tar
+VERSION=1.11.8
+LINGUAS="de fr pt sv"
+PROGRAMS=tar
+AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
+AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+AC_SUBST(PROGRAMS)
+
+AC_PROG_GCC_TRADITIONAL
 AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 AC_PROG_YACC
+
 AC_AIX
-AC_MINIX
 AC_ISC_POSIX
-AC_RETSIGTYPE
-AC_SIZE_T
-AC_MAJOR_HEADER
-AC_DIR_HEADER
-# The 3-argument open happens to go along with the O_* defines,
-# which are easier to check for.
-AC_HEADER_CHECK(fcntl.h, open_header=fcntl.h, open_header=sys/file.h)
-AC_COMPILE_CHECK(3-argument open,
-[#include <$open_header>], [int x = O_RDONLY;], , AC_DEFINE(EMUL_OPEN3))
-AC_REMOTE_TAPE
-AC_RSH
-AC_STDC_HEADERS
-AC_UNISTD_H
-echo checking for getgrgid declaration
-AC_HEADER_EGREP(getgrgid, grp.h, AC_DEFINE(HAVE_GETGRGID))
-echo checking for getpwuid declaration
-AC_HEADER_EGREP(getpwuid, pwd.h, AC_DEFINE(HAVE_GETPWUID))
-AC_HAVE_HEADERS(string.h limits.h)
-echo checking default archive
-# This might guess wrong, but it's not very important.
-for dev in rmt8 rmt0 rmt0h rct0 rst0 tape rct/c7d0s2
-do
-  if test -n "`ls /dev/$dev 2>/dev/null`"; then
-    DEF_AR_FILE=/dev/$dev
-    break
-  fi
-done
-if test -z "$DEF_AR_FILE"; then
-  DEF_AR_FILE=-
+AC_MINIX
+fp_C_PROTOTYPES
+AC_C_CONST
+
+AC_CHECK_HEADERS(fcntl.h limits.h memory.h string.h \
+sys/gentape.h sys/io/trioctl.h sys/ioccom.h sys/mtio.h sys/param.h \
+sys/tape.h sys/time.h sys/timeb.h sys/wait.h unistd.h)
+
+AC_MSG_CHECKING(for utime.h)
+AC_TRY_COMPILE([#include <sys/types.h>
+#include <utime.h>], [struct utimbuf foo],
+  [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_UTIME_H)], [AC_MSG_RESULT(no)])
+
+if test "$ac_cv_header_sys_mtio_h" = yes; then
+  AC_MSG_CHECKING(for remote tape header files)
+  AC_CACHE_VAL(ac_cv_header_rmt,
+    [AC_TRY_CPP([#include <sgtty.h>
+#include <sys/socket.h>],
+    ac_cv_header_rmt=yes, ac_cv_header_rmt=no)])
+  AC_MSG_RESULT($ac_cv_header_rmt)
+  test $ac_cv_header_rmt = yes && PROGRAMS="$PROGRAMS rmt"
 fi
 
-AC_SUBST(DEF_AR_FILE)dnl
-AC_HAVE_FUNCS(strstr valloc mkdir mknod rename ftruncate ftime getcwd)
-AC_VPRINTF
-AC_ALLOCA
-echo checking for BSD
-( test -f /vmunix || test -f /sdmach || test -f /../../mach ) && AC_DEFINE(BSD42)
-echo checking for HP-UX
-test -f /hp-ux && test ! -f /vmunix && MALLOC=malloc.o
-AC_SUBST(MALLOC)
-AC_XENIX_DIR
-AC_HAVE_LIBRARY(socket, [LIBS="$LIBS -lsocket"])
-AC_HAVE_LIBRARY(nsl, [LIBS="$LIBS -lnsl"])
-AC_OUTPUT(Makefile)
+AC_MSG_CHECKING(for getgrgid declaration)
+AC_EGREP_HEADER(getgrgid, grp.h,
+  [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_GETGRGID)], [AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING(for getpwuid declaration)
+AC_EGREP_HEADER(getpwuid, pwd.h,
+  [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_GETPWUID)], [AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING(which field to test for reversed bytes in remote ioctl)
+AC_EGREP_HEADER(mt_model, sys/mtio.h, field=mt_model, field=mt_type)
+AC_MSG_RESULT($field)
+AC_DEFINE_UNQUOTED(MTIO_CHECK_FIELD, $field)
+
+AC_HEADER_DIRENT
+AC_HEADER_MAJOR
+AC_HEADER_STAT
+AC_HEADER_STDC
+AC_HEADER_TIME
+AC_STRUCT_ST_BLKSIZE
+AC_STRUCT_ST_BLOCKS
+AC_TYPE_SIGNAL
+AC_TYPE_SIZE_T
+AC_TYPE_UID_T
+
+AC_CHECK_FUNCS(ftime getcwd isascii mkfifo strstr)
+AC_MSG_CHECKING(for mknod)
+AC_CACHE_VAL(ac_cv_func_mknod,
+	     AC_TRY_LINK([#include <sys/stat.h>], [mknod (0, 0, 0)],
+			 ac_cv_func_mknod=yes, ac_cv_func_mknod=no))
+AC_MSG_RESULT($ac_cv_func_mknod)
+test $ac_cv_func_mknod = yes && AC_DEFINE(HAVE_MKNOD)
+
+#
+# If -lnsl has gethostname() defined, and/or if -lsocket has an
+# undefined reference to gethostname(), then we need both -lsocket
+# and -lnsl.  Ideally, -lsocket and -lnsl should be tested both
+# at once, we rather test -lsocket after -lnsl.  Other ideas for
+# -lsocket: socket or ntohl.  For -lnsl: t_open or dial.
+#
+AC_CHECK_LIB(inet, gettimeofday, [LIBS="$LIBS -linet"])
+AC_CHECK_LIB(nsl, gethostname, [LIBS="$LIBS -lnsl"])
+AC_CHECK_LIB(socket, setsockopt, [LIBS="$LIBS -lsocket"])
+#
+AC_FUNC_ALLOCA
+AC_FUNC_VPRINTF
+AC_REPLACE_FUNCS(fnmatch ftruncate memset mkdir rename rmdir)
+test "$ac_cv_func_strstr" = yes || LIBOBJS="$LIBOBJS strstr.o"
+
+AC_MSG_CHECKING(for HP-UX needing gmalloc)
+if test "`(uname -s) 2> /dev/null`" = 'HP-UX'; then
+  AC_MSG_RESULT(yes)
+  LIBOBJS="$LIBOBJS gmalloc.o"
+  AC_DEFINE(HAVE_VALLOC)
+else
+  AC_MSG_RESULT(no)
+  AC_CHECK_FUNCS(valloc)
+fi
+
+# The 3-argument open happens to go along with the O_* defines, which
+# are easier to check for. 
+AC_MSG_CHECKING(for 3-argument open)
+AC_TRY_COMPILE([#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#else
+#include <sys/file.h>
+#endif], [int x = O_RDONLY],
+  [AC_MSG_RESULT(yes)], [AC_MSG_RESULT(no); AC_DEFINE(EMUL_OPEN3)])
+
+AC_MSG_CHECKING(for union wait)
+AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/wait.h>], [union wait status; int pid; pid = wait (&status);
+#ifdef WEXITSTATUS
+/* Some POSIXoid systems have both the new-style macros and the old
+   union wait type, and they do not work together.  If union wait
+   conflicts with WEXITSTATUS et al, we don't want to use it at all.  */
+if (WEXITSTATUS (status) != 0) pid = -1;
+#endif],
+  [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_UNION_WAIT)], [AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING(for remote shell)
+AC_CACHE_VAL(ac_cv_path_RSH,
+[if test -n "$RSH"; then
+  ac_cv_path_RSH=$RSH
+else
+  ac_cv_path_RSH=no
+  for ac_file in \
+    /usr/ucb/rsh /usr/bin/remsh /usr/bin/rsh /usr/bsd/rsh /usr/bin/nsh
+  do
+    if test -f $ac_file; then
+      ac_cv_path_RSH=$ac_file
+      break
+    fi
+  done
+fi])
+AC_MSG_RESULT($ac_cv_path_RSH)
+if test $ac_cv_path_RSH = no; then
+  AC_CHECK_HEADERS(netdb.h)
+else
+  AC_DEFINE_UNQUOTED(REMOTE_SHELL, "$ac_cv_path_RSH")
+fi
+
+AC_MSG_CHECKING(for default archive)
+
+if test -z "$DEFAULT_ARCHIVE"; then
+  DEFAULT_ARCHIVE=-
+else
+  if test -z "`ls $DEFAULT_ARCHIVE 2>/dev/null`"; then
+    AC_MSG_WARN(DEFAULT_ARCHIVE \`$DEFAULT_ARCHIVE' not found on this system)
+  fi
+  # Look for DEFTAPE in <sys/mtio.h>.  Rearrange, here.  FIXME.
+  case $DEFAULT_ARCHIVE in
+changequote(, )dnl
+    *[0-7][lmh])
+      device_prefix=`echo $DEFAULT_ARCHIVE | sed 's/[0-7][lmh]$//'`
+changequote([, ])dnl
+      AC_DEFINE_UNQUOTED(DEVICE_PREFIX, "$device_prefix")
+      AC_DEFINE(DENSITY_LETTER)
+      ;;
+changequote(, )dnl
+    *[0-7])
+      device_prefix=`echo $DEFAULT_ARCHIVE | sed 's/[0-7]$//'`
+changequote([, ])dnl
+      AC_DEFINE_UNQUOTED(DEVICE_PREFIX, "$device_prefix")
+      ;;
+  esac
+fi
+AC_DEFINE_UNQUOTED(DEFAULT_ARCHIVE, "$DEFAULT_ARCHIVE")
+AC_MSG_RESULT($DEFAULT_ARCHIVE)
+
+AC_MSG_CHECKING(for default blocking)
+DEFAULT_BLOCKING=${DEFAULT_BLOCKING-20}
+AC_DEFINE_UNQUOTED(DEFAULT_BLOCKING, $DEFAULT_BLOCKING)
+AC_MSG_RESULT($DEFAULT_BLOCKING)
+
+fp_WITH_DMALLOC
+fp_WITH_REGEX
+
+# ----------------------
+# Beginning of NLS block.
+#
+ud_GNU_GETTEXT
+for file in `cat $srcdir/po/POTFILES`; do
+  POTFILES="$POTFILES ../$file"
+done
+AC_SUBST(POTFILES)
+AC_HAVE_HEADERS(values.h)
+AC_C_INLINE
+AC_TYPE_OFF_T
+AC_SIZEOF_TYPE(unsigned short)
+AC_SIZEOF_TYPE(unsigned int)
+AC_FUNC_MMAP
+AC_CHECK_FUNCS(putenv setenv)
+
+test -d intl || mkdir intl
+case "$target" in
+  *-linux*) cp $srcdir/intl/linux-msg.sed intl/po-to-msg.sed ;;
+  *)        cp $srcdir/intl/xopen-msg.sed intl/po-to-msg.sed ;;
+esac
+chmod +w intl/po-to-msg.sed
+if test -n "$nls_cv_header_libgt" && test -n "$nls_cv_header_intl"; then
+  cp $srcdir/$nls_cv_header_libgt $nls_cv_header_intl
+  chmod +w $nls_cv_header_intl
+fi
+#
+# End of NLS block.
+# -----------------
+
+AC_OUTPUT([Makefile doc/Makefile intl/Makefile lib/Makefile po/Makefile \
+src/Makefile scripts/Makefile],
+[test -z "$CONFIG_HEADERS" || echo timestamp > stamp-h])
