@@ -27,6 +27,13 @@ anyone else from sharing it farther.  Help stamp out software hoarding!
  * Created 25 August 1985 by John Gilmore, ihnp4!hoptoad!gnu.
  */
 
+#include "testpad.h"
+
+/* major() and minor() macros (among other things) defined here for hpux */
+#ifdef hpux
+#include <sys/mknod.h>
+#endif
+
 /*
  * Kludge for handling systems that can't cope with multiple
  * external definitions of a variable.  In ONE routine (tar.c),
@@ -37,7 +44,7 @@ anyone else from sharing it farther.  Help stamp out software hoarding!
 #define TAR_EXTERN extern
 #endif
 
-#if defined(USG) && !defined(XENIX)
+#if defined(USG) && !defined(XENIX) && !defined(HAVE_SIZE_T)
 typedef int size_t;
 #endif
 
@@ -66,7 +73,6 @@ struct sp_array {
 	int numbytes;
 };
 
-
 union record {
 	char		charptr[RECORDSIZE];
 	struct header {
@@ -90,6 +96,9 @@ union record {
 		char	ctime[12];
 		char	offset[12];
 		char	longnames[4];
+#ifdef NEEDPAD
+		char    pad;
+#endif
 		struct	sparse sp[SPARSE_IN_HDR];
 		char	isextended;
 		char	realsize[12];		/* true size of the sparse file */
@@ -163,6 +172,9 @@ TAR_EXTERN char		*name_file;	/* File containing names to work on */
 TAR_EXTERN char		*tar;		/* Name of this program */
 TAR_EXTERN struct sp_array *sparsearray;/* Pointer to the start of the scratch space */
 TAR_EXTERN int		sp_array_size;	/* Initial size of the sparsearray */
+TAR_EXTERN int 		tot_written;    /* Total written to output */
+TAR_EXTERN struct re_pattern_buffer
+  			*label_pattern;	/* compiled regex for extract label */
 
 /*
  * Flags from the command line
@@ -196,6 +208,7 @@ TAR_EXTERN int	f_ignorez;		/* -i */
 TAR_EXTERN int	f_keep;			/* -k */
 TAR_EXTERN int	f_startfile;		/* -K */
 TAR_EXTERN int	f_local_filesys;	/* -l */
+TAR_EXTERN int  tape_length;		/* -L */
 TAR_EXTERN int	f_modified;		/* -m */
 TAR_EXTERN int 	f_multivol;		/* -M */
 TAR_EXTERN int	f_new_files;		/* -N */
@@ -217,6 +230,7 @@ TAR_EXTERN int  f_exclude;		/* -X */
 TAR_EXTERN int 	f_compress;		/* -z */
 					/* -Z */
 TAR_EXTERN int	f_do_chown;		/* +do-chown */
+TAR_EXTERN int  f_totals;		/* +totals */
 
 /*
  * We now default to Unix Standard format rather than 4.2BSD tar format.
@@ -241,6 +255,7 @@ struct name {
 	char		regexp;		/* This name is a regexp, not literal */
 	char		*change_dir;	/* JF set with the -C option */
 	char		*dir_contents;	/* JF for f_gnudump */
+	char		fake;		/* dummy entry */
 	char		name[1];
 };
 
@@ -267,7 +282,7 @@ union record *endofrecs();
 void anno();
 
 /* Do not prototype these for BSD--see port.c [DOPRNT_MSG].  */
-#if defined(__STDC__) && !defined(BSD42)
+#if defined(__STDC__) && (!defined(BSD42) || defined(STDC_MSG))
 void msg(char *, ...);
 void msg_perror(char *, ...);
 #else

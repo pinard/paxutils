@@ -675,11 +675,11 @@ skip_extended_headers()
 	for (;;) {
 	    exhdr = findrec();
 	    if (!exhdr->ext_hdr.isextended) {
-	    	userec(exhdr);
+	        userec(exhdr);
 	    	break;
 	    }
+	    userec (exhdr);
 	}
-	userec(exhdr);
 }
 
 /*

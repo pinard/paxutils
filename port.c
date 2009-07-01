@@ -65,7 +65,7 @@ extern long baserec;
 /* JF: modified so all configuration information can appear here, instead of
    being scattered through the file.  Add all the machine-dependent #ifdefs
    here */
-#undef WANT_DUMB_GETDATE/* WANT_DUMB_GETDATE --> getdate() */
+#undef WANT_DUMB_GET_DATE/* WANT_DUMB_GET_DATE --> get_date() */
 #undef WANT_VALLOC	/* WANT_VALLOC --> valloc() */
 #undef WANT_MKDIR	/* WANT_MKDIR --> mkdir() rmdir() */
 #undef WANT_STRING	/* WANT_STRING --> index() bcopy() bzero() bcmp() */
@@ -102,6 +102,10 @@ extern long baserec;
 
 #endif
 
+#ifdef hpux
+#define WANT_VALLOC
+#endif
+
 #ifdef MINIX
 #define WANT_BZERO
 #endif
@@ -127,7 +131,9 @@ char TTY_NAME[] ="/dev/tty";
 
 #define WANT_UTILS
 #define WANT_CK_PIPE
+#ifndef HAVE_STRSTR
 #define WANT_STRSTR
+#endif
 
 #if (!defined(STDC_MSG) && !defined(DOPRNT_MSG) && !defined(VARARGS_MSG) && !defined(LOSING_MSG))
 #ifdef BSD42
@@ -150,19 +156,19 @@ char TTY_NAME[] ="/dev/tty";
 
 /* End of system-dependent #ifdefs */
 
-#ifdef WANT_DUMB_GETDATE
-/* JF a getdate() routine takes a date/time/etc and turns it into a time_t */
+#ifdef WANT_DUMB_GET_DATE
+/* JF a get_date() routine takes a date/time/etc and turns it into a time_t */
 /* This one is a quick hack I wrote in about five minutes to see if the N
    option works.  Someone should replace it with one that works */
 
-/* This getdate takes an arg of the form mm/dd/yyyy hh:mm:ss and turns it
+/* This get_date takes an arg of the form mm/dd/yyyy hh:mm:ss and turns it
    into a time_t .  Its not well tested or anything. . .  */
-/* In general, you should use the getdate() supplied in getdate.y */
+/* In general, you should use the get_date() supplied in getdate.y */
 
 #define OFF_FROM GMT 18000		/* Change for your time zone! */
 
 time_t
-getdate(str)
+get_date(str)
 char *str;
 {
 	int month,day,year,hour,minute,second;
@@ -1106,6 +1112,8 @@ char *wanted;
 	register char firstc;
 	extern int strcmp();
 
+	if (*wanted == '\0')
+	  return (char *)0;
 	/*
 	 * The odd placement of the two tests is so "" is findable.
 	 * Also, we inline the first char for speed.

@@ -1,3 +1,195 @@
+Mon Jul  1 14:14:06 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* Release of version 1.10; appropriate changes to README.
+
+	* create.c: Removed printf's about sparse files.
+
+	* Fix a misplaced quote in level-0 and change some >& into
+	2>&1.
+
+Fri Jun 21 23:04:31 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* list.c (skip_extended_headers): Userec was being called in
+	the wrong place.
+
+Thu Jun 20 19:10:35 1991  David J. MacKenzie  (djm at geech.gnu.ai.mit.edu)
+
+	* tar.h: Use ANSI prototypes for msg and msg_perror if
+	STDC_MSG is defined, even if BSD42 is also.
+
+	* Makefile: Replace DESTDIR with bindir.
+	(install): Don't install tar.texinfo.  There's no standard
+	place for texinfo files, and /usr/local/man is inappropriate.
+	Add TAGS, distclean, and realclean targets and SHELL= line.
+
+	* version.c: Move old change history to bottom of ChangeLog.
+
+Wed Jun 12 12:43:58 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* rtape_lib.c (__rmt_write): #ifdef should reference
+	SIGNAL_VOID, not USG.
+
+Wed Jun  5 14:57:11 1991  Michael I Bushnell  (mib@geech.gnu.ai.mit.edu)
+
+	* tar.c (name_match, addname): Ugly hack to handle -C without
+	any files specified.  
+	tar.h (struct name): New field for ugly hack.
+
+Mon Jun  3 14:46:46 1991  Michael I Bushnell  (mib@geech.gnu.ai.mit.edu)
+
+	* testpad.c: New file to determine if we need special padding
+	in struct header in tar.h.
+
+	* tar.h (struct header): include padding if necessary, include
+	testpad.h.
+
+	* Makefile: rules to create testpad.h, etc.
+
+Wed May 22 16:02:35 1991  Michael I Bushnell  (mib@churchy.gnu.ai.mit.edu)
+
+	* tar.c (options): -L takes an argument.
+
+	* rtape_lib.c (__rmt_open): add /usr/bin/nsh to the list of
+	remote shell programs.
+
+	* create.c: define MAXPATHLEN if we don't get it from a system
+	header file.
+
+	* create.c (deal_with_sparse): return a real return value if
+	we can't open the file.
+
+	* tar.c (long_options): +newer takes an argument.
+	(describe): fix printing in various trivial ways
+
+Tue May 21 17:15:19 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* tar.c (long_options): +get and +concatentate don't require arguments
+
+Mon May 20 15:55:30 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* create.c (write_eot): Don't try and write an EOF if we are
+	already at one.
+
+	* port.c (strstr): Looking for null string should return zero.
+
+Sun May 19 22:30:10 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* tar.c (options): -l doesn't take an argument
+
+	* Makefile: minor fix for SGI 4D defines from torda@scum.ethz.ch
+
+	* rtape_server.c (main.c): Suggested mod for 386/AIX from
+	Minh Tran-Le.  I'm suspicious about this one.
+
+	* create.c (dump_file): Mods from Minh Tran-Le for hidden
+	files on AIX.
+	gnu.c (collect_and_sort_name, get_dir_contents): AIX hidden file mod.
+
+	* tar.c: (name_next): Mod from David Taylor to allow -C inside
+	a file list given to -T.
+
+	* Makefile: Comment describing presence of USE_REXEC.
+
+	* extract.c (extract_archive, case LF_SPARSE): zero check for
+	last element on numbytes needs to look at value after
+	converted from octal.
+
+	* port.c: Don't always demand strstr, check for HAVE_STRSTR
+	instead.
+	Makefile: Comment describing presence of HAVE_STRSTR option.
+
+Sun May 19 18:39:48 1991  David J. MacKenzie  (djm at churchy.gnu.ai.mit.edu)
+
+	* port.c (get_date): Renamed from getdate, to avoid SVR4 conflict.
+	* tar.c: Call get_date instead of getdate.
+
+Fri May 10 02:58:17 1991  Noah Friedman  (friedman at nutrimat)
+
+        * tar.c:  added "\n\" to the end of some documentation strings
+          where they were left off.  
+
+Thu May  9 17:28:54 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* Makefile: added level-0, level-1, and backup-specs to AUX.
+	* version.c: changed to 1.10 beta.
+	* README: updated for 1.10 beta release.
+
+Tue Apr  2 12:04:54 1991  Michael I Bushnell  (mib at godwin)
+
+	* create.c (dump_file): HPUX's st_blocks is in 1024 byte units
+	instead of 512 like the rest of the world, so I special cased
+	it.
+	* tar.c: Undo Noah's changes.
+
+Mon Apr  1 17:49:28 1991  Noah Friedman  (friedman at wookumz.gnu.ai.mit.edu)
+
+        (This ought to be temporary until things are fixed properly. )
+
+        * tar.c: (struct option long_options):  flag for "sparse" zero if
+          compiling under hpux. 
+          tar.c: (functon options): case 'S' is a no-op if compiling under
+          hpux. 
+
+Sat Mar 30 12:20:41 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* tar.h: new variable tape_length.
+
+	* tar.c (options): add new option +tape-length / -L.
+
+	* buffer.c (fl_write): Turn #ifdef TEST code for limited tape
+	length on always, for tape-length option.
+
+	* create.c (dump_file): avoid apollo lossage where S_IFIFO == S_IFSOCK.
+
+        * buffer.c: include regex.h
+	* buffer.c (fl_read, open_archive): Use regex routines for
+	volume header match.
+	* xmalloc.c: removed file; wasn't necessary.
+	* tar.c: (main) use ck_malloc instead of xmalloc.
+
+Thu Mar 28 04:05:05 1991  Noah Friedman  (friedman at goldman)
+
+        * regex.c, regex.o: New links. 
+        * tar.c: include regex.h. 
+        * Makefile (OBJ2): Add regex.o.
+        (regex.o, tar.o): Depend on regex.h
+        (SRC2, AUX): Add the new files.
+
+Sat Mar 23 15:39:42 1991  Noah Friedman  (friedman at wookumz.gnu.ai.mit.edu)
+
+        * Makefile: added default flags and options for compiling under
+          hpux.
+
+        * Added files alloca.c and xmalloc.c 
+
+Sat Mar 23 14:35:31 1991  Michael I Bushnell  (mib at geech.gnu.ai.mit.edu)
+
+	* port.c: Define WANT_VALLOC in HPUX.
+
+Fri Mar 15 06:20:15 1991  David J. MacKenzie  (djm at geech.ai.mit.edu)
+
+	* rtape_lib.c: If USG and not HAVE_MTIO, define NO_RMTIOCTL
+	automatically.
+	(_rmt_rexec): Temporarily re-open stdin and stdout to
+	/dev/tty, to guarantee that rexec() can prompt and read the
+	login name and password from the user.
+	From pascal@cnam.cnam.fr (Pascal Meheut).
+	* Makefile: Mention -DUSE_REXEC.
+
+Fri Mar  8 20:15:11 1991  Michael I Bushnell  (mib at wookumz.ai.mit.edu)
+
+	* tar.h, Makefile:  Makefile CPP macro HAVE_SIZE_T might be
+	useful for some people.
+
+	* gnu.c: lstat->stat define where appropriate
+
+	* buffer.c (fl_write): keep track of amount written for +totals.
+	* tar.c, tar.h: set flag f_totals from +totals option
+	* tar.h (f_totals, tot_written): new variables
+	* tar.c (main): print total written with CMD_CREATE
+
+	* tar.c (main): return appropriate exit status
+
 Thu Jan 17 00:50:21 1991  David J. MacKenzie  (djm at apple-gunkies)
 
 	* port.c: Remove a spurious `+' between functions (a remnant
@@ -120,6 +312,8 @@ Thu Oct 25 16:03:58 EDT 1990	Jay Fenlason (hack@ai.mit.edu)
 	gnu.c		Add forward reference for add_dir_name().
 
 Tue Oct 16 11:04:52 EDT 1990	Jay Fenlason (hack@ai.mit.edu)
+
+	1.09	New -G file implementation of gnu-dump stuff.
 
 	* tar.c  (name_add)  Get the calls to ck_realloc and ck_malloc right.
 
@@ -368,6 +562,8 @@ Mon Feb  5 14:29:21 EST 1990	Jay Fenlason	(hack@wookumz)
 		  Fix typo in #ifdef WANT_GETWD
 
 Fri Jan 26 16:11:20 EST 1990	Jay Fenlason	(hack@wookumz)
+
+	1.08	Sparse file support added.  Also various other features.
 
 	* diffarch.c (compare_chunk)  Include correct arguments in
 	a call to fprintf() for an error msg.
@@ -628,6 +824,72 @@ Thu Aug 24 10:09:38 EDT 1989		Joy Kendall (jak at spiff)
 
 	* tar.c: added long-named options to make tar compatible with
 	getopt_long, changed Makefile.
+
+... ... .. ..:..:.. ... ....	Jay Fenlason (hack@ai.mit.edu)
+
+	1.07	New version to go on beta tape with GCC 1.35
+	Better USG support.  Also support for __builtin_alloca
+	if we're compiling with GCC.
+	diffarch.c: Include the correct header files so MTIOCTOP
+	is defined.
+	tar.c:  Don't print the verbose list of options unless
+	given -help.  The list of options is *way* too long.
+
+	1.06	Use STDC_MSG if __STDC__ defined
+	ENXIO meand end-of-volume in archive (for the UNIX PC)
+	Added break after volume-header case (line 440) extract.c
+	Added patch from arnold@unix.cc.emory.edu to rtape_lib.c
+	Added f_absolute_paths option.
+	Deleted refereces to UN*X manual sections (dump(8), etc)
+	Fixed to not core-dump on illegal options
+	Modified msg_perror to call perror("") instead of perror(0)
+	patch so -X - works
+	Fixed tar.c so 'tar cf - -C dir' doesn't core-dump
+	tar.c (name_match): Fixed to chdir() to the appropriate
+	directory if the matching name's change_dir is set.  This
+	makes tar xv -C foo {files} work.
+
+	1.05	A fix to make confirm() work when the archive is on stdin
+	include 'extern FILE *msg_file;' in pr_mkdir(), and fix
+	tar.h to work with __STDC__
+
+	Added to port.c: mkdir() ftruncate()  Removed: lstat()
+	Fixed -G to work with -X
+	Another fix to tar.texinfo
+	Changed tar.c to say argv[0]":you must specify exactly ...
+	buffer.c: modified child_open() to keep tar from hanging when
+	it is done reading/writing a compressed archive
+	added fflush(msg_file) before printing error messages
+	create.c: fixed to make link_names non-absolute
+
+	1.04	Added functions msg() and msg_perror()  Modified all the
+	files to call them.  Also checked that all (I hope)
+	calls to msg_perror() have a valid errno value
+	(modified anno() to leave errno alone), etc
+	Re-fixed the -X option.  This time for sure. . .
+	re-modified the msg stuff.  flushed anno() completely
+	Modified the directory stuff so it should work on sysV boxes
+	added ftime() to getdate.y
+	Fixed un_quote_string() so it won't wedge on \" Also fixed
+	\ddd (like \123, etc)
+	More fixes to tar.texinfo
+
+	1.03	Fixed buffer.c so 'tar tzf NON_EXISTENT_FILE' returns an error
+	message instead of hanging forever
+	More fixes to tar.texinfo
+
+	1.02	Fixed tar.c so 'tar -h' and 'tar -v' don't cause core dump
+	Also fixed the 'usage' message to be more up-to-date.
+	Fixed diffarch.c so verify should compile without MTIOCTOP
+	defined
+
+	1.01	Fixed typoes in tar.texinfo
+	Fixed a bug in the #define for rmtcreat()
+	Fixed the -X option to not call realloc() of 0.
+
+	Version 1.00:  version.c added.  -version option added
+	Installed new version of the remote-tape library
+	Added -help option
 
 Local Variables:
 mode: indented-text

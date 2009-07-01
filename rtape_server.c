@@ -37,6 +37,10 @@ static char sccsid[] = "@(#)rmt.c	5.4 (Berkeley) 6/29/88";
 #include <sys/mtio.h>
 #include <errno.h>
 
+#if defined (i386) && defined (AIX)
+#include <fcntl.h>
+#endif
+
 int	tape = -1;
 
 char	*record;
@@ -85,7 +89,31 @@ top:
 			(void) close(tape);
 		getstring(device); getstring(mode);
 		DEBUG2("rmtd: O %s %s\n", device, mode);
+#if defined (i386) && defined (AIX)
+		/* This is alleged to fix a byte ordering problem. */
+		/* I'm quite suspicious if it's right. -- mib */
+		{
+		  int oflag = atoi (mode);
+		  int nflag = 0;
+		  if ((oflag & 3) == 0)
+		    nflag |= O_RDONLY;
+		  if (oflag & 1)
+		    nflag |= O_WRONLY;
+		  if (oflag & 2)
+		    nflag |= O_RDWR;
+		  if (oflag & 0x0008)
+		    nflag |= O_APPEND;
+		  if (oflag & 0x0200)
+		    nflag |= O_CREAT;
+		  if (oflag & 0x0400)
+		    nflag |= O_TRUNC;
+		  if (oflag & 0x0800)
+		    nflag |= O_EXCL;
+		  tape = open (device, nflag, 0666);
+		}
+#else		
 		tape = open(device, atoi(mode),0666);
+#endif
 		if (tape < 0)
 			goto ioerror;
 		goto respond;

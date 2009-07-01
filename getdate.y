@@ -14,6 +14,20 @@
 /* SUPPRESS 287 on yaccpar_sccsid *//* Unusd static variable */
 /* SUPPRESS 288 on yyerrlab *//* Label unused */
 
+#ifdef __GNUC__
+#define alloca __builtin_alloca
+#else
+#ifdef sparc
+#include <alloca.h>
+#else
+#ifdef _AIX /* for Bison */
+#pragma alloca
+#else
+char *alloca ();
+#endif
+#endif
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -785,7 +799,7 @@ yylex()
 
 
 time_t
-getdate(p, now)
+get_date(p, now)
     char		*p;
     struct timeb	*now;
 {
@@ -868,7 +882,7 @@ main(ac, av)
     (void)printf("Enter date, or blank line to exit.\n\t> ");
     (void)fflush(stdout);
     while (gets(buff) && buff[0]) {
-	d = getdate(buff, (struct timeb *)NULL);
+	d = get_date(buff, (struct timeb *)NULL);
 	if (d == -1)
 	    (void)printf("Bad format - couldn't convert.\n");
 	else

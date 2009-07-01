@@ -69,15 +69,11 @@ static char *RCSid = "$Header: /usr/src/local/usr.lib/librmt/RCS/rmtlib.c,v 1.7 
  *	Fred Fish, with some additional work by Arnold Robbins.
  */
  
-/*
- *	MAXUNIT --- Maximum number of remote tape file units
- *
- *	READ --- Return the number of the read side file descriptor
- *	WRITE --- Return the number of the write side file descriptor
- */
+/* Use -DUSE_REXEC for rexec code, courtesy of Dan Kegel, srs!dan */
 
-/* #define RMTIOCTL	1	Use -DNO_RMTIOCTL to disable rmtioctl() calls */
-/* #define USE_REXEC	1	/* rexec code courtesy of Dan Kegel, srs!dan */
+#if defined(USG) && !defined(HAVE_MTIO)
+#define NO_RMTIOCTL
+#endif
 
 #include <stdio.h>
 #include <signal.h>
@@ -97,8 +93,16 @@ static char *RCSid = "$Header: /usr/src/local/usr.lib/librmt/RCS/rmtlib.c,v 1.7 
 #include <sys/stat.h>
 
 #define BUFMAGIC	64	/* a magic number for buffer sizes */
+
+/*
+ *	MAXUNIT --- Maximum number of remote tape file units
+ */
 #define MAXUNIT	4
 
+/*
+ *	READ --- Return the number of the read side file descriptor
+ *	WRITE --- Return the number of the write side file descriptor
+ */
 #define READ(fd)	(Ctp[fd][0])
 #define WRITE(fd)	(Ptc[fd][1])
 
@@ -133,7 +137,7 @@ int fildes;
 char *buf;
 {
 	register int blen;
-#ifdef USG
+#ifdef SIGNAL_VOID
 	void (*pstat)();
 #else
 	int (*pstat)();
@@ -258,6 +262,21 @@ char *host;
 char *user;		/* may be NULL */
 {
 	struct servent *rexecserv;
+	int save_stdin = dup(fileno(stdin));
+	int save_stdout = dup(fileno(stdout));
+	int tape_fd;		/* Return value. */
+
+	/*
+	 * When using cpio -o < filename, stdin is no longer the tty.
+	 * But the rexec subroutine reads the login and the passwd on stdin, 
+	 * to allow remote execution of the command.
+	 * So, reopen stdin and stdout on /dev/tty before the rexec and
+	 * give them back their original value after.
+	 */
+	if (freopen("/dev/tty", "r", stdin) == NULL)
+		freopen("/dev/null", "r", stdin);
+	if (freopen("/dev/tty", "w", stdout) == NULL)
+		freopen("/dev/null", "w", stdout);
 
 	rexecserv = getservbyname("exec", "tcp");
 	if (NULL == rexecserv) {
@@ -266,8 +285,14 @@ char *user;		/* may be NULL */
 	}
 	if ((user != NULL) && *user == '\0')
 		user = (char *) NULL;
-	return rexec (&host, rexecserv->s_port, user, NULL,
-			"/etc/rmt", (int *)NULL);
+	tape_fd = rexec (&host, rexecserv->s_port, user, NULL,
+			 "/etc/rmt", (int *)NULL);
+	fclose(stdin);
+	fdopen(save_stdin, "r");
+	fclose(stdout);
+	fdopen(save_stdout, "w");
+
+	return tape_fd;
 }
 #endif /* USE_REXEC */
 
@@ -395,6 +420,8 @@ int bias;
 				"/etc/rmt", (char *) 0);
 			execl("/usr/bsd/rsh", "rsh", system, "-l", login,
 				"/etc/rmt", (char *)0);
+			execl("/usr/bin/nsh", "nsh", system, "-l", login,
+			        "/etc/rmt", (char *)0);
 		}
 		else
 		{
@@ -406,6 +433,8 @@ int bias;
 				"/etc/rmt", (char *) 0);
 			execl("/usr/bsd/rsh", "rsh", system,
 				"/etc/rmt", (char *) 0);
+			execl("/usr/bin/nsh", "nsh", system,
+			        "/etc/rmt", (char *)0);
 		}
 
 /*
@@ -496,7 +525,7 @@ char *buf;
 unsigned int nbyte;
 {
 	char buffer[BUFMAGIC];
-#ifdef USG
+#ifdef SIGNAL_VOID
 	void (*pstat)();
 #else
 	int (*pstat)();

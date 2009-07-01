@@ -53,6 +53,7 @@ extern int errno;
 #include "tar.h"
 #include "port.h"
 #include "rmt.h"
+#include "regex.h"
 
 /* Either stdout or stderr:  The thing we write messages (standard msgs, not
    errors) to.  Stdout unless we're writing a pipe, in which case stderr */
@@ -582,6 +583,7 @@ open_archive(reading)
 
 		if(f_volhdr) {
 			union record *head;
+#if 0
 			char *ptr;
 
 			if(f_multivol) {
@@ -589,17 +591,26 @@ open_archive(reading)
 				sprintf(ptr,"%s Volume %d",f_volhdr,1);
 			} else
 				ptr=f_volhdr;
+#endif
 			head=findrec();
 			if(!head) {
-				msg("Archive not labelled %s",ptr);
+				msg("Archive not labelled to match %s",f_volhdr);
 				exit(EX_BADVOL);
 			}
+			if (re_match (label_pattern, head->header.name,
+				      strlen (head->header.name), 0, 0) < 0) {
+				msg ("Volume mismatch!  %s!=%s", f_volhdr,
+				     head->header.name);
+				exit (EX_BADVOL);
+			}
+#if 0			
 			if(strcmp(ptr,head->header.name)) {
 				msg("Volume mismatch!  %s!=%s",ptr,head->header.name);
 				exit(EX_BADVOL);
 			}
 			if(ptr!=f_volhdr)
 				free(ptr);
+#endif
 		}
 	} else if(f_volhdr) {
 		bzero((void *)ar_block,RECORDSIZE);
@@ -650,24 +661,20 @@ fl_write()
 {
 	int err;
 	int copy_back;
-#ifdef TEST
-	static long test_written = 0;
-#endif
+	static long bytes_written = 0;
 
-#ifdef TEST
-	if(test_written>=30720) {
+	if(tape_length && bytes_written >= tape_length * 1024) {
 		errno = ENOSPC;
 		err = 0;
 	} else
-#endif
-	err = rmtwrite(archive, ar_block->charptr,(int) blocksize);
+		err = rmtwrite(archive, ar_block->charptr,(int) blocksize);
 	if(err!=blocksize && !f_multivol)
 		writeerror(err);
+	else if (f_totals)
+	        tot_written += blocksize;
 
-#ifdef TEST
 	if(err>0)
-		test_written+=err;
-#endif
+		bytes_written+=err;
 	if (err == blocksize) {
 		if(f_multivol) {
 			if(!save_name) {
@@ -697,9 +704,7 @@ fl_write()
 
 	if(new_volume(0)<0)
 		return;
-#ifdef TEST
-	test_written=0;
-#endif
+	bytes_written=0;
 	if(f_volhdr && real_s_name[0]) {
 		copy_back=2;
 		ar_block-=2;
@@ -738,10 +743,11 @@ fl_write()
 	err = rmtwrite(archive, ar_block->charptr,(int) blocksize);
 	if(err!=blocksize)
 		writeerror(err);
+	else if (f_totals)
+	        tot_written += blocksize;
+	        
 
-#ifdef TEST
-	test_written = blocksize;
-#endif
+	bytes_written = blocksize;
 	if(copy_back) {
 		ar_block+=copy_back;
 		bcopy((void *)(ar_block+blocking-copy_back),
@@ -897,10 +903,22 @@ error_loop:
 
 		if(head->header.linkflag==LF_VOLHDR) {
 			if(f_volhdr) {
+#if 0
 				char *ptr;
 
 				ptr=(char *)malloc(strlen(f_volhdr)+20);
 				sprintf(ptr,"%s Volume %d",f_volhdr,volno);
+#endif
+				if (re_match (label_pattern, head->header.name,
+					      strlen (head->header.name),
+					      0, 0) < 0) {
+					msg("Volume mismatch! %s!=%s",f_volhdr,
+					    head->header.name);
+					--volno;
+					goto try_volume;
+				      }
+				    
+#if 0
  				if(strcmp(ptr,head->header.name)) {
 					msg("Volume mismatch! %s!=%s",ptr,head->header.name);
 					--volno;
@@ -908,6 +926,7 @@ error_loop:
 					goto try_volume;
 				}
 				free(ptr);
+#endif
 			}
 			if(f_verbose)
 				fprintf(msg_file,"Reading %s",head->header.name);
@@ -1206,7 +1225,7 @@ int	type;
 	if (f_run_script_at_end)
 		system(info_script);
 	else for(;;) {
-		fprintf(msg_file,"Prepare volume #%d and hit return: ",volno);
+		fprintf(msg_file,"\007Prepare volume #%d and hit return: ",volno);
 		fflush(msg_file);
 		if(fgets(inbuf,sizeof(inbuf),read_file)==0) {
  			fprintf(msg_file,"EOF?  What does that mean?");

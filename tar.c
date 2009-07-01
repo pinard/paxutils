@@ -31,6 +31,7 @@ anyone else from sharing it farther.  Help stamp out software hoarding!
 #include <sys/types.h>		/* Needed for typedefs in tar.h */
 #include <sys/stat.h>		/* JF */
 #include "getopt.h"
+#include "regex.h"
 
 #ifdef USG
 #define rindex strrchr
@@ -101,7 +102,7 @@ extern void	update_archive();
 extern void	junk_archive();
 
 /* JF */
-extern time_t	getdate();
+extern time_t	get_date();
 
 time_t new_time;
 
@@ -143,11 +144,11 @@ struct option long_options[] =
 	{"create",		0,	0,			'c'},
 	{"append",		0,	0,			'r'},
 	{"extract",		0,	0,			'x'},
-	{"get",			1,	0,			'x'},
+	{"get",			0,	0,			'x'},
 	{"list",		0,	0,			't'},
 	{"update",		0,	0,			'u'},
 	{"catenate",		0,	0,			'A'},
-	{"concatenate",		1,	0,			'A'},
+	{"concatenate",		0,	0,			'A'},
 	{"compare",		0,	0,			'd'},
 	{"diff",		0,	0,			'd'},
 	{"delete",		0,	0,			14},
@@ -163,7 +164,8 @@ struct option long_options[] =
 	{"block-size",		1,	0,			'b'},
 	{"version",		0,	0,			11},
 	{"verbose", 		0,	0,			'v'},
-
+	{"totals",		0,	&f_totals,		1},
+	  
 	{"read-full-blocks",	0,	&f_reblock,		1},
 	{"starting-file",	1,	0,			'K'},
 	{"to-stdout",		0,	&f_exstdout,		1},
@@ -178,7 +180,7 @@ struct option long_options[] =
 	{"same-owner",		0,	&f_do_chown,		1},
 	{"preserve-order",	0,	&f_sorted_names,	1},
 
-	{"newer",		0,	0,			'N'},
+	{"newer",		1,	0,			'N'},
 	{"after-date",		1,	0,			'N'},
 	{"newer-mtime",		1,	0,			13},
 	{"incremental",		0,	0,			'G'},
@@ -197,6 +199,7 @@ struct option long_options[] =
 	{"compress",		0,	&f_compress,		1},
 	{"compress-block",	0,	&f_compress,		2},
 	{"sparse",		0,	&f_sparse_files,	1},
+	{"tape-length",		1,	0,			'L'},
 
 	{0, 0, 0, 0}
 };
@@ -211,6 +214,7 @@ main(argc, argv)
 	extern char version_string[];
 
 	tar = argv[0];		/* JF: was "tar" Set program name */
+	errors = 0;
 
 	options(argc, argv);
 
@@ -228,13 +232,46 @@ main(argc, argv)
 		break;
 	case CMD_CREATE:
 		create_archive();
+		if (f_totals)
+			fprintf (stderr, "Total bytes written: %d\n", tot_written);
 		break;
 	case CMD_EXTRACT:
+		if (f_volhdr) {
+			char *err;
+			label_pattern = (struct re_pattern_buffer *)
+			  ck_malloc (sizeof *label_pattern);
+		 	err = re_compile_pattern (f_volhdr, strlen (f_volhdr),
+						  label_pattern);
+			if (err) {
+				fprintf (stderr,"Bad regular expression: %s\n",
+					 err);
+				errors++;
+				break;
+			}
+		   
+		}		  
 		extr_init();
 		read_and(extract_archive);
 		break;
 	case CMD_LIST:
+		if (f_volhdr) {
+			char *err;
+			label_pattern = (struct re_pattern_buffer *)
+			  ck_malloc (sizeof *label_pattern);
+		 	err = re_compile_pattern (f_volhdr, strlen (f_volhdr),
+						  label_pattern);
+			if (err) {
+				fprintf (stderr,"Bad regular expression: %s\n",
+					 err);
+				errors++;
+				break;
+			}
+		}		  
 		read_and(list_archive);
+#if 0
+		if (!errors)
+			errors = different;
+#endif
 		break;
 	case CMD_DIFF:
 		diff_init();
@@ -248,7 +285,7 @@ main(argc, argv)
  		fprintf(stderr,"For more information, type ``%s +help''.\n",tar);
 		exit(EX_ARGSBAD);
 	}
-	exit(0);
+	exit(errors);
 	/* NOTREACHED */
 }
 
@@ -272,7 +309,7 @@ options(argc, argv)
 
 	/* Parse options */
 	while ((c = getoldopt(argc, argv,
-			      "-01234567Ab:BcC:df:F:g:GhikK:lmMN:oOpPrRsStT:uvV:wWxX:zZ",
+			      "-01234567Ab:BcC:df:F:g:GhikK:lL:mMN:oOpPrRsStT:uvV:wWxX:zZ",
 			      long_options, &ind)) != EOF) {
 		switch (c) {
 		case 0:		/* long options that set a single flag */
@@ -444,6 +481,10 @@ options(argc, argv)
 			f_local_filesys++;
 			break;
 
+		case 'L':
+			tape_length = intconv (optarg);
+			f_multivol++;
+			break;
 		case 'm':
 			f_modified++;
 			break;
@@ -458,7 +499,7 @@ options(argc, argv)
 		case 'N':			/* Only write files newer than X */
 		get_newer:
 			f_new_files++;
-			new_time=getdate(optarg,(struct timeb *)0);
+			new_time=get_date(optarg,(struct timeb *)0);
 			break;
 
 		case 'o':			/* Generate old archive */
@@ -573,14 +614,17 @@ describe()
 {
 	msg("choose one of the following:");
 	fputs("\
--A, +catenate		append tar files to an archive\n\
+-A, +catenate,\n\
+    +concatenate	append tar files to an archive\n\
 -c, +create		create a new archive\n\
--d, +diff		find differences between archive and file system\n\
-    +delete		delete from the archive (not for use on mag tapes!)\n\
+-d, +diff,\n\
+    +compare		find differences between archive and file system\n\
++delete			delete from the archive (not for use on mag tapes!)\n\
 -r, +append		append files to the end of an archive\n\
 -t, +list		list the contents of an archive\n\
 -u, +update		only append files that are newer than copy in archive\n\
--x, +extract		extract files from an archive\n",stderr);
+-x, +extract,\n\
+    +get		extract files from an archive\n",stderr);
 
 	fprintf(stderr, "\
 Other options:\n\
@@ -591,34 +635,46 @@ Other options:\n\
 ", stderr); /* KLUDGE */ fprintf(stderr, "\
 -f, +file [HOSTNAME:]F	use archive file or device F (default %s)\n",
 				 DEF_AR_FILE); fputs("\
--G, +incremental F	create/list/extract GNU-format incremental backup\n\
+-F, +info-script F	run script at end of each tape (implies -M)\n\
+-G, +incremental	create/list/extract old GNU-format incremental backup\n\
+-g, +listed-incremental F create/list/extract new GNU-format incremental backup\n\
 -h, +dereference	don't dump symlinks; dump the files they point to\n\
 -i, +ignore-zeros	ignore blocks of zeros in archive (normally mean EOF)\n\
 -k, +keep-old-files	keep existing files; don't overwrite them from archive\n\
 -K, +starting-file FILE	begin at FILE in the archive\n\
 -l, +one-file-system	stay in local file system when creating an archive\n\
+-L, +tape-length LENGTH change tapes after writing LENGTH\n\
 ", stderr); /* KLUDGE */ fputs("\
 -m, +modification-time	don't extract file modified time\n\
 -M, +multi-volume	create/list/extract multi-volume archive\n\
--N, +after-date DATE	only store files newer than DATE\n\
--o, +old-archive	write a V7 format archive, rather than ANSI format\n\
+-N, +after-date DATE,\n\
+    +newer DATE		only store files newer than DATE\n\
+-o, +old-archive,\n\
+    +portability	write a V7 format archive, rather than ANSI format\n\
 -O, +to-stdout		extract files to standard output\n\
--p, +same-permissions	extract all protection information\n\
+-p, +same-permissions,\n\
+    +preserve-permissions extract all protection information\n\
 -P, +absolute-paths	don't strip leading `/'s from file names\n\
 +preserve		like -p -s\n\
 ", stderr); /* KLUDGE */ fputs("\
 -R, +record-number	show record number within archive with each message\n\
--s, +same-order		list of names to extract is sorted to match archive\n\
+-s, +same-order,\n\
+    +preserve-order	list of names to extract is sorted to match archive\n\
++same-order		create extracted files with the same ownership \n\
 -S, +sparse		handle sparse files efficiently\n\
 -T, +files-from F	get names to extract or create from file F\n\
++totals			print total bytes written with +create\n\
 -v, +verbose		verbosely list files processed\n\
 -V, +label NAME		create archive with volume name NAME\n\
 +version		print tar program version number\n\
--w, +interactive	ask for confirmation for every action\n\
+-w, +interactive,\n\
+    +confirmation	ask for confirmation for every action\n\
 ", stderr); /* KLUDGE */ fputs("\
 -W, +verify		attempt to verify the archive after writing it\n\
--X, +exclude FILE	exclude files listed in FILE\n\
--z, -Z, +compress      	filter the archive through compress\n\
+-X, +exclude FILE	exclude file FILE\n\
++exclude-from FILE	exclude files listed in FILE\n\
+-z, -Z, +compress,\n\
+    +uncompress      	filter the archive through compress\n\
 -[0-7][lmh]		specify drive and density\n\
 ", stderr);
 }
@@ -678,6 +734,7 @@ name_next(c)
 	static buffer_siz;
 	register char	*p;
 	register char	*q = 0;
+	register char	*q2 = 0;
 	extern char *un_quote_string();
 
 	if(buffer_siz==0) {
@@ -731,6 +788,16 @@ name_next(c)
 		*q-- = '\0';			/* Zap the newline */
 		while (q > p && *q == '/')	/* Zap trailing /s */
 			*q-- = '\0';
+		if (c && !q2 && p[0] == '-' && p[1] == 'C' && p[2] == '\0') {
+			q2 = p;
+			goto tryagain;
+		}
+		if (q2) {
+			if (chdir (p) < 0)
+				msg_perror ("Can't chdir to %s", p);
+			q2 = 0;
+			goto tryagain;
+		}
 		if(f_exclude && check_exclude(p))
 			goto tryagain;
 		return un_quote_string(p);
@@ -818,7 +885,7 @@ addname(name)
 	if(name[0]=='-' && name[1]=='C' && name[2]=='\0') {
 		chdir_name=name_next(0);
 		name=name_next(0);
-		if(!name) {
+		if(!chdir_name) {
 			msg("Missing file name after -C");
 			exit(EX_ARGSBAD);
 		}
@@ -842,27 +909,44 @@ addname(name)
 		}
 	}
 
-	i = strlen(name);
-	/*NOSTRICT*/
-	p = (struct name *)malloc((unsigned)(sizeof(struct name) + i));
+	if (name)
+	  {
+	    i = strlen(name);
+	    /*NOSTRICT*/
+	    p = (struct name *)malloc((unsigned)(sizeof(struct name) + i));
+	  }
+	else
+	  p = (struct name *)malloc ((unsigned)(sizeof (struct name)));
 	if (!p) {
-		msg("cannot allocate mem for name '%s'.",name);
-		exit(EX_SYSTEM);
+	  if (name)
+	    msg("cannot allocate mem for name '%s'.",name);
+	  else
+	    msg("cannot allocate mem for chdir record.");
+	  exit(EX_SYSTEM);
 	}
 	p->next = (struct name *)NULL;
-	p->length = i;
-	strncpy(p->name, name, i);
-	p->name[i] = '\0';	/* Null term */
+	if (name)
+	  {
+	    p->fake = 0;
+	    p->length = i;
+	    strncpy(p->name, name, i);
+	    p->name[i] = '\0';	/* Null term */
+	  }
+	else
+	  p->fake = 1;
 	p->found = 0;
 	p->regexp = 0;		/* Assume not a regular expression */
 	p->firstch = 1;		/* Assume first char is literal */
 	p->change_dir=chdir_name;
 	p->dir_contents = 0;	/* JF */
-	if (index(name, '*') || index(name, '[') || index(name, '?')) {
-		p->regexp = 1;	/* No, it's a regexp */
-		if (name[0] == '*' || name[0] == '[' || name[0] == '?')
-			p->firstch = 0;		/* Not even 1st char literal */
-	}
+	if (name)
+	  {
+	    if (index(name, '*') || index(name, '[') || index(name, '?')) {
+	      p->regexp = 1;	/* No, it's a regexp */
+	      if (name[0] == '*' || name[0] == '[' || name[0] == '?')
+		p->firstch = 0;		/* Not even 1st char literal */
+	    }
+	  }
 
 	if (namelast) namelast->next = p;
 	namelast = p;
@@ -880,6 +964,13 @@ name_match(p)
 again:
 	if (0 == (nlp = namelist))	/* Empty namelist is easy */
 		return 1;
+	if (nlp->fake)
+	  {
+	    if (nlp->change_dir && chdir (nlp->change_dir))
+	      msg_perror ("Can't change to directory %d", nlp->change_dir);
+	    namelist = 0;
+	    return 1;
+	  }
 	len = strlen(p);
 	for (; nlp != 0; nlp = nlp->next) {
 		/* If first chars don't match, quick skip */

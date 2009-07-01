@@ -198,12 +198,12 @@ extract_archive()
 		sp_array_size = 10;
 		sparsearray = (struct sp_array *) malloc(sp_array_size * sizeof(struct sp_array));
 		for (i = 0; i < SPARSE_IN_HDR; i++) {
-			if (!head->header.sp[i].numbytes)
-				break;
 			sparsearray[i].offset = 
 				from_oct(1+12, head->header.sp[i].offset);
 			sparsearray[i].numbytes = 
 				from_oct(1+12, head->header.sp[i].numbytes);
+			if (!sparsearray[i].numbytes)
+				break;
 		}
 		
 /*		end_nulls = from_oct(1+12, head->header.ending_blanks);*/

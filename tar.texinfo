@@ -1,6 +1,6 @@
 \input texinfo @c -*-texinfo-*-
 
-@setfilename tar-info
+@setfilename tar.info
 @settitle The @code{tar} Manual: DRAFT
 @ifinfo
 This file documents the tape archive of the GNU system.

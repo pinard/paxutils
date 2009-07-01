@@ -28,7 +28,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <sys/stat.h>
 #include <stdio.h>
 
-
 #ifndef V7
 #include <fcntl.h>
 #endif
@@ -87,6 +86,10 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
  */
 #ifndef	O_BINARY
 #define	O_BINARY	0
+#endif
+
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
 #endif
 
 #include "tar.h"
@@ -231,7 +234,13 @@ dump_file (p, curdev)
 	 * symbolic links.  Otherwise, use lstat (which, on non-4.2
 	 * systems, is #define'd to stat anyway.
 	 */
+#ifdef AIX
+	if (0 != f_follow_links ?
+	    statx (p, &hstat, STATSIZE, STX_HIDDEN):
+	    statx (p, &hstat, STATSIZE, STX_HIDDEN|STX_LINK))
+#else
 	if (0 != f_follow_links? stat(p, &hstat): lstat(p, &hstat))
+#endif /* AIX */
 	{
 badperror:
 		msg_perror("can't add file %s",p);
@@ -239,6 +248,17 @@ badfile:
 		errors++;
 		return;
 	}
+
+#ifdef AIX
+	if (S_ISHIDDEN (hstat.st_mode)) {
+		char *new = (char *)allocate (strlen (p) + 2);
+		if (new) {
+			strcpy (new, p);
+			strcat (new, "@");
+			p = new;
+		}
+	}
+#endif /* AIX */
 
 	/* See if we only want new files, and check if this one is too old to
 	   put in the archive. */
@@ -370,11 +390,14 @@ badfile:
 		 * at least one of those records in the file is just
 		 * a useless hole.
 		 */
+#ifdef hpux	/* Nice of HPUX to gratuitiously change it, huh?  - mib */
+		        if (hstat.st_size - (hstat.st_blocks * 1024) > 1024 ) {
+#else
 			if (hstat.st_size - (hstat.st_blocks * RECORDSIZE) > RECORDSIZE) {
+#endif
 				int	filesize = hstat.st_size;
 				register int i;
 				
-				printf("File is sparse: %s\n", p);
 				header = start_header(p, &hstat);
 				if (header == NULL)
 					goto badfile;
@@ -417,8 +440,6 @@ badfile:
 			 */
 				 
 				find_new_file_size(&filesize, upperbound);
-				printf("File %s is now size %d\n", 
-							p, filesize);
 				hstat.st_size = filesize;
 				to_oct((long) filesize, 1+12,
  						header->header.size);
@@ -754,11 +775,14 @@ badfile:
 		goto easy;
 #endif
 
+/* Avoid screwy apollo lossage where S_IFIFO == S_IFSOCK */
+#if ((_ISP__M68K == 0) && (_ISP__A88K == 0))
 #ifdef S_IFIFO
 	case S_IFIFO:			/* Fifo      special file */
 		
 		type = LF_FIFO;
 		goto easy;
+#endif
 #endif
 
 #ifdef S_IFSOCK
@@ -933,7 +957,7 @@ deal_with_sparse(name, header, nulls_at_end)
 	 * so just return.
 	 */
 	if ((fd = open(name, O_RDONLY)) < 0)
-		return;
+		return 0;
 		
 	init_sparsearray();
 	clear_buffer(buf);
@@ -1269,7 +1293,10 @@ write_eot()
 	void bzero();
 
 	p = findrec();
-	bufsize = endofrecs()->charptr - p->charptr;
-	bzero(p->charptr, bufsize);
-	userec(p);
+	if (p)
+	  {
+	    bufsize = endofrecs()->charptr - p->charptr;
+	    bzero(p->charptr, bufsize);
+	    userec(p);
+	  }
 }

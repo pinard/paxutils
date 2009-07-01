@@ -3,7 +3,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 1, or (at your option)
+   the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -44,34 +44,34 @@
 #ifdef sparc
 #include <alloca.h>
 #else
+#ifdef _AIX
+#pragma alloca
+#else
 char *alloca ();
+#endif
 #endif /* sparc */
 #endif /* not __GNUC__ */
 
 #if defined(STDC_HEADERS) || defined(__GNU_LIBRARY__)
 #include <stdlib.h>
-#include <string.h>
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#define index strchr
 #else /* STDC_HEADERS or __GNU_LIBRARY__ */
-
-#ifdef USG
-#include <string.h>
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#define index strchr
-#else /* USG */
-#ifdef VMS
-#include <string.h>
-#else
-#include <strings.h>
-#endif /* VMS */
-/* Declaring bcopy causes errors on systems whose declarations are different.
-   If the declaration is omitted, everything works fine.  rms.  */
-#endif /* USG */
-
 char *getenv ();
 char *malloc ();
 #endif /* STDC_HEADERS or __GNU_LIBRARY__ */
+
+#if defined(USG) || defined(STDC_HEADERS) || defined(__GNU_LIBRARY__)
+#include <string.h>
+#define bcopy(s, d, n) memcpy ((d), (s), (n))
+#define index strchr
+#else /* USG or STDC_HEADERS or __GNU_LIBRARY__ */
+#ifdef VMS
+#include <string.h>
+#else /* VMS */
+#include <strings.h>
+#endif /* VMS */
+/* Declaring bcopy causes errors on systems whose declarations are different.
+   If the declaration is omitted, everything works fine.  */
+#endif /* USG or STDC_HEADERS or __GNU_LIBRARY__ */
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,

@@ -1,7 +1,12 @@
 # Makefile for GNU tar program.
-#
+
+SHELL = /bin/sh
+
 # In order to disable remote-tape support, add -DNO_REMOTE to the
 # appropriate DEFS line, and remove rtape_lib.* from LOCAL_{SRC,OBJ}
+# For Ultrix 3.1, you will have to compile rtape_lib.c with -DUSG.
+# Add -DUSE_REXEC to use rexec for remote tape operations
+# instead of forking rsh or remsh.
 #
 # If tar fails to properly print error msgs, or core-dumps doing same,
 # you may need to change which version of msg...() you are using.
@@ -14,11 +19,20 @@
 # Some non-BSD systems may have to add -DNEED_TZSET in order to have getdate.y
 # compile correctly.
 #
+# If you have a system V system which defines size_t, add -DHAVE_SIZE_T.
+# If you have a system which defines strstr, add -DHAVE_STRSTR.
+#
+# If you can't use remote tar with the rmt library, you can still get
+# some stuff to work right by adding -DUSE_REXEC.
+#
+# Some people's systems define a prototype for signal handlers which
+# require them to be declared as void.  If you get such problems in
+# rtape_lib, function command, then define -DSIGNAL_VOID.  
+#
 # getdate.y has 8 shift/reduce conflicts.
 #
 # In addition to setting DEFS appropriately for your system, you might
-# have to hand edit the #defines and #undefs in port.c and rtape_lib.c.
-# For Ultrix 3.1, you will have to compile rtape_lib.c with -DUSG
+# have to hand edit the #defines and #undefs in port.c.
 #
 
 ## GNU version
@@ -33,8 +47,8 @@
 #DEFBLOCKING = 20
 #O = o
 
-# Berserkeley version
-#CC=ngcc
+## Berserkeley version
+CC=gcc
 DEFS = -DBSD42
 LOCAL_SRC = getdate.y  rtape_lib.c
 LOCAL_OBJ = getdate.$O rtape_lib.$O
@@ -46,6 +60,46 @@ DEF_AR_FILE = \"/dev/rmt8\"
 DEFBLOCKING = 20
 O = o
 
+## Ultrix
+#CC=gcc
+#DEFS = -DBSD42 -DSIGNAL_VOID
+#LOCAL_SRC = getdate.y  rtape_lib.c
+#LOCAL_OBJ = getdate.$O rtape_lib.$O
+#LDFLAGS =
+#LIBS =
+#LINT = lint
+#LINTFLAGS = -abchx
+#DEF_AR_FILE = \"/dev/rmt8\"
+#DEFBLOCKING = 20
+#O = o
+
+# HPUX 7.0 version
+#DEFS = -DBSD42 -Dhpux -DVARARGS_MSG
+#LOCAL_SRC = getdate.y  rtape_lib.c 
+#LOCAL_OBJ = getdate.$O rtape_lib.$O alloca.$O
+#LDFLAGS =
+#LIBS = -lBSD 
+#LINT = lint
+#LINTFLAGS = -abchx
+#DEF_AR_FILE = \"/dev/rct/c3d0s2\"
+#DEFBLOCKING = 20
+#O = o
+
+# IBM AIX version -- this saves "hidden" directories, but doesn't restore
+# them as hidden.  Add -Di386 for a PS/2.  If you don't have GCC, turn it off.
+# Some people think you need -lbsd, some don't.  Dunno.
+#CC=gcc
+#DEFS= -DUSG -Daix -DSTDC_MSG -DHAVE_MTIO -DHAVE_SIZE_T -DSIGNAL_VOID
+#LOCAL_SRC =  getdate.y rtape_lib.c
+#LOCAL_OBJ =  getdate.$O rtape_lib.$O
+#LDFLAGS =
+#LIBS = -lbsd
+#LINT = lint
+#LINTFLAGS = -p
+#DEF_AR_FILE = \"/dev/rmt0\"
+#DEFBLOCKING = 20
+#O = o
+
 # USG version
 # Add -DNDIR to DEFS if your system uses ndir.h instead of dirent.h
 # Add -DDIRECT to DEFS if your system uses 'struct direct' instead of
@@ -56,7 +110,7 @@ O = o
 # external variable `daylight'.
 # Add -lndir to LIBS if your ndir routines aren't in libc.a
 # Add -lPW to LIBS if you don't compile with gcc (to get alloca)
-#DEFS = -DUSG #-DNDIR -DDIRECT -DHAVE_MTIO
+#DEFS = -DUSG -DSIGNAL_VOID #-DNDIR -DDIRECT -DHAVE_MTIO
 #LOCAL_SRC =  getdate.y rtape_lib.c
 #LOCAL_OBJ =  getdate.$O rtape_lib.$O
 #LDFLAGS =
@@ -68,7 +122,7 @@ O = o
 #O = o
 
 # UniSoft's Uniplus SVR2 with NFS
-#DEFS = -DUSG -DUNIPLUS -DNFS -DSVR2
+#DEFS = -DUSG -DUNIPLUS -DNFS -DSVR2 -DSIGNAL_VOID
 #LOCAL_SRC =  getdate.y rtape_lib.c
 #LOCAL_OBJ =  getdate.$O rtape_lib.$O
 #LDFLAGS =
@@ -137,11 +191,11 @@ O = o
 #LDFLAGS =
 #LIBS =
 #DEF_AR_FILE = \"-\"
-#DEFBLOCKING = 8	/* No good reason for this, change at will */
+#DEFBLOCKING = 8	# No good reason for this, change at will
 #O = s
 
 # Xenix version
-#DEFS = -DUSG -DXENIX
+#DEFS = -DUSG -DXENIX -DSIGNAL_VOID
 #LOCAL_SRC =  getdate.y rtape_lib.c
 #LOCAL_OBJ =  getdate.$O rtape_lib.$O
 #LDFLAGS = 
@@ -153,11 +207,12 @@ O = o
 #O = o
 
 # SGI 4D version
+# You will need to define NEED_TZSET in getdate.y
 #DEFS = -DUSG -I/usr/include/bsd
 #LOCAL_SRC = getdate.y rtape_lib.c
 #LOCAL_OBJ =  getdate.$O rtape_lib.$O
 #LDFLAGS = 
-#LIBS =
+#LIBS = -lxmalloc
 #LINT = lint
 #LINTFLAGS = -p
 #DEF_AR_FILE = \"/dev/tape\"
@@ -182,22 +237,23 @@ SUBSRC=
 SUBOBJ=	
 
 # Destination directory and installation program for make install
-DESTDIR = /usr/local
+bindir = /usr/local/gnubin
 INSTALL = cp
 RM = rm -f
 
 SRC1 =	tar.c create.c extract.c buffer.c getoldopt.c update.c gnu.c mangle.c
-SRC2 =  version.c list.c names.c diffarch.c port.c wildmat.c getopt.c getopt1.c
+SRC2 =  version.c list.c names.c diffarch.c port.c wildmat.c getopt.c getopt1.c regex.c
 SRC3 =  $(LOCAL_SRC) $(SUBSRC)
 SRCS =	$(SRC1) $(SRC2) $(SRC3)
 OBJ1 =	tar.$O create.$O extract.$O buffer.$O getoldopt.$O list.$O update.$O
-OBJ2 =	version.$O names.$O diffarch.$O port.$O wildmat.$O getopt.$O getopt1.$O
+OBJ2 =	version.$O names.$O diffarch.$O port.$O wildmat.$O getopt.$O getopt1.$O regex.$O
 OBJ3 =  gnu.$O mangle.$O $(LOCAL_OBJ) $(SUBOBJ)
 OBJS =	$(OBJ1) $(OBJ2) $(OBJ3)
 # AUX =	README PORTING Makefile TODO tar.h port.h open3.h \
 #	msd_dir.h msd_dir.c
 AUX =   README COPYING ChangeLog Makefile tar.texinfo tar.h port.h open3.h \
-	rmt.h msd_dir.h msd_dir.c rtape_server.c rtape_lib.c getdate.y getopt.h
+	rmt.h msd_dir.h msd_dir.c rtape_server.c rtape_lib.c getdate.y \
+	getopt.h regex.h level-0 level-1 backup-specs testpad.c
 
 all:	tar rmt
 
@@ -205,7 +261,13 @@ tar:	$(OBJS)
 	$(CC) $(LDFLAGS) -o tar $(COPTS) $(OBJS) $(LIBS)
 
 rmt:	rtape_server.c
-	$(CC) $(CFLAGS) -o rmt rtape_server.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o rmt rtape_server.c
+
+testpad.h: testpad
+	testpad > testpad.h
+
+testpad: testpad.o
+	$(CC) -o testpad testpad.o
 
 # command is too long for Messy-Dos (128 char line length limit) so
 # this kludge is used...
@@ -215,27 +277,33 @@ rmt:	rtape_server.c
 #	@$(RM) command
 
 install: all
-	$(RM) $(DESTDIR)/bin/tar
-	$(INSTALL) tar   $(DESTDIR)/bin/tar
-	$(INSTALL) tar.texinfo $(DESTDIR)/man/tar.texinfo
+	$(RM) $(bindir)/tar
+	$(INSTALL) tar $(bindir)/tar
 	$(INSTALL) rmt /etc/rmt
 
 lint:	$(SRCS)
 	$(LINT) $(LINTFLAGS) $(ALLDEFS) $(SRCS)
 
+TAGS:	$(SRCS)
+	etags $(SRCS)
+
 clean:
-	$(RM) errs $(OBJS) tar rmt
+	$(RM) errs $(OBJS) tar rmt testpad.o testpad testpad.h
+
+distclean: clean
+
+realclean: clean
 
 shar: $(SRCS) $(AUX)
 	shar $(SRCS) $(AUX) | compress > tar-`sed -e '/version_string/!d' -e 's/[^0-9.]*\([0-9.]*\).*/\1/' -e q version.c`.shar.Z
 
 dist: $(SRC1) $(SRC2) $(AUX)
 	echo tar-`sed -e '/version_string/!d' -e 's/[^0-9.]*\([0-9.]*\).*/\1/' -e q < version.c` > .fname
+	-rm -rf `cat .fname`
 	mkdir `cat .fname`
-
 	ln $(SRC1) $(SRC2) $(AUX) `cat .fname`
-	tar cvhZf `cat .fname`.tar.Z `cat .fname`
-	-rm -r `cat .fname` .fname
+	tar chZf `cat .fname`.tar.Z `cat .fname`
+	-rm -rf `cat .fname` .fname
 
 tar.zoo: $(SRCS) $(AUX)
 	-mkdir tmp.dir
@@ -244,4 +312,5 @@ tar.zoo: $(SRCS) $(AUX)
 	cd tmp.dir ; zoo aM ../tar.zoo *
 	-rmdir tmp.dir
 
-$(OBJS): tar.h port.h
+$(OBJS): tar.h port.h testpad.h
+regex.$O tar.$O: regex.h

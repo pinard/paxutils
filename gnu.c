@@ -39,6 +39,13 @@
 #define MAXPATHLEN 1024
 #endif
 
+/*
+ * If there are no symbolic links, there is no lstat().  Use stat().
+ */
+#ifndef S_IFLNK
+#define lstat stat
+#endif
+
 #ifdef __STDC__
 #define VOIDSTAR void *
 #else
@@ -229,7 +236,11 @@ collect_and_sort_names()
 				continue;
 			}
 
+#ifdef AIX
+		if (statx (n->name, &statbuf, STATSIZE, STX_HIDDEN|STX_LINK))
+#else
 		if(lstat(n->name,&statbuf)<0) {
+#endif /* AIX */
 			msg_perror("can't stat %s",n->name);
 			continue;
 		}
@@ -331,13 +342,27 @@ int device;
 				namebuf=ck_realloc(namebuf,bufsiz+2);
 			}
 			(void) strcpy(namebuf+len,d->d_name);
-			if (0 != f_follow_links? stat(namebuf, &hs): lstat(namebuf, &hs)) {
+#ifdef AIX
+			if (0 != f_follow_links?
+			    statx(namebuf, &hs, STATSIZE, STX_HIDDEN):
+			    statx(namebuf, &hs, STATSIZE, STX_HIDDEN|STX_LINK))
+#else
+			if (0 != f_follow_links? stat(namebuf, &hs): lstat(namebuf, &hs))
+#endif
+			{
 				msg_perror("can't stat %s",namebuf);
 				continue;
 			}
 			if(   (f_local_filesys && device!=hs.st_dev)
 			   || (f_exclude && check_exclude(namebuf)))
 				add_buffer(the_buffer,"N",1);
+#ifdef AIX
+			else if (S_ISHIDDEN (hs.st_mode)) {
+				add_buffer (the_buffer, "D", 1);
+				strcat (d->d_name, "A");
+				d->d_namlen++;
+			}	
+#endif /* AIX */
 			else if((hs.st_mode&S_IFMT)==S_IFDIR) {
 				if(dp=get_dir(namebuf)) {
 					if(   dp->dev!=hs.st_dev
