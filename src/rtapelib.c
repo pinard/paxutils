@@ -479,7 +479,7 @@ rmt_close__ (int handle)
 | Return the number of bytes read on success, -1 on error.		   |
 `-------------------------------------------------------------------------*/
 
-int
+ssize_t
 rmt_read__ (int handle, char *buffer, unsigned int length)
 {
   char command_buffer[COMMAND_BUFFER_SIZE];
@@ -509,7 +509,7 @@ rmt_read__ (int handle, char *buffer, unsigned int length)
 | the number of bytes written on success, -1 on error.			   |
 `-------------------------------------------------------------------------*/
 
-int
+ssize_t
 rmt_write__ (int handle, char *buffer, unsigned int length)
 {
   char command_buffer[COMMAND_BUFFER_SIZE];
@@ -538,7 +538,7 @@ rmt_write__ (int handle, char *buffer, unsigned int length)
 | Return the new file offset if successful, -1 if on error.		  |
 `------------------------------------------------------------------------*/
 
-long
+off_t
 rmt_lseek__ (int handle, off_t offset, int whence)
 {
   char command_buffer[COMMAND_BUFFER_SIZE];

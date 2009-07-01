@@ -1,0 +1,212 @@
+#!/bin/sh
+# Setup helper for `cpio' tests.
+
+case "$1" in
+
+  mix)
+    . ./atconfig
+    mkdir mix
+    cd mix
+      echo foz > foo
+      wrsparse
+      mkdir tmp tmp2 tmp3 dev
+      echo baz > bar
+
+      if test "$FIFOS" = yes; then
+	$MKFIFO pipe
+	ln pipe copy
+	$MKFIFO diff
+	$MKFIFO dev/pipe2
+	cat << EOF > extra1
+mix/dev/pipe2
+mix/pipe
+mix/copy
+mix/diff
+EOF
+	cat << EOF > extra2
+mix/dev/pipe2: extra file
+mix/copy: extra file
+mix/diff: extra file
+mix/pipe: extra file
+EOF
+      else
+	> extra1
+	> extra2
+      fi
+      cd tmp
+	echo hello1 > hello
+	test $SYMLINKS = yes && ln -s hello hello2
+	ln hello hello3
+	echo > world 'the world'
+      cd ..
+      cd tmp2
+	test $SYMLINKS = yes && ln -s ../foo foolink
+      cd ..
+      cd tmp3
+	mkdir tmp4
+      cd ..
+    cd ..
+    ;;
+
+  smix)
+    mkdir smix
+    cd smix
+      echo 'abc' > abc
+      echo 'abcdefg' > file1
+      echo 'abcdefgh' > file3
+      echo '123456789012345' > file2
+      echo '1234567890123456' > file4
+      echo '12345678901234567' > file5
+    cd ..
+    ;;
+
+  lmix)
+    mkdir lmix
+    cd lmix
+      mkdir 12345678901234
+      cd 12345678901234
+	mkdir abcdefghijklmn
+	cd abcdefghijklmn
+	  mkdir 43210987654321
+	  cd 43210987654321
+	    mkdir ABCDEFGHIJKLMN
+	    cd ABCDEFGHIJKLMN
+	      mkdir foobarbazwhizz
+	      cd foobarbazwhizz
+		mkdir onetwothreefou
+		cd onetwothreefou
+		  mkdir rfivesixsevene
+		  cd rfivesixsevene
+		    mkdir ightnineten
+		    cd ightnineten
+		      mkdir deeper
+		      cd deeper
+			echo undeuxtrois > 123
+			echo quatrecinqsixsepthuit > 45678
+		      cd ..
+		    cd ..
+		    mkdir 8910
+		    cd 8910
+		      mkdir almostdeeper
+		      cd almostdeeper
+			echo probablyspelledwrong > onetwothree
+		      cd ..
+		    cd ..
+		    mkdir notquiteasdeep
+		    cd notquiteasdeep
+		      mkdir butstillrather
+		      cd butstillrather
+			mkdir fardownthere
+			cd fardownthere
+			  echo twistypassagesallalike > twistypassages
+			  echo twistypassagesalldifferent > twistypassage2
+			cd ..
+		      cd ..
+		    cd ..
+		  cd ..
+		cd ..
+	      cd ..
+	    cd ..
+	  cd ..
+	cd ..
+      cd ..
+    cd ..
+    ;;
+
+  lmix-one)
+    # One random name in `lmix' having more than 100 characters.
+    echo lmix/12345678901234/abcdefghijklmn/43210987654321/ABCDEFGHIJKLMN/foobarbazwhizz/onetwothreefou/rfivesixsevene/notquiteasdeep/butstillrather/fardownthere/twistypassage2 > lmix-one
+    ;;
+
+  mmix)
+    mkdir mmix
+    cd mmix
+      mkdir 12345678901234
+      cd 12345678901234
+	mkdir abcdefghijklmn
+	cd abcdefghijklmn
+	  mkdir 43210987654321
+	  cd 43210987654321
+	    mkdir ABCDEFGHIJKLMN
+	    cd ABCDEFGHIJKLMN
+	      mkdir foobarbazwhizz
+	      cd foobarbazwhizz
+		mkdir onetwothreefou
+		cd onetwothreefou
+		  mkdir rfivesixsevene
+		  cd rfivesixsevene
+		    mkdir ightnineten
+		    cd ightnineten
+		      mkdir deeper
+		      cd deeper
+			mkdir 12345678901234
+			cd 12345678901234
+			  mkdir abcdefghijklmn
+			  cd abcdefghijklmn
+			    mkdir 43210987654321
+			    cd 43210987654321
+			      mkdir ABCDEFGHIJKLMN
+			      cd ABCDEFGHIJKLMN
+			        mkdir foobarbazwhizz
+			        cd foobarbazwhizz
+				  mkdir onetwothreefou
+				  cd onetwothreefou
+				    mkdir rfivesixsevene
+				    cd rfivesixsevene
+				      mkdir ightnineten
+				      cd ightnineten
+				        mkdir deeper
+				        cd deeper
+					  mkdir 12345678901234
+					  cd 12345678901234
+					    mkdir abcdefghijklmn
+					    cd abcdefghijklmn
+					      mkdir 43210987654321
+					      cd 43210987654321
+					        mkdir ABCDEFGHIJKLMN
+					        cd ABCDEFGHIJKLMN
+						  mkdir foobarbazwhizz
+						  cd foobarbazwhizz
+						    mkdir onetwothreefou
+						    cd onetwothreefou
+						      mkdir rfivesixsevene
+						      cd rfivesixsevene
+						        mkdir ightnineten
+						        cd ightnineten
+							  mkdir deeper
+							  cd deeper
+							    echo foo > FOO
+							  cd ..
+							cd ..
+						      cd ..
+						    cd ..
+						  cd ..
+						cd ..
+					      cd ..
+					    cd ..
+					  cd ..
+					cd ..
+				      cd ..
+				    cd ..
+				  cd ..
+				cd ..
+			      cd ..
+			    cd ..
+			  cd ..
+			cd ..
+		      cd ..
+		    cd ..
+		  cd ..
+		cd ..
+	      cd ..
+	    cd ..
+	  cd ..
+	cd ..
+      cd ..
+    cd ..
+    ;;
+
+  *)
+    echo 1>&2 "Do not know how to make \`$1'"
+    exit 1
+esac

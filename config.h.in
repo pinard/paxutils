@@ -32,10 +32,6 @@
 /* Define if your system has a working fnmatch function.  */
 #undef HAVE_FNMATCH
 
-/* Define if system calls automatically restart after interruption
-   by a signal.  */
-#undef HAVE_RESTARTABLE_SYSCALLS
-
 /* Define if your struct stat has st_blksize.  */
 #undef HAVE_ST_BLKSIZE
 
@@ -198,9 +194,6 @@
 
 /* Define if you have the dcgettext function.  */
 #undef HAVE_DCGETTEXT
-
-/* Define if you have the dirname function.  */
-#undef HAVE_DIRNAME
 
 /* Define if you have the endgrent function.  */
 #undef HAVE_ENDGRENT

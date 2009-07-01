@@ -12,20 +12,20 @@
    $ verify -mode 0100644 file		# verify that file the file type
 					# and protection mode bits for file
 					# are 0100644 (octal).
-   $ verify -mtime-gt 1 file		# verify that file was modified
-					# after 1/1/70 00:00:01 GMT.
+   $ verify -mtime-ge 1 file		# verify that file was modified
+					# at or after 1/1/70 00:00:01 GMT.
 
    These are some of the basic options to verify:
 
    -atime seconds-since-epoch
-   -atime-gt seconds-since-epoch
-   -atime-lt seconds-since-epoch
+   -atime-ge seconds-since-epoch
+   -atime-le seconds-since-epoch
    -gid group-id-number
    -ino inode-number
    -mode file-type-and-protection-modes
    -mtime seconds-since-epoch
-   -mtime-lt seconds-since-epoch
-   -mtime-gt seconds-since-epoch
+   -mtime-le seconds-since-epoch
+   -mtime-ge seconds-since-epoch
    -nlink links-to-file
    -size bytes
    -uid user-id-number
@@ -217,10 +217,10 @@ char *alloca ();
 char **read_a_dir ();
 
 int atime_flag = 0;
-int atime_gt_flag = 0;
-int atime_gt_value = 0;
-int atime_lt_flag = 0;
-int atime_lt_value = 0;
+int atime_ge_flag = 0;
+int atime_ge_value = 0;
+int atime_le_flag = 0;
+int atime_le_value = 0;
 int atime_match_flag = 0;
 int atime_value = 0;
 int contents_match_flag = 0;
@@ -243,10 +243,10 @@ int mode_flag = 0;
 int mode_match_flag = 0;
 int mode_value = 0;
 int mtime_flag = 0;
-int mtime_gt_flag = 0;
-int mtime_gt_value = 0;
-int mtime_lt_flag = 0;
-int mtime_lt_value = 0;
+int mtime_ge_flag = 0;
+int mtime_ge_value = 0;
+int mtime_le_flag = 0;
+int mtime_le_value = 0;
 int mtime_match_flag = 0;
 int mtime_value = 0;
 int nlink_flag = 0;
@@ -270,16 +270,16 @@ int verbose_flag = 0;
 int errors = 0;
 
 #define OPTION_ATIME      1
-#define OPTION_ATIME_GT   2
-#define OPTION_ATIME_LT   3
+#define OPTION_ATIME_GE   2
+#define OPTION_ATIME_LE   3
 #define OPTION_GID        4
 #define OPTION_INO        5
 #define OPTION_MATCH_DIR  6
 #define OPTION_MATCH_FILE 7
 #define OPTION_MODE       8
 #define OPTION_MTIME      9
-#define OPTION_MTIME_GT  10
-#define OPTION_MTIME_LT  11
+#define OPTION_MTIME_GE  10
+#define OPTION_MTIME_LE  11
 #define OPTION_NLINK     12
 #define OPTION_SIZE      13
 #define OPTION_UID       14
@@ -287,8 +287,8 @@ int errors = 0;
 struct option long_options[] =
 {
   {"atime", required_argument, NULL, OPTION_ATIME},
-  {"atime-gt", required_argument, NULL, OPTION_ATIME_GT},
-  {"atime-lt", required_argument, NULL, OPTION_ATIME_LT},
+  {"atime-ge", required_argument, NULL, OPTION_ATIME_GE},
+  {"atime-le", required_argument, NULL, OPTION_ATIME_LE},
   {"atime-match", no_argument, &atime_match_flag, 1},
   {"contents-match", no_argument, &contents_match_flag, 1},
   {"dir", no_argument, &dir_flag, 1},
@@ -308,8 +308,8 @@ struct option long_options[] =
   {"mode", required_argument, NULL, OPTION_MODE},
   {"mode-match", no_argument, &mode_match_flag, 1},
   {"mtime", required_argument, NULL, OPTION_MTIME},
-  {"mtime-gt", required_argument, NULL, OPTION_MTIME_GT},
-  {"mtime-lt", required_argument, NULL, OPTION_MTIME_LT},
+  {"mtime-ge", required_argument, NULL, OPTION_MTIME_GE},
+  {"mtime-le", required_argument, NULL, OPTION_MTIME_LE},
   {"mtime-match", no_argument, &mtime_match_flag, 1},
   {"nlink", required_argument, NULL, OPTION_NLINK},
   {"nlink-match", no_argument, &nlink_match_flag, 1},
@@ -346,14 +346,14 @@ main (argc, argv)
        atime_value = atoi (optarg);
        break;
 
-     case OPTION_ATIME_GT:
-       atime_gt_flag = 1;
-       atime_gt_value = atoi (optarg);
+     case OPTION_ATIME_GE:
+       atime_ge_flag = 1;
+       atime_ge_value = atoi (optarg);
        break;
 
-     case OPTION_ATIME_LT:
-       atime_lt_flag = 1;
-       atime_lt_value = atoi (optarg);
+     case OPTION_ATIME_LE:
+       atime_le_flag = 1;
+       atime_le_value = atoi (optarg);
        break;
 
      case OPTION_GID:
@@ -384,14 +384,14 @@ main (argc, argv)
        mtime_value = atoi (optarg);
        break;
 
-     case OPTION_MTIME_GT:
-       mtime_gt_flag = 1;
-       mtime_gt_value = atoi (optarg);
+     case OPTION_MTIME_GE:
+       mtime_ge_flag = 1;
+       mtime_ge_value = atoi (optarg);
        break;
 
-     case OPTION_MTIME_LT:
-       mtime_lt_flag = 1;
-       mtime_lt_value = atoi (optarg);
+     case OPTION_MTIME_LE:
+       mtime_le_flag = 1;
+       mtime_le_value = atoi (optarg);
        break;
 
      case OPTION_NLINK:
@@ -410,9 +410,9 @@ main (argc, argv)
      }
 
 #if 0
-  if (!strcmp (argv [optind], "-not"))
+  if (!strcmp (argv[optind], "-not"))
     not_flag = not_flag ? 0 : 1;
-  else if (!strcmp (argv [optind], "-all-match"))
+  else if (!strcmp (argv[optind], "-all-match"))
     {
       mode_match_flag = 1;
       ino_match_flag = 1;
@@ -429,7 +429,7 @@ main (argc, argv)
 
   if (list_flag)
     {
-      char filename1 [4096], filename2 [4096];
+      char filename1[4096], filename2[4096];
       strcpy (filename2, "/missing/filename/junk");
       if ((optind < argc)
 	  || (!match_dir && (size_match_flag || mtime_match_flag
@@ -454,7 +454,7 @@ main (argc, argv)
     }
 
   if (optind < argc)
-    file1 = argv [optind++];
+    file1 = argv[optind++];
   else
     usage ();
   if (match_dir)
@@ -488,13 +488,13 @@ verify (file1, file2)
 	  if ((errno == ENOENT) || (errno == ENOTDIR))
 	    {
 	      if (verbose_flag)
-		fprintf (stderr, "OK: %s does not exist.\n", file1);
+		printf ("OK: %s does not exist\n", file1);
 	      return 0;
 	    }
 	  else
 	    {
 	      perror (file1);
-	      fprintf (stderr, "%s error, but might exist.\n", file1);
+	      printf ("%s error, but might exist\n", file1);
 	      ++errors;
 	      return 1;
 	    }
@@ -506,7 +506,7 @@ verify (file1, file2)
 
   if (non_exist_flag)
     {
-      fprintf (stderr, "%s exists, should not.\n", file1);
+      printf ("%s exists, should not\n", file1);
       ++errors;
       return 1;
     }
@@ -527,22 +527,22 @@ verify (file1, file2)
 
       if (S_ISREG (stat1.st_mode))
 	{
-	  fprintf (stderr, "%s not regular file.\n", file1);
+	  printf ("%s not regular file\n", file1);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s is a regular file.\n", file1);
+	printf ("OK: %s is a regular file\n", file1);
     }
 
   if (dir_flag)
     {
       if (S_ISDIR (stat1.st_mode))
 	{
-	  fprintf (stderr, "%s not directory.\n", file1);
+	  printf ("%s not directory\n", file1);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s is a directory.\n", file1);
+	printf ("OK: %s is a directory\n", file1);
     }
 
 #ifdef S_ISLNK
@@ -550,11 +550,11 @@ verify (file1, file2)
     {
       if (S_ISLNK (stat1.st_mode))
 	{
-	  fprintf (stderr, "%s not a sym link.\n", file1);
+	  printf ("%s not a sym link\n", file1);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s is a a sym link.\n", file1);
+	printf ("OK: %s is a a sym link\n", file1);
     }
 #endif
 
@@ -562,55 +562,60 @@ verify (file1, file2)
     {
       if (stat1.st_size != size_value)
 	{
-	  fprintf (stderr, "%s size %d should be %d.\n", file1, stat1.st_size, size_value);
+	  printf ("%s size %d should be %d\n",
+		   file1, stat1.st_size, size_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s size.\n", file1);
+	printf ("OK: %s size\n", file1);
     }
 
   if (size_match_flag)
     {
       if ((stat1.st_size != stat2.st_size) && !S_ISDIR (stat1.st_mode))
 	{
-	  fprintf (stderr, "%s size match %d should be %d.\n", file1, stat1.st_size, stat2.st_size);
+	  printf ("%s size match %d should be %d\n",
+		  file1, stat1.st_size, stat2.st_size);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s size match.\n", file1);
+	printf ("OK: %s size match\n", file1);
     }
 
   if (mtime_flag)
     {
       if (stat1.st_mtime != mtime_value)
 	{
-	  fprintf (stderr, "%s mtime %d should be %d.\n", file1, stat1.st_mtime, mtime_value);
+	  printf ("%s mtime %d should be %d\n",
+		  file1, stat1.st_mtime, mtime_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s mtime.\n", file1);
+	printf ("OK: %s mtime\n", file1);
     }
 
-  if (mtime_gt_flag)
+  if (mtime_ge_flag)
     {
-      if (stat1.st_mtime <= mtime_gt_value)
+      if (stat1.st_mtime < mtime_ge_value)
 	{
-	  fprintf (stderr, "%s mtime %d should be > %d.\n", file1, stat1.st_mtime, mtime_gt_value);
+	  printf ("%s mtime %d should be >= %d\n",
+		  file1, stat1.st_mtime, mtime_ge_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s mtime gt.\n", file1);
+	printf ("OK: %s mtime ge\n", file1);
     }
 
-  if (mtime_lt_flag)
+  if (mtime_le_flag)
     {
-      if (stat1.st_mtime >= mtime_lt_value)
+      if (stat1.st_mtime > mtime_le_value)
 	{
-	  fprintf (stderr, "%s mtime %d should be < %d.\n", file1, stat1.st_mtime, mtime_lt_value);
+	  printf ("%s mtime %d should be <= %d\n",
+		  file1, stat1.st_mtime, mtime_le_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s mtime lt.\n", file1);
+	printf ("OK: %s mtime le\n", file1);
     }
 
   if (mtime_match_flag)
@@ -624,45 +629,49 @@ verify (file1, file2)
 					 || (strcmp (file1, "./") == 0)))
 	  )
 	{
-	  fprintf (stderr, "%s mtime match %d should be %d.\n", file1, stat1.st_mtime, stat2.st_mtime);
+	  printf ("%s mtime match %d should be %d\n",
+		  file1, stat1.st_mtime, stat2.st_mtime);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s mtime match.\n", file1);
+	printf ("OK: %s mtime match\n", file1);
     }
 
   if (atime_flag)
     {
       if (stat1.st_atime != atime_value)
 	{
-	  fprintf (stderr, "%s atime %d should be %d.\n", file1, stat1.st_atime, atime_value);
+	  printf ("%s atime %d should be %d\n",
+		  file1, stat1.st_atime, atime_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s atime.\n", file1);
+	printf ("OK: %s atime\n", file1);
     }
 
-  if (atime_gt_flag)
+  if (atime_ge_flag)
     {
-      if (stat1.st_atime <= atime_gt_value)
+      if (stat1.st_atime < atime_ge_value)
 	{
-	  fprintf (stderr, "%s atime %d should be > %d.\n", file1, stat1.st_atime, atime_gt_value);
+	  printf ("%s atime %d should be >= %d\n",
+		  file1, stat1.st_atime, atime_ge_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s atime gt.\n", file1);
+	printf ("OK: %s atime ge\n", file1);
     }
 
-  if (atime_lt_flag)
+  if (atime_le_flag)
     {
-      if ((stat1.st_atime >= atime_lt_value)
+      if ((stat1.st_atime > atime_le_value)
 	   && (!ignore_dir_atime_flag && S_ISDIR (stat1.st_mode)))
 	{
-	  fprintf (stderr, "%s atime %d should be < %d.\n", file1, stat1.st_atime, atime_gt_value);
+	  printf ("%s atime %d should be <= %d\n",
+		  file1, stat1.st_atime, atime_ge_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s atime lt.\n", file1);
+	printf ("OK: %s atime le\n", file1);
     }
 
   if (atime_match_flag)
@@ -670,66 +679,72 @@ verify (file1, file2)
       if ((stat1.st_atime != stat2.st_atime)
 	   && (!ignore_dir_atime_flag && S_ISDIR (stat1.st_mode)))
 	{
-	  fprintf (stderr, "%s atime match %d should be %d.\n", file1, stat1.st_atime, stat2.st_atime);
+	  printf ("%s atime match %d should be %d\n",
+		  file1, stat1.st_atime, stat2.st_atime);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s atime match.\n", file1);
+	printf ("OK: %s atime match\n", file1);
     }
 
   if (uid_flag)
     {
       if (stat1.st_uid != uid_value)
 	{
-	  fprintf (stderr, "%s uid %d should be %d.\n", file1, stat1.st_uid, uid_value);
+	  printf ("%s uid %d should be %d\n",
+		  file1, stat1.st_uid, uid_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s uid.\n", file1);
+	printf ("OK: %s uid\n", file1);
     }
 
   if (uid_match_flag)
     {
       if (stat1.st_uid != stat2.st_uid)
 	{
-	  fprintf (stderr, "%s uid match %d should be %d.\n", file1, stat1.st_uid, stat2.st_uid);
+	  printf ("%s uid match %d should be %d\n",
+		  file1, stat1.st_uid, stat2.st_uid);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s uid match.\n", file1);
+	printf ("OK: %s uid match\n", file1);
     }
 
   if (gid_flag)
     {
       if (stat1.st_gid != gid_value)
 	{
-	  fprintf (stderr, "%s gid %d should be %d.\n", file1, stat1.st_gid, gid_value);
+	  printf ("%s gid %d should be %d\n",
+		  file1, stat1.st_gid, gid_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s gid.\n", file1);
+	printf ("OK: %s gid\n", file1);
     }
 
   if (gid_match_flag)
     {
       if (stat1.st_gid != stat2.st_gid)
 	{
-	  fprintf (stderr, "%s gid match %d should be %d.\n", file1, stat1.st_gid, stat2.st_gid);
+	  printf ("%s gid match %d should be %d\n",
+		  file1, stat1.st_gid, stat2.st_gid);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s gid match.\n", file1);
+	printf ("OK: %s gid match\n", file1);
     }
 
   if (ino_flag)
     {
       if (stat1.st_ino != ino_value)
 	{
-	  fprintf (stderr, "%s ino %d should be %d.\n", file1, stat1.st_ino, ino_value);
+	  printf ("%s ino %d should be %d\n",
+		  file1, stat1.st_ino, ino_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s ino.\n", file1);
+	printf ("OK: %s ino\n", file1);
     }
 
   if (ino_match_flag)
@@ -740,55 +755,60 @@ verify (file1, file2)
 	   && !(ignore_link_ino_flag && S_ISLNK (stat1.st_mode)))
 #endif
 	{
-	  fprintf (stderr, "%s ino match %d should be %d.\n", file1, stat1.st_ino, stat2.st_ino);
+	  printf ("%s ino match %d should be %d\n",
+		  file1, stat1.st_ino, stat2.st_ino);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s ino match.\n", file1);
+	printf ("OK: %s ino match\n", file1);
     }
 
   if (nlink_flag)
     {
       if (stat1.st_nlink != nlink_value)
 	{
-	  fprintf (stderr, "%s nlink %d should be %d.\n", file1, stat1.st_nlink, nlink_value);
+	  printf ("%s nlink %d should be %d\n",
+		  file1, stat1.st_nlink, nlink_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s nlink.\n", file1);
+	printf ("OK: %s nlink\n", file1);
     }
 
   if (nlink_match_flag)
     {
       if (stat1.st_nlink != stat2.st_nlink)
 	{
-	  fprintf (stderr, "%s nlink match %d should be %d.\n", file1, stat1.st_nlink, stat2.st_nlink);
+	  printf ("%s nlink match %d should be %d\n",
+		  file1, stat1.st_nlink, stat2.st_nlink);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s nlink match.\n", file1);
+	printf ("OK: %s nlink match\n", file1);
     }
 
   if (mode_flag)
     {
       if (stat1.st_mode != mode_value)
 	{
-	  fprintf (stderr, "%s mode 0%o should be 0%o.\n", file1, stat1.st_mode, mode_value);
+	  printf ("%s mode 0%o should be 0%o\n",
+		  file1, stat1.st_mode, mode_value);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s mode.\n", file1);
+	printf ("OK: %s mode\n", file1);
     }
 
   if (mode_match_flag)
     {
       if (stat1.st_mode != stat2.st_mode)
 	{
-	  fprintf (stderr, "%s mode match 0%o should be 0%o.\n", file1, stat1.st_mode, stat2.st_mode);
+	  printf ("%s mode match 0%o should be 0%o\n",
+		  file1, stat1.st_mode, stat2.st_mode);
 	  ++errors;
 	}
       else if (verbose_flag)
-	fprintf (stderr, "OK: %s mode match.\n", file1);
+	printf ("OK: %s mode match\n", file1);
     }
 
   if (contents_match_flag)
@@ -796,7 +816,7 @@ verify (file1, file2)
       if (S_ISREG (stat1.st_mode))
 	{
 	  int	fd1, fd2;
-	  char	buf1 [BUFSIZ], buf2 [BUFSIZ];
+	  char	buf1[BUFSIZ], buf2[BUFSIZ];
 	  int	rc1, rc2;
 	  int	bytes;
 
@@ -835,26 +855,27 @@ verify (file1, file2)
 		{
 		  if (rc1 != rc2)
 		    {
-		      fprintf (stderr, "%s lengths and contents differ at bytes %d.\n", file1, bytes + MIN (rc1, rc2) + 1);
+		      printf ("%s lengths and contents differ at bytes %d\n",
+			      file1, bytes + MIN (rc1, rc2) + 1);
 		      ++errors;
 		    }
 		  else
 		    {
 		      if (bcmp (buf1, buf2, rc1))
 			{
-			  fprintf (stderr, "%s contents differ at byte %d.\n", file1,
+			  printf ("%s contents differ at byte %d\n", file1,
 				   bytes + first_diff (buf1, buf2, rc1) + 1);
 			  ++errors;
 			}
 		      else if (verbose_flag)
-			fprintf (stderr, "OK: %s contents match.\n", file1);
+			printf ("OK: %s contents match\n", file1);
 		    }
 		  break;
 		}
 	      if (bcmp (buf1, buf2, rc1))
 		{
-		  fprintf (stderr, "%s contents differ at byte %d.\n", file1,
-			   bytes + first_diff (buf1, buf2, rc1) + 1);
+		  printf ("%s contents differ at byte %d\n", file1,
+			  bytes + first_diff (buf1, buf2, rc1) + 1);
 		  ++errors;
 		  break;
 		}
@@ -866,7 +887,7 @@ verify (file1, file2)
 #ifdef S_ISLNK
       else if (S_ISLNK (stat1.st_mode))
 	{
-	  char	link1 [4096], link2 [4096];
+	  char	link1[4096], link2[4096];
 	  int	rc1, rc2;
 	  rc1 = readlink (file1, link1, 4096);
 	  rc2 = readlink (file2, link2, 4096);
@@ -884,11 +905,11 @@ verify (file1, file2)
 	    }
 	  if (strcmp (link1, link2))
 	    {
-	      fprintf (stderr, "%s link contents differ.\n", file1);
+	      printf ("%s link contents differ\n", file1);
 	      ++errors;
 	    }
 	  else if (verbose_flag)
-	    fprintf (stderr, "OK: %s link contents.\n", file1);
+	    printf ("OK: %s link contents\n", file1);
 	}
 #endif	/* S_ISLNK */
       else if (S_ISDIR (stat1.st_mode))
@@ -899,21 +920,23 @@ verify (file1, file2)
 	{
 	  if (stat1.st_rdev != stat2.st_rdev)
 	    {
-	      fprintf (stderr, "%s char dev contents differ, 0x%x, should be 0x%x.\n", file1, stat1.st_rdev, stat2.st_rdev);
+	      printf ("%s char dev contents differ, 0x%x, should be 0x%x\n",
+		      file1, stat1.st_rdev, stat2.st_rdev);
 	      ++errors;
 	    }
 	  else if (verbose_flag)
-	    fprintf (stderr, "OK: %s char dev contents.\n", file1);
+	    printf ("OK: %s char dev contents\n", file1);
 	}
       else if (S_ISBLK (stat1.st_mode))
 	{
 	  if (stat1.st_rdev != stat2.st_rdev)
 	    {
-	      fprintf (stderr, "%s block dev contents differ, 0x%x, should be 0x%x.\n", file1, stat1.st_rdev, stat2.st_rdev);
+	      printf ("%s block dev contents differ, 0x%x, should be 0x%x\n",
+		      file1, stat1.st_rdev, stat2.st_rdev);
 	      ++errors;
 	    }
 	  else if (verbose_flag)
-	    fprintf (stderr, "OK: %s block dev contents.\n", file1);
+	    printf ("OK: %s block dev contents\n", file1);
 	}
 #ifdef S_IFIFO
       else if (S_ISFIFO (stat1.st_mode))
@@ -921,16 +944,17 @@ verify (file1, file2)
 	  /* is this the right check? */
 	  if (stat1.st_rdev != stat2.st_rdev)
 	    {
-	      fprintf (stderr, "%s fifo dev contents differ, 0x%x, should be 0x%x.\n", file1, stat1.st_rdev, stat2.st_rdev);
+	      printf ("%s fifo dev contents differ, 0x%x, should be 0x%x\n",
+		      file1, stat1.st_rdev, stat2.st_rdev);
 	      ++errors;
 	    }
 	  else if (verbose_flag)
-	    fprintf (stderr, "OK: %s fifo dev contents.\n", file1);
+	    printf ("OK: %s fifo dev contents\n", file1);
 	}
 #endif
       else
 	{
-	  fprintf (stderr, "can't contents-match file type 0%o yet\n", stat1.st_mode);
+	  printf ("can't contents-match file type 0%o yet\n", stat1.st_mode);
 	  ++errors;
 	  return 1;
 	}
@@ -947,18 +971,20 @@ first_diff (buf1, buf2, len)
   int k;
 
   for (k = 0; k < len; ++k)
-    if (buf1 [k] != buf2 [k])
+    if (buf1[k] != buf2[k])
       return k;
   return len;
 }
 
 usage()
 {
-  fprintf (stderr, "usage: verify [-attributes] file\n");
-  fprintf (stderr, "usage: verify [-attributes] -list < file\n");
-  fprintf (stderr, "usage: verify -match-file file [-attributes] [-attributes-match] file\n");
-  fprintf (stderr, "usage: verify -match-dir dir [-attributes] [-attributes-match] file\n");
-  fprintf (stderr, "usage: verify -match-dir dir [-attributes] [-attributes-match] -list < file\n");
+  fputs ("\
+Usage: verify [-attributes] file\n\
+  or : verify [-attributes] -list < file\n\
+  or : verify -match-file file [-attributes] [-attributes-match] file\n\
+  or : verify -match-dir dir [-attributes] [-attributes-match] file\n\
+  or : verify -match-dir dir [-attributes] [-attributes-match] -list < file\n",
+	 stderr);
   exit (1);
 }
 
@@ -1037,7 +1063,7 @@ content_match_dirs (dirname1, dirname2)
   qsort (list2, len2, sizeof (char *), sortfun);
   for (j = 0, k = 0; j < len1 && k < len2; )
     {
-      if ((cmp = strcmp (list1 [j], list2 [k])) == 0)
+      if ((cmp = strcmp (list1[j], list2[k])) == 0)
 	{
 	  ++j;
 	  ++k;
@@ -1045,22 +1071,22 @@ content_match_dirs (dirname1, dirname2)
       else if (cmp < 0)
 	{
 	  dontmatch = 1;
-	  fprintf (stderr, "%s/%s: extra file.\n", dirname1, list1 [j]);
+	  printf ("%s/%s: extra file\n", dirname1, list1[j]);
 	  ++j;
-	  while ((j < len1) && ((cmp = strcmp (list1 [j], list2 [k])) < 0))
+	  while ((j < len1) && ((cmp = strcmp (list1[j], list2[k])) < 0))
 	    {
-	      fprintf (stderr, "%s/%s: extra file.\n", dirname1, list1 [j]);
+	      printf ("%s/%s: extra file\n", dirname1, list1[j]);
 	      ++j;
 	    }
 	}
       else
 	{
 	  dontmatch = 1;
-	  fprintf (stderr, "%s/%s: missing file.\n", dirname1, list2 [k]);
+	  printf ("%s/%s: missing file\n", dirname1, list2[k]);
 	  ++k;
-	  while ((k < len2) && ((cmp = strcmp (list1 [j], list2 [k])) > 0))
+	  while ((k < len2) && ((cmp = strcmp (list1[j], list2[k])) > 0))
 	    {
-	      fprintf (stderr, "%s/%s: missing file.\n", dirname1, list2 [k]);
+	      printf ("%s/%s: missing file\n", dirname1, list2[k]);
 	      ++k;
 	    }
 	}
@@ -1068,16 +1094,16 @@ content_match_dirs (dirname1, dirname2)
   if (j < len1)
     {
       for ( ;j < len1; ++j)
-	fprintf (stderr, "%s/%s: extra file.\n", dirname1, list1 [j]);
+	printf ("%s/%s: extra file\n", dirname1, list1[j]);
     }
   if (k < len2)
     {
       for ( ; k < len2; ++k)
-	fprintf (stderr, "%s/%s: missing file.\n", dirname2, list2 [k]);
+	printf ("%s/%s: missing file\n", dirname2, list2[k]);
     }
 
   if (dontmatch == 0 && verbose_flag)
-    fprintf (stderr, "OK: %s dir contents match\n", dirname1);
+    printf ("OK: %s dir contents match\n", dirname1);
 }
 
 char **
@@ -1113,12 +1139,12 @@ read_a_dir (dirname, num_entries)
 	  list = (char **) realloc (list, alloced * sizeof (char *));
 	}
       len = NAMLEN(dp);
-      list [used] = (char *) malloc (len + 1);
-      strncpy (list [used], dp->d_name, len);
-      list [used][len] = '\0';
+      list[used] = (char *) malloc (len + 1);
+      strncpy (list[used], dp->d_name, len);
+      list[used][len] = '\0';
       ++used;
     }
-  list [used] = NULL;
+  list[used] = NULL;
   closedir (dirp);
   *num_entries = used;
   return list;

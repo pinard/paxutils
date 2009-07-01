@@ -608,7 +608,7 @@ create_all_directories (char *name)
   int   cdf;
 #endif
 
-  dir = dirname (name);
+  dir = dir_name (name);
   mode = 0700;
 #ifdef HPUX_CDF
   cdf = islastparentcdf (name);
@@ -624,7 +624,7 @@ create_all_directories (char *name)
     error (2, 0, _("virtual memory exhausted"));
 
   if (dir[0] != '.' || dir[1] != '\0')
-    make_path (dir, mode, 0700, -1, -1, (char *) NULL);
+    make_path (dir, mode, 0700, -1, -1, 0, (char *) NULL);
 
   free (dir);
 }

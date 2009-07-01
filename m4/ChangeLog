@@ -1,3 +1,7 @@
+1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* gettext.m4: Use our own included gettext by default.
+
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Include atconfig.m4, delete echo.m4.
@@ -6,7 +10,7 @@
 
 	* atconfig.m4: New file, also subsuming echo.m4.
 	* echo.m4: Deleted.
-
+
 1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
 
 	* gettext.m4: Try to use gettext from libc.

@@ -1,94 +1,67 @@
 #							-*- shell-script -*-
+# New portable cpio format.
 
-### test new -c format
+AT_SETUP(if new portable cpio creation and listing works)
+dnl      -----------------------------------------------
 
-AT_SETUP(cpio -o -H newc)
-dnl      ---------------
+PREPARE(mix, list-mix)
+sed -e '/^\.\/..*$/s/^\.\///' list-mix | sort > expout
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-cat struct-list | cpio -o -H newc > 1.c.gcpio
+[cat list-mix | cpio -o -H newc > archive
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -t -H newc < 1.c.gcpio)
-dnl      ------------------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -t -H newc < 1.c.gcpio | sort +8
-sed -e '/^\.\/..*$/s/^\.\///' -e 's/^/.*/' -e s'/$/.*/' struct-list | sort > expout
-cat << EOF >> expout
-NN blocks
-EOF
+[cpio -t -H newc < archive | sort
 CPIO_FILTER
-], 0)
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -tv -H newc < 1.c.gcpio)
-dnl      -------------------------------
+], , expout,
+[NN blocks
+])
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -tv -H newc < 1.c.gcpio | sort +8
-sed -e '/^\.\/..*$/s/^\.\///' -e 's/^/.*/' -e s'/$/.*/' struct-list | sort > expout
-sort expout > ${EXPOUT}2
-mv ${EXPOUT}2 expout
-cat << EOF >> expout
-NN blocks
-EOF
+[cpio -tv -H newc < archive | sed -e 's,^.* \(mix[[a-z0-9/]*]\).*,\1,' | sort
 CPIO_FILTER
-], 0)
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -tv < 1.c.gcpio)
-dnl      -----------------------
+], , expout,
+[NN blocks
+])
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -tv < 1.c.gcpio | sort +8
-sed -e '/^\.\/..*$/s/^\.\///' -e 's/^/.*/' -e s'/$/.*/' struct-list | sort > expout
-cat << EOF >> expout
-NN blocks
-EOF
+[cpio -tv < archive | sed -e 's,^.* \(mix[[a-z0-9/]*]\).*,\1,' | sort
 CPIO_FILTER
-], 0)
+], , expout,
+[NN blocks
+])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup archive)
 
-AT_SETUP(cpio -id -H newc < 1.c.gcpio)
-dnl      ----------------------------
+AT_SETUP(if new portable cpio extraction works)
+dnl      -------------------------------------
+
+PREPARE(mix, list-mix, cpio-newc)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id -H newc < 1.c.gcpio
+[TIME=`echotime`
+cd unmix
+  cpio -id -H newc < ../cpio-newc
+cd ..
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idum -H newc < 1.c.gcpio)
-dnl      ------------------------------
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idum -H newc < 1.c.gcpio
+[cd unmix
+  cpio -idum -H newc < ../cpio-newc
+cd ..
 VERIFY_EXACT
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup unmix)

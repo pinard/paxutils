@@ -1,13 +1,13 @@
 * README file for `paxutils'				allout -*- outline -*-
 
-  Here is version 2.4f for Free `pax' utilities.  Glance through this
+  Here is version 2.4g for Free `pax' utilities.  Glance through this
   `README' file before starting configuration.  Make sure you read files
   `ABOUT-NLS' and `INSTALL' if you are not familiar with them already.
 
   The canonical distribution point for this version is either:
 
-     http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4f.tar.gz
-     ftp://ftp.iro.umontreal.ca/pub/paxutils/paxutils-2.4f.tar.gz
+     http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4g.tar.gz
+     ftp://ftp.iro.umontreal.ca/pub/paxutils/paxutils-2.4g.tar.gz
 
   yet the second URL (the FTP one) might disappear one day.  GNU mirrors
   usually hold a copy of non-pretest releases, the canonical distribution
@@ -75,12 +75,13 @@
     For comprehensive modifications to `paxutils', you might need tools
     beyond those used in simple installations.  If not done already, get:
 
-	ftp://i44ftp.info.uni-karlsruhe.de/pub/gnu/gettext-0.10.26.tar.gz
-	ftp://ftp.gnu.org/pub/gnu/m4-1.4.tar.gz
+	ftp://ftp.seindal.dk/pub/rene/gnu/m4-1.4j.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/autoconf-2.12.tar.gz          + PATCHES-AC
 	ftp://ftp.gnu.org/pub/gnu/perl-5.003.tar.gz
-	ftp://ftp.gnu.org/pub/gnu/autoconf-2.12.tar.gz          + AC-PATCHES
-	ftp://ftp.cygnus.com/pub/tromey/automake-1.3.tar.gz	+ AM-PATCHES
-	ftp://ftp.gnu.org/pub/gnu/bison-1.25.tar.gz             + BI-PATCHES
+	ftp://ftp.cygnus.com/pub/tromey/automake-1.3b.tar.gz
+	ftp://ftp.cygnus.com/pub/home/drepper/gettext-0.10.35.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/bison-1.25.tar.gz             + PATCHES-BI
+	http://www.ozemail.com.au/~bod/help2man-1.5c.tar.gz
 
     Do not forget applying the `*-PATCHES' files (all officious)
     appropriately.  Make sure GNU `m4' is fully installed before you start
@@ -210,8 +211,8 @@
 
     About *security*, it is probable that future releases of `tar' will
     have some behaviour changed.  There are many pending suggestions to
-    choose from.  Today, extracting an archive not being `root', `tar'
-    will restore suid/sgid bits on files but owned by the extracting user.
+    choose from.  Today, extracting an archive not being `root', `tar' will
+    restore suid/sgid bits on files, even if owned by the extracting user.
     `root' automatically gets a lot of special privileges, `-p' might
     later become required to get them.
 
@@ -228,19 +229,19 @@
     `cpio' knows to recognize the nonstandard "ustar" archives produced by
     `tar'.  This will be progressively corrected over the incoming years.
 
-    Don't be mislead by the mere existence of the --posix option.
-    This option will be more fully implemented in later releases for
-    producing truly POSIX archives.  `paxutils' 3.0 will produce POSIX
+    Don't be mislead by the mere existence of the `--posix' option in
+    `tar'.  This option will be more fully implemented in later releases
+    for producing truly POSIX archives.  `paxutils' 3.0 will produce POSIX
     archives by default, but there is a long way before we get there.
     (If you look at the internals, don't take all the extensions you see
     for granted, as they are planned to change.)
 
 . + What's next?
 
-    The `BACKLOG' file shows an approximative priorisation of the many
-    pending problems and suggestions.  Besides pending problems and all
-    other matters listed above, the cleanup will continue and extend to
-    the general organisation of the code, so to better merge the `cpio'
-    and `tar' algorithms, which were once fully separate.  We also want
-    to address some long-awaited performance issues (for example: double
-    buffering) or enhancements (for example: per-file compression).
+    The `BACKLOG' file shows a rather approximative priorisation of the
+    many pending problems and suggestions.  Besides such pending problems
+    and all other matters listed above, the cleanup will continue and
+    extend to the general organisation of the code, so to better merge the
+    `cpio' and `tar' algorithms, which were once fully separate.  We also
+    want to address some long-awaited performance issues (for example:
+    double buffering) or enhancements (for example: per-file compression).

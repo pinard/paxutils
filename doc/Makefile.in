@@ -109,10 +109,9 @@ extra_libexec_progs = @extra_libexec_progs@
 
 AUTOMAKE_OPTIONS = gnits
 info_TEXINFOS = paxutils.texi
-man_MANS = cpio.1 mt.1 tar.1
+man_MANS = cpio.1 mt.1 pax.1 tar.1
 
-EXTRA_DIST = convtexi.pl getdate.texi header.texi help2man \
-helptoman.pl $(MANS)
+EXTRA_DIST = convtexi.pl getdate.texi header.texi help2man $(MANS)
 
 PERL = perl
 
@@ -422,15 +421,43 @@ header.texi: $(top_srcdir)/src/tar.h
 	sed -n '/archive format/,/End of format/p' $(top_srcdir)/src/tar.h \
 	  | expand | sed 's/\([{}]\)/@\1/g' > $(srcdir)/header.texi
 
-# Removing the `LANGUAGE=C...' line produces a translated man page!!
-tar.1: helptoman.pl $(top_srcdir)/src/tar.c
+cpio.1: help2man $(top_srcdir)/src/cpio.c
+	@if test -f ../src/cpio; then \
+	  echo "Updating the \`man' page for \`cpio'"; \
+	  LANGUAGE=C $(PERL) $(srcdir)/help2man ../src/cpio > cpio.1-tmp; \
+	  mv cpio.1-tmp $(srcdir)/cpio.1; \
+	else \
+	  echo "WARNING: The \`man' page for \`cpio' cannot be updated yet."; \
+	  echo "         Retry once the program executable will be ready."; \
+	fi
+
+mt.1: help2man $(top_srcdir)/src/mt.c
+	@if test -f ../src/mt; then \
+	  echo "Updating the \`man' page for \`mt'"; \
+	  LANGUAGE=C $(PERL) $(srcdir)/help2man ../src/mt > mt.1-tmp; \
+	  mv mt.1-tmp $(srcdir)/mt.1; \
+	else \
+	  echo "WARNING: The \`man' page for \`mt' cannot be updated yet."; \
+	  echo "         Retry once the program executable will be ready."; \
+	fi
+
+pax.1: help2man $(top_srcdir)/src/pax.c
+	@if test -f ../src/pax; then \
+	  echo "Updating the \`man' page for \`pax'"; \
+	  LANGUAGE=C $(PERL) $(srcdir)/help2man ../src/pax > pax.1-tmp; \
+	  mv pax.1-tmp $(srcdir)/pax.1; \
+	else \
+	  echo "WARNING: The \`man' page for \`pax' cannot be updated yet."; \
+	  echo "         Retry once the program executable will be ready."; \
+	fi
+
+tar.1: help2man $(top_srcdir)/src/tar.c
 	@if test -f ../src/tar; then \
-	  echo "Updating the \`man' page"; \
-	    LANGUAGE=C \
-	      $(PERL) $(srcdir)/helptoman.pl ../src/tar > tar.1-tmp; \
+	  echo "Updating the \`man' page for \`tar'"; \
+	  LANGUAGE=C $(PERL) $(srcdir)/help2man ../src/tar > tar.1-tmp; \
 	  mv tar.1-tmp $(srcdir)/tar.1; \
 	else \
-	  echo "WARNING: The \`man' page cannot be updated yet."; \
+	  echo "WARNING: The \`man' page for \`tar' cannot be updated yet."; \
 	  echo "         Retry once the program executable will be ready."; \
 	fi
 

@@ -1,114 +1,102 @@
-#							-*- shell-script -*-
+# cpio appends.						-*- shell-script -*-
 
-### test -A flag
+AT_SETUP(if cpio can append using default format)
+dnl      ---------------------------------------
 
-AT_SETUP(cpio -oO 1.-A.gcpio)
-dnl      ----------------------
-
-cd structure
-echo append > aptest
-echo append2 > tmp/aptest2
+PREPARE(mix, list-mix, cpio-def)
+echo mix/aptest > aplist
+echo mix/tmp/aptest2 >> aplist
+cp cpio-def archive
+mv mix mix-save
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -f 1.-A.gcpio
-cat struct-list | cpio -oO 1.-A.gcpio
+[cpio -idm < cpio-def
+echo append > mix/aptest
+echo append2 > mix/tmp/aptest2
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -oAO 1.-A.gcpio)
-dnl      -----------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-{ echo aptest; echo tmp/aptest2; } | cpio -oAO 1.-A.gcpio
+[cpio -oAO archive < aplist
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -id < 1.-A.gcpio)
-dnl      ---------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id < 1.-A.gcpio
+[TIME=`echotime`
+cd unmix
+  cpio -id < ../archive
+cd ..
 VERIFY_NEWER
-{ echo aptest; echo tmp/aptest2; } | verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-le $TIME < aplist
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+rm -rf mix
+mv mix-save mix
 
-AT_SETUP(cpio -oO 1.c-A.gcpio -H newc)
-dnl      -------------------------------
+AT_CLEANUP($cleanup aplist archive mix-save unmix)
+
+AT_SETUP(if cpio can append using new portable format)
+dnl      --------------------------------------------
+
+PREPARE(mix, list-mix, cpio-newc)
+echo mix/aptest > aplist
+echo mix/tmp/aptest2 >> aplist
+cp cpio-newc archive
+mv mix mix-save
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-rm -f 1.c-A.gcpio
-cat struct-list | cpio -oO 1.c-A.gcpio -H newc
+[cpio -idm < cpio-newc
+echo append > mix/aptest
+echo append2 > mix/tmp/aptest2
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -oAO 1.c-A.gcpio -H newc)
-dnl      --------------------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-{ echo aptest; echo tmp/aptest2; } | cpio -oAO 1.c-A.gcpio -H newc
+[cpio -oAO archive -H newc < aplist
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -id -H newc < 1.c-A.gcpio)
-dnl      ------------------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id -H newc < 1.c-A.gcpio
+[TIME=`echotime`
+cd unmix
+  cpio -id -H newc < ../archive
+cd ..
 VERIFY_NEWER
-{ echo aptest; echo tmp/aptest2; } | verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-le $TIME < aplist
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idumI 1.c-A.gcpio -H newc)
-dnl      ----------------------------------
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumI 1.c-A.gcpio -H newc
-verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match < struct-list
-{ echo aptest; echo tmp/aptest2; } | verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match
+[cd unmix
+  cpio -idumI ../archive -H newc
+cd ..
+VERIFY_NEWER
+dnl verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match < list-mix
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match < aplist
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
-],
-[\./tmp mtime match [0-9]* should be [0-9]*\.
-\. mtime match [0-9]* should be [0-9]*\.
 ])
 
-AT_CLEANUP($cleanup)
+rm -rf mix
+mv mix-save mix
+
+AT_CLEANUP($cleanup aplist archive mix-save unmix)

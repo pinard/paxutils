@@ -1,117 +1,100 @@
 #							-*- shell-script -*-
+# Options -I, -O and -F.
 
-### Test -I,-O and -F
-
-AT_SETUP(cpio -idumcI 1.c.gcpio -H newc)
-dnl      ---------------------------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumI 1.c.gcpio -H newc
-VERIFY_EXACT
-CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -oO 1.c.gcpio -H newc)
+AT_SETUP(if cpio can read without pipe)
 dnl      -----------------------------
 
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-rm -f 1.c.gcpio
-cat struct-list | cpio -oO 1.c.gcpio -H newc
-CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idum -H newc < 1.c.gcpio)
-dnl      ------------------------------
+PREPARE(mix, list-mix, cpio-newc)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idum -H newc < 1.c.gcpio
+[cd unmix
+  cpio -idmI ../cpio-newc -H newc
+cd ..
 VERIFY_EXACT
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idumcI 1.c.gcpio -H newc)
-dnl      ---------------------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumI 1.c.gcpio -H newc
+[cd unmix
+  cpio -idumF ../cpio-newc -H newc
+cd ..
 VERIFY_EXACT
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup unmix)
 
-AT_SETUP(cpio -idumcF 1.c.gcpio -H newc)
-dnl      ---------------------------------
+AT_SETUP(if cpio can write without pipe using -O)
+dnl      ---------------------------------------
+
+PREPARE(mix, list-mix)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumF 1.c.gcpio -H newc
+[cat list-mix | cpio -oO archive -H newc
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CHECK(
+[cd unmix
+  cpio -idm -H newc < ../archive
+cd ..
 VERIFY_EXACT
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -oF 1.c.gcpio -H newc)
-dnl      -----------------------------
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-rm -f 1.c.gcpio
-cat struct-list | cpio -oF 1.c.gcpio -H newc
-CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idumF 1.c.gcpio -H newc)
-dnl      --------------------------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumF 1.c.gcpio -H newc
+[cd unmix
+  cpio -idumI ../archive -H newc
+cd ..
 VERIFY_EXACT
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup archive unmix)
 
-AT_SETUP(cpio -idumcI 1.c.gcpio -H newc)
-dnl      ---------------------------------
+AT_SETUP(if cpio can write without pipe using -F)
+dnl      ---------------------------------------
+
+PREPARE(mix, list-mix)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumI 1.c.gcpio -H newc
-VERIFY_EXACT
+[cat list-mix | cpio -oF archive -H newc
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CHECK(
+[cd unmix
+  cpio -idmF ../archive -H newc
+cd ..
+VERIFY_EXACT
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CHECK(
+[cd unmix
+  cpio -idumI ../archive -H newc
+cd ..
+VERIFY_EXACT
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CLEANUP($cleanup archive unmix)

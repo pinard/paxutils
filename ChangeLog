@@ -1,3 +1,23 @@
+1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am (EXTRA_DIST): Do not include PATCHES-AM anymore.
+
+1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Dismiss any locale while configuration goes,
+	so the output from id could be processed correctly.
+
+1998-10-31  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* configure.in: Don't replace dirname.
+
+	* configure.in: Remove AC_SYS_RESTARTABLE_SYSCALLS, it does not
+	check what we need here.
+
+1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Version 2.4g.
+
 1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
 
 	* configure.in: Use AT_CONFIG instead of fp_PROG_ECHO.  Create
@@ -10,7 +30,7 @@
 1998-10-13  François Pinard  <pinard@iro.umontreal.ca>
 
 	* configure.in: Version 2.4f.
-
+
 1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
 
 	* configure.in (AC_OUTPUT): Prepare tests/test-one and make it
@@ -130,8 +150,9 @@
 	* configure.in: Use it.
 	* acconfig.h: Declare HAVE_PRINTF_LLU.
 	[!HAVE_PRINTF_LLU]: Reset SIZEOF_UNSIGNED_LONG_LONG to zero.
-	Reported by Alexandre Oliva, Andreas Zeller, Anne Becker, Johann
-	Haider, Jörg Schilling, Robert E. Brown and Wolfram Wagner.
+	Reported by Alexandre Oliva, Andreas Zeller, Anne Becker, Helmut
+	Heller Johann Haider, Jörg Schilling, Robert E. Brown and Wolfram
+	Wagner.
 
 1997-12-21  François Pinard  <pinard@iro.umontreal.ca>
 

@@ -3,14 +3,12 @@
 AT_SETUP(copy-pass mode)
 dnl      --------------
 
-PREPARE(structure, struct-list)
+PREPARE(mix, list-mix)
+mkdir unmix
 
 AT_CHECK(
 [TIME=`echotime`
-sleep 1
-cd structure
-  find . -depth -print | cpio -pd ../unpacked || exit 1
-cd ..
+find mix -depth -print | cpio -pd unmix || exit 1
 VERIFY_NEWER
 CPIO_FILTER
 ], , ,
@@ -18,9 +16,7 @@ CPIO_FILTER
 ])
 
 AT_CHECK(
-[cd structure
-  find . -depth -print | cpio -pdum ../unpacked || exit 1
-cd ..
+[find mix -depth -print | cpio -pdum unmix || exit 1
 VERIFY_EXACT
 CPIO_FILTER
 ], , ,
@@ -28,31 +24,28 @@ CPIO_FILTER
 ])
 
 AT_CHECK(
-[cd structure
-  # Probably should verify linked message.
-  find . -depth -print | cpio -pdumv ../unpacked 2>&1 | grep -v 'cpio.*linked to' 1>&2
-cd ..
+[# Probably should verify linked message.
+find mix -depth -print | cpio -pdumv unmix 2>&1 | grep -v 'cpio.*linked to' 1>&2
 VERIFY_EXACT
-cp struct-list experr
+cp list-mix experr
 echo 'NN blocks' >> experr
 CPIO_FILTER
 ], , , experr)
 
-AT_CLEANUP($cleanup unpacked)
+AT_CLEANUP($cleanup unmix)
 
 AT_SETUP(copy-pass mode through linking)
 dnl      -----------------------------
 
-PREPARE(structure, struct-list)
+PREPARE(mix, list-mix)
+mkdir unmix
 
 AT_CHECK(
-[cd structure
-  find . -depth -print | cpio -pdl ../unpacked || exit 1
-cd ..
-verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match -ino-match -ignore-dir-ino -ignore-link-ino -ignore-link-mtime -ignore-dir-mtime < struct-list
+[find mix -depth -print | cpio -pdl unmix || exit 1
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match -ino-match -ignore-dir-ino -ignore-link-ino -ignore-link-mtime -ignore-dir-mtime < list-mix
 CPIO_FILTER
-], 0,
-[NN blocks
+], , ,
+[0 blocks
 ])
 
-AT_CLEANUP($cleanup unpacked)
+AT_CLEANUP($cleanup unmix)

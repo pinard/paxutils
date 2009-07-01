@@ -134,7 +134,7 @@ int link_to_maj_min_ino PARAMS ((char *, int, int, int));
 int link_to_name PARAMS ((char *, char *));
 
 /* dirname.c */
-char *dirname PARAMS ((char *));
+char *dir_name PARAMS ((const char *));
 
 /* filemode.c */
 void mode_string PARAMS ((unsigned int, char *));
@@ -172,7 +172,7 @@ void process_args PARAMS ((int, char *[]));
 void initialize_buffers PARAMS ((void));
 
 /* makepath.c */
-int make_path PARAMS ((char *, int, int, uid_t, gid_t, char *));
+int make_path PARAMS ((char *, int, int, uid_t, gid_t, int, char *));
 
 /* octal.c */
 int otoa PARAMS ((char *, unsigned long *));

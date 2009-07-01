@@ -5,7 +5,7 @@ Features
 --------
 
   This port of GNU Tar includes significant improvements as compared
-to previous versions as distribution by FSF.  I believe that all the
+to previous versions as distributed by FSF.  I believe that all the
 features in the original Unix code also work in the DOS/Windows port;
 the single most important exception is the lack of support for remote
 archives (see the "Missing" section below).

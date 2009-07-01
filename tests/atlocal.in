@@ -32,7 +32,7 @@ GID=@TEST_GID@
 GIDNAME=@TEST_GIDNAME@
 
 # If your system supports multiple groups and you are a member of more
-# than 1 group, set to another group so the test suite can check cpio's
+# than one group, set to another group so the test suite can check cpio's
 # ability to set different gid's.
 GID2=@TEST_GID2@
 GID2NAME=@TEST_GID2NAME@

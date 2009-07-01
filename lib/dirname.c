@@ -33,17 +33,20 @@ char *malloc ();
 # endif
 #endif
 
-/* Return the leading directories part of PATH,
-   allocated with malloc.  If out of memory, return 0.
-   Assumes that trailing slashes have already been
-   removed.  */
+/* Return the leading directories part of PATH, allocated with malloc.  If out
+   of memory, return 0.  Assumes that trailing slashes have already been
+   removed.
+
+   In general, we can't use the builtin `dirname' function if available, since
+   it has different meanings in different environments.  In some environments
+   the builtin `dirname' modifies its argument.  */
 
 char *
-dirname (path)
-     char *path;
+dir_name (path)
+     const char *path;
 {
   char *newpath;
-  char *slash;
+  const char *slash;
   int length;			/* Length of result, not including NUL.  */
 
   slash = strrchr (path, '/');

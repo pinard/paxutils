@@ -1,9 +1,12 @@
 * paxutils NEWS - User visible changes.			allout	-*- outline -*-
 
-.* Version paxutils 2.4f - François Pinard, 1998-10.
+.* Version paxutils 2.4g - François Pinard, 1998-11.
 
 . + Specification changes
 .  - An info script should return success for `tar' to continue processing.
+
+. + New features
+.  - Short `man' pages get installed as well for `cpio', `mt' and `pax'.
 
 .* Version cpio 2.4.50 - Tom Tromey, 1998-05.
 

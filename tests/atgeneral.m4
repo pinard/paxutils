@@ -27,20 +27,40 @@ undefine([undefine])
 
 AT_DEFINE(AT_INIT,
 [AT_DEFINE(AT_ordinal, 0)
+. ./atconfig
+# Snippet (3
+
 at_usage="Usage: [$]0 [OPTION]...
 
-  -v  Explain the purpose of each group of tests
-  -e  Stop if a test fails, then do not clean up"
+  -e  Stop and inhibit normal clean up if a test of the full test suite fails
+  -s  Inhibit verbosity in debugging scripts, at generation or at execution
+  -v  Force more detailed output, default for debugging scripts unless -s"
 
 while test [$][#] -gt 0; do
   case "[$]1" in
-    -v) at_verbose=1; shift ;;
-    -e) at_stop_on_error=1 shift ;;
+    -e) at_stop_on_error=1; shift ;;
+    -s) at_verbose=; at_silent=1; shift ;;
+    -v) at_verbose=1; at_silent=; shift ;;
     *) echo 1>&2 "$at_usage"; exit 1 ;;
   esac
 done
 
-. ./atconfig
+# In the testing suite, we only want to know if the test succeeded or failed.
+# But in debugging scripts, we want more information, so we prefer `diff -u'
+# to silent `cmp', even if it may happen that we compare binary files.
+# Option `-u' might be less portable, so either change it or use GNU `diff'.
+
+if test -n "$at_verbose"; then
+  at_diff='diff -u'
+else
+  at_diff='cmp -s'
+fi
+
+# Each generated debugging script, containing a single test group, clean
+# up files at the beginning only, not at the end.  This is so we can repeat
+# the script many times and browse left over files.  To cope with such left
+# over files, the full test suite clean up both before and after test groups.
+# Snippet )3
 
 if test -n "`$1 --version | sed -n s/$at_package.*$at_version/OK/p`"; then
   at_banner="Testing suite for Free $at_package, version $at_version"
@@ -55,31 +75,45 @@ else
   exit 1
 fi
 
+# Remove any debugging script resulting from a previous run.
+rm -f FAIL-*.sh
+
 at_failed_list=
-at_test_count=0
-divert(1)
+at_ignore_count=0
+divert(2)[]dnl
+
 # Wrap up the testing suite with summary statistics.
 
 rm -f at-check-line
 at_fail_count=0
 if test -z "$at_failed_list"; then
-  at_banner="All $at_test_count tests were successful"
+  if test "$at_ignore_count" = 0; then
+    at_banner="All $at_test_count tests were successful"
+  else
+    at_banner="All $at_test_count tests were successful ($at_ignore_count ignored)"
+  fi
 else
+  echo $at_n "Writing debugging scripts (FAIL-*.sh)...$at_c"
   for at_group in $at_failed_list; do
-    at_fail_count=`expr $at_fail_count + 1`
+    echo $at_n " $at_group$at_c"
     ( echo '#!/bin/sh'
-      sed -n "/^[#] Snippet ((/,/^[#] Snippet ))/p" atconfig
+      sed -n "/^[#] Snippet (1/,/^[#] Snippet )1/p" atconfig
+      test -z "$at_silent" && echo 'at_verbose=1'
+      sed -n "/^[#] Snippet (2/,/^[#] Snippet )2/p" atconfig
+      sed -n "/^[#] Snippet (3/,/^[#] Snippet )3/p" [$]0
       sed -n "/^[#] Snippet (c$at_group(/,/^[#] Snippet )c$at_group)/p" [$]0
+      echo 'test -n "$at_verbose" && echo "========== [$]0 ===================="'
       sed -n "/^[#] Snippet (s$at_group(/,/^[#] Snippet )s$at_group)/p" [$]0
       echo 'exit 0'
     ) | grep -v '^[#] Snippet' > FAIL-$at_group.sh
     chmod +x FAIL-$at_group.sh
-    echo "FAIL-$at_group.sh:1: debugging script"
+    at_fail_count=`expr $at_fail_count + 1`
   done
+  echo '... done'
   if test -n "$at_stop_on_error"; then
-    at_banner="ERROR: One test failed, inhibiting subsequent tests"
+    at_banner="ERROR: One of the tests failed, inhibiting subsequent tests"
   else
-    at_banner="ERROR: $at_fail_count of $at_test_count tests failed"
+    at_banner="ERROR: Suite unsuccessful, $at_fail_count of $at_test_count tests failed"
   fi
 fi
 at_dashes=`echo $at_banner | sed s/./=/g`
@@ -87,7 +121,18 @@ echo "$at_dashes"
 echo "$at_banner"
 echo "$at_dashes"
 
-test -z "$at_failed_list" || exit 1
+if test -n "$at_failed_list"; then
+  if test -z "$at_silent"; then
+    echo
+    echo "Now, failed tests will be executed again, with more details..."
+    echo
+    for at_group in $at_failed_list; do
+      ./FAIL-$at_group.sh
+    done
+  fi
+  exit 1
+fi
+
 exit 0
 divert[]dnl
 ])
@@ -98,11 +143,15 @@ divert[]dnl
 # The group is testing what DESCRIPTION says.
 
 AT_DEFINE(AT_SETUP,
-[AT_DEFINE([AT_group_line], __file__:__line__)
-AT_DEFINE([AT_group_description], [$1])
-AT_DEFINE([AT_data_files], )
-AT_DEFINE([AT_ordinal], AT_EVAL(AT_ordinal + 1))
+[AT_DEFINE([AT_ordinal], AT_EVAL(AT_ordinal + 1))
+pushdef([AT_group_description], [$1])
+pushdef([AT_group_line], __file__:__line__)
+pushdef([AT_data_files], )
+pushdef([AT_data_expout], )
+pushdef([AT_data_experr], )
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+divert(1)[]dnl
+  echo __line__ > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing AT_group_description'
     echo $at_n "     $at_c"
@@ -126,25 +175,30 @@ AT_DEFINE(AT_CLEANUP,
   )
   case [$]? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list AT_ordinal"
        ;;
   esac
+  at_test_count=AT_ordinal
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+divert(0)[]dnl
 [#] Snippet (c[]AT_ordinal[](
 
-ifelse([AT_data_files$1], ,
-  [rm -f stdout stderr],
-  [rm -rf[]AT_data_files[]ifelse($1, , , [ $1]) stdout stderr])
+rm ifelse([AT_data_files$1], , [-f], [-rf[]AT_data_files[]ifelse($1, , , [ $1])]) stdout stderr[]AT_data_expout[]AT_data_experr
 [#] Snippet )c[]AT_ordinal[])
+undivert(1)[]dnl
+    rm ifelse([AT_data_files$1], , [-f], [-rf[]AT_data_files[]ifelse($1, , , [ $1])]) stdout stderr[]AT_data_expout[]AT_data_experr
   fi
 fi
-AT_UNDEFINE([AT_group_description])])
+popdef([AT_data_experr])
+popdef([AT_data_expout])
+popdef([AT_data_files])
+popdef([AT_group_line])
+popdef([AT_group_description])])
 
 # AT_DATA(FILE, CONTENTS)
 
@@ -167,18 +221,22 @@ $2'EOF'
 # the expected stderr.  STATUS is not checked if it is empty.
 
 AT_DEFINE(AT_CHECK,
-[echo __line__ > at-check-line
+[test -n "$at_verbose" \
+  && echo $srcdir'/__file__:__line__: Testing AT_group_description'
+echo __line__ > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 $1
 ifelse([$2], , , [test $? = $2 || exit 1])
 exec 1>&5 2>&6
 ifelse([$3], , [test ! -s stdout || exit 1
-], [$3], expout, [$at_diff expout stdout || exit 1
+], [$3], expout, [AT_DEFINE([AT_data_expout], [ expout])dnl
+$at_diff expout stdout || exit 1
 ], [changequote({, })dnl
 echo $at_n "patsubst({$3}, \([\"`$]\), \\\1)$at_c" | $at_diff - stdout || exit 1
 changequote([, ])])dnl
 ifelse([$4], , [test ! -s stderr || exit 1
-], [$4], experr, [$at_diff experr stderr || exit 1
+], [$4], experr, [AT_DEFINE([AT_data_experr], [ experr])dnl
+$at_diff experr stderr || exit 1
 ], [changequote({, })dnl
 echo $at_n "patsubst({$4}, \([\"`$]\), \\\1)$at_c" | $at_diff - stderr || exit 1
 changequote([, ])])dnl

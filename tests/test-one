@@ -7,7 +7,7 @@ if test -f atconfig; then
   . ./atconfig
 else
   echo >&2 'Execute from the testing directory in the build hierarchy.'
-  echo >&2 '  (a typical call is: ../../tests/test-one exclude.m4).'
+  echo >&2 '  (a typical call is: ../../tests/test-one t-exclude.m4).'
   exit 1
 fi
 

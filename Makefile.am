@@ -20,8 +20,8 @@ AUTOMAKE_OPTIONS = gnits dist-shar
 ACLOCAL_AMFLAGS = -I m4
 
 BABYL = ../rmail/* ../admin/*/RMAIL
-EXTRA_DIST = PATCHES-AC PATCHES-AM PATCHES-BI README.dos config.bat \
-rebox.el stamp-pot
+EXTRA_DIST = PATCHES-AC PATCHES-BI README.dos config.bat rebox.el \
+stamp-pot
 
 SUBDIRS = m4 doc i18n lib src scripts tests contrib
 

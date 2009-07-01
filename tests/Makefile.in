@@ -110,16 +110,15 @@ extra_bin_progs = @extra_bin_progs@
 extra_libexec_progs = @extra_libexec_progs@
 
 AUTOMAKE_OPTIONS = gnits ../src/ansi2knr
-check_PROGRAMS = echotime genfile rediff swapb swaphw verify wrsparse
+check_PROGRAMS = echotime genfile swapb swaphw verify wrsparse
 
-SUITE = append.m4 c-append.m4 c-base.m4 c-block.m4 c-crc.m4 \
-c-interop.m4 c-junk.m4 c-long.m4 c-newc.m4 c-nopipe.m4 c-odd.m4	\
-c-owner.m4 c-pass.m4 c-reset.m4 c-skip.m4 c-swap.m4 c-tar.m4 \
-c-unpack.m4 create.m4 delete.m4 exclude.m4 extract.m4 gzip.m4 \
-incremen.m4 volume.m4
+SUITE = c-append.m4 c-block.m4 c-crc.m4 c-default.m4 c-junk.m4 \
+c-long.m4 c-newc.m4 c-nopipe.m4 c-oldc.m4 c-owner.m4 c-pass.m4 \
+c-reset.m4 c-skip.m4 c-swap.m4 c-tar.m4 suite.m4 t-append.m4 \
+t-create.m4 t-delete.m4 t-exclude.m4 t-extract.m4 t-gzip.m4 \
+t-incremen.m4 t-volume.m4
 
-EXTRA_DIST = atgeneral.m4 make-structure test-one testsuite \
-testsuite.m4 $(SUITE)
+EXTRA_DIST = atgeneral.m4 make-mix test-one testsuite $(SUITE)
 
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 INCLUDES = -I.. -I$(top_srcdir)/src -I$(top_srcdir)/lib
@@ -142,11 +141,6 @@ genfile_OBJECTS =  genfile$U.o
 genfile_LDADD = $(LDADD)
 genfile_DEPENDENCIES =  ../lib/libpu.a
 genfile_LDFLAGS = 
-rediff_SOURCES = rediff.c
-rediff_OBJECTS =  rediff$U.o
-rediff_LDADD = $(LDADD)
-rediff_DEPENDENCIES =  ../lib/libpu.a
-rediff_LDFLAGS = 
 swapb_SOURCES = swapb.c
 swapb_OBJECTS =  swapb$U.o
 swapb_LDADD = $(LDADD)
@@ -170,16 +164,15 @@ wrsparse_LDFLAGS =
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(CC) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
-DIST_COMMON =  README ChangeLog Makefile.am Makefile.in TODO atconfig.in \
-atlocal.in
+DIST_COMMON =  ChangeLog Makefile.am Makefile.in atconfig.in atlocal.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP = --best
-SOURCES = echotime.c genfile.c rediff.c swapb.c swaphw.c verify.c wrsparse.c
-OBJECTS = echotime$U.o genfile$U.o rediff$U.o swapb$U.o swaphw$U.o verify$U.o wrsparse$U.o
+SOURCES = echotime.c genfile.c swapb.c swaphw.c verify.c wrsparse.c
+OBJECTS = echotime$U.o genfile$U.o swapb$U.o swaphw$U.o verify$U.o wrsparse$U.o
 
 all: Makefile all-local
 
@@ -248,10 +241,6 @@ genfile: $(genfile_OBJECTS) $(genfile_DEPENDENCIES)
 	@rm -f genfile
 	$(LINK) $(genfile_LDFLAGS) $(genfile_OBJECTS) $(genfile_LDADD) $(LIBS)
 
-rediff: $(rediff_OBJECTS) $(rediff_DEPENDENCIES)
-	@rm -f rediff
-	$(LINK) $(rediff_LDFLAGS) $(rediff_OBJECTS) $(rediff_LDADD) $(LIBS)
-
 swapb: $(swapb_OBJECTS) $(swapb_DEPENDENCIES)
 	@rm -f swapb
 	$(LINK) $(swapb_LDFLAGS) $(swapb_OBJECTS) $(swapb_LDADD) $(LIBS)
@@ -271,8 +260,6 @@ echotime_.c: echotime.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/echotime.c; then echo $(srcdir)/echotime.c; else echo echotime.c; fi` | $(ANSI2KNR) > echotime_.c
 genfile_.c: genfile.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/genfile.c; then echo $(srcdir)/genfile.c; else echo genfile.c; fi` | $(ANSI2KNR) > genfile_.c
-rediff_.c: rediff.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/rediff.c; then echo $(srcdir)/rediff.c; else echo rediff.c; fi` | $(ANSI2KNR) > rediff_.c
 swapb_.c: swapb.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/swapb.c; then echo $(srcdir)/swapb.c; else echo swapb.c; fi` | $(ANSI2KNR) > swapb_.c
 swaphw_.c: swaphw.c $(ANSI2KNR)
@@ -281,8 +268,8 @@ verify_.c: verify.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/verify.c; then echo $(srcdir)/verify.c; else echo verify.c; fi` | $(ANSI2KNR) > verify_.c
 wrsparse_.c: wrsparse.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/wrsparse.c; then echo $(srcdir)/wrsparse.c; else echo wrsparse.c; fi` | $(ANSI2KNR) > wrsparse_.c
-echotime_.o genfile_.o rediff_.o swapb_.o swaphw_.o verify_.o \
-wrsparse_.o : $(ANSI2KNR)
+echotime_.o genfile_.o swapb_.o swaphw_.o verify_.o wrsparse_.o : \
+$(ANSI2KNR)
 
 tags: TAGS
 
@@ -391,8 +378,8 @@ all-local: atconfig atlocal testsuite
 check-local: atconfig atlocal testsuite
 	$(SHELL) $(srcdir)/testsuite
 
-$(srcdir)/testsuite: atgeneral.m4 testsuite.m4 $(SUITE)
-	m4 -I $(srcdir) atgeneral.m4 testsuite.m4 | cat -s > $@-tmp
+$(srcdir)/testsuite: atgeneral.m4 $(SUITE)
+	m4 -I $(srcdir) atgeneral.m4 suite.m4 | cat -s > $@-tmp
 	mv $@-tmp $@
 	chmod +x $@
 

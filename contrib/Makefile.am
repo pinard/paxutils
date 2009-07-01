@@ -18,4 +18,5 @@
 
 AUTOMAKE_OPTIONS = gnits
 
-EXTRA_DIST = src-makefile.go3 lib-makefile.go3 config.sta config.go3
+EXTRA_DIST = cpio.1 mt.1 tar.1 src-makefile.go3 lib-makefile.go3 \
+config.sta config.go3

@@ -480,8 +480,8 @@ AC_DEFUN(fp_WITH_GETTEXT, [
     if test $ac_cv_lib_intl_gettext$ac_cv_func_gettext != nono; then
       AC_MSG_CHECKING(whether the included gettext is preferred)
       AC_ARG_WITH(included-gettext,
-	[  --with-included-gettext compile our provided version of gettext],
-	with_included_gettext=$withval, with_included_gettext=no)
+	[  --without-included-gettext avoid our provided version of gettext],
+	with_included_gettext=$withval, with_included_gettext=yes)
       AC_MSG_RESULT($with_included_gettext)
       if test $with_included_gettext$ac_cv_func_gettext = nono; then
         LIBS="$LIBS -lintl"

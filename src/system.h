@@ -105,7 +105,10 @@ char *alloca ();
 # endif
 #endif
 
+/* stpcpy is a macro in GNU libc.  */
+#ifndef stpcpy
 char *stpcpy ();
+#endif
 
 /* Declare errno.  */
 
@@ -536,6 +539,9 @@ typedef enum {false = 0, true = 1} bool;
 # else
 #  include <gettext.h>
 # endif
+# if HAVE_LOCALE_H
+#  include <locale.h>
+# endif
 # if !HAVE_SETLOCALE
 #  define setlocale(Category, Locale)
 # endif
@@ -577,25 +583,28 @@ char *xstrdup PARAMS ((const char *));
 
 /* When interrupted system calls are automatically restarted, we have little
    to worry about incomplete reads or writes.  A few users report that POSIX
-   requires (?) some system calls to *not* be restartable.  In such cases,
-   we ought to loop on input/output operations until the transfer is fully
-   done, so pipes and disks are dependable, despite interruptions.
+   requires (?) some system calls to *not* be restartable.  In such cases, we
+   ought to loop on input/output operations until the transfer is fully done,
+   so pipes and disks are dependable, despite interruptions.
 
    It is not clear whether this should apply or not to tape drives, where
    partial writes yield shorter physical records.  Since exact blocking is
-   needed, shorter records are errors, and might not be reported as such.
-   For now, I just guess that writing a physical tape record should be an
-   atomic operation as much in the operating system than in the electronic
-   and mechanics of the beast.  Otherwise, restarting an interrupted call
-   would require prior tape repositioning, it is hard to believe that tape
-   driver writers would force such complexities on programming users.
+   needed, shorter records are errors, and might not be reported as such.  For
+   now, I just guess that writing a physical tape record should be an atomic
+   operation as much in the operating system than in the electronic and
+   mechanics of the beast.  Otherwise, restarting an interrupted call would
+   require prior tape repositioning, it is hard to believe that tape driver
+   writers would force such complexities on programming users.  Does someone
+   know better about all this?
 
-   Does someone know better about all this?  */
+   `full_read' and `full_write' used to be defined as `read' and `write' when
+   HAVE_RESTARTABLE_SYSCALLS.  This has been changed, after Andreas Schwab
+   wrote: "AC_SYS_RESTARTABLE_SYSCALLS does not check whether syscalls are
+   restarted in general.  It only tests whether a signal handler installed
+   with signal (*not* sigaction) causes syscalls to be restarted.  But that
+   does not say anything about syscalls that are interrupted by stop signals
+   that have no handlers.  Thus tar should always check for EINTR from
+   read/write if it is defined.".  */
 
-#if HAVE_RESTARTABLE_SYSCALLS
-# define full_read(Desc, Buffer, Size) read (Desc, Buffer, Size)
-# define full_write(Desc, Buffer, Size) write (Desc, Buffer, Size)
-#else
 ssize_t full_read PARAMS ((int, char *, size_t));
 ssize_t full_write PARAMS ((int, const char *, size_t));
-#endif

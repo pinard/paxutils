@@ -1,188 +1,289 @@
-#							-*- shell-script -*-
+# Swapping options.					-*- shell-script -*-
 
-### test byte swapping, -s, -S, -b
+AT_SETUP(if cpio byte swapping works)
+dnl      ---------------------------
 
-AT_SETUP(cpio -o -H newc)
-dnl      ---------------
-
-cd structure
-rm aptest tmp/aptest2
+PREPARE(smix, list-smix, listf-smix)
+mkdir unmix xmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
+[cat list-smix | cpio -o -H newc > archive
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CHECK(
+[cd xmix
+  cpio -id -H newc < ../archive
 cd ..
-mkdir src2 dst2 dst2swap
-cd src2
-echo 'abc' > abc
-echo 'abcdefg' > file1
-echo 'abcdefgh' > file3
-echo '123456789012345' > file2
-echo '1234567890123456' > file4
-echo '12345678901234567' > file5
-find . -depth -print > 2.find
-find . -type f -depth -print > 2.find.files
-cat 2.find | cpio -o -H newc > 2.c.gcpio
+verify -list -match-dir xmix -size-match -contents-match < list-smix
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idu -H newc < 2.c.gcpio)
-dnl      -----------------------------
+cd xmix
+  while read file; do
+    swapb $file > temp
+    rm $file
+    mv temp $file
+  done < ../listf-smix
+cd ..
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2swap/*
-cd dst2swap
-cpio -idu -H newc < 2.c.gcpio
-verify -list -match-dir src2 -size-match -contents-match < 2.find
+[TIME=`echotime`
+cd unmix
+  cpio -ids -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
 CPIO_FILTER
-], 0,
+], , ,
+[cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+NN blocks
+])
+
+AT_CHECK(
+[cd unmix
+  cpio -idu -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -size-match -contents-match < list-smix
+CPIO_FILTER
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup archive unmix xmix)
 
-AT_SETUP(cpio -ids -H newc < 2.c.gcpio)
-dnl      -----------------------------
+AT_SETUP(if cpio halfword swapping works)
+dnl      -------------------------------
 
-for i in `cat 2.find.files`; do
-  swapb $i > $i.swapb
-  rm $i
-  mv $i.swapb $i
-done
+PREPARE(smix, list-smix, listf-smix)
+mkdir unmix xmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2/*
-cd dst2
-TIME=`echotime`
-sleep 1
-cpio -ids -H newc < 2.c.gcpio
-verify -list -match-dir dst2swap -size-match -contents-match -mtime-gt $TIME < 2.find
+[cat list-smix | cpio -o -H newc > archive
 CPIO_FILTER
-], 0,
-[.*cannot swap bytes of file3: odd number of bytes
-.*cannot swap bytes of file4: odd number of bytes
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idu -H newc < 2.c.gcpio)
-dnl      -----------------------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2swap/*
-cd dst2swap
-cpio -idu -H newc < 2.c.gcpio
-verify -list -match-dir src2 -size-match -contents-match < 2.find
-CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idS -H newc < 2.c.gcpio)
-dnl      -----------------------------
-
-for i in `cat 2.find.files`; do
-  swaphw $i > $i.swaphw
-  rm $i
-  mv $i.swaphw $i
-done
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2/*
-cd dst2
-TIME=`echotime`
-sleep 1
-cpio -idS -H newc < 2.c.gcpio
-verify -list -match-dir dst2swap -size-match -contents-match -mtime-gt $TIME < 2.find
+[cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
 CPIO_FILTER
-], 0,
-[.*cannot swap halfwords of file3: odd number of halfwords
-.*cannot swap halfwords of file4: odd number of halfwords
-.*cannot swap halfwords of file5: odd number of halfwords
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idu -H newc < 2.c.gcpio)
-dnl      -----------------------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2swap/*
-cd dst2swap
-cpio -idu -H newc < 2.c.gcpio
-verify -list -match-dir src2 -size-match -contents-match < 2.find
-CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idsS -H newc < 2.c.gcpio)
-dnl      ------------------------------
-
-for i in `cat 2.find.files`; do
-  swapb $i > $i.swapb
-  rm $i
-  mv $i.swapb $i
-done
-for i in `cat 2.find.files`; do
-  swaphw $i > $i.swaphw
-  rm $i
-  mv $i.swaphw $i
-done
+cd xmix
+  while read file; do
+    swaphw $file > temp
+    rm $file
+    mv temp $file
+  done < ../listf-smix
+cd ..
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2/*
-cd dst2
-TIME=`echotime`
-sleep 1
-cpio -idsS -H newc < 2.c.gcpio
-verify -list -match-dir dst2swap -size-match -contents-match -mtime-gt $TIME < 2.find
+[TIME=`echotime`
+cd unmix
+  cpio -idS -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
 CPIO_FILTER
-], 0,
-[.*cannot swap halfwords of file3: odd number of halfwords
-.*cannot swap bytes of file3: odd number of bytes
-.*cannot swap halfwords of file4: odd number of halfwords
-.*cannot swap bytes of file4: odd number of bytes
-.*cannot swap halfwords of file5: odd number of halfwords
+], , ,
+[cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
 NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CHECK(
+[cd unmix
+  cpio -idu -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -size-match -contents-match < list-smix
+CPIO_FILTER
+], , ,
+[NN blocks
+])
 
-AT_SETUP(cpio -idb -H newc < 2.c.gcpio)
-dnl      -----------------------------
+AT_CLEANUP($cleanup archive unmix xmix)
+
+AT_SETUP(if cpio combined swapping works)
+dnl      -------------------------------
+
+PREPARE(smix, list-smix, listf-smix)
+mkdir unmix xmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-rm -rf dst2/*
-cd dst2
-TIME=`echotime`
-sleep 1
-cpio -idb -H newc < 2.c.gcpio
-verify -list -match-dir dst2swap -size-match -contents-match -mtime-gt $TIME < 2.find
+[cat list-smix | cpio -o -H newc > archive
 CPIO_FILTER
-], 0,
-[.*cannot swap halfwords of file3: odd number of halfwords
-.*cannot swap bytes of file3: odd number of bytes
-.*cannot swap halfwords of file4: odd number of halfwords
-.*cannot swap bytes of file4: odd number of bytes
-.*cannot swap halfwords of file5: odd number of halfwords
+], , ,
+[NN blocks
+])
+
+AT_CHECK(
+[cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+cd xmix
+  while read file; do
+    swapb $file > temp
+    rm $file
+    swaphw temp > $file
+    rm temp
+  done < ../listf-smix
+cd ..
+
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idsS -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+CPIO_FILTER
+], , ,
+[cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
 NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idub -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+CPIO_FILTER
+], , ,
+[cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+])
+
+AT_CLEANUP($cleanup archive unmix xmix)
+
+AT_SETUP(cpio swapping with weird block sizes)
+dnl      ------------------------------------
+
+PREPARE(smix, list-smix)
+mkdir unmix xmix
+
+AT_CHECK(
+[cat list-smix | cpio -o -H newc > archive
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CHECK(
+[cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+cd xmix
+  while read file; do
+    swapb $file > temp
+    rm $file
+    swaphw temp > $file
+    rm temp
+  done < ../listf-smix
+cd ..
+
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idbC 7 -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+CPIO_FILTER
+], , ,
+[cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+])
+
+rm -rf unmix
+mkdir unmix
+
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idbC 3 -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+CPIO_FILTER
+], , ,
+[cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+])
+
+rm -rf unmix
+mkdir unmix
+
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idbC 1 -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../xmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+CPIO_FILTER
+], , ,
+[cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+])
+
+AT_CLEANUP($cleanup archive unmix xmix)

@@ -29,24 +29,24 @@
 
 main (argc, argv)
      int argc;
-     char *argv [];
+     char *argv[];
 {
   int length;
   int fd;
-  short	buf [2];
+  short	buf[2];
   short	c;
 
-  fd = open (argv [1], 0);
+  fd = open (argv[1], 0);
   if (fd < 0)
     exit (1);
   length = lseek (fd, 0, SEEK_END);
   lseek (fd, 0, SEEK_SET);
-  if ((length % 4) != 0)
+  if (length % 4 != 0)
     justcopy (fd);
   while (read (fd, buf, 4) == 4) {
-    c = buf [0];
-    buf [0] = buf [1];
-    buf [1] = c;
+    c = buf[0];
+    buf[0] = buf[1];
+    buf[1] = c;
     write (1, buf, 4);
   }
   exit (0);
@@ -55,10 +55,10 @@ main (argc, argv)
 justcopy (fd)
      int fd;
 {
-  char buf [512];
+  char buf[512];
   int bytes_read;
 
-  while ((bytes_read = read (fd, buf, 512) ) > 0)
+  while (bytes_read = read (fd, buf, 512), bytes_read > 0)
     write (1, buf, bytes_read);
   exit (1);
 }

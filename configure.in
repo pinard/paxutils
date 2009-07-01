@@ -19,9 +19,18 @@
 AC_INIT(src/pax.c)
 AC_PREREQ(2.12)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(paxutils, 2.4f)
+AM_INIT_AUTOMAKE(paxutils, 2.4g)
 AT_CONFIG(../src)
 ALL_LINGUAS="cs de es fr it ko nl no pl pt sl sv"
+
+# LC_MESSAGES is always shadowed by LC_ALL.  Here are the only cases:
+# - GNU:       LANGUAGE -> LC_ALL -> LC_MESSAGES -> LANG
+# - POSIX:     LC_ALL -> LC_MESSAGES -> LANG
+# - XPG4:      LC_ALL -> LANG
+# - SysV/XPG2: LANG
+export LANGUAGE; LANGUAGE=C
+export LANG; LANG=C
+export LC_ALL; LC_ALL=C
 
 extra_bin_progs=
 extra_libexec_progs=
@@ -152,8 +161,7 @@ if test $ac_cv_func_getservbyname = no; then
   AC_CHECK_LIB(socket, getservbyname)
 fi
 
-AC_REPLACE_FUNCS(dirname execlp ftruncate memset mkdir rename rmdir \
-stpcpy stpncpy)
+AC_REPLACE_FUNCS(execlp ftruncate memset mkdir rename rmdir stpcpy stpncpy)
 
 test "$ac_cv_func_pipe$ac_cv_func_popen" = nono && LIBOBJS="$LIBOBJS popen.o"
 test "$ac_cv_func_strstr" = yes || LIBOBJS="$LIBOBJS strstr.o"
@@ -203,10 +211,6 @@ AC_CACHE_CHECK(for union wait, pu_cv_header_union_wait,
   [int status; int pid; pid = wait (&status);],
   pu_cv_header_union_wait=no, pu_cv_header_union_wait=yes)])
 test $pu_cv_header_union_wait = yes && AC_DEFINE(HAVE_UNION_WAIT)
-
-AC_SYS_RESTARTABLE_SYSCALLS
-test $ac_cv_sys_restartable_syscalls = yes \
-  || LIBOBJS="$LIBOBJS full-read.o full-write.o"
 
 AC_CACHE_CHECK(for remote shell, pu_cv_path_RSH,
   [if test -n "$RSH"; then
@@ -310,7 +314,7 @@ fi
 # Maybe systems exist without 'id'.  How does one get uid and gid
 # information on such machines?
 AC_PATH_PROG(TEST_ID, id)
-changequote(,)
+changequote(, )
 if test -n "$TEST_ID"; then
    # Have it.  Get info.
    idinfo=`$TEST_ID`
@@ -330,7 +334,7 @@ if test -n "$TEST_ID"; then
       fi
    done
 fi
-changequote([,])
+changequote([, ])
 AC_SUBST(TEST_UID)
 AC_SUBST(TEST_UIDNAME)
 AC_SUBST(TEST_GID)

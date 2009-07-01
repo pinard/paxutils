@@ -1,147 +1,159 @@
 #							-*- shell-script -*-
 
-AT_SETUP(cpio -idH tar < 1.tar)
+AT_SETUP(if tar creation works)
 dnl      ---------------------
+# This is in preparation for later testing if `cpio' can read `tar' files.
+
+PREPARE(mix)
+
+AT_CHECK([tar cf archive mix], 0)
+
+AT_CLEANUP($cleanup archive)
+
+AT_SETUP(if tar format cpio creation works)
+dnl      ---------------------------------
+
+PREPARE(mix, list-mix)
+
+if test "$FIFOS" = yes; then
 
 AT_CHECK(
-[test -n "$BINTAR" || exit 77
-PREPARE(structure, struct-list)
-$BINTAR cf 1.tar .
-# fixme, should check for bogus errors
-TIME=`echotime`
-sleep 1
-cpio -idH tar < 1.tar
-cat struct-list | fgrep -v -x -f missing1 | \
-verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME | fgrep -v -x -f missing2
+[cat list-mix | cpio -oH tar > archive
 CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -oH tar)
-dnl      ------------
-
-AT_CHECK(
-[test "$FIFOS" = yes || exit 77
-PREPARE(structure, struct-list)
-cd structure
-cat struct-list | cpio -oH tar > 1.tar.gcpio
-CPIO_FILTER
-], 0,
-[.* dev/pipe2 not dumped: not a regular file
-.* pipe not dumped: not a regular file
-.* copy not dumped: not a regular file
-.* diff not dumped: not a regular file
+], , ,
+[cpio: mix/dev/pipe2 not dumped: not a regular file
+cpio: mix/pipe not dumped: not a regular file
+cpio: mix/copy not dumped: not a regular file
+cpio: mix/diff not dumped: not a regular file
 NN blocks
 ])
 
+else
+
 AT_CHECK(
-[test "$FIFOS" = yes && exit 77
-PREPARE(structure, struct-list)
-cd structure
-cat struct-list | cpio -oH tar > 1.tar.gcpio
+[cat list-mix | cpio -oH tar > archive
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+fi
 
-AT_SETUP(cpio -idH tar < 1.tar.gcpio)
-dnl      ---------------------------
+AT_CLEANUP($cleanup archive)
+
+AT_SETUP(if ustar format cpio creation works)
+dnl      -----------------------------------
+
+PREPARE(mix, list-mix)
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -idH tar < 1.tar.gcpio
-cat struct-list | fgrep -v -x -f missing1 | \
-verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME | fgrep -v -x -f missing2
+[cat list-mix | cpio -oH ustar > archive
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup archive)
 
-AT_SETUP(cpio -id < 1.tar.gcpio)
-dnl      ----------------------
+AT_SETUP(if cpio can unpack installed tar archives)
+dnl      -----------------------------------------
 
-AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id < 1.tar.gcpio
-cat struct-list | fgrep -v -x -f missing1 | \
-verify -list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME | fgrep -v -x -f missing2
-CPIO_FILTER
-], 0,
-[NN blocks
-])
+test -n "$BINTAR" || exit 77
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idH ustar < 1.gtar)
-dnl      ------------------------
+PREPARE(mix, list-mix, itar-def)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-tar cf 1.gtar .
-TIME=`echotime`
-sleep 1
-cpio -idH ustar < 1.gtar
+[TIME=`echotime`
+cd unmix
+  cpio -idH tar < ../itar-def
+cd ..
+dnl cat list-mix | fgrep -v -x -f extra1 | \
+dnl verify -list -match-dir mix -mode-match -uid-match -gid-match -size-match -contents-match -mtime-ge $TIME | fgrep -v -x -f extra2
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup unmix)
 
-AT_SETUP(cpio -oH ustar)
-dnl      --------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-cat struct-list | cpio -oH ustar > 1.ustar.gcpio
-CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idH ustar < 1.ustar.gcpio)
+AT_SETUP(if cpio can unpack tar archives)
 dnl      -------------------------------
 
+PREPARE(mix, list-mix, tar-def)
+mkdir unmix
+
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -idH ustar < 1.ustar.gcpio
+[TIME=`echotime`
+cd unmix
+  cpio -idH ustar < ../tar-def
+cd ..
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup unmix)
 
-AT_SETUP(cpio -id < 1.ustar.gcpio)
-dnl      ------------------------
+AT_SETUP(if cpio can unpack tar format)
+dnl      -----------------------------
+
+PREPARE(mix, list-mix, cpio-tar)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
+[PREPARE(mix, list-mix, cpio-tar)
 TIME=`echotime`
-sleep 1
-cpio -id < 1.ustar.gcpio
-VERIFY_NEWER
+cd unmix
+  cpio -idH tar < ../cpio-tar
+cd ..
+VERIFY_NEWER_FILTERED
 CPIO_FILTER
-], 0,
+], , ,
 [NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idu < ../cpio-tar
+cd ..
+VERIFY_NEWER_FILTERED
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CLEANUP($cleanup unmix)
+
+AT_SETUP(if cpio can unpack ustar format)
+dnl      -------------------------------
+
+PREPARE(mix, list-mix, cpio-ustar)
+mkdir unmix
+
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idH ustar < ../cpio-ustar
+cd ..
+VERIFY_NEWER
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CHECK(
+[TIME=`echotime`
+cd unmix
+  cpio -idu < ../cpio-ustar
+cd ..
+VERIFY_NEWER
+CPIO_FILTER
+], , ,
+[NN blocks
+])
+
+AT_CLEANUP($cleanup unmix)

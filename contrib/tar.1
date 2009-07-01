@@ -1,0 +1,1031 @@
+.TH GTAR 1 "31 December 1997"
+.SH NAME
+gtar \- GNU file archiver utility
+.SH SYNOPSIS
+.B gtar
+.RI [ options ]
+.RI [ arguments ]
+.SH DESCRIPTION
+The
+.I gtar
+utility is the GNU equivalent to the standard UNIX utility
+.IR tar (1).
+It attempts to correct some of the functional flaws in the original
+version of
+.IR tar (1),
+which is still generally supplied as part of UNIX.
+Several examples: 
+the original version of
+.IR tar (1)
+would overwrite files if the tar archive contained files with
+absolute file paths, something
+.IR gtar (1)
+refuses to do in the absence of a specific option;
+the original
+.IR tar (1)
+would get caught in an infinite loop
+if the user specified the creation of an archive file
+in the same directory from which files were being saved
+(whereas
+.I gtar(1)
+automatically excludes the recursive inclusion of the archive
+file within itself);
+finally,
+many new options enable the use of
+.I gtar
+to create system backup tapes,
+instead of utilities more traditonally used for thsi purpose,
+such as
+.IR ufsdump (1)
+and
+.IR ufsrestore (1).
+.LP
+Originally,
+.I tar
+stood for
+.IR t ape
+.IR ar chiver.
+However, input/output from the program can be redirected
+from/to local or remote devices, files, or other programs (using pipes).
+It is commonly used to merge entire collections of files and/or directories
+containing files into a single file
+(a
+.I tar
+.IR archive )
+that can then be compressed for efficient storage or transmission
+to another site.
+It is a very flexible and useful tool; refer to the
+.SM EXAMPLES
+section for concrete examples of some of its more common applications.
+.LP
+This manual page is the distillation of a large and complex
+.IR texinfo (1)_based
+document set,
+and must be considered provisional until reviewed and revised by the
+authors of
+.IR gtar (1).
+.SH OPTIONS
+Options are supplied in three different forms:
+traditional (single-letter options from the original version of
+.IR tar (1),
+which must be concatenated without a leading \-),
+mnemonic (short names that are often identical to traditional options,
+but which take a leading \- and do not require concatenation),
+and long (which take two leading \- characters,
+and some of which are prepended to a corresponding argument,
+such as a file name, by "=").
+Given the number and complexity of options,
+they are organized thematically rather than alphabetically:
+.SS OPERATIONS
+There are eight fundamental operations, plus a help command:
+.TP
+.SM "APPEND ARCHIVES TO AN ARCHIVE"
+.RS
+.TP
+.B \-A
+Append specified tar archives to the end of the specified archive.
+.TP
+.B \-\|\-catenate
+Long form of
+.B \-A
+operation.
+.TP
+.B \-\|\-concatenate
+Long form of
+.B \-A
+operation.
+.RE
+.TP
+.SM "APPEND FILES TO AN ARCHIVE"
+.RS
+.TP
+.B \-r
+Append the specified files to the end of the specified archive.
+.TP
+.B \-\|\-append
+Long form of
+.B \-r
+operation.
+.RE
+.TP
+.SM "COMPARE CONTENTS OF ARCHIVE WITH FILE SYSTEM"
+.RS
+.TP
+.B \-d
+Compare archive contents with their counterparts in the file system,
+and report differences in file size, mode, owner, modification date,
+and contents.
+.TP
+.B \-\|\-compare
+Long form of
+.B \-d
+operation.
+.TP
+.B \-\|\-diff
+Long form of
+.B \-d
+operation.
+.RE
+.TP
+.SM "CREATE AN ARCHIVE"
+.RS
+.TP
+.B \-c
+Create a new archive.
+.TP
+.B \-\|\-create
+Long form of
+.B \-c
+operation.
+.RE
+.TP
+.SM "DELETE ELEMENTS OF ARCHIVE"
+.RS
+.TP
+.B \-\|\-delete
+Delete specified components from the specified archive;
+do not use with archives that are on sequential access devices
+such as magnetic tape.
+.RE
+.TP
+.SM "EXTRACT ELEMENTS OF ARCHIVE"
+.RS
+.TP
+.B \-x
+Extract specified files from the specified archive.
+.TP
+.B \-\|\-extract
+Long form of
+.B \-x
+operation.
+.TP
+.B \-\|\-get
+Long form of
+.B \-x
+operation.
+.RE
+.TP
+.SM "LIST CONTENTS OF ARCHIVE"
+.RS
+.TP
+.B \-t
+List the contents of the specified archive.
+Note that if you specify individual files on the command line,
+they will be listed only if the specified path exactly matches the
+path used to create the archive (see
+.TP
+.B \-\|\-list
+.RE
+.TP
+.SM "PRINT HELP MESSAGE"
+.RS
+.TP
+.B \-\|\-help
+Print a concise list of all operations and options.
+.RE
+.TP
+.SM "UPDATE CONTENTS OF AN ARCHIVE"
+.RS
+.TP
+.B \-u
+Add the specified files to the end of the archive,
+if and only if they are newer than their counterparts already in the archive,
+or if they do not already exist in the archive.
+.TP
+.B \-\|\-update
+.RE
+.SS "ORDINARY OPTIONS"
+Ordinary options allow tighter control over the operations taken by
+.IR gtar .
+The most frequently used is
+.B \-f
+(archive file name specification):
+.TP
+.SM "ACCESS & MODIFICATION TIMES"
+.RS
+.TP
+.B \-\|\-atime-preserve
+ Preserve the access time field in a file's inode when archiving it.
+.TP
+.B \-N
+When creating an archive,
+only add files that have changed since
+.IR DATE .
+.TP
+.BI \-\|\-after-date= DATE
+Long form of
+.B \-N
+option.
+.TP
+.BI \-\|\-newer= DATE
+Long form of
+.B \-N
+option.
+.TP
+.B \-\|\-newer-mtime
+If the
+.B \-N
+option is also in effect,
+only add files whose contents have changed.
+.RE
+.TP
+.SM "ARCHIVE FILE NAME SPECIFICATION"
+.RS
+.TP
+.BI \-f " filename"
+Act upon the specified archive file,
+rather than the compilation-dependent default archive device/file.
+This can be an ordinary file or device.
+.TP
+.BI \-\|\-file= filename
+Long form of
+.B \-f
+operation.
+.RE
+.TP
+.SM "BACKUP ARCHIVES"
+.RS
+.TP
+.BI \-F " SCRIPT-FILE"
+Execute
+.I SCRIPT-FILE
+at the end of each tape
+when creating a multi-tape backup.
+.TP
+.BI \-\|\-info-script= SCRIPT-FILE
+Long form of
+.B \-F
+option.
+.TP
+.BI \-\|\-new-volume-script= SCRIPT-FILE
+Long form of
+.B \-F
+option.
+.TP
+.B \-G
+Assume that the archive is old GNU-format incremental backup archive
+(for backwards compatibility).
+.TP
+.B \-\|\-incremental
+Long form of
+.B \-G
+option.
+.TP
+.BI \-g " SNAPSHOT-FILE"
+During a
+.B \-\|\-create
+operation,
+create a new GNU-format incremental backup archive,
+using
+.I SNAPSHOT-FILE
+to determine which files to backup.
+With other operations,
+assume that the archive is in incremental format.
+.TP
+.BI \-\|\-listed-incremental= SNAPSHOT-FILE
+Long form of
+.B \-g
+option.
+.RE
+.TP
+.SM "BLOCKING FACTOR & RECORD SIZE"
+.RS
+.TP
+.B \-B
+Reblock the input when reading from a pipe on a system with
+buggy implementations.
+.TP
+.B \-\|\-read-full-records
+Long form of
+.B \-B
+option.
+.TP
+.BI \-b " BLOCKING"
+Set the blocking factor to
+.IR BLOCKING x512
+bytes per record.
+.TP
+.BI \-\|\-blocking-factor= BLOCKING
+Long form of
+.B \-b
+option.
+.TP
+.BI \-\|\-record-size= SIZE
+Employ
+.I SIZE
+bytes per record when accessing the archive.
+.RE
+.TP
+.SM "COMPATIBILITY"
+.RS
+.TP
+.B \-o
+Create an archive that is compatible with Unix V7
+.IR tar (1).
+.TP
+.B \-\|\-old-archive
+Long form of
+.B \-o
+option.
+.TP
+.B \-\|\-portability
+Long form of
+.B \-o
+option.
+.TP
+.B \-\|\-posix
+Create a POSIX compliant archive.
+.RE
+.TP
+.SM "COMPRESSION/DECOMPRESSION"
+.RS
+.TP
+.BI \-\|\-use-compress-program= PROG
+Access the archive through
+.IR PROG ,
+which is presumed to be a compression program.
+.TP
+.B \-Z
+Employ the
+.IR compress (1)
+program when reading or writing the archive, conserving storage space.
+.TP
+.B \-\|\-compress
+Long form of
+.B \-Z
+option.
+.TP
+.B \-\|\-uncompress
+Long form of
+.B \-Z
+option.
+.TP
+.B \-z
+Read or write archives through
+.IR gzip (1),
+allowing
+.I gtar
+to operate on several kinds of compressed archives transparently.
+.TP
+.B \-\|\-gunzip
+Long form of
+.B \-z
+option.
+.TP
+.B \-\|\-gzip
+Long form of
+.B \-z
+option.
+.TP
+.B \-\|\-ungzip
+Long form of
+.B \-z
+option.
+.RE
+.TP
+.SM "CONTROLLING GROUP, OWNER, & PERMISSIONS"
+.RS
+.TP
+.BI \-\|\-group= GROUP
+When adding files to the archive, employ the specified group id
+.IR GROUP ,
+rather than the group of the source file.
+GROUP is first decoded as a symbolic group name;
+if this fails, it is treated as a decimal numeric group ID.
+.TP
+.B \-\|\-m
+Set the modification time of extracted files to the extraction time,
+rather than the modification time stored in the archive.
+.TP
+.B \-\|\-touch
+Long form of
+.B \-m
+option.
+.TP
+.BI \-\|\-mode= PERMISSIONS
+When adding files to an archive, employ
+.I PERMISSIONS
+for the archive members,
+rather than taking permissions from the files.
+The syntax for permissions is the same as for the program
+.IR chmod (1).
+and this option share the same syntax for file permissions,
+which can be expressed as octal number or as symbols.
+For example,
+the value
+.B a+rw
+adds read and write permissions for everybody,
+while retaining executable bits on directories
+or on any other file already marked as executable.
+.TP
+.B \-\|\-numeric-owner
+Employ numeric user and group IDs when creating an archive,
+rather than names.
+.TP
+.BI \-\|\-owner= USER
+Employ
+.I USER
+as the owner of members when creating archives,
+instead of the user associated with the source file.
+USER is first decoded as a user symbolic name,
+but if this interpretation fails,
+it has to be a decimal numeric user ID.  .
+.IP
+There is no value indicating a missing number, and `0' usually means `root'.
+Some people like to force `0' as the value to offer in their distributions
+for the owner of files,
+because the `root' user is anonymous anyway,
+so that might as well be the owner of anonymous archives.
+.TP
+.B \-p
+When extracting an archive, use permissions directly from the archive
+(the default behavior is to subtract the users' umask from the
+permissions specified in the archive and use the result as the permissions
+for the destination file).
+.TP
+.B \-\|\-ignore-umask
+Long form of
+.B \-p
+option.
+.TP
+.B \-\|\-preserve-permissions
+Long form of
+.B \-p
+option.
+.TP
+.B \-\|\-same-permissions
+Long form of
+.B \-p
+option.
+.TP
+.B \-\|\-preserve
+Identical to concurrent specification of
+.B \-\|\-preserve-permissions
+and
+.BR \-\|\-save-order .
+.TP
+.B \-\|\-same-owner
+When extracting an archive,
+attempt to preserve the owner specified in the archive.
+.RE
+.TP
+.SM "DIRECTORY SPECIFICATION"
+.RS
+.TP
+.BI \-C " DIR"
+Change the effective working directory to
+.I DIR
+before performing any operations.
+When this option is used during archive creation,
+it is order sensitive.
+.TP
+.BI \-\|\-directory= DIR
+Long form of
+.B \-C
+option.
+.TP
+.B \-l
+When creating an archive,
+do not enter directories that are on file systems other
+then the one containing the current directory.
+.TP
+.B \-\|\-one-file-system
+Long form of
+.B \-l
+option.
+.TP
+.B \-\|\-no-recursion
+Do not recurse into directories unless a directory is explicitly named
+as an argument.
+.RE
+.TP
+.SM "FILE EXCLUSION"
+.RS
+.TP
+.BI \-\|\-exclude= PATTERN
+When performing operations,
+skip files that match
+.IR PATTERN .
+.TP
+.BI \-K " NAME"
+When extracting files, skip files in the archive until finding one that
+matches
+.IR NAME .
+.TP
+.BI \-\|\-starting-file= NAME
+Long form of
+.B \-K
+option.
+.TP
+.BI \-X " FILE"
+Similar to
+.BR \-\|\-exclude ,
+but use the list of patterns in the file
+.IR FILE .
+.TP
+.BI \-\|\-exclude-from= FILE
+Long form of
+.B \-X
+option.
+.RE
+.TP
+.SM "FILE REDIRECTION"
+.RS
+.TP
+.B \-O
+Extract files to stdout rather than to the file system.
+.TP
+.B \-\|\-to-stdout
+Long form of
+.B \-O
+option.
+.RE
+.TP
+.SM "FILE SPECIFICATION"
+.RS
+.TP
+.B \-\|\-force-local
+Interpret the filename given to
+.B \-\|\-file
+as a local file,
+even if it looks like a remote tape drive name.
+.TP
+.B \-s
+Assume that the list of file arguments has already been sorted
+to match the order of files in the archive
+(helpful when running on machines with small amounts of memory).
+.TP
+.B \-\|\-preserve-order
+Long form of
+.B \-s
+option.
+.TP
+.B \-\|\-same-order
+Long form of
+.B \-s
+option.
+.TP
+.BI \-T " FILE"
+Employ the contents of
+.I FILE
+as a list of archive members or files to operate on,
+in addition to those specified on the command-line.
+.TP
+.BI \-\|\-files-from= FILE
+Long form of
+.B \-T
+option.
+.RE
+.TP
+.SM "IMPACT ON LOCAL FILE SYSTEM"
+.RS
+.TP
+.BI \-\|\-backup= BACKUP-TYPE
+Rather than deleting files from the file system,
+back them up using simple or numbered backups,
+depending upon BACKUP-TYPE.
+.TP
+.B \-k
+When extracting files from an archive,
+do not overwrite existing files.
+.TP
+.B \-\|\-keep-old-files
+Long form of
+.B \-k
+option.
+.TP
+.B \-P
+Disable the default behavior in which
+.I gtar
+strips an initial `/' from archive components
+(the default behavior prevents files from being overwritten by archive
+components that were saved using absolute path names).
+.TP
+.B \-\|\-absolute-names
+Long form of
+.B \-P
+option.
+.TP
+.B \-\|\-recursive-unlink
+Remove existing directory hierarchies before extracting directories
+of the same name from the archive
+(similar to the
+.B \-\|\-unlink-first
+option).
+Potentially dangerous.
+.TP
+.B \-\|\-remove-files
+Remove the source file from the file system after appending it to an archive.
+.TP
+.BI \-\|\-suffix= SUFFIX
+Emply the specified suffix when backing up files (default: ~).
+.TP
+.B \-U
+Remove the corresponding file from the file system before extracting
+it from the archive.
+.TP
+.B \-\|\-unlink-first
+Long form of
+.B \-U
+option.
+.TP
+.BI \-\|\-version-control= METHOD
+When
+.B \-\|\-backup
+is in effect,
+make file backups of the type specified by
+.IR METHOD .
+If this option is not specified,
+the value of the
+.SM VERSION_CONTROL
+environment variable is used.
+If the variable is not set,
+the default backup type is "existing".
+and
+.SM METHOD
+must be one of the following values:
+.RS
+.TP
+.B t
+.TP
+.B numbered
+Always make numbered backups.
+.TP
+.B nil
+.TP
+.B existing
+Make numbered backups of files that already have them,
+simple backups of the others.
+.TP
+.B never
+.TP
+.B simple
+Always make simple backups.
+.RE
+.IP
+this list is identical to the values used by the
+.IE emacs (1)
+variable "version-control".
+.RE
+.TP
+.SM "MAGNETIC TAPE"
+.RS
+.TP
+.BI \-L " NUM"
+Assume that the tape being written upon is
+.I NUM
+x 1024 bytes long.
+.TP
+.BI \-\|\-tape-length= NUM
+Long form of
+.B \-L
+option.
+.RE
+.TP
+.SM MESSAGES
+.RS
+.TP
+.B \-\|\-checkpoint
+Print periodic checkpoint messages as it reads through the specified archive.
+This is helpful in providing visual indication that
+is still running, without the overhead of the
+.B \-v
+operation.
+.TP
+.B \-R
+Print error messages for read errors,
+including the block number in the archive file,
+.TP
+.B \-\|\-block-number
+Long form of
+.B \-R
+option.
+.TP
+.B \-\|\-totals
+Display the total number of bytes written after creating an archive.
+.TP
+.B \-\|\-show-omitted-dirs
+Mention directories that are skipped when operating on an archive.
+.TP
+.B \-v
+Employ verbose mode:
+describe the actions being taken by
+.IR gtar (1).
+For some operations,
+this option can be specified twice
+to increase the amount of information presented.
+.TP
+.B \-\|\-verbose
+Long form of
+.B \-v
+option.
+.RE
+.TP
+.SM MISCELLANEOUS
+.RS
+.TP
+.B \-i
+Ignore zeroed blocks in the archive, which normally signals end-of-file.
+.TP
+.B \-\|\-ignore-zeros
+Long form of
+.B \-i
+option.
+.TP
+.B \-\|\-ignore-failed-read
+Exit if
+.I gtar
+encounters an unreadable file.
+.TP
+.B \-\|\-null
+When the
+.B \-\|\-files-from
+option is in effect,
+expect filenames terminated with `NUL',
+allowing
+.I gtar
+to work correctly with file names that contain newlines.
+.TP
+.B \-S
+Invoke a GNU extension when adding files to an archive that
+handles sparse files efficiently.
+.TP
+.B \-\|\-sparse
+Long form of
+.B \-S
+option.
+.RE
+.TP
+.SM "MULTI-VOLUME ARCHIVES"
+.RS
+.TP
+.B \-M
+Create or otherwise operate on a multi-volume archive.
+.TP
+.B \-\|\-multi-volume
+Long form of
+.B \-M
+option.
+.TP
+.BI \-\|\-volno-file= FILE
+Used in conjunction with
+.BI \-\|\-multi-volume  ;
+keep track (in
+.IR FILE )
+of which volume of a multi-volume archive is being processed.
+.RE
+.TP
+.SM "NAMING ARCHIVES"
+.RS
+.TP
+.BI \-V " NAME"
+When creating an archive,
+write
+.I NAME
+as a name record in the archive.
+When extracting or listing archives,
+only operate on archives that have a label
+matching the pattern specified in
+.IR NAME .
+.TP
+.BI \-\|\-label= NAME
+Long form of
+.B \-V
+option.
+.RE
+.TP
+.SM "REQUEST CONFIRMATION FOR DANGEROUS ACTIONS"
+.RS
+.TP
+.B \-w
+Ask the user for confirmation before performing potentially destructive options
+such as overwriting files.
+.TP
+.B \-\|\-confirmation
+Long form of
+.B \-w
+option.
+.TP
+.B \-\|\-interactive
+Long form of
+.B \-w
+option.
+.RE
+.TP
+.SM "REMOTE SYSTEMS"
+.RS
+.TP
+.BI \-\|\-rsh-command= CMD
+Employ
+.I CMD
+to communicate with remote devices.
+.RE
+.TP
+.SM "SYMBOLIC LINKS"
+.RS
+.TP
+.B \-h
+When creating an archive,
+save the file that a symbolic link points to,
+rather than archiving the symbolic link itself.
+.TP
+.B \-\|\-dereference
+Long form of
+.B \-h
+option.
+.RE
+.TP
+.SM VERIFICATION
+.RS
+.TP
+.B \-W
+When creating an archive,
+verify that the archive was correctly written.
+.TP
+.B \-\|\-verify
+Long form of
+.B \-W
+option.
+.RE
+.TP
+.SM "VERSION INFORMATION"
+.RS
+.TP
+.B \-\|\-version
+Print a message containing the program version,
+a copyright message, and credits.
+.RE
+.SH "DOING DUMPS WITH gtar"
+The
+.I gtar
+program can be used to do file system backups.
+A set of scripts to assist with backups and restorations accompanies the
+.I gtar
+distribution,
+and must be built and installed separately from
+.I gtar
+itself.
+Refer to the
+.IR texinfo (1)-based
+documentation supplied with
+.I gtar
+for help with these scripts.
+.SH "EXIT STATUS"
+If the
+.BR \-\|\-compare ,
+.BR \-\|\-diff ,
+and
+.B \-d
+options are not in use,
+an exit status of zero means that everything went well
+(aside from possible innocuous warnings).
+A nonzero status indicates that something went wrong.
+A nonzero exit status is almost always either 2
+or 128 (the latter for remote operations).
+.SH EXAMPLES
+The following command creates a new archive in the current directory,
+.IR afiles.tar ,
+containing
+the files
+.IR apple ,
+.IR angst ,
+and
+.IR aspic ,
+from the current directory:
+.IP
+\fCtar -cvf afiles.tar apple angst aspic\fP
+.LP
+which is equivalent to the following command, which uses long-form options:
+.IP
+\fCtar \-\|\-create \-\|\-verbose \-\|\-file=afiles.tar apple angst aspic\fP
+.LP
+Having created the archive
+.IR afiles.tar ,
+the following command can be used to list its contents:
+.IP
+\fCtar -tvf afiles.tar\fP
+.LP
+and the following command can be used to extract its contents:
+.IP
+\fCtar -xvf afiles.tar\fP
+.LP
+Despite its complexity,
+.I gtar
+is often used in very simple ways:
+the above commands for archive creation, content listing, and extraction,
+are perhaps the most common way in which
+.I gtar
+is invoked.
+.LP
+Short-form options require correct ordering;
+with long-form options, order is not important.
+In this example:
+.IP
+\fCtar \-cfv collection.tar blues folk jazz\fP
+.I gtar
+.LP
+will create an archive file named
+.IR v ,
+containing whichever of the following files
+are present in the current directory:
+.IR collection.tar ,
+.IR blues ,
+.IR folk ,
+and
+.IR jazz .
+.LP
+Suppose that an archive was created using the command:
+.IP
+\fCtar \-cvf afiles.tar ../apple ./angst dir/aspic\fP
+.LP
+Because the list and extract options require exact path matches,
+the following commands will fail:
+.IP
+\fCtar \-tvf afiles.tar apple angst aspic\fP
+.br
+\fCtar \-xvf afiles.tar ./apple angst aspic\fP
+.LP
+whereas the following commands will succeed:
+.IP
+\fCtar \-tvf afiles.tar ../apple ./angst dir/aspic\fP
+.br
+\fCtar \-xvf afiles.tar ../apple dir/aspic\fP
+.SH "ERROR MESSAGES"
+In the absence of the
+.B \-f
+or
+.B \-\|\-file=
+options,
+.I gtar
+will assume a default file/device,
+generally a physical tape drive attached to the computer;
+if this device is nonexistent,
+you may see an error message of the form:
+.IP
+\fCtar: can't open /dev/rmt8 : No such device or address\fP
+.br
+\fCtar: can't open /dev/rsmt0 : I/O error\fP
+.SH "ENVIRONMENT VARIABLES"
+.TP
+POSIXLY_CORRECT
+When this variable is set,
+.I gtar
+requires adherence to POSIX standards.
+.SH FILES
+.TP 2.2i
+.I /depot/bin/gtar
+executable
+.SH "SEE ALSO"
+.IR ar (1),
+.IR cd (1),
+.IR chgrp (1),
+.IR chmod (1),
+.IR chown (1),
+.IR compress (1),
+.IR cpio (1),
+.IR dd (1),
+.IR gzip (1),
+.IR mt (1),
+.IR mtio (1),
+.IR pax (1),
+.IR shar (1),
+.IR tar (1),
+.IR umask (1),
+.IR zip (1)
+.SH AUTHORS
+Version 1.12 of 25 April 1997.
+Send bug reports to:
+.br
+\fCtar-bugs@gnu.ai.mit.edu\fP
+.br
+or the alternative:
+.br
+\fCbug-gnu-utils@prep.ai.mit.edu\fP.
+.br
+and send suggestions to:
+.br
+\fCtar-forum@iro.umontreal.ca\fP.
+.LP
+Original version by John Gilmore, with modifications by many others,
+most prominently: Jay Fenlason, Joy Kendall, Thomas Bushnell, n/BSG,
+and Francois Pinard.
+A partial list of other contributors can be found in the THANKS file
+that accompanies the GNU
+.I tar
+distribution.
+.LP
+UNIX manual page by R. P. C. Rodgers,
+Lister Hill National Center for Biomedical Communications,
+U.S. National Library of Medicine (rodgers@nlm.nih.gov).
+This UNIX manual page is a pity distillation of the elaborate GNU texinfo
+document, derived from work of John Gilmore, Thomas Bushnell, n/BSG, Amy Gorin,
+Francois Pinard, Melissa Weisshaus, and Daniel Hagerty.
+Rodgers offers apologies for taking liberties with these lengthier documents,
+but feels strongly that no UNIX tool should be
+distributed without at least a rudimentary traditional
+.IR nroff (1)-style
+manual page, as
+.IR texinfo (1)
+is not universally available and is likely to be eclipsed
+by WWW-related document presentation systems.
+.\" end of man page

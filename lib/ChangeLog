@@ -1,3 +1,18 @@
+1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* getversion.c: Deleted.
+	* Makefile.am (libpu_a_SOURCES): Adjusted.
+	Reported by Nelson H. F. Beebe.
+
+1998-10-31  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* dirname.c (dir_name): Renamed from dirname, add const
+	qualifiers.  Explain that dirname is unusable in general.
+	* Makefile.am (libpu_a_SOURCES): Add dirname.c.
+
+	* Makefile.am (libpu_a_SOURCES): Add full-read.c and
+	full-write.c.
+
 1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
 
 	* getopt.c, regex.c, xmalloc.c: Include <gettext.h>, not <libintl.h>.

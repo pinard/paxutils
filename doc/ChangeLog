@@ -1,3 +1,12 @@
+1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* help2man: New, from Brendan's version 1.5c.
+	* helptoman.pl: Deleted.
+	* cpio.1, mt.1: Deleted, moved into contrib directory.
+	* Makefile.am (tar.1): Adjust rule.
+	(cpio.1, mt.1, pax.1): New rules.
+	(man_MANS): Add pax.1.
+
 1998-06-24  François Pinard  <pinard@iro.umontreal.ca>
 
 	* tar.h: Many corrections to comments.
@@ -19,7 +28,6 @@
 
 1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
-	(FIXME: Just a temporary ChangeLog entry! :-)
 	* help2man: New version.  To be studied later.
 	* Makefile.am (EXTRA_DIST): Adjusted.
 	Reported by Brendan O'Dea.

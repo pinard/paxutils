@@ -1,309 +1,226 @@
-#							-*- shell-script -*-
+# Corrupted cpio files.					-*- shell-script -*-
 
-AT_SETUP(binary format with corruption)
-dnl      -----------------------------
+AT_SETUP(cpio usual formats with small corruption)
+dnl      ----------------------------------------
 
-PREPARE(structure, struct-list, archive, arch-oldc, arch-newc)
-mkdir unpacked
+PREPARE(mix, list-mix, minijunk, cpio-def, cpio-oldc, cpio-newc)
+mkdir unmix
 
 AT_CHECK(
-[cd unpacked
-  cat minijunk ../archive | cpio -idm || exit 1
+[cd unmix
+  cat ../minijunk ../cpio-def | cpio -idm || exit 1
 cd ..
 VERIFY_EXACT
 CPIO_FILTER
 ], , ,
-[.*warning: skipped 5 bytes of junk
+[cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
 AT_CHECK(
-[cd unpacked
-  cat minijunk ../arch-oldc | cpio -idum -c || exit 1
+[cd unmix
+  cat ../minijunk ../cpio-oldc | cpio -idum -c || exit 1
 cd ..
 VERIFY_EXACT
 CPIO_FILTER
 ], , ,
-[.*warning: skipped 5 bytes of junk
+[cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
 AT_CHECK(
-[cd unpacked
-  cat minijunk ../arch-oldc | cpio -idum || exit 1
+[cd unmix
+  cat ../minijunk ../cpio-oldc | cpio -idum || exit 1
 cd ..
 VERIFY_EXACT
 CPIO_FILTER
 ], , ,
-[.*warning: skipped 5 bytes of junk
+[cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
+dnl FIXME!
+dnl AT_CHECK(
+dnl [cd unmix
+dnl   cat ../minijunk ../cpio-newc | cpio -idum -H newc || exit 1
+dnl cd ..
+dnl VERIFY_EXACT
+dnl CPIO_FILTER
+dnl ], , ,
+dnl [cpio: warning: skipped 5 bytes of junk
+dnl NN blocks
+dnl ])
+
 AT_CHECK(
-[cd unpacked
-  cat minijunk ../arch-newc | cpio -idum -H newc || exit 1
+[cd unmix
+  cat ../minijunk ../cpio-oldc | cpio -idum || exit 1
 cd ..
 VERIFY_EXACT
 CPIO_FILTER
 ], , ,
-[.*warning: skipped 5 bytes of junk
+[cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
+AT_CLEANUP($cleanup unmix)
+
+dnl AT_SETUP(cpio usual formats with bigger corruption)
+dnl dnl      -----------------------------------------
+dnl
+dnl PREPARE(mix, list-mix, maxijunk, cpio-oldc)
+dnl mkdir unmix
+dnl
+dnl FIXME!
+dnl AT_CHECK(
+dnl [cd unmix
+dnl   cat ../maxijunk ../cpio-oldc | cpio -idm -H newc || exit 1
+dnl cd ..
+dnl VERIFY_EXACT
+dnl CPIO_FILTER
+dnl ], , ,
+dnl [cpio: warning: skipped 1248 bytes of junk
+dnl NN blocks
+dnl ])
+dnl
+dnl FIXME!
+dnl AT_CHECK(
+dnl [cd unmix
+dnl   cat ../maxijunk ../cpio-oldc | cpio -idum || exit 1
+dnl cd ..
+dnl VERIFY_EXACT
+dnl CPIO_FILTER
+dnl ], , ,
+dnl [cpio: warning: skipped 1248 bytes of junk
+dnl NN blocks
+dnl ])
+dnl
+dnl AT_CLEANUP($cleanup unmix)
+
+dnl AT_SETUP(cpio CRC format with corruption)
+dnl dnl      -------------------------------
+dnl
+dnl PREPARE(mix, list-mix, cpio-crc)
+dnl mkdir unmix
+dnl
+dnl FIXME!
+dnl AT_CHECK(
+dnl [cd unmix
+dnl   cat ../minijunk ../cpio-crc | cpio -idmH crc || exit 1
+dnl cd ..
+dnl VERIFY_EXACT
+dnl CPIO_FILTER
+dnl ], , ,
+dnl [cpio: warning: skipped 5 bytes of junk
+dnl NN blocks
+dnl ])
+dnl
+dnl FIXME!
+dnl AT_CHECK(
+dnl [cd unmix
+dnl   cat ../minijunk ../cpio-crc | cpio -idum || exit 1
+dnl VERIFY_EXACT
+dnl CPIO_FILTER
+dnl ], , ,
+dnl [cpio: warning: skipped 5 bytes of junk
+dnl NN blocks
+dnl ])
+dnl
+dnl AT_CLEANUP($cleanup unmix)
+
+AT_SETUP(cpio tar format with corruption)
+dnl      -------------------------------
+
+PREPARE(mix, list-mix, cpio-tar)
+mkdir unmix
+
 AT_CHECK(
-[cd unpacked
-  cat minijunk ../arch-oldc | cpio -idum || exit 1
+[TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-tar | cpio -idH tar || exit 1
 cd ..
-VERIFY_EXACT
+dnl cat list-mix | fgrep -v -x -f extra1 | \
+dnl verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match -contents-match -mtime-le $TIME | fgrep -v -x -f extra2
+VERIFY_NEWER_FILTERED
 CPIO_FILTER
 ], , ,
-[.*warning: skipped 5 bytes of junk
+[cpio: invalid header: checksum error
+cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idum -H newc < arch-oldc.cor2)
-dnl      -----------------------------------
-
-cat maxijunk arch-oldc > arch-oldc.cor2
-
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idum -H newc < arch-oldc.cor2
-VERIFY_EXACT
+[TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-tar | cpio -idu || exit 1
+cd ..
+dnl cat list-mix | fgrep -v -x -f extra1 | \
+dnl verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match -contents-match -mtime-le $TIME | fgrep -v -x -f extra2
+VERIFY_NEWER_FILTERED
 CPIO_FILTER
-], 0,
-[.*warning: skipped 1248 bytes of junk
+], , ,
+[cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup unmix)
 
-AT_SETUP(cpio -idum < arch-oldc.cor2)
-dnl      ---------------------------
+AT_SETUP(cpio ustar format with corruption)
+dnl      ---------------------------------
 
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idum < arch-oldc.cor2
-VERIFY_EXACT
-CPIO_FILTER
-], 0,
-[.*warning: skipped 1248 bytes of junk
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-### test -H crc with corruption
-
-AT_SETUP(cpio -oH crc)
-dnl      ------------
+PREPARE(mix, list-mix, minijunk, maxijunk, cpio-ustar)
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-cat struct-list | cpio -oH crc > arch-crc
-CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idumH crc < arch-crc-cor)
-dnl      ------------------------------
-
-cat minijunk arch-crc > arch-crc-cor
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idumH crc < arch-crc-cor
-VERIFY_EXACT
-CPIO_FILTER
-], 0,
-[.*warning: skipped 5 bytes of junk
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idum < arch-crc-cor)
-dnl      -------------------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cpio -idum < arch-crc-cor
-VERIFY_EXACT
-CPIO_FILTER
-], 0,
-[.*warning: skipped 5 bytes of junk
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-### test -H tar with minor corruption
-
-AT_SETUP(cpio -oH tar)
-dnl      ------------
-
-if test "$FIFOS" = yes; then
-
-  AT_CHECK(
-  [cd structure
-  cat struct-list | cpio -oH tar > arch-tar
-  #cat << EOF > expout
-  #NN blocks
-  #EOF
-], 0,
-  [.* dev/pipe2 not dumped: not a regular file
-  .* pipe not dumped: not a regular file
-  .* copy not dumped: not a regular file
-  .* diff not dumped: not a regular file
-  NN blocks
-])
-
-else
-
-  AT_CHECK(
-  [cd structure
-  cat struct-list | cpio -oH tar > arch-tar
-  #cat << EOF > expout
-  #NN blocks
-  #EOF
-], 0,
-  [NN blocks
-])
-
-fi
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idH tar < arch-tar-cor)
-dnl      ----------------------------
-
-cat minijunk arch-tar > arch-tar-cor
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -idH tar < arch-tar-cor
-cat struct-list | fgrep -v -x -f missing1 | \
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match -size-match -contents-match -mtime-lt $TIME | fgrep -v -x -f missing2
-CPIO_FILTER
-], 0,
-[.*invalid header: checksum error
-.*warning: skipped 5 bytes of junk
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -id < arch-tar-cor)
-dnl      -----------------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id < arch-tar-cor
-cat struct-list | fgrep -v -x -f missing1 | \
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match -size-match -contents-match -mtime-lt $TIME | fgrep -v -x -f $MISSING2
-CPIO_FILTER
-], 0,
-[.*warning: skipped 5 bytes of junk
-NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-### test -H ustar with minor corruption
-
-AT_SETUP(cpio -oH ustar)
-dnl      --------------
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-cd structure
-cat struct-list | cpio -oH ustar > arch-ustar
-CPIO_FILTER
-], 0,
-[NN blocks
-])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idH ustar < arch-ustar-cor)
-dnl      --------------------------------
-
-cat minijunk arch-ustar > arch-ustar-cor
-cat maxijunk arch-ustar > arch-ustar-cor2
-
-AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -idH ustar < arch-ustar-cor
+[TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-ustar | cpio -idH ustar || exit 1
+cd ..
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
-[.*invalid header: checksum error
-.*warning: skipped 5 bytes of junk
+], , ,
+[cpio: invalid header: checksum error
+cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -id < arch-ustar-cor)
-dnl      -------------------------
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id < arch-ustar-cor
+[TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-ustar | cpio -idu || exit 1
+cd ..
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
-[.*warning: skipped 5 bytes of junk
+], , ,
+[cpio: warning: skipped 5 bytes of junk
 NN blocks
 ])
 
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -idH ustar < arch-ustar-cor2)
-dnl      --------------------------------
+rm -rf unmix
+mkdir unmix
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -idH ustar < arch-ustar-cor2
+[TIME=`echotime`
+cd unmix
+  cat ../maxijunk ../cpio-ustar | cpio -idH ustar || exit 1
+cd ..
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
-[.*invalid header: checksum error
-.*warning: skipped 1248 bytes of junk
+], , ,
+[cpio: invalid header: checksum error
+cpio: warning: skipped 1248 bytes of junk
 NN blocks
 ])
-
-AT_CLEANUP($cleanup)
-
-AT_SETUP(cpio -id < arch-ustar-cor2)
-dnl      -------------------------
 
 AT_CHECK(
-[PREPARE(structure, struct-list)
-TIME=`echotime`
-sleep 1
-cpio -id < arch-ustar-cor2
+[TIME=`echotime`
+cd unmix
+  cat ../maxijunk ../cpio-ustar | cpio -idu || exit 1
+cd ..
 VERIFY_NEWER
 CPIO_FILTER
-], 0,
-[.*warning: skipped 1248 bytes of junk
+], , ,
+[cpio: warning: skipped 1248 bytes of junk
 NN blocks
 ])
 
-AT_CLEANUP($cleanup)
+AT_CLEANUP($cleanup unmix)

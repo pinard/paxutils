@@ -1,10 +1,15 @@
 A new pretest for the `pax' utilities is now available as:
 
-   http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4f.tar.gz
+   http://www.iro.umontreal.ca/contrib/paxutils/paxutils-2.4g.tar.gz
 
-This is still pre-alpha software.  You are invited to use the mailing list
-mailto:paxutils-forum@iro.umontreal.ca, but you could also write to me either
-at mailto:paxutils-bugs@iro.umontreal.ca or mailto:pinard@iro.umontreal.ca.
+This is alpha software.  See `README' for list and report information.
 
-The test suite holds `tar' checks and now, a few from the `cpio' series.
-Many checks fail.  Your analysis of problems (and small diffs) are welcome!
+In the last pretest, some problems were induced by Solaris gettext, which
+I'm not trying to support.  So, at least for the time being, I changed
+the default so to prefer the included gettext.  Let's see how it goes.
+A few other reported compilation problems have not been addressed yet.
+
+The test suite now holds `cpio' and `tar' checks.  A few failing tests
+have been commented out.  Your analysis (and small diffs) are welcome!
+My confidence in the package is slowly raising.  If you do not use too
+far-stretched options, `cpio' and `tar' might even be dependable! :-)

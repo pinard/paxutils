@@ -1,3 +1,23 @@
+1998-10-31 Alexandre Oliva  <oliva@dcc.unicamp.br>
+
+	* rtapelib.c (rmt_read__, rmt_write__, rmt_lseek__): Return
+	type was different from declaration.
+	Reported by Nelson H. F. Beebe.
+
+	* system.h: Include <locale.h> where available.
+
+1998-10-31  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
+
+	* extern.h: Declare dir_name instead of dirname.
+	* util.c (create_all_directories): Adjusted.
+
+	* system.h: Always use full_read and full_write.
+
+	* extern.h: Fix declaration of make_path, it has a new argument.
+	* util.c (create_all_directories): Adjusted.
+
+	* system.h: Don't declare stpcpy if it is a macro.
+
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* system.h: Declare stpcpy.
@@ -35,7 +55,7 @@
 
 	* common.h (FILE_IS_NEW_ENOUGH): Fix paren nesting.  Return true
 	also if timestamps are equal.
-
+
 1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
 
 	* buffer.c (output_checkpoint_mark): Consistently print 10 dots
@@ -601,7 +621,8 @@
 	* arith.c (add_to_tarlong_helper): Consider the case where added
 	value is bigger than what a superdigit may hold, as this happens
 	in practice.  Get rid of the negative case, currently unused.
-	Reported by Alexandre Oliva, Brendan O'Dea and Paul Eggert.
+	Reported by Alexandre Oliva, Brendan O'Dea, Helmut Heller and Paul
+	Eggert.
 
 1997-06-05  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -641,8 +662,8 @@
 	for unsigned long.
 	* arith.c (print_tarlong_helper): Idem.
 	Reported by Alexandre Oliva, Andreas Zeller, Brendan O'Dea, Dale
-	Hirchert, Ed DeRivas, Garret Brady, Howard Bampton, Jörg
-	Schilling, Paul Eggert and Robert E. Brown.
+	Hirchert, Ed DeRivas, Garret Brady, Helmut Heller, Howard Bampton,
+	Jörg Schilling, Paul Eggert and Robert E. Brown.
 
 	Manage so compression work on DOSish systems.
 	* buffer.c [!HAVE_PIPE]: [!HAVE_POPEN]: Include our own popen.h.

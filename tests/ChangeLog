@@ -1,6 +1,64 @@
+1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* README, TODO, rediff.c: Deleted.
+	* Makefile.am (check_PROGRAMS): Adjusted.
+
+	* c-owner.m4: Prepare for real life.
+
+	* c-long.m4: Prepare for real life.
+	* make-mix: Accept lmix or mmix as argument.
+	* suite.m4: Adjusted.
+
+	* c-junk.m4: Prepare for real life.
+	* atgeneral.m4: Give statistics for ignored tests.
+
+	* c-swap.m4: Prepare for real life, integrate c-odd.m4.
+	* c-odd.m4: Deleted.
+	* make-mix: Accept mix or smix as argument.
+	* Makefile.am, suite.m4: Adjusted.
+
+	* verify.c: Send diagnostics on stdout instead of stderr.  This
+	should get rid of a few 2>&1 in the test suite.
+
+	* atgeneral.m4: Use diversions so to cleanup both before and after
+	each test group, because debugging scripts do not clean after.
+
+	* atgeneral.m4: Unless -s, verbosely execute failed tests.
+
+	* c-nopipe.m4, c-skip.m4, c-append.m4: Prepare for real life.
+
+1998-11-08  François Pinard  <pinard@iro.umontreal.ca>
+
+	* verify.c: Change --atime-gt to --atime-ge, --atime-lt to
+	--atime-le, --mtime-gt to --mtime-ge and --mtime-lt to --mtime-le.
+	This allows for getting rid of a few sleeps in the test suite.
+
+	* make-mix: New name for make-structure.
+	This is part of an archive nomenclature change, everywhere.
+	* c-default.m4: New name for c-unpack.m4.  Move in related code from
+	c-base.m4.
+	* c-oldc.m4: New name for c-interop.m4.  Move in related code from
+	c-base.m4.
+	* c-pack.m4: Deleted.
+	* suite.m4: New name for testsuite.m4.
+	* t-append.m4, t-create.m4, t-delete.m4, t-exclude.m4, t-extract.m4,
+	t-gzip.m4, t-incremen.m4, t-volume.m4: New names for files previously
+	not having the t- prefix.
+	* Makefile.am, testsuite.m4: Adjusted.
+
+	* c-reset.m4, c-tar.m4, c-new.m4, c-crc.m4: Prepare for real life.
+
+1998-11-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Output more detailed check progress when -v.
+	Preset at_verbose in debugging scripts.  Add at_script_file.
+	* atconfig.in: Prefer diff -u to cmp -s when -v.  Add -q.
+
+	* c-pass.m4: Prepare for real life.
+
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
-	* testsuite.m4: Activate some mix of tests to prerelease.
+	* testsuite.m4: Activate some mix of tests for prerelease.
 
 1998-10-27  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -75,7 +133,7 @@
 	* delete.m4: Test the output archive, not the input one.
 	* incremen.m4: Remove spurious action and test.
 	Reported by Jim Meyering.
-
+
 1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
 
 	* exclude.m4: New file.

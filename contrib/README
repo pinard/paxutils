@@ -25,11 +25,12 @@
    Please drop me a note about what you found to be useful, in here,
    to help me at deciding what should be kept and what should go away.
 
-. + gtar.1
+. + cpio.1
+. + mt.1
+. + tar.1
 
-    A better `man' page for tar.
-
-    Rick P. C. Rodgers <rodgers@nlm.nih.gov>
+    Previous `man' pages for `cpio' and `mt' from the `cpio' distribution.
+    Another `man' page for `tar' by Rick P. C. Rodgers <rodgers@nlm.nih.gov>.
 
 . + src-makefile.go3
 . + lib-makefile.go3
@@ -45,7 +46,7 @@
     A fully featured and fairly speedy network parallel backup system,
     including automatic tape management, and sophisticated scheduling.
 
-    ftp://ftp.amanda.org/pub/amanda/amanda-2.4.0b6.tar.gz
+    ftp://ftp.amanda.org/pub/amanda/amanda-2.4.1b1.tar.gz
     James da Silva <jds@cs.umd.edu> (unsupported)
     Alexandre Oliva <oliva@dcc.unicamp.br>
     amanda-announce@cs.umd.edu, amanda-announce-request@cs.umd.edu

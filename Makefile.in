@@ -112,8 +112,8 @@ AUTOMAKE_OPTIONS = gnits dist-shar
 ACLOCAL_AMFLAGS = -I m4
 
 BABYL = ../rmail/* ../admin/*/RMAIL
-EXTRA_DIST = PATCHES-AC PATCHES-AM PATCHES-BI README.dos config.bat \
-rebox.el stamp-pot
+EXTRA_DIST = PATCHES-AC PATCHES-BI README.dos config.bat rebox.el \
+stamp-pot
 
 SUBDIRS = m4 doc i18n lib src scripts tests contrib
 
@@ -125,10 +125,10 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = 
-DIST_COMMON =  README ABOUT-NLS AUTHORS BACKLOG COPYING ChangeLog \
-INSTALL Makefile.am Makefile.in NEWS README-alpha THANKS TODO \
-acconfig.h aclocal.m4 config.h.in configure configure.in install-sh \
-missing mkinstalldirs stamp-h.in
+DIST_COMMON =  README ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL \
+Makefile.am Makefile.in NEWS README-alpha THANKS TODO acconfig.h \
+aclocal.m4 config.h.in configure configure.in install-sh missing \
+mkinstalldirs stamp-h.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)

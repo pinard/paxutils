@@ -1,22 +1,42 @@
 #!/bin/sh
-# Validation suite for Free `pax' utilities.
+# Validation suite for Free `pax' utilities.		-*- shell-script -*-
 # Copyright © 1998 Progiciels Bourbeau-Pinard inc.
 # François Pinard <pinard@iro.umontreal.ca>, 1998.
 
+. ./atconfig
+# Snippet (3
+
 at_usage="Usage: $0 OPTION...
 
-  -v  Explain the purpose of each group of tests
-  -e  Stop if a test fails, then do not clean up"
+  -e  Stop and inhibit normal clean up if a test of the full test suite fails
+  -s  Inhibit verbosity in debugging scripts, at generation or at execution
+  -v  Force more detailed output, default for debugging scripts unless -s"
 
 while test $# -gt 0; do
   case "$1" in
-    -v) at_verbose=1; shift ;;
-    -e) at_stop_on_error=1 shift ;;
+    -e) at_stop_on_error=1; shift ;;
+    -s) at_verbose=; at_silent=1; shift ;;
+    -v) at_verbose=1; at_silent=; shift ;;
     *) echo 1>&2 "$at_usage"; exit 1 ;;
   esac
 done
 
-. ./atconfig
+# In the testing suite, we only want to know if the test succeeded or failed.
+# But in debugging scripts, we want more information, so we prefer `diff -u'
+# to silent `cmp', even if it may happen that we compare binary files.
+# Option `-u' might be less portable, so either change it or use GNU `diff'.
+
+if test -n "$at_verbose"; then
+  at_diff='diff -u'
+else
+  at_diff='cmp -s'
+fi
+
+# Each generated debugging script, containing a single test group, clean
+# up files at the beginning only, not at the end.  This is so we can repeat
+# the script many times and browse left over files.  To cope with such left
+# over files, the full test suite clean up both before and after test groups.
+# Snippet )3
 
 if test -n "`pax --version | sed -n s/$at_package.*$at_version/OK/p`"; then
   at_banner="Testing suite for Free $at_package, version $at_version"
@@ -31,8 +51,11 @@ else
   exit 1
 fi
 
+# Remove any debugging script resulting from a previous run.
+rm -f FAIL-*.sh
+
 at_failed_list=
-at_test_count=0
+at_ignore_count=0
 
 echo
 echo 'cpio tests.'
@@ -42,51 +65,62 @@ echo
 # build directory has high-numbered inodes, CPIO_FILTER gets rid of them.
 # One might prefer testing on a less used filesystem?  I'm not sure.
 
-# Prior cleanup should ideally not be needed.
-rm -rf structure unpacked
-rm -f struct-list archive arch-oldc arch-newc
-rm -f arch-inst arch-c-inst
-
-# Uncomment to hide our `cpio' by system's one, on the search PATH.
-# export PATH=/usr/bin:$PATH
+rm -rf mix list-mix cpio-def cpio-oldc
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
+fi
+if test ! -f cpio-oldc; then
+  cat list-mix | cpio -oc > cpio-oldc 2> /dev/null
+  cleanup="$cleanup cpio-oldc"
+fi
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
-fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
-fi
+rm -rf smix list-smix listf-smix
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c1(
+
+rm -rf $cleanup archive stdout stderr expout
+# Snippet )c1)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing if default cpio creation and listing merely works'
+    echo 'testing if default cpio creation and listing works'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "1. c-base.m4:3          $at_c"
+  echo $at_n "1. c-default.m4:3       $at_c"
   (
 # Snippet (s1(
 
-# The test group starts at `c-base.m4:3'.  An error occurred while
-# testing if default cpio creation and listing merely works.
+# The test group starts at `c-default.m4:3'.  An error occurred while
+# testing if default cpio creation and listing works.
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
 
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:13: Testing if default cpio creation and listing works'
 echo 13 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cat struct-list | cpio -o > archive || exit 1
+cat list-mix | cpio -o > archive || exit 1
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -96,10 +130,12 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:21: Testing if default cpio creation and listing works'
 echo 21 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 cpio -t < archive || exit 1
-cp struct-list expout
+cp list-mix expout
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -109,10 +145,12 @@ $at_diff expout stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:29: Testing if default cpio creation and listing works'
 echo 29 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 cpio -tv < archive | sed -e 's/ -> .*//' -e 's/^.* //'
-cp struct-list expout
+cp list-mix expout
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -126,48 +164,65 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 1"
        ;;
   esac
+  at_test_count=1
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c1(
-
-rm -rf $cleanup archive expout stdout stderr
-# Snippet )c1)
+    rm -rf $cleanup archive stdout stderr expout
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c2(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c2)
+  echo 33 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing if old portable cpio creation and listing merely works'
+    echo 'testing if installed cpio can unpack our cpio'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "2. c-base.m4:33         $at_c"
+  echo $at_n "2. c-default.m4:33      $at_c"
   (
 # Snippet (s2(
 
-# The test group starts at `c-base.m4:33'.  An error occurred while
-# testing if old portable cpio creation and listing merely works.
+# The test group starts at `c-default.m4:33'.  An error occurred while
+# testing if installed cpio can unpack our cpio.
+
+test -n "$BINCPIO" || exit 77
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
 fi
 
-echo 43 > at-check-line
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:50: Testing if installed cpio can unpack our cpio'
+echo 50 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cat struct-list | cpio -o -c > arch-oldc || exit 1
+TIME=`echotime`
+cd unmix
+  $BINCPIO -id$DEVFLAG < ../cpio-def || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -177,42 +232,21 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 51 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:60: Testing if installed cpio can unpack our cpio'
+echo 60 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cpio -t -c < arch-oldc || exit 1
-cp struct-list expout
+cd unmix
+  $BINCPIO -idum$DEVFLAG < ../cpio-def || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
 
 exec 1>&5 2>&6
-$at_diff expout stdout || exit 1
-echo $at_n "NN blocks
-$at_c" | $at_diff - stderr || exit 1
-
-echo 59 > at-check-line
-exec 5>&1 6>&2 1>stdout 2>stderr
-cpio -t < arch-oldc || exit 1
-cp struct-list expout
-grep -v ': truncating inode number' stderr \
-| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
-mv stderr2 stderr
-
-exec 1>&5 2>&6
-$at_diff expout stdout || exit 1
-echo $at_n "NN blocks
-$at_c" | $at_diff - stderr || exit 1
-
-echo 67 > at-check-line
-exec 5>&1 6>&2 1>stdout 2>stderr
-cpio -tv -c < arch-oldc | sed -e 's/ -> .*//' -e 's/^.* //'
-cp struct-list expout
-grep -v ': truncating inode number' stderr \
-| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
-mv stderr2 stderr
-
-exec 1>&5 2>&6
-$at_diff expout stdout || exit 1
+test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
@@ -220,50 +254,63 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 2"
        ;;
   esac
+  at_test_count=2
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c2(
-
-rm -rf $cleanup arch-oldc expout stdout stderr
-# Snippet )c2)
+    rm -rf $cleanup unmix stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c3(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c3)
+  echo 64 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing if installed cpio creation merely works'
+    echo 'testing if we can unpack our own archive'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "3. c-base.m4:71         $at_c"
+  echo $at_n "3. c-default.m4:64      $at_c"
   (
 # Snippet (s3(
 
-# The test group starts at `c-base.m4:71'.  An error occurred while
-# testing if installed cpio creation merely works.
-
-test -n "$BINCPIO" || exit 77
+# The test group starts at `c-default.m4:64'.  An error occurred while
+# testing if we can unpack our own archive.
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
 fi
 
-echo 83 > at-check-line
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:79: Testing if we can unpack our own archive'
+echo 79 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cat struct-list | $BINCPIO -o$DEVFLAG > arch-inst || exit 1
+TIME=`echotime`
+cd unmix
+  cpio -id < ../cpio-def || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -273,9 +320,15 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 90 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-default.m4:89: Testing if we can unpack our own archive'
+echo 89 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cat struct-list | $BINCPIO -o$DEVFLAG $BINOLDC > arch-c-inst || exit 1
+cd unmix
+  cpio -idum < ../cpio-def || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -289,97 +342,68 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 3"
        ;;
   esac
+  at_test_count=3
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c3(
-
-rm -rf $cleanup arch-inst arch-c-inst stdout stderr
-# Snippet )c3)
+    rm -rf $cleanup unmix stdout stderr
   fi
 fi
 
-# FIXME: struct-list gets deleted by the above check, while it should not.
-cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
-fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
-fi
-
-cleanup=
-if test ! -f archive; then
-  cat struct-list | cpio -o > archive 2> /dev/null
-  cleanup="$cleanup archive"
-fi
-if test ! -f arch-oldc; then
-  cat struct-list | cpio -o -c > arch-oldc 2> /dev/null
-  cleanup="$cleanup arch-oldc"
-fi
-
-if test -n "$BINCPIO"; then
-  cleanup=
-if test ! -f arch-inst; then
-  cat struct-list | $BINCPIO -o$DEVFLAG > arch-inst 2> /dev/null
-  cleanup="$cleanup arch-inst"
-fi
-if test ! -f arch-c-inst; then
-  cat struct-list | $BINCPIO -o$DEVFLAG $BINOLDC > arch-c-inst 2> /dev/null
-  cleanup="$cleanup arch-c-inst"
-fi
-
-fi
 #							-*- shell-script -*-
 
+# Test blocking.  It will not do much good on a pipe, but because it will
+# cause all reads and writes to use the same blocksize it will help exercise
+# `sparse.c'.
+
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c4(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c4)
+  echo 7 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing if installed cpio can unpack our archive'
+    echo 'testing option -C'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "4. c-unpack.m4:3        $at_c"
+  echo $at_n "4. c-block.m4:7         $at_c"
   (
 # Snippet (s4(
 
-# The test group starts at `c-unpack.m4:3'.  An error occurred while
-# testing if installed cpio can unpack our archive.
-
-test -n "$BINCPIO" || exit 77
+# The test group starts at `c-block.m4:7'.  An error occurred while
+# testing option -C.
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
-if test ! -f archive; then
-  cat struct-list | cpio -o > archive 2> /dev/null
-  cleanup="$cleanup archive"
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
 fi
 
-mkdir unpacked
+mkdir unmix
 
+test -n "$at_verbose" \
+  && echo $srcdir'/c-block.m4:21: Testing option -C'
 echo 21 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-TIME=`echotime`
-sleep 1
-cd unpacked
-  $BINCPIO -id$DEVFLAG < ../archive || exit 1
+cd unmix
+  cpio -idum -C 1 < ../cpio-def || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-lt $TIME < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -389,13 +413,33 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/c-block.m4:31: Testing option -C'
 echo 31 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  $BINCPIO -idum$DEVFLAG < ../archive || exit 1
+cd unmix
+  cpio -idum -C 256 < ../cpio-def || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-block.m4:41: Testing option -C'
+echo 41 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idum --block-size=20 < ../cpio-def || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -409,60 +453,62 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 4"
        ;;
   esac
+  at_test_count=4
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c4(
-
-rm -rf $cleanup unpacked stdout stderr
-# Snippet )c4)
+    rm -rf $cleanup unmix stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c5(
+
+rm -rf $cleanup unmix stdout stderr experr
+# Snippet )c5)
+  echo 45 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing if we can unpack our own archive'
+    echo 'testing option -B'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "5. c-unpack.m4:35       $at_c"
+  echo $at_n "5. c-block.m4:45        $at_c"
   (
 # Snippet (s5(
 
-# The test group starts at `c-unpack.m4:35'.  An error occurred while
-# testing if we can unpack our own archive.
+# The test group starts at `c-block.m4:45'.  An error occurred while
+# testing option -B.
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
-if test ! -f archive; then
-  cat struct-list | cpio -o > archive 2> /dev/null
-  cleanup="$cleanup archive"
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
 fi
 
-mkdir unpacked
+mkdir unmix
 
-echo 51 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-block.m4:59: Testing option -B'
+echo 59 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-TIME=`echotime`
-sleep 1
-cd unpacked
-  cpio -id < ../archive || exit 1
+cd unmix
+  cpio -idm -B < ../cpio-def || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-lt $TIME < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -472,84 +518,81 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 61 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-block.m4:70: Testing option -B'
+echo 70 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum < ../archive || exit 1
+cd unmix
+  # Probably should verify linked message.
+  cpio -idumv < ../cpio-def 2>&1 | grep -v 'cpio.*linked to' 1>&2
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+cp list-mix experr
+echo 'NN blocks' >> experr
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
 
 exec 1>&5 2>&6
 test ! -s stdout || exit 1
-echo $at_n "NN blocks
-$at_c" | $at_diff - stderr || exit 1
+$at_diff experr stderr || exit 1
 
 # Snippet )s5)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 5"
        ;;
   esac
+  at_test_count=5
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c5(
-
-rm -rf $cleanup unpacked stdout stderr
-# Snippet )c5)
+    rm -rf $cleanup unmix stdout stderr experr
   fi
 fi
 
 #							-*- shell-script -*-
-
-# Test blocking.  It will not do much good on a pipe, but because it will
-# cause all reads and writes to use the same blocksize it will help exercise
-# `sparse.c'.
+# Inter-operability of old portable cpio formats.
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c6(
+
+rm -rf $cleanup archive stdout stderr
+# Snippet )c6)
+  echo 4 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing option -C'
+    echo 'testing if installed cpio creation works'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "6. c-block.m4:7         $at_c"
+  echo $at_n "6. c-oldc.m4:4          $at_c"
   (
 # Snippet (s6(
 
-# The test group starts at `c-block.m4:7'.  An error occurred while
-# testing option -C.
+# The test group starts at `c-oldc.m4:4'.  An error occurred while
+# testing if installed cpio creation works.
+
+test -n "$BINCPIO" || exit 77
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
-fi
-if test ! -f archive; then
-  cat struct-list | cpio -o > archive 2> /dev/null
-  cleanup="$cleanup archive"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
 
-mkdir unpacked
-
-echo 21 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:16: Testing if installed cpio creation works'
+echo 16 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum -C 1 < ../archive || exit 1
-cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+cat list-mix | $BINCPIO -o$DEVFLAG > archive || exit 1
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -559,29 +602,11 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 31 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:23: Testing if installed cpio creation works'
+echo 23 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum -C 256 < ../archive || exit 1
-cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
-grep -v ': truncating inode number' stderr \
-| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
-mv stderr2 stderr
-
-exec 1>&5 2>&6
-test ! -s stdout || exit 1
-echo $at_n "NN blocks
-$at_c" | $at_diff - stderr || exit 1
-
-echo 41 > at-check-line
-exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum --block-size=20 < ../archive || exit 1
-cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+cat list-mix | $BINCPIO -o$DEVFLAG $BINOLDC > archive || exit 1
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -595,58 +620,52 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 6"
        ;;
   esac
+  at_test_count=6
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c6(
-
-rm -rf $cleanup unpacked stdout stderr
-# Snippet )c6)
+    rm -rf $cleanup archive stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c7(
+
+rm -rf $cleanup archive stdout stderr expout
+# Snippet )c7)
+  echo 27 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing option -B'
+    echo 'testing if old portable cpio creation and listing works'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "7. c-block.m4:45        $at_c"
+  echo $at_n "7. c-oldc.m4:27         $at_c"
   (
 # Snippet (s7(
 
-# The test group starts at `c-block.m4:45'.  An error occurred while
-# testing option -B.
+# The test group starts at `c-oldc.m4:27'.  An error occurred while
+# testing if old portable cpio creation and listing works.
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
-fi
-if test ! -f archive; then
-  cat struct-list | cpio -o > archive 2> /dev/null
-  cleanup="$cleanup archive"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
 
-mkdir unpacked
-
-echo 59 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:37: Testing if old portable cpio creation and listing works'
+echo 37 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idm -B < ../archive || exit 1
-cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+cat list-mix | cpio -o -c > archive || exit 1
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -656,96 +675,137 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 70 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:45: Testing if old portable cpio creation and listing works'
+echo 45 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  # Probably should verify linked message.
-  cpio -idumv < ../archive 2>&1 | grep -v 'cpio.*linked to' 1>&2
-cd ..
-cp struct-list experr
-echo 'NN blocks' >> experr
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+cpio -t -c < archive || exit 1
+cp list-mix expout
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
 
 exec 1>&5 2>&6
-test ! -s stdout || exit 1
-$at_diff experr stderr || exit 1
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:53: Testing if old portable cpio creation and listing works'
+echo 53 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -t < archive || exit 1
+cp list-mix expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:61: Testing if old portable cpio creation and listing works'
+echo 61 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tv -c < archive | sed -e 's/ -> .*//' -e 's/^.* //'
+cp list-mix expout
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
 
 # Snippet )s7)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 7"
        ;;
   esac
+  at_test_count=7
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c7(
-
-rm -rf $cleanup unpacked stdout stderr
-# Snippet )c7)
+    rm -rf $cleanup archive stdout stderr expout
   fi
 fi
 
-#							-*- shell-script -*-
+# Do a bit of optimization.
+if test -n "$BINCPIO"; then
+  cleanup=
+if test ! -f icpio-def; then
+  cat list-mix | $BINCPIO -o$DEVFLAG > icpio-def 2> /dev/null
+  cleanup="$cleanup icpio-def"
+fi
+if test ! -f icpio-oldc; then
+  cat list-mix | $BINCPIO -o$DEVFLAG $BINOLDC > icpio-oldc 2> /dev/null
+  cleanup="$cleanup icpio-oldc"
+fi
 
-# Inter-operability checks.
+fi
+cleanup=
+if test ! -f cpio-oldc; then
+  cat list-mix | cpio -oc > cpio-oldc 2> /dev/null
+  cleanup="$cleanup cpio-oldc"
+fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c8(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c8)
+  echo 71 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing interoperability with installed cpio'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "8. c-interop.m4:5       $at_c"
+  echo $at_n "8. c-oldc.m4:71         $at_c"
   (
 # Snippet (s8(
 
-# The test group starts at `c-interop.m4:5'.  An error occurred while
+# The test group starts at `c-oldc.m4:71'.  An error occurred while
 # testing interoperability with installed cpio.
 
 test -n "$BINCPIO" || exit 77
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
-if test ! -f arch-oldc; then
-  cat struct-list | cpio -o -c > arch-oldc 2> /dev/null
-  cleanup="$cleanup arch-oldc"
+if test ! -f cpio-oldc; then
+  cat list-mix | cpio -oc > cpio-oldc 2> /dev/null
+  cleanup="$cleanup cpio-oldc"
 fi
-if test ! -f arch-inst; then
-  cat struct-list | $BINCPIO -o$DEVFLAG > arch-inst 2> /dev/null
-  cleanup="$cleanup arch-inst"
-fi
-if test ! -f arch-c-inst; then
-  cat struct-list | $BINCPIO -o$DEVFLAG $BINOLDC > arch-c-inst 2> /dev/null
-  cleanup="$cleanup arch-c-inst"
+if test ! -f icpio-def; then
+  cat list-mix | $BINCPIO -o$DEVFLAG > icpio-def 2> /dev/null
+  cleanup="$cleanup icpio-def"
 fi
 
-mkdir unpacked
+mkdir unmix
 
-echo 23 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:88: Testing interoperability with installed cpio'
+echo 88 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 TIME=`echotime`
-sleep 1
-cd unpacked
-  cpio -id < ../arch-inst || exit 1
+cd unmix
+  cpio -id < ../icpio-def || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-lt $TIME < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -755,13 +815,15 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 33 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:98: Testing interoperability with installed cpio'
+echo 98 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum < ../arch-inst || exit 1
+cd unmix
+  cpio -idum < ../icpio-def || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -771,49 +833,16 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 45 > at-check-line
-exec 5>&1 6>&2 1>stdout 2>stderr
-TIME=`echotime`
-sleep 1
-cd unpacked
-  $BINCPIO -id$DEVFLAG $BINOLDC < ../arch-oldc || exit 1
-cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-lt $TIME < struct-list
-grep -v ': truncating inode number' stderr \
-| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
-mv stderr2 stderr
-
-exec 1>&5 2>&6
-test ! -s stdout || exit 1
-echo $at_n "NN blocks
-$at_c" | $at_diff - stderr || exit 1
-
-echo 55 > at-check-line
-exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  $BINCPIO -idum$DEVFLAG $BINOLDC < ../arch-oldc || exit 1
-cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
-grep -v ': truncating inode number' stderr \
-| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
-mv stderr2 stderr
-
-exec 1>&5 2>&6
-test ! -s stdout || exit 1
-echo $at_n "NN blocks
-$at_c" | $at_diff - stderr || exit 1
-
-echo 67 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:109: Testing interoperability with installed cpio'
+echo 109 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 TIME=`echotime`
-sleep 1
-cd unpacked
-  cpio -id -c < ../arch-c-inst || exit 1
+cd unmix
+  $BINCPIO -idum$DEVFLAG $BINOLDC < ../cpio-oldc || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-lt $TIME < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -823,13 +852,15 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 77 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:119: Testing interoperability with installed cpio'
+echo 119 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum -c < ../arch-c-inst || exit 1
+cd unmix
+  $BINCPIO -idum$DEVFLAG $BINOLDC < ../cpio-oldc || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -843,60 +874,63 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 8"
        ;;
   esac
+  at_test_count=8
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c8(
-
-rm -rf $cleanup unpacked stdout stderr
-# Snippet )c8)
+    rm -rf $cleanup unmix stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c9(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c9)
+  echo 123 > at-check-line
   if test -n "$at_verbose"; then
-    echo 'testing cpio interoperability with self'
+    echo 'testing interoperability with installed cpio in portable mode'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "9. c-interop.m4:81      $at_c"
+  echo $at_n "9. c-oldc.m4:123        $at_c"
   (
 # Snippet (s9(
 
-# The test group starts at `c-interop.m4:81'.  An error occurred while
-# testing cpio interoperability with self.
+# The test group starts at `c-oldc.m4:123'.  An error occurred while
+# testing interoperability with installed cpio in portable mode.
 
 cleanup=
-if test ! -d structure; then
-  $at_srcdir/make-structure
-  cleanup="$cleanup structure"
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
 fi
-if test ! -f struct-list; then
-  find structure -depth -print > struct-list
-  cleanup="$cleanup struct-list"
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
 fi
-if test ! -f arch-oldc; then
-  cat struct-list | cpio -o -c > arch-oldc 2> /dev/null
-  cleanup="$cleanup arch-oldc"
+if test ! -f icpio-oldc; then
+  cat list-mix | $BINCPIO -o$DEVFLAG $BINOLDC > icpio-oldc 2> /dev/null
+  cleanup="$cleanup icpio-oldc"
 fi
 
-mkdir unpacked
+mkdir unmix
 
-echo 97 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:138: Testing interoperability with installed cpio in portable mode'
+echo 138 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 TIME=`echotime`
-sleep 1
-cd unpacked
-  cpio -id -c < ../arch-oldc || exit 1
+cd unmix
+  cpio -id -c < ../icpio-oldc || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-lt $TIME < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -906,13 +940,15 @@ test ! -s stdout || exit 1
 echo $at_n "NN blocks
 $at_c" | $at_diff - stderr || exit 1
 
-echo 107 > at-check-line
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:148: Testing interoperability with installed cpio in portable mode'
+echo 148 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
-cd unpacked
-  cpio -idum -c < ../arch-oldc || exit 1
+cd unmix
+  cpio -idum -c < ../icpio-oldc || exit 1
 cd ..
-verify -list -match-dir unpacked -mode-match -uid-match -gid-match \
-  -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
 grep -v ': truncating inode number' stderr \
 | sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
 mv stderr2 stderr
@@ -926,27 +962,3429 @@ $at_c" | $at_diff - stderr || exit 1
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
+    *) echo "FAILED near line `cat at-check-line`"
        at_failed_list="$at_failed_list 9"
        ;;
   esac
+  at_test_count=9
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c9(
-
-rm -rf $cleanup unpacked stdout stderr
-# Snippet )c9)
+    rm -rf $cleanup unmix stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-  rm -rf structure unpacked
-  rm -f struct-list archive arch-oldc arch-newc
-  rm -f arch-inst arch-c-inst
+# Snippet (c10(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c10)
+  echo 152 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio interoperability with self'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "10. c-oldc.m4:152       $at_c"
+  (
+# Snippet (s10(
+
+# The test group starts at `c-oldc.m4:152'.  An error occurred while
+# testing cpio interoperability with self.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-oldc; then
+  cat list-mix | cpio -oc > cpio-oldc 2> /dev/null
+  cleanup="$cleanup cpio-oldc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:167: Testing cpio interoperability with self'
+echo 167 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -id -c < ../cpio-oldc || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-oldc.m4:177: Testing cpio interoperability with self'
+echo 177 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idum -c < ../cpio-oldc || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s10)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 10"
+       ;;
+  esac
+  at_test_count=10
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+# Optimization cleanup.
+if test -n "$BINCPIO"; then
+  rm -f icpio-def icpio-oldc
+fi
+rm -f cpio-oldc
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c11(
+
+rm -rf $cleanup unmix stdout stderr experr
+# Snippet )c11)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing copy-pass mode'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "11. c-pass.m4:3         $at_c"
+  (
+# Snippet (s11(
+
+# The test group starts at `c-pass.m4:3'.  An error occurred while
+# testing copy-pass mode.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-pass.m4:16: Testing copy-pass mode'
+echo 16 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+find mix -depth -print | cpio -pd unmix || exit 1
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-pass.m4:24: Testing copy-pass mode'
+echo 24 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+find mix -depth -print | cpio -pdum unmix || exit 1
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-pass.m4:33: Testing copy-pass mode'
+echo 33 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+# Probably should verify linked message.
+find mix -depth -print | cpio -pdumv unmix 2>&1 | grep -v 'cpio.*linked to' 1>&2
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+cp list-mix experr
+echo 'NN blocks' >> experr
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+$at_diff experr stderr || exit 1
+
+# Snippet )s11)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 11"
+       ;;
+  esac
+  at_test_count=11
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr experr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c12(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c12)
+  echo 37 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing copy-pass mode through linking'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "12. c-pass.m4:37        $at_c"
+  (
+# Snippet (s12(
+
+# The test group starts at `c-pass.m4:37'.  An error occurred while
+# testing copy-pass mode through linking.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-pass.m4:49: Testing copy-pass mode through linking'
+echo 49 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+find mix -depth -print | cpio -pdl unmix || exit 1
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match -ino-match -ignore-dir-ino -ignore-link-ino -ignore-link-mtime -ignore-dir-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "0 blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s12)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 12"
+       ;;
+  esac
+  at_test_count=12
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c13(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c13)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if access time could be reset'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "13. c-reset.m4:3        $at_c"
+  (
+# Snippet (s13(
+
+# The test group starts at `c-reset.m4:3'.  An error occurred while
+# testing if access time could be reset.
+
+# First copy the directory into unmix so we can make sure that
+# the -a doesn't do something weird to the mtime (like it has on a
+# weird 88k SysV machine that has a non-standard utimbuf mix).
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-oldc; then
+  cat list-mix | cpio -oc > cpio-oldc 2> /dev/null
+  cleanup="$cleanup cpio-oldc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-reset.m4:21: Testing if access time could be reset'
+echo 21 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idm -c < ../cpio-oldc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-reset.m4:31: Testing if access time could be reset'
+echo 31 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cat list-mix | cpio -oa -c > cpio-oldc
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+verify -list -ignore-dir-atime -atime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-reset.m4:41: Testing if access time could be reset'
+echo 41 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idum -c < ../cpio-oldc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s13)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 13"
+       ;;
+  esac
+  at_test_count=13
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+#							-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c14(
+
+rm -rf $cleanup archive stdout stderr
+# Snippet )c14)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if tar creation works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "14. c-tar.m4:3          $at_c"
+  (
+# Snippet (s14(
+
+# The test group starts at `c-tar.m4:3'.  An error occurred while
+# testing if tar creation works.
+
+# This is in preparation for later testing if `cpio' can read `tar' files.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:9: Testing if tar creation works'
+echo 9 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+tar cf archive mix
+test $? = 0 || exit 1
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+test ! -s stderr || exit 1
+
+# Snippet )s14)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 14"
+       ;;
+  esac
+  at_test_count=14
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c15(
+
+rm -rf $cleanup archive stdout stderr
+# Snippet )c15)
+  echo 13 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if tar format cpio creation works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "15. c-tar.m4:13         $at_c"
+  (
+# Snippet (s15(
+
+# The test group starts at `c-tar.m4:13'.  An error occurred while
+# testing if tar format cpio creation works.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+if test "$FIFOS" = yes; then
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:29: Testing if tar format cpio creation works'
+echo 29 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -oH tar > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: mix/dev/pipe2 not dumped: not a regular file
+cpio: mix/pipe not dumped: not a regular file
+cpio: mix/copy not dumped: not a regular file
+cpio: mix/diff not dumped: not a regular file
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+else
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:38: Testing if tar format cpio creation works'
+echo 38 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -oH tar > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+fi
+
+# Snippet )s15)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 15"
+       ;;
+  esac
+  at_test_count=15
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c16(
+
+rm -rf $cleanup archive stdout stderr
+# Snippet )c16)
+  echo 44 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if ustar format cpio creation works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "16. c-tar.m4:44         $at_c"
+  (
+# Snippet (s16(
+
+# The test group starts at `c-tar.m4:44'.  An error occurred while
+# testing if ustar format cpio creation works.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:54: Testing if ustar format cpio creation works'
+echo 54 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -oH ustar > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s16)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 16"
+       ;;
+  esac
+  at_test_count=16
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c17(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c17)
+  echo 58 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can unpack installed tar archives'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "17. c-tar.m4:58         $at_c"
+  (
+# Snippet (s17(
+
+# The test group starts at `c-tar.m4:58'.  An error occurred while
+# testing if cpio can unpack installed tar archives.
+
+test -n "$BINTAR" || exit 77
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f itar-def; then
+  $BINTAR cf itar-def mix >/dev/null 2>&1
+  cleanup="$cleanup itar-def"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:77: Testing if cpio can unpack installed tar archives'
+echo 77 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idH tar < ../itar-def
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s17)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 17"
+       ;;
+  esac
+  at_test_count=17
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c18(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c18)
+  echo 81 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can unpack tar archives'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "18. c-tar.m4:81         $at_c"
+  (
+# Snippet (s18(
+
+# The test group starts at `c-tar.m4:81'.  An error occurred while
+# testing if cpio can unpack tar archives.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f tar-def; then
+  tar cf tar-def mix >/dev/null 2>&1
+  cleanup="$cleanup tar-def"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:96: Testing if cpio can unpack tar archives'
+echo 96 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idH ustar < ../tar-def
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s18)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 18"
+       ;;
+  esac
+  at_test_count=18
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c19(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c19)
+  echo 100 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can unpack tar format'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "19. c-tar.m4:100        $at_c"
+  (
+# Snippet (s19(
+
+# The test group starts at `c-tar.m4:100'.  An error occurred while
+# testing if cpio can unpack tar format.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-tar; then
+  cat list-mix | cpio -oH tar > cpio-tar 2> /dev/null
+  cleanup="$cleanup cpio-tar"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:116: Testing if cpio can unpack tar format'
+echo 116 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-tar; then
+  cat list-mix | cpio -oH tar > cpio-tar 2> /dev/null
+  cleanup="$cleanup cpio-tar"
+fi
+
+TIME=`echotime`
+cd unmix
+  cpio -idH tar < ../cpio-tar
+cd ..
+cat list-mix \
+| fgrep -v -x -f mix/extra1 \
+| verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+    -size-match -contents-match -mtime-le $TIME \
+| fgrep -v -x -f mix/extra2
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:127: Testing if cpio can unpack tar format'
+echo 127 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idu < ../cpio-tar
+cd ..
+cat list-mix \
+| fgrep -v -x -f mix/extra1 \
+| verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+    -size-match -contents-match -mtime-le $TIME \
+| fgrep -v -x -f mix/extra2
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s19)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 19"
+       ;;
+  esac
+  at_test_count=19
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c20(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c20)
+  echo 131 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can unpack ustar format'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "20. c-tar.m4:131        $at_c"
+  (
+# Snippet (s20(
+
+# The test group starts at `c-tar.m4:131'.  An error occurred while
+# testing if cpio can unpack ustar format.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-ustar; then
+  cat list-mix | cpio -oH ustar > cpio-ustar 2> /dev/null
+  cleanup="$cleanup cpio-ustar"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:146: Testing if cpio can unpack ustar format'
+echo 146 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idH ustar < ../cpio-ustar
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-tar.m4:157: Testing if cpio can unpack ustar format'
+echo 157 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idu < ../cpio-ustar
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s20)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 20"
+       ;;
+  esac
+  at_test_count=20
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+#							-*- shell-script -*-
+# New portable cpio format.
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c21(
+
+rm -rf $cleanup archive stdout stderr expout
+# Snippet )c21)
+  echo 4 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if new portable cpio creation and listing works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "21. c-newc.m4:4         $at_c"
+  (
+# Snippet (s21(
+
+# The test group starts at `c-newc.m4:4'.  An error occurred while
+# testing if new portable cpio creation and listing works.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+sed -e '/^\.\/..*$/s/^\.\///' list-mix | sort > expout
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-newc.m4:15: Testing if new portable cpio creation and listing works'
+echo 15 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-newc.m4:22: Testing if new portable cpio creation and listing works'
+echo 22 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -t -H newc < archive | sort
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-newc.m4:29: Testing if new portable cpio creation and listing works'
+echo 29 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tv -H newc < archive | sed -e 's,^.* \(mix[a-z0-9/]*\).*,\1,' | sort
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-newc.m4:36: Testing if new portable cpio creation and listing works'
+echo 36 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tv < archive | sed -e 's,^.* \(mix[a-z0-9/]*\).*,\1,' | sort
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s21)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 21"
+       ;;
+  esac
+  at_test_count=21
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive stdout stderr expout
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c22(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c22)
+  echo 40 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if new portable cpio extraction works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "22. c-newc.m4:40        $at_c"
+  (
+# Snippet (s22(
+
+# The test group starts at `c-newc.m4:40'.  An error occurred while
+# testing if new portable cpio extraction works.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-newc; then
+  cat list-mix | cpio -oH newc > cpio-newc 2> /dev/null
+  cleanup="$cleanup cpio-newc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-newc.m4:55: Testing if new portable cpio extraction works'
+echo 55 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -id -H newc < ../cpio-newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-newc.m4:65: Testing if new portable cpio extraction works'
+echo 65 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idum -H newc < ../cpio-newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s22)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 22"
+       ;;
+  esac
+  at_test_count=22
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+#							-*- shell-script -*-
+# CRC cpio format.
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c23(
+
+rm -rf $cleanup archive stdout stderr expout
+# Snippet )c23)
+  echo 4 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if CRC cpio creation and listing works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "23. c-crc.m4:4          $at_c"
+  (
+# Snippet (s23(
+
+# The test group starts at `c-crc.m4:4'.  An error occurred while
+# testing if CRC cpio creation and listing works.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+sed -e '/^\.\/..*$/s/^\.\///' list-mix | sort > expout
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-crc.m4:15: Testing if CRC cpio creation and listing works'
+echo 15 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -oH crc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-crc.m4:22: Testing if CRC cpio creation and listing works'
+echo 22 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tH crc < archive | sort
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-crc.m4:29: Testing if CRC cpio creation and listing works'
+echo 29 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -tvH crc < archive | sed -e 's,^.* \(mix[a-z0-9/]*\).*,\1,' | sort
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+$at_diff expout stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s23)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 23"
+       ;;
+  esac
+  at_test_count=23
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive stdout stderr expout
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c24(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c24)
+  echo 33 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if CRC cpio extraction works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "24. c-crc.m4:33         $at_c"
+  (
+# Snippet (s24(
+
+# The test group starts at `c-crc.m4:33'.  An error occurred while
+# testing if CRC cpio extraction works.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-crc; then
+  cat list-mix | cpio -oH crc > cpio-crc 2> /dev/null
+  cleanup="$cleanup cpio-crc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-crc.m4:48: Testing if CRC cpio extraction works'
+echo 48 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idH crc < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-crc.m4:58: Testing if CRC cpio extraction works'
+echo 58 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumH crc < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-crc.m4:68: Testing if CRC cpio extraction works'
+echo 68 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idum < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s24)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 24"
+       ;;
+  esac
+  at_test_count=24
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+#							-*- shell-script -*-
+# Options -I, -O and -F.
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c25(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c25)
+  echo 4 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can read without pipe'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "25. c-nopipe.m4:4       $at_c"
+  (
+# Snippet (s25(
+
+# The test group starts at `c-nopipe.m4:4'.  An error occurred while
+# testing if cpio can read without pipe.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-newc; then
+  cat list-mix | cpio -oH newc > cpio-newc 2> /dev/null
+  cleanup="$cleanup cpio-newc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:18: Testing if cpio can read without pipe'
+echo 18 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idmI ../cpio-newc -H newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:28: Testing if cpio can read without pipe'
+echo 28 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumF ../cpio-newc -H newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s25)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 25"
+       ;;
+  esac
+  at_test_count=25
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c26(
+
+rm -rf $cleanup archive unmix stdout stderr
+# Snippet )c26)
+  echo 32 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can write without pipe using -O'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "26. c-nopipe.m4:32      $at_c"
+  (
+# Snippet (s26(
+
+# The test group starts at `c-nopipe.m4:32'.  An error occurred while
+# testing if cpio can write without pipe using -O.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:43: Testing if cpio can write without pipe using -O'
+echo 43 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -oO archive -H newc
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:53: Testing if cpio can write without pipe using -O'
+echo 53 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idm -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:63: Testing if cpio can write without pipe using -O'
+echo 63 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumI ../archive -H newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s26)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 26"
+       ;;
+  esac
+  at_test_count=26
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c27(
+
+rm -rf $cleanup archive unmix stdout stderr
+# Snippet )c27)
+  echo 67 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can write without pipe using -F'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "27. c-nopipe.m4:67      $at_c"
+  (
+# Snippet (s27(
+
+# The test group starts at `c-nopipe.m4:67'.  An error occurred while
+# testing if cpio can write without pipe using -F.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:78: Testing if cpio can write without pipe using -F'
+echo 78 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mix | cpio -oF archive -H newc
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:88: Testing if cpio can write without pipe using -F'
+echo 88 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idmF ../archive -H newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-nopipe.m4:98: Testing if cpio can write without pipe using -F'
+echo 98 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumI ../archive -H newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s27)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 27"
+       ;;
+  esac
+  at_test_count=27
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix stdout stderr
+  fi
+fi
+
+# Skipping files while extracting.			-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c28(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c28)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio skips files as per non-options'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "28. c-skip.m4:3         $at_c"
+  (
+# Snippet (s28(
+
+# The test group starts at `c-skip.m4:3'.  An error occurred while
+# testing if cpio skips files as per non-options.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-newc; then
+  cat list-mix | cpio -oH newc > cpio-newc 2> /dev/null
+  cleanup="$cleanup cpio-newc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-skip.m4:20: Testing if cpio skips files as per non-options'
+echo 20 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idm -H newc mix/foo < ../cpio-newc
+cd ..
+verify -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match mix/foo
+sed -e '/^mix$/d' -e '/^mix\/foo$/d' -e 's,^,unmix/,' list-mix \
+| verify -list -non-exist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf unmix
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-skip.m4:37: Testing if cpio skips files as per non-options'
+echo 37 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idm -H newc -f mix/foo < ../cpio-newc
+cd ..
+sed -e '/mix\/foo/d' list-mix \
+| verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+    -contents-match -mtime-match -ignore-dot-mtime \
+| sed -e '/^mix\/foo: extra file$/d'
+verify -non-exist unmix/mix/foo
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s28)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 28"
+       ;;
+  esac
+  at_test_count=28
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c29(
+
+rm -rf $cleanup pattern unmix stdout stderr
+# Snippet )c29)
+  echo 41 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio skips files as per -E file'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "29. c-skip.m4:41        $at_c"
+  (
+# Snippet (s29(
+
+# The test group starts at `c-skip.m4:41'.  An error occurred while
+# testing if cpio skips files as per -E file.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-newc; then
+  cat list-mix | cpio -oH newc > cpio-newc 2> /dev/null
+  cleanup="$cleanup cpio-newc"
+fi
+
+echo mix/foo > pattern
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-skip.m4:59: Testing if cpio skips files as per -E file'
+echo 59 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idmE ../pattern -H newc < ../cpio-newc
+cd ..
+verify -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match mix/foo
+sed -e '/^mix$/d' -e '/^mix\/foo$/d' -e 's,^,unmix/,' list-mix \
+| verify -list -non-exist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf unmix
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-skip.m4:76: Testing if cpio skips files as per -E file'
+echo 76 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idmfE ../pattern -H newc < ../cpio-newc
+cd ..
+sed -e '/^mix\/foo/d' list-mix \
+| verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match -ignore-dot-mtime \
+| sed -e '/^mix\/foo: extra file$/d'
+verify -non-exist unmix/mix/foo
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s29)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 29"
+       ;;
+  esac
+  at_test_count=29
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup pattern unmix stdout stderr
+  fi
+fi
+
+# cpio appends.						-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c30(
+
+rm -rf $cleanup aplist archive mix-save unmix stdout stderr
+# Snippet )c30)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can append using default format'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "30. c-append.m4:3       $at_c"
+  (
+# Snippet (s30(
+
+# The test group starts at `c-append.m4:3'.  An error occurred while
+# testing if cpio can append using default format.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
+fi
+
+echo mix/aptest > aplist
+echo mix/tmp/aptest2 >> aplist
+cp cpio-def archive
+mv mix mix-save
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:20: Testing if cpio can append using default format'
+echo 20 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -idm < cpio-def
+echo append > mix/aptest
+echo append2 > mix/tmp/aptest2
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:27: Testing if cpio can append using default format'
+echo 27 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -oAO archive < aplist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:40: Testing if cpio can append using default format'
+echo 40 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -id < ../archive
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-le $TIME < aplist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf mix
+mv mix-save mix
+
+# Snippet )s30)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 30"
+       ;;
+  esac
+  at_test_count=30
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup aplist archive mix-save unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c31(
+
+rm -rf $cleanup aplist archive mix-save unmix stdout stderr
+# Snippet )c31)
+  echo 47 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can append using new portable format'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "31. c-append.m4:47      $at_c"
+  (
+# Snippet (s31(
+
+# The test group starts at `c-append.m4:47'.  An error occurred while
+# testing if cpio can append using new portable format.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-newc; then
+  cat list-mix | cpio -oH newc > cpio-newc 2> /dev/null
+  cleanup="$cleanup cpio-newc"
+fi
+
+echo mix/aptest > aplist
+echo mix/tmp/aptest2 >> aplist
+cp cpio-newc archive
+mv mix mix-save
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:64: Testing if cpio can append using new portable format'
+echo 64 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -idm < cpio-newc
+echo append > mix/aptest
+echo append2 > mix/tmp/aptest2
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:71: Testing if cpio can append using new portable format'
+echo 71 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cpio -oAO archive -H newc < aplist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:84: Testing if cpio can append using new portable format'
+echo 84 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-le $TIME < aplist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-append.m4:97: Testing if cpio can append using new portable format'
+echo 97 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumI ../archive -H newc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match < aplist
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf mix
+mv mix-save mix
+
+# Snippet )s31)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 31"
+       ;;
+  esac
+  at_test_count=31
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup aplist archive mix-save unmix stdout stderr
+  fi
+fi
+
+# Swapping options.					-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c32(
+
+rm -rf $cleanup archive unmix xmix stdout stderr
+# Snippet )c32)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio byte swapping works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "32. c-swap.m4:3         $at_c"
+  (
+# Snippet (s32(
+
+# The test group starts at `c-swap.m4:3'.  An error occurred while
+# testing if cpio byte swapping works.
+
+cleanup=
+if test ! -d smix; then
+  $at_srcdir/make-mix smix
+  cleanup="$cleanup smix"
+fi
+if test ! -f list-smix; then
+  find smix -depth -print > list-smix
+  cleanup="$cleanup list-smix"
+fi
+if test ! -f listf-smix; then
+  find smix -type f -depth -print > listf-smix
+  cleanup="$cleanup listf-smix"
+fi
+
+mkdir unmix xmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:14: Testing if cpio byte swapping works'
+echo 14 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-smix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:24: Testing if cpio byte swapping works'
+echo 24 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+cd xmix
+  while read file; do
+    swapb $file > temp
+    rm $file
+    mv temp $file
+  done < ../listf-smix
+cd ..
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:48: Testing if cpio byte swapping works'
+echo 48 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -ids -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:58: Testing if cpio byte swapping works'
+echo 58 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idu -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -size-match -contents-match < list-smix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s32)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 32"
+       ;;
+  esac
+  at_test_count=32
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix xmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c33(
+
+rm -rf $cleanup archive unmix xmix stdout stderr
+# Snippet )c33)
+  echo 62 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio halfword swapping works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "33. c-swap.m4:62        $at_c"
+  (
+# Snippet (s33(
+
+# The test group starts at `c-swap.m4:62'.  An error occurred while
+# testing if cpio halfword swapping works.
+
+cleanup=
+if test ! -d smix; then
+  $at_srcdir/make-mix smix
+  cleanup="$cleanup smix"
+fi
+if test ! -f list-smix; then
+  find smix -depth -print > list-smix
+  cleanup="$cleanup list-smix"
+fi
+if test ! -f listf-smix; then
+  find smix -type f -depth -print > listf-smix
+  cleanup="$cleanup listf-smix"
+fi
+
+mkdir unmix xmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:73: Testing if cpio halfword swapping works'
+echo 73 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-smix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:83: Testing if cpio halfword swapping works'
+echo 83 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+cd xmix
+  while read file; do
+    swaphw $file > temp
+    rm $file
+    mv temp $file
+  done < ../listf-smix
+cd ..
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:108: Testing if cpio halfword swapping works'
+echo 108 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idS -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:118: Testing if cpio halfword swapping works'
+echo 118 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idu -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -size-match -contents-match < list-smix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s33)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 33"
+       ;;
+  esac
+  at_test_count=33
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix xmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c34(
+
+rm -rf $cleanup archive unmix xmix stdout stderr
+# Snippet )c34)
+  echo 122 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio combined swapping works'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "34. c-swap.m4:122       $at_c"
+  (
+# Snippet (s34(
+
+# The test group starts at `c-swap.m4:122'.  An error occurred while
+# testing if cpio combined swapping works.
+
+cleanup=
+if test ! -d smix; then
+  $at_srcdir/make-mix smix
+  cleanup="$cleanup smix"
+fi
+if test ! -f list-smix; then
+  find smix -depth -print > list-smix
+  cleanup="$cleanup list-smix"
+fi
+if test ! -f listf-smix; then
+  find smix -type f -depth -print > listf-smix
+  cleanup="$cleanup listf-smix"
+fi
+
+mkdir unmix xmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:133: Testing if cpio combined swapping works'
+echo 133 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-smix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:143: Testing if cpio combined swapping works'
+echo 143 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+cd xmix
+  while read file; do
+    swapb $file > temp
+    rm $file
+    swaphw temp > $file
+    rm temp
+  done < ../listf-smix
+cd ..
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:171: Testing if cpio combined swapping works'
+echo 171 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idsS -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:190: Testing if cpio combined swapping works'
+echo 190 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idub -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s34)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 34"
+       ;;
+  esac
+  at_test_count=34
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix xmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c35(
+
+rm -rf $cleanup archive unmix xmix stdout stderr
+# Snippet )c35)
+  echo 194 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio swapping with weird block sizes'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "35. c-swap.m4:194       $at_c"
+  (
+# Snippet (s35(
+
+# The test group starts at `c-swap.m4:194'.  An error occurred while
+# testing cpio swapping with weird block sizes.
+
+cleanup=
+if test ! -d smix; then
+  $at_srcdir/make-mix smix
+  cleanup="$cleanup smix"
+fi
+if test ! -f list-smix; then
+  find smix -depth -print > list-smix
+  cleanup="$cleanup list-smix"
+fi
+
+mkdir unmix xmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:205: Testing cpio swapping with weird block sizes'
+echo 205 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-smix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:215: Testing cpio swapping with weird block sizes'
+echo 215 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd xmix
+  cpio -id -H newc < ../archive
+cd ..
+verify -list -match-dir xmix -size-match -contents-match < list-smix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+cd xmix
+  while read file; do
+    swapb $file > temp
+    rm $file
+    swaphw temp > $file
+    rm temp
+  done < ../listf-smix
+cd ..
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:243: Testing cpio swapping with weird block sizes'
+echo 243 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idbC 7 -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf unmix
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:265: Testing cpio swapping with weird block sizes'
+echo 265 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idbC 3 -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../unmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf unmix
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-swap.m4:287: Testing cpio swapping with weird block sizes'
+echo 287 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idbC 1 -H newc < ../archive
+cd ..
+cd xmix
+  verify -list -match-dir ../xmix -size-match -contents-match -mtime-le $TIME \
+    < ../list-smix
+cd ..
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: cannot swap halfwords of smix/file3: odd number of halfwords
+cpio: cannot swap bytes of smix/file3: odd number of bytes
+cpio: cannot swap halfwords of smix/file4: odd number of halfwords
+cpio: cannot swap bytes of smix/file4: odd number of bytes
+cpio: cannot swap halfwords of smix/file5: odd number of halfwords
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s35)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 35"
+       ;;
+  esac
+  at_test_count=35
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix xmix stdout stderr
+  fi
+fi
+
+# A few FIXME remain in c-junk.m4.
+# Corrupted cpio files.					-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c36(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c36)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio usual formats with small corruption'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "36. c-junk.m4:3         $at_c"
+  (
+# Snippet (s36(
+
+# The test group starts at `c-junk.m4:3'.  An error occurred while
+# testing cpio usual formats with small corruption.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f minijunk; then
+  echo junk > minijunk
+  cleanup="$cleanup minijunk"
+fi
+if test ! -f cpio-def; then
+  cat list-mix | cpio -o > cpio-def 2> /dev/null
+  cleanup="$cleanup cpio-def"
+fi
+if test ! -f cpio-oldc; then
+  cat list-mix | cpio -oc > cpio-oldc 2> /dev/null
+  cleanup="$cleanup cpio-oldc"
+fi
+if test ! -f cpio-newc; then
+  cat list-mix | cpio -oH newc > cpio-newc 2> /dev/null
+  cleanup="$cleanup cpio-newc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:18: Testing cpio usual formats with small corruption'
+echo 18 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cat ../minijunk ../cpio-def | cpio -idm || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:29: Testing cpio usual formats with small corruption'
+echo 29 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cat ../minijunk ../cpio-oldc | cpio -idum -c || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:40: Testing cpio usual formats with small corruption'
+echo 40 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cat ../minijunk ../cpio-oldc | cpio -idum || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:63: Testing cpio usual formats with small corruption'
+echo 63 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cat ../minijunk ../cpio-oldc | cpio -idum || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s36)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 36"
+       ;;
+  esac
+  at_test_count=36
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c37(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c37)
+  echo 130 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio tar format with corruption'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "37. c-junk.m4:130       $at_c"
+  (
+# Snippet (s37(
+
+# The test group starts at `c-junk.m4:130'.  An error occurred while
+# testing cpio tar format with corruption.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-tar; then
+  cat list-mix | cpio -oH tar > cpio-tar 2> /dev/null
+  cleanup="$cleanup cpio-tar"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:149: Testing cpio tar format with corruption'
+echo 149 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-tar | cpio -idH tar || exit 1
+cd ..
+cat list-mix \
+| fgrep -v -x -f mix/extra1 \
+| verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+    -size-match -contents-match -mtime-le $TIME \
+| fgrep -v -x -f mix/extra2
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: invalid header: checksum error
+cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:163: Testing cpio tar format with corruption'
+echo 163 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-tar | cpio -idu || exit 1
+cd ..
+cat list-mix \
+| fgrep -v -x -f mix/extra1 \
+| verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+    -size-match -contents-match -mtime-le $TIME \
+| fgrep -v -x -f mix/extra2
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s37)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 37"
+       ;;
+  esac
+  at_test_count=37
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c38(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c38)
+  echo 167 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio ustar format with corruption'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "38. c-junk.m4:167       $at_c"
+  (
+# Snippet (s38(
+
+# The test group starts at `c-junk.m4:167'.  An error occurred while
+# testing cpio ustar format with corruption.
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f minijunk; then
+  echo junk > minijunk
+  cleanup="$cleanup minijunk"
+fi
+if test ! -f maxijunk; then
+  for loop in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    echo junkJUNKjunkJUNKjunkJUNKjunkawholelotofgarbagebecausewewant
+    echo tomakesurepeeklooksatmorethan1recordofinput
+  done > maxijunk
+  cleanup="$cleanup maxijunk"
+fi
+if test ! -f cpio-ustar; then
+  cat list-mix | cpio -oH ustar > cpio-ustar 2> /dev/null
+  cleanup="$cleanup cpio-ustar"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:184: Testing cpio ustar format with corruption'
+echo 184 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-ustar | cpio -idH ustar || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: invalid header: checksum error
+cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:196: Testing cpio ustar format with corruption'
+echo 196 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cat ../minijunk ../cpio-ustar | cpio -idu || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 5 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+rm -rf unmix
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:212: Testing cpio ustar format with corruption'
+echo 212 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cat ../maxijunk ../cpio-ustar | cpio -idH ustar || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: invalid header: checksum error
+cpio: warning: skipped 1248 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-junk.m4:224: Testing cpio ustar format with corruption'
+echo 224 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cat ../maxijunk ../cpio-ustar | cpio -idu || exit 1
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-le $TIME < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "cpio: warning: skipped 1248 bytes of junk
+NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s38)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 38"
+       ;;
+  esac
+  at_test_count=38
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+# One FIXME remains in c-long.m4.
+# Long files names in cpio.				-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c39(
+
+rm -rf $cleanup archive unmix stdout stderr
+# Snippet )c39)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio usual formats with long file names'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "39. c-long.m4:3         $at_c"
+  (
+# Snippet (s39(
+
+# The test group starts at `c-long.m4:3'.  An error occurred while
+# testing cpio usual formats with long file names.
+
+cleanup=
+if test ! -d lmix; then
+  $at_srcdir/make-mix lmix
+  cleanup="$cleanup lmix"
+fi
+if test ! -f list-lmix; then
+  find lmix -depth -print > list-lmix
+  cleanup="$cleanup list-lmix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:14: Testing cpio usual formats with long file names'
+echo 14 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-lmix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:25: Testing cpio usual formats with long file names'
+echo 25 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idm -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match -ignore-dot-mtime < list-lmix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s39)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 39"
+       ;;
+  esac
+  at_test_count=39
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c40(
+
+rm -rf $cleanup archive unmix stdout stderr
+# Snippet )c40)
+  echo 29 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio ustar format with long file names'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "40. c-long.m4:29        $at_c"
+  (
+# Snippet (s40(
+
+# The test group starts at `c-long.m4:29'.  An error occurred while
+# testing cpio ustar format with long file names.
+
+cleanup=
+if test ! -d lmix; then
+  $at_srcdir/make-mix lmix
+  cleanup="$cleanup lmix"
+fi
+if test ! -f list-lmix; then
+  find lmix -depth -print > list-lmix
+  cleanup="$cleanup list-lmix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:40: Testing cpio ustar format with long file names'
+echo 40 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-lmix | cpio -oH ustar > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:52: Testing cpio ustar format with long file names'
+echo 52 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+TIME=`echotime`
+cd unmix
+  cpio -idH ustar < ../archive
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-le $TIME < list-lmix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s40)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 40"
+       ;;
+  esac
+  at_test_count=40
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c41(
+
+rm -rf $cleanup archive stdout stderr experr
+# Snippet )c41)
+  echo 56 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio tar format with long file names'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "41. c-long.m4:56        $at_c"
+  (
+# Snippet (s41(
+
+# The test group starts at `c-long.m4:56'.  An error occurred while
+# testing cpio tar format with long file names.
+
+cleanup=
+if test ! -d lmix; then
+  $at_srcdir/make-mix lmix
+  cleanup="$cleanup lmix"
+fi
+if test ! -f lmix-one; then
+  $at_srcdir/make-mix lmix-one
+  cleanup="$cleanup lmix-one"
+fi
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:66: Testing cpio tar format with long file names'
+echo 66 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat lmix-one | cpio -oH tar > archive
+sed -e 's,^,cpio: ,' -e 's,$,: file name too long,' < lmix-one > experr
+echo 'NN blocks' >> experr
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+$at_diff experr stderr || exit 1
+
+# Snippet )s41)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 41"
+       ;;
+  esac
+  at_test_count=41
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive stdout stderr experr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c42(
+
+rm -rf $cleanup archive unmix stdout stderr
+# Snippet )c42)
+  echo 70 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing cpio new portable format with longer file names'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "42. c-long.m4:70        $at_c"
+  (
+# Snippet (s42(
+
+# The test group starts at `c-long.m4:70'.  An error occurred while
+# testing cpio new portable format with longer file names.
+
+cleanup=
+if test ! -d mmix; then
+  $at_srcdir/make-mix mmix
+  cleanup="$cleanup mmix"
+fi
+if test ! -f list-mmix; then
+  find mmix -depth -print > list-mmix
+  cleanup="$cleanup list-mmix"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:81: Testing cpio new portable format with longer file names'
+echo 81 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cat list-mmix | cpio -o -H newc > archive
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-long.m4:92: Testing cpio new portable format with longer file names'
+echo 92 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idum -H newc < ../archive
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match -size-match \
+  -contents-match -mtime-match -ignore-dot-mtime < list-mmix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s42)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 42"
+       ;;
+  esac
+  at_test_count=42
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup archive unmix stdout stderr
+  fi
+fi
+
+# A few FIXME remain in c-owner.m4.
+# Ownership tests in cpio.				-*- shell-script -*-
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c43(
+
+rm -rf $cleanup unmix stdout stderr
+# Snippet )c43)
+  echo 3 > at-check-line
+  if test -n "$at_verbose"; then
+    echo 'testing if cpio can handle current owner/group'
+    echo $at_n "     $at_c"
+  fi
+  echo $at_n "43. c-owner.m4:3        $at_c"
+  (
+# Snippet (s43(
+
+# The test group starts at `c-owner.m4:3'.  An error occurred while
+# testing if cpio can handle current owner/group.
+
+# FIXME: Why? :-(
+rm -f cpio-crc
+
+cleanup=
+if test ! -d mix; then
+  $at_srcdir/make-mix mix
+  cleanup="$cleanup mix"
+fi
+if test ! -f list-mix; then
+  find mix -depth -print > list-mix
+  cleanup="$cleanup list-mix"
+fi
+if test ! -f cpio-crc; then
+  cat list-mix | cpio -oH crc > cpio-crc 2> /dev/null
+  cleanup="$cleanup cpio-crc"
+fi
+
+mkdir unmix
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-owner.m4:20: Testing if cpio can handle current owner/group'
+echo 20 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumH crc -R $UIDNAME.$GIDNAME < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-owner.m4:30: Testing if cpio can handle current owner/group'
+echo 30 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumH crc --no-preserve-owner < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-owner.m4:40: Testing if cpio can handle current owner/group'
+echo 40 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumH crc -R $XUID.$GID < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+test -n "$at_verbose" \
+  && echo $srcdir'/c-owner.m4:50: Testing if cpio can handle current owner/group'
+echo 50 > at-check-line
+exec 5>&1 6>&2 1>stdout 2>stderr
+cd unmix
+  cpio -idumH crc --no-preserve-owner < ../cpio-crc
+cd ..
+verify -list -match-dir unmix -mode-match -uid-match -gid-match \
+  -size-match -contents-match -mtime-match -ignore-dot-mtime < list-mix
+grep -v ': truncating inode number' stderr \
+| sed 's/^[1-9][0-9]* blocks*/NN blocks/' > stderr2
+mv stderr2 stderr
+
+exec 1>&5 2>&6
+test ! -s stdout || exit 1
+echo $at_n "NN blocks
+$at_c" | $at_diff - stderr || exit 1
+
+# Snippet )s43)
+  )
+  case $? in
+    0) echo ok
+       ;;
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
+	;;
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 43"
+       ;;
+  esac
+  at_test_count=43
+  if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+    rm -rf $cleanup unmix stdout stderr
+  fi
+fi
+
+if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+  rm -rf mix list-mix cpio-def cpio-oldc
 fi
 
 echo
@@ -956,17 +4394,24 @@ echo
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c44(
+
+rm -rf archive file1 file2 stdout stderr
+# Snippet )c44)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing that -- does not stop option decoding'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "10. create.m4:3         $at_c"
+  echo $at_n "44. t-create.m4:3       $at_c"
   (
-# Snippet (s10(
+# Snippet (s44(
 
-# The test group starts at `create.m4:3'.  An error occurred while
+# The test group starts at `t-create.m4:3'.  An error occurred while
 # testing that -- does not stop option decoding.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:11: Testing that -- does not stop option decoding'
 echo 11 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 
@@ -980,37 +4425,39 @@ file2
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s10)
+# Snippet )s44)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 10"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 44"
        ;;
   esac
+  at_test_count=44
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c10(
-
-rm -rf archive file1 file2 stdout stderr
-# Snippet )c10)
+    rm -rf archive file1 file2 stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c45(
+
+rm -rf file stdout stderr
+# Snippet )c45)
+  echo 14 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if an interrupted write gets restarted on POSIX systems'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "11. create.m4:14        $at_c"
+  echo $at_n "45. t-create.m4:14      $at_c"
   (
-# Snippet (s11(
+# Snippet (s45(
 
-# The test group starts at `create.m4:14'.  An error occurred while
+# The test group starts at `t-create.m4:14'.  An error occurred while
 # testing if an interrupted write gets restarted on POSIX systems.
 
 # Skip test when fork is not available, like on DOSish systems.
@@ -1021,6 +4468,8 @@ test -z "$ComSpec" || exit 77
 
 genfile -l 100000 > file
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:36: Testing if an interrupted write gets restarted on POSIX systems'
 echo 36 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 ( tar cf - file &
@@ -1039,39 +4488,43 @@ exec 1>&5 2>&6
 test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s11)
+# Snippet )s45)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 11"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 45"
        ;;
   esac
+  at_test_count=45
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c11(
-
-rm -rf file stdout stderr
-# Snippet )c11)
+    rm -rf file stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c46(
+
+rm -rf archive directory stdout stderr
+# Snippet )c46)
+  echo 40 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if old archives receive directories'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "12. create.m4:40        $at_c"
+  echo $at_n "46. t-create.m4:40      $at_c"
   (
-# Snippet (s12(
+# Snippet (s46(
 
-# The test group starts at `create.m4:40'.  An error occurred while
+# The test group starts at `t-create.m4:40'.  An error occurred while
 # testing if old archives receive directories.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:52: Testing if old archives receive directories'
 echo 52 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1086,37 +4539,39 @@ directory/
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s12)
+# Snippet )s46)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 12"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 46"
        ;;
   esac
+  at_test_count=46
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c12(
-
-rm -rf archive directory stdout stderr
-# Snippet )c12)
+    rm -rf archive directory stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c47(
+
+rm -rf archive directory file stdout stderr
+# Snippet )c47)
+  echo 56 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if --ignore-failed-read handles unreadable directories'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "13. create.m4:56        $at_c"
+  echo $at_n "47. t-create.m4:56      $at_c"
   (
-# Snippet (s13(
+# Snippet (s47(
 
-# The test group starts at `create.m4:56'.  An error occurred while
+# The test group starts at `t-create.m4:56'.  An error occurred while
 # testing if --ignore-failed-read handles unreadable directories.
 
 ## Skip test when root.  These few lines (which warranted a few emails! :-)
@@ -1149,6 +4604,8 @@ touch file
 mkdir directory
 touch directory/file
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:98: Testing if --ignore-failed-read handles unreadable directories'
 echo 98 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 chmod 000 file
@@ -1163,6 +4620,8 @@ echo $at_n "tar: Cannot add file file: Permission denied
 tar: Processed all files possible, despite earlier errors
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:108: Testing if --ignore-failed-read handles unreadable directories'
 echo 108 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 chmod 000 file
@@ -1176,6 +4635,8 @@ test ! -s stdout || exit 1
 echo $at_n "tar: Cannot add file file: Permission denied
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:119: Testing if --ignore-failed-read handles unreadable directories'
 echo 119 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 chmod 000 directory
@@ -1190,6 +4651,8 @@ echo $at_n "tar: Cannot add directory directory: Permission denied
 tar: Processed all files possible, despite earlier errors
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-create.m4:129: Testing if --ignore-failed-read handles unreadable directories'
 echo 129 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 chmod 000 directory
@@ -1203,41 +4666,45 @@ test ! -s stdout || exit 1
 echo $at_n "tar: Cannot add directory directory: Permission denied
 $at_c" | $at_diff - stderr || exit 1
 
-# Snippet )s13)
+# Snippet )s47)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 13"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 47"
        ;;
   esac
+  at_test_count=47
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c13(
-
-rm -rf archive directory file stdout stderr
-# Snippet )c13)
+    rm -rf archive directory file stdout stderr
   fi
 fi
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c48(
+
+rm -rf archive directory stdout stderr
+# Snippet )c48)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if diagnostic is suppressed when directory already exists'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "14. extract.m4:3        $at_c"
+  echo $at_n "48. t-extract.m4:3      $at_c"
   (
-# Snippet (s14(
+# Snippet (s48(
 
-# The test group starts at `extract.m4:3'.  An error occurred while
+# The test group starts at `t-extract.m4:3'.  An error occurred while
 # testing if diagnostic is suppressed when directory already exists.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:13: Testing if diagnostic is suppressed when directory already exists'
 echo 13 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1251,43 +4718,47 @@ exec 1>&5 2>&6
 test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s14)
+# Snippet )s48)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 14"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 48"
        ;;
   esac
+  at_test_count=48
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c14(
-
-rm -rf archive directory stdout stderr
-# Snippet )c14)
+    rm -rf archive directory stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c49(
+
+rm -rf archive file link stdout stderr
+# Snippet )c49)
+  echo 17 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if symlinks can be extracted over existing files'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "15. extract.m4:17       $at_c"
+  echo $at_n "49. t-extract.m4:17     $at_c"
   (
-# Snippet (s15(
+# Snippet (s49(
 
-# The test group starts at `extract.m4:17'.  An error occurred while
+# The test group starts at `t-extract.m4:17'.  An error occurred while
 # testing if symlinks can be extracted over existing files.
 
 # Skip test when file links are not available, like on DOSish systems.
 test -z "$COMSPEC" || exit 77
 test -z "$ComSpec" || exit 77
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:33: Testing if symlinks can be extracted over existing files'
 echo 33 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1303,39 +4774,43 @@ exec 1>&5 2>&6
 test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s15)
+# Snippet )s49)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 15"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 49"
        ;;
   esac
+  at_test_count=49
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c15(
-
-rm -rf archive file link stdout stderr
-# Snippet )c15)
+    rm -rf archive file link stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c50(
+
+rm -rf archive directory stdout stderr
+# Snippet )c50)
+  echo 37 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if paths going up and down avoid extraction loops'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "16. extract.m4:37       $at_c"
+  echo $at_n "50. t-extract.m4:37     $at_c"
   (
-# Snippet (s16(
+# Snippet (s50(
 
-# The test group starts at `extract.m4:37'.  An error occurred while
+# The test group starts at `t-extract.m4:37'.  An error occurred while
 # testing if paths going up and down avoid extraction loops.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:45: Testing if paths going up and down avoid extraction loops'
 echo 45 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 mkdir directory
@@ -1347,6 +4822,8 @@ echo $at_n "directory/../directory/
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:49: Testing if paths going up and down avoid extraction loops'
 echo 49 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar xfv archive
@@ -1356,37 +4833,39 @@ echo $at_n "directory/../directory/
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s16)
+# Snippet )s50)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 16"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 50"
        ;;
   esac
+  at_test_count=50
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c16(
-
-rm -rf archive directory stdout stderr
-# Snippet )c16)
+    rm -rf archive directory stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c51(
+
+rm -rf archive directory stdout stderr
+# Snippet )c51)
+  echo 53 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing that intermediate directories does not give protection errors'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "17. extract.m4:53       $at_c"
+  echo $at_n "51. t-extract.m4:53     $at_c"
   (
-# Snippet (s17(
+# Snippet (s51(
 
-# The test group starts at `extract.m4:53'.  An error occurred while
+# The test group starts at `t-extract.m4:53'.  An error occurred while
 # testing that intermediate directories does not give protection errors.
 
 # While creating intermediate directories, there was a protection error
@@ -1394,6 +4873,8 @@ if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
 
 mkdir directory
 echo x > directory/file
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:61: Testing that intermediate directories does not give protection errors'
 echo 61 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar cfP archive `pwd`/directory/file
@@ -1403,6 +4884,8 @@ test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
 rm -rf directory
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:64: Testing that intermediate directories does not give protection errors'
 echo 64 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar xfP archive `pwd`/directory/file
@@ -1411,39 +4894,43 @@ exec 1>&5 2>&6
 test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s17)
+# Snippet )s51)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 17"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 51"
        ;;
   esac
+  at_test_count=51
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c17(
-
-rm -rf archive directory stdout stderr
-# Snippet )c17)
+    rm -rf archive directory stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c52(
+
+rm -rf archive contents stdout stderr
+# Snippet )c52)
+  echo 68 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if --recursive-unlink works as expected'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "18. extract.m4:68       $at_c"
+  echo $at_n "52. t-extract.m4:68     $at_c"
   (
-# Snippet (s18(
+# Snippet (s52(
 
-# The test group starts at `extract.m4:68'.  An error occurred while
+# The test group starts at `t-extract.m4:68'.  An error occurred while
 # testing if --recursive-unlink works as expected.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-extract.m4:83: Testing if --recursive-unlink works as expected'
 echo 83 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1461,41 +4948,45 @@ echo $at_n "OK
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s18)
+# Snippet )s52)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 18"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 52"
        ;;
   esac
+  at_test_count=52
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c18(
-
-rm -rf archive contents stdout stderr
-# Snippet )c18)
+    rm -rf archive contents stdout stderr
   fi
 fi
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c53(
+
+rm -rf archive test-directory stdout stderr
+# Snippet )c53)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if exclude correctly checks the last occurrence of the string'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "19. exclude.m4:3        $at_c"
+  echo $at_n "53. t-exclude.m4:3      $at_c"
   (
-# Snippet (s19(
+# Snippet (s53(
 
-# The test group starts at `exclude.m4:3'.  An error occurred while
+# The test group starts at `t-exclude.m4:3'.  An error occurred while
 # testing if exclude correctly checks the last occurrence of the string.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-exclude.m4:11: Testing if exclude correctly checks the last occurrence of the string'
 echo 11 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 mkdir test-directory
@@ -1508,41 +4999,45 @@ echo $at_n "test-directory/
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s19)
+# Snippet )s53)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 19"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 53"
        ;;
   esac
+  at_test_count=53
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c19(
-
-rm -rf archive test-directory stdout stderr
-# Snippet )c19)
+    rm -rf archive test-directory stdout stderr
   fi
 fi
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c54(
+
+rm -rf archive file1 file2 stdout stderr
+# Snippet )c54)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if append works'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "20. append.m4:3         $at_c"
+  echo $at_n "54. t-append.m4:3       $at_c"
   (
-# Snippet (s20(
+# Snippet (s54(
 
-# The test group starts at `append.m4:3'.  An error occurred while
+# The test group starts at `t-append.m4:3'.  An error occurred while
 # testing if append works.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-append.m4:17: Testing if append works'
 echo 17 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1559,41 +5054,46 @@ file2
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s20)
+# Snippet )s54)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 20"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 54"
        ;;
   esac
+  at_test_count=54
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c20(
-
-rm -rf archive file1 file2 stdout stderr
-# Snippet )c20)
+    rm -rf archive file1 file2 stdout stderr
   fi
 fi
 
+# One FIXME remains in t-delete.m4.
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c55(
+
+rm -rf archive file1 file2 stdout stderr
+# Snippet )c55)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if deleting a member after a big one leaves a good archive'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "21. delete.m4:3         $at_c"
+  echo $at_n "55. t-delete.m4:3       $at_c"
   (
-# Snippet (s21(
+# Snippet (s55(
 
-# The test group starts at `delete.m4:3'.  An error occurred while
+# The test group starts at `t-delete.m4:3'.  An error occurred while
 # testing if deleting a member after a big one leaves a good archive.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-delete.m4:16: Testing if deleting a member after a big one leaves a good archive'
 echo 16 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1609,39 +5109,43 @@ echo $at_n "file1
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s21)
+# Snippet )s55)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 21"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 55"
        ;;
   esac
+  at_test_count=55
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c21(
-
-rm -rf archive file1 file2 stdout stderr
-# Snippet )c21)
+    rm -rf archive file1 file2 stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c56(
+
+rm -rf archive archive2 1 2 3 stdout stderr
+# Snippet )c56)
+  echo 20 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if deleting a member with the archive from stdin works correctly'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "22. delete.m4:20        $at_c"
+  echo $at_n "56. t-delete.m4:20      $at_c"
   (
-# Snippet (s22(
+# Snippet (s56(
 
-# The test group starts at `delete.m4:20'.  An error occurred while
+# The test group starts at `t-delete.m4:20'.  An error occurred while
 # testing if deleting a member with the archive from stdin works correctly.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-delete.m4:36: Testing if deleting a member with the archive from stdin works correctly'
 echo 36 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1660,49 +5164,41 @@ echo $at_n "1
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-echo 41 > at-check-line
-exec 5>&1 6>&2 1>stdout 2>stderr
-tar tf archive2
-test $? = 0 || exit 1
-exec 1>&5 2>&6
-echo $at_n "1
-3
-$at_c" | $at_diff - stdout || exit 1
-test ! -s stderr || exit 1
-
-# Snippet )s22)
+# Snippet )s56)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 22"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 56"
        ;;
   esac
+  at_test_count=56
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c22(
-
-rm -rf archive archive2 1 2 3 stdout stderr
-# Snippet )c22)
+    rm -rf archive archive2 1 2 3 stdout stderr
   fi
 fi
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c57(
+
+rm -rf archive directory stdout stderr
+# Snippet )c57)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if directories older than the listed entry are processed'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "23. incremen.m4:3       $at_c"
+  echo $at_n "57. t-incremen.m4:3     $at_c"
   (
-# Snippet (s23(
+# Snippet (s57(
 
-# The test group starts at `incremen.m4:3'.  An error occurred while
+# The test group starts at `t-incremen.m4:3'.  An error occurred while
 # testing if directories older than the listed entry are processed.
 
 # Cover for the DOS 2-seconds granularity in file timestamps.
@@ -1711,6 +5207,8 @@ mkdir directory
 touch directory/file
 sleep 2
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-incremen.m4:15: Testing if directories older than the listed entry are processed'
 echo 15 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar cfv archive --listed=list directory
@@ -1724,6 +5222,8 @@ test ! -s stderr || exit 1
 sleep 3
 touch directory/file
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-incremen.m4:23: Testing if directories older than the listed entry are processed'
 echo 23 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar cfv archive --listed=list directory
@@ -1734,39 +5234,43 @@ directory/file
 $at_c" | $at_diff - stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s23)
+# Snippet )s57)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 23"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 57"
        ;;
   esac
+  at_test_count=57
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c23(
-
-rm -rf archive directory stdout stderr
-# Snippet )c23)
+    rm -rf archive directory stdout stderr
   fi
 fi
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c58(
+
+rm -rf archiv-1 archiv-2 before after stdout stderr
+# Snippet )c58)
+  echo 27 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if existing directories are incrementally emptied at restore time'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "24. incremen.m4:27      $at_c"
+  echo $at_n "58. t-incremen.m4:27    $at_c"
   (
-# Snippet (s24(
+# Snippet (s58(
 
-# The test group starts at `incremen.m4:27'.  An error occurred while
+# The test group starts at `t-incremen.m4:27'.  An error occurred while
 # testing if existing directories are incrementally emptied at restore time.
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-incremen.m4:55: Testing if existing directories are incrementally emptied at restore time'
 echo 55 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1799,45 +5303,49 @@ exec 1>&5 2>&6
 test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
-# Snippet )s24)
+# Snippet )s58)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 24"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 58"
        ;;
   esac
+  at_test_count=58
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c24(
-
-rm -rf archiv-1 archiv-2 before after stdout stderr
-# Snippet )c24)
+    rm -rf archiv-1 archiv-2 before after stdout stderr
   fi
 fi
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c59(
+
+rm -rf stdout stderr
+# Snippet )c59)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if tar detects that its gzip child failed'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "25. gzip.m4:3           $at_c"
+  echo $at_n "59. t-gzip.m4:3         $at_c"
   (
-# Snippet (s25(
+# Snippet (s59(
 
-# The test group starts at `gzip.m4:3'.  An error occurred while
+# The test group starts at `t-gzip.m4:3'.  An error occurred while
 # testing if tar detects that its gzip child failed.
 
 # Skip test when /dev/null is not available.
 # Hmph!  Seems it was only for DOS, where DJGPP now supports it.
 #test -r /dev/null && exit 77
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-gzip.m4:15: Testing if tar detects that its gzip child failed'
 echo 15 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar xfvz /dev/null
@@ -1850,45 +5358,49 @@ tar: Child returned status 1
 tar: Processed all files possible, despite earlier errors
 $at_c" | $at_diff - stderr || exit 1
 
-# Snippet )s25)
+# Snippet )s59)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 25"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 59"
        ;;
   esac
+  at_test_count=59
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c25(
-
-rm -rf stdout stderr
-# Snippet )c25)
+    rm -rf stdout stderr
   fi
 fi
 
 #							-*- shell-script -*-
 
 if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
+# Snippet (c60(
+
+rm -rf archive stdout stderr
+# Snippet )c60)
+  echo 3 > at-check-line
   if test -n "$at_verbose"; then
     echo 'testing if volume labels are checked on read by fnmatch'
     echo $at_n "     $at_c"
   fi
-  echo $at_n "26. volume.m4:3         $at_c"
+  echo $at_n "60. t-volume.m4:3       $at_c"
   (
-# Snippet (s26(
+# Snippet (s60(
 
-# The test group starts at `volume.m4:3'.  An error occurred while
+# The test group starts at `t-volume.m4:3'.  An error occurred while
 # testing if volume labels are checked on read by fnmatch.
 
 # Skip test when /dev/null is not available.
 # Hmph!  Seems it was only for DOS, where DJGPP now supports it.
 test -r /dev/null || exit 77
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-volume.m4:17: Testing if volume labels are checked on read by fnmatch'
 echo 17 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 set -e
@@ -1902,6 +5414,8 @@ exec 1>&5 2>&6
 test ! -s stdout || exit 1
 test ! -s stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-volume.m4:22: Testing if volume labels are checked on read by fnmatch'
 echo 22 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar xfV archive lab
@@ -1912,6 +5426,8 @@ echo $at_n "tar: Volume \`label' does not match \`lab'
 tar: Error is not recoverable: exiting now
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-volume.m4:27: Testing if volume labels are checked on read by fnmatch'
 echo 27 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar xfV archive bel
@@ -1922,6 +5438,8 @@ echo $at_n "tar: Volume \`label' does not match \`bel'
 tar: Error is not recoverable: exiting now
 $at_c" | $at_diff - stderr || exit 1
 
+test -n "$at_verbose" \
+  && echo $srcdir'/t-volume.m4:32: Testing if volume labels are checked on read by fnmatch'
 echo 32 > at-check-line
 exec 5>&1 6>&2 1>stdout 2>stderr
 tar xfV archive babel
@@ -1932,49 +5450,60 @@ echo $at_n "tar: Volume \`label' does not match \`babel'
 tar: Error is not recoverable: exiting now
 $at_c" | $at_diff - stderr || exit 1
 
-# Snippet )s26)
+# Snippet )s60)
   )
   case $? in
     0) echo ok
-       at_test_count=`expr $at_test_count + 1`
        ;;
-    77) echo ignored
+    77) echo "ignored near line `cat at-check-line`"
+        at_ignore_count=`expr $at_ignore_count + 1`
 	;;
-    *) echo "FAILED before line `cat at-check-line`"
-       at_test_count=`expr $at_test_count + 1`
-       at_failed_list="$at_failed_list 26"
+    *) echo "FAILED near line `cat at-check-line`"
+       at_failed_list="$at_failed_list 60"
        ;;
   esac
+  at_test_count=60
   if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
-# Snippet (c26(
-
-rm -rf archive stdout stderr
-# Snippet )c26)
+    rm -rf archive stdout stderr
   fi
 fi
+
+echo
+
+# End of test suite.
 
 # Wrap up the testing suite with summary statistics.
 
 rm -f at-check-line
 at_fail_count=0
 if test -z "$at_failed_list"; then
-  at_banner="All $at_test_count tests were successful"
+  if test "$at_ignore_count" = 0; then
+    at_banner="All $at_test_count tests were successful"
+  else
+    at_banner="All $at_test_count tests were successful ($at_ignore_count ignored)"
+  fi
 else
+  echo $at_n "Writing debugging scripts (FAIL-*.sh)...$at_c"
   for at_group in $at_failed_list; do
-    at_fail_count=`expr $at_fail_count + 1`
+    echo $at_n " $at_group$at_c"
     ( echo '#!/bin/sh'
-      sed -n "/^# Snippet ((/,/^# Snippet ))/p" atconfig
+      sed -n "/^# Snippet (1/,/^# Snippet )1/p" atconfig
+      test -z "$at_silent" && echo 'at_verbose=1'
+      sed -n "/^# Snippet (2/,/^# Snippet )2/p" atconfig
+      sed -n "/^# Snippet (3/,/^# Snippet )3/p" $0
       sed -n "/^# Snippet (c$at_group(/,/^# Snippet )c$at_group)/p" $0
+      echo 'test -n "$at_verbose" && echo "========== $0 ===================="'
       sed -n "/^# Snippet (s$at_group(/,/^# Snippet )s$at_group)/p" $0
       echo 'exit 0'
     ) | grep -v '^# Snippet' > FAIL-$at_group.sh
     chmod +x FAIL-$at_group.sh
-    echo "FAIL-$at_group.sh:1: debugging script"
+    at_fail_count=`expr $at_fail_count + 1`
   done
+  echo '... done'
   if test -n "$at_stop_on_error"; then
-    at_banner="ERROR: One test failed, inhibiting subsequent tests"
+    at_banner="ERROR: One of the tests failed, inhibiting subsequent tests"
   else
-    at_banner="ERROR: $at_fail_count of $at_test_count tests failed"
+    at_banner="ERROR: Suite unsuccessful, $at_fail_count of $at_test_count tests failed"
   fi
 fi
 at_dashes=`echo $at_banner | sed s/./=/g`
@@ -1982,5 +5511,16 @@ echo "$at_dashes"
 echo "$at_banner"
 echo "$at_dashes"
 
-test -z "$at_failed_list" || exit 1
+if test -n "$at_failed_list"; then
+  if test -z "$at_silent"; then
+    echo
+    echo "Now, failed tests will be executed again, with more details..."
+    echo
+    for at_group in $at_failed_list; do
+      ./FAIL-$at_group.sh
+    done
+  fi
+  exit 1
+fi
+
 exit 0
