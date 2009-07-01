@@ -11,6 +11,8 @@
 #include	"msd_dir.h"
 #ifndef __TURBOC__
 #include	<malloc.h>
+#else
+#include	<stdlib.h>
 #endif
 #include	<string.h>
 #include	<dos.h>
@@ -115,14 +117,14 @@ closedir(dirp)
 	free((char *) dirp);
 }
 
-struct direct	*
+struct dirent	*
 readdir(dirp)
 	DIR	*dirp;
 {
-	static	struct direct	dp;
+	static	struct dirent	dp;
 	
 	if (dirp->dd_cp == (struct _dircontents *) NULL)
-		return (struct direct *) NULL;
+		return (struct dirent *) NULL;
 	dp.d_namlen = dp.d_reclen =
 		strlen(strcpy(dp.d_name, dirp->dd_cp->_d_entry));
 	strlwr(dp.d_name);		/* JF */

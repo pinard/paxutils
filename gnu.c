@@ -1,74 +1,78 @@
+/* GNU dump extensions to tar.
+   Copyright (C) 1988, 1992 Free Software Foundation
+
+This file is part of GNU Tar.
+
+GNU Tar is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+GNU Tar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU Tar; see the file COPYING.  If not, write to
+the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <ctype.h>
 #include <errno.h>
-
-#ifdef BSD42
-#include <sys/dir.h>
-#else
-#ifdef __MSDOS__
-#include "msd_dir.h"
-#else
-#ifdef USG
-#ifdef NDIR
-#include <ndir.h>
-#else
-#include <dirent.h>
+#ifndef STDC_HEADERS
+extern int errno;
 #endif
-#ifndef DIRECT
-#define direct dirent
-#endif
-#define DP_NAMELEN(x) strlen((x)->d_name)
-#else
-/*
- * FIXME: On other systems there is no standard place for the header file
- * for the portable directory access routines.  Change the #include line
- * below to bring it in from wherever it is.
- */
-#include "ndir.h"
-#endif
-#endif
-#endif
-
-#ifndef DP_NAMELEN
-#define DP_NAMELEN(x)	(x)->d_namlen
-#endif
-
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
-#endif
-
-/*
- * If there are no symbolic links, there is no lstat().  Use stat().
- */
-#ifndef S_IFLNK
-#define lstat stat
-#endif
-
-#ifdef __STDC__
-#define VOIDSTAR void *
-#else
-#define VOIDSTAR char *
-#endif
-extern VOIDSTAR ck_malloc();
-extern VOIDSTAR ck_realloc();
-
-#ifndef S_IFLNK
-#define lstat stat
-#endif
-
-extern VOIDSTAR malloc();
+#include <time.h>
+time_t time();
 
 #include "tar.h"
+#include "port.h"
+
+#if defined(_POSIX_VERSION) || defined(DIRENT)
+#include <dirent.h>
+#ifdef direct
+#undef direct
+#endif /* direct */
+#define direct dirent
+#define DP_NAMELEN(x) strlen((x)->d_name)
+#endif /* _POSIX_VERSION or DIRENT */
+#if !defined(_POSIX_VERSION) && !defined(DIRENT) && defined(BSD42)
+#include <sys/dir.h>
+#define DP_NAMELEN(x)	(x)->d_namlen
+#endif /* not _POSIX_VERSION and BSD42 */
+#ifdef __MSDOS__
+#include "msd_dir.h"
+#define DP_NAMELEN(x)	(x)->d_namlen
+#define direct dirent
+#endif
+#if defined(USG) && !defined(_POSIX_VERSION) && !defined(DIRENT)
+#include <ndir.h>
+#define DP_NAMELEN(x) strlen((x)->d_name)
+#endif /* USG and not _POSIX_VERSION and not DIRENT */
+
+#ifndef S_ISLNK
+#define lstat stat
+#endif
 
 extern time_t new_time;
 extern FILE *msg_file;
 
-extern VOIDSTAR init_buffer();
+void addname();
+int check_exclude();
+extern PTR ck_malloc();
+extern PTR ck_realloc();
+int confirm();
+extern PTR init_buffer();
 extern char *get_buffer();
+int is_dot_or_dotdot();
 extern void add_buffer();
 extern void flush_buffer();
+void name_gather();
+int recursively_delete();
+void skip_file();
+char *un_quote_string();
 
 extern char *new_name();
 
@@ -89,6 +93,8 @@ void
 add_dir(name,dev,ino,text)
 char *name;
 char *text;
+dev_t dev;
+ino_t ino;
 {
 	struct dirname *dp;
 
@@ -113,15 +119,14 @@ read_dir_file()
 	char *strp;
 	FILE *fp;
 	char buf[512];
-	extern int errno;
-	static char path[MAXPATHLEN];
+	static char *path = 0;
 
+	if (path == 0)
+		path = ck_malloc(PATH_MAX);
 	time(&this_time);
 	if(gnu_dumpfile[0]!='/') {
-#if defined(MSDOS) || defined(USG)
-			int getcwd();
-
-			if(!getcwd(path,MAXPATHLEN))
+#if defined(__MSDOS__) || defined(USG) || defined(_POSIX_VERSION)
+			if(!getcwd(path,PATH_MAX))
 				msg("Couldn't get current directory.");
 				exit(EX_SYSTEM);
 #else
@@ -211,6 +216,7 @@ char *name;
 
 /* Collect all the names from argv[] (or whatever), then expand them into
    a directory tree, and put all the directories at the beginning. */
+void
 collect_and_sort_names()
 {
 	struct name *n,*n_next;
@@ -239,12 +245,13 @@ collect_and_sort_names()
 #ifdef AIX
 		if (statx (n->name, &statbuf, STATSIZE, STX_HIDDEN|STX_LINK))
 #else
-		if(lstat(n->name,&statbuf)<0) {
+		if(lstat(n->name,&statbuf)<0)
 #endif /* AIX */
+		{
 			msg_perror("can't stat %s",n->name);
 			continue;
 		}
-		if((statbuf.st_mode&S_IFMT)==S_IFDIR) {
+		if(S_ISDIR(statbuf.st_mode)) {
 			n->found++;
 			add_dir_name(n->name,statbuf.st_dev);
 		}
@@ -253,13 +260,13 @@ collect_and_sort_names()
 	num_names=0;
 	for(n=namelist;n;n=n->next)
 		num_names++;
-	namelist=(struct name *)merge_sort((VOIDSTAR)namelist,num_names,(char *)(&(namelist->next))-(char *)namelist,name_cmp);
+	namelist=(struct name *)merge_sort((PTR)namelist,num_names,(char *)(&(namelist->next))-(char *)namelist,name_cmp);
 
 	for(n=namelist;n;n=n->next) {
 		n->found=0;
 	}
-	/* if(gnu_dumpfile)
-		write_dir_file(gnu_dumpfile); */
+	if(gnu_dumpfile)
+		write_dir_file();
 }
 
 int
@@ -279,12 +286,13 @@ struct name *n1,*n2;
 
 int
 dirent_cmp(p1,p2)
-char **p1,**p2;
+const PTR p1;
+const PTR p2;
 {
 	char *frst,*scnd;
 
-	frst= (*p1)+1;
-	scnd= (*p2)+1;
+	frst= (*(char **)p1)+1;
+	scnd= (*(char **)p2)+1;
 
 	return strcmp(frst,scnd);
 }
@@ -300,10 +308,10 @@ int device;
 	char *namebuf;
 	int bufsiz;
 	int len;
-	VOIDSTAR the_buffer;
+	PTR the_buffer;
 	char *buf;
-	int n_strs;
-	int n_size;
+	size_t n_strs;
+/*	int n_size;*/
 	char *p_buf;
 	char **vec,**p_vec;
 
@@ -318,7 +326,7 @@ int device;
 			msg_perror("can't open directory %s",p);
 		else
 			msg("error opening directory %s",p);
-		new_buf="\0\0\0\0";
+		new_buf=NULL;
 	} else {
 		struct dirname *dp;
 		int all_children;
@@ -363,7 +371,7 @@ int device;
 				d->d_namlen++;
 			}	
 #endif /* AIX */
-			else if((hs.st_mode&S_IFMT)==S_IFDIR) {
+			else if(S_ISDIR(hs.st_mode)) {
 				if(dp=get_dir(namebuf)) {
 					if(   dp->dev!=hs.st_dev
  					   || dp->ino!=hs.st_ino) {
@@ -402,7 +410,7 @@ int device;
 		buf=get_buffer(the_buffer);
 		if(buf[0]=='\0') {
 			flush_buffer(the_buffer);
-			new_buf="\0\0\0\0";
+			new_buf=NULL;
 		} else {
 			n_strs=0;
 			for(p_buf=buf;*p_buf;) {
@@ -416,7 +424,7 @@ int device;
 			for(p_vec=vec,p_buf=buf;*p_buf;p_buf+=strlen(p_buf)+1)
 				*p_vec++= p_buf;
 			*p_vec= 0;
-			qsort((VOIDSTAR)vec,n_strs,sizeof(char *),dirent_cmp);
+			qsort((PTR)vec,n_strs,sizeof(char *),dirent_cmp);
 			new_buf=(char *)malloc(p_buf-buf+2);
 			for(p_vec=vec,p_buf=new_buf;*p_vec;p_vec++) {
 				char *p_tmp;
@@ -448,11 +456,11 @@ int device;
 	register int len;
 	int sublen;
 
-	VOIDSTAR the_buffer;
+/*	PTR the_buffer;*/
 
-	char *buf;
-	char **vec,**p_vec;
-	int n_strs,n_size;
+/*	char *buf;*/
+/*	char **vec,**p_vec;*/
+/*	int n_strs,n_size;*/
 
 	struct name *n;
 
@@ -462,36 +470,40 @@ int device;
 
 	for(n=namelist;n;n=n->next) {
 		if(!strcmp(n->name,p)) {
-			n->dir_contents = new_buf;
+		  	n->dir_contents = new_buf ? new_buf : "\0\0\0\0";
 			break;
 		}
 	}
 
-	len=strlen(p);
-	buflen= NAMSIZ<=len ? len + NAMSIZ : NAMSIZ;
-	namebuf= ck_malloc(buflen+1);
+	if (new_buf)
+	  {
+	    len=strlen(p);
+	    buflen= NAMSIZ<=len ? len + NAMSIZ : NAMSIZ;
+	    namebuf= ck_malloc(buflen+1);
 
-	(void)strcpy(namebuf,p);
-	if(namebuf[len-1]!='/') {
-		namebuf[len++]='/';
-		namebuf[len]='\0';
-	}
-	for(p_buf=new_buf;*p_buf;p_buf+=sublen+1) {
-		sublen=strlen(p_buf);
-		if(*p_buf=='D') {
-			if(len+sublen>=buflen) {
-				buflen+=NAMSIZ;
-				namebuf= ck_realloc(namebuf,buflen+1);
-			}
-			(void)strcpy(namebuf+len,p_buf+1);
-			addname(namebuf);
-			add_dir_name(namebuf,device);
+	    (void)strcpy(namebuf,p);
+	    if(namebuf[len-1]!='/') {
+	      namebuf[len++]='/';
+	      namebuf[len]='\0';
+	    }
+	    for(p_buf=new_buf;*p_buf;p_buf+=sublen+1) {
+	      sublen=strlen(p_buf);
+	      if(*p_buf=='D') {
+		if(len+sublen>=buflen) {
+		  buflen+=NAMSIZ;
+		  namebuf= ck_realloc(namebuf,buflen+1);
 		}
-	}
-	free(namebuf);
+		(void)strcpy(namebuf+len,p_buf+1);
+		addname(namebuf);
+		add_dir_name(namebuf,device);
+	      }
+	    }
+	    free(namebuf);
+	  }
 }
 
 /* Returns non-zero if p is . or ..   This could be a macro for speed. */
+int
 is_dot_or_dotdot(p)
 char *p;
 {
@@ -503,6 +515,7 @@ char *p;
 
 
 
+void
 gnu_restore(skipcrud)
 int skipcrud;
 {
@@ -511,7 +524,7 @@ int skipcrud;
 
 	char *archive_dir;
 /*	int archive_dir_length; */
-	VOIDSTAR the_buffer;
+	PTR the_buffer;
 	char	*p;
 	DIR	*dirp;
 	struct direct *d;
@@ -521,7 +534,7 @@ int skipcrud;
 	char *from,*to;
 	extern union record *head;
 
-	dirp=opendir(skipcrud+head->header.name);
+	dirp=opendir(skipcrud+current_file_name);
 
 	if(!dirp) {
 			/* The directory doesn't exist now.  It'll be created.
@@ -558,7 +571,7 @@ int skipcrud;
 		copied=endofrecs()->charptr - from;
 		if(copied>size)
 			copied=size;
-		bcopy((VOIDSTAR)from,(VOIDSTAR)to,(int)copied);
+		bcopy((PTR)from,(PTR)to,(int)copied);
 		to+=copied;
 		userec((union record *)(from+copied-1));
 	}
@@ -570,7 +583,7 @@ int skipcrud;
 				break;
 		}
 		if(*arc=='\0') {
-			p=new_name(skipcrud+head->header.name,cur);
+			p=new_name(skipcrud+current_file_name,cur);
 			if(f_confirm && !confirm("delete",p)) {
 				free(p);
 				continue;
@@ -588,6 +601,7 @@ int skipcrud;
 	free(archive_dir);
 }
 
+int
 recursively_delete(path)
 char *path;
 {
@@ -600,7 +614,7 @@ char *path;
 
 	if(lstat(path,&sbuf)<0)
 		return 1;
-	if((sbuf.st_mode &S_IFMT)==S_IFDIR) {
+	if(S_ISDIR(sbuf.st_mode)) {
 
 		/* path_len=strlen(path); */
 		dirp=opendir(path);

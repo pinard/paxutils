@@ -1,31 +1,21 @@
-/*
+/* Declarations for tar archives.
+   Copyright (C) 1988, 1992 Free Software Foundation
 
-	Copyright (C) 1988 Free Software Foundation
+This file is part of GNU Tar.
 
-GNU tar is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY.  No author or distributor accepts responsibility to anyone
-for the consequences of using it or for whether it serves any
-particular purpose or works at all, unless he says so in writing.
-Refer to the GNU tar General Public License for full details.
+GNU Tar is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
-Everyone is granted permission to copy, modify and redistribute GNU tar,
-but only under the conditions described in the GNU tar General Public
-License.  A copy of this license is supposed to have been given to you
-along with GNU tar so you can know your rights and responsibilities.  It
-should be in a file named COPYING.  Among other things, the copyright
-notice and this notice must be preserved on all copies.
+GNU Tar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-In other words, go ahead and share GNU tar, but don't try to stop
-anyone else from sharing it farther.  Help stamp out software hoarding!
-*/
-
-/*
- * Header file for tar (tape archive) program.
- *
- * @(#)tar.h 1.24 87/11/06
- *
- * Created 25 August 1985 by John Gilmore, ihnp4!hoptoad!gnu.
- */
+You should have received a copy of the GNU General Public License
+along with GNU Tar; see the file COPYING.  If not, write to
+the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "testpad.h"
 
@@ -42,10 +32,6 @@ anyone else from sharing it farther.  Help stamp out software hoarding!
  */
 #ifndef TAR_EXTERN
 #define TAR_EXTERN extern
-#endif
-
-#if defined(USG) && !defined(XENIX) && !defined(HAVE_SIZE_T)
-typedef int size_t;
 #endif
 
 /*
@@ -76,7 +62,7 @@ struct sp_array {
 union record {
 	char		charptr[RECORDSIZE];
 	struct header {
-		char	name[NAMSIZ];
+		char	arch_name[NAMSIZ];
 		char	mode[8];
 		char	uid[8];
 		char	gid[8];
@@ -84,7 +70,7 @@ union record {
 		char	mtime[12];
 		char	chksum[8];
 		char	linkflag;
-		char	linkname[NAMSIZ];
+		char	arch_linkname[NAMSIZ];
 		char	magic[8];
 		char	uname[TUNMLEN];
 		char	gname[TGNMLEN];
@@ -136,6 +122,10 @@ union record {
 					   the names of files that were in
 					   the dir at the time the dump
 					   was made */
+#define LF_LONGLINK	'K'		/* Identifies the NEXT file on the tape
+					   as having a long linkname */
+#define LF_LONGNAME	'L'		/* Identifies the NEXT file on the tape
+					   as having a long name. */
 #define LF_MULTIVOL	'M'		/* This is the continuation
 					   of a file that began on another
 					   volume */
@@ -166,15 +156,20 @@ TAR_EXTERN union record	*ar_last;	/* Last+1 record of archive block */
 TAR_EXTERN char		ar_reading;	/* 0 writing, !0 reading archive */
 TAR_EXTERN int		blocking;	/* Size of each block, in records */
 TAR_EXTERN int		blocksize;	/* Size of each block, in bytes */
-TAR_EXTERN char		*ar_file;	/* File containing archive */
 TAR_EXTERN char		*info_script;	/* Script to run at end of each tape change */
 TAR_EXTERN char		*name_file;	/* File containing names to work on */
+TAR_EXTERN char		filename_terminator; /* \n or \0. */
 TAR_EXTERN char		*tar;		/* Name of this program */
 TAR_EXTERN struct sp_array *sparsearray;/* Pointer to the start of the scratch space */
 TAR_EXTERN int		sp_array_size;	/* Initial size of the sparsearray */
 TAR_EXTERN int 		tot_written;    /* Total written to output */
 TAR_EXTERN struct re_pattern_buffer
   			*label_pattern;	/* compiled regex for extract label */
+TAR_EXTERN char    	**ar_files;	/* list of tape drive names */
+TAR_EXTERN int		n_ar_files;	/* number of tape drive names */
+TAR_EXTERN int		cur_ar_file;	/* tape drive currently being used */
+TAR_EXTERN int		ar_files_len;	/* malloced size of ar_files */
+TAR_EXTERN char		*current_file_name, *current_link_name;
 
 /*
  * Flags from the command line
@@ -189,7 +184,7 @@ TAR_EXTERN int cmd_mode;
 #define CMD_UPDATE	6		/* -u */
 #define CMD_EXTRACT	7		/* -x */
 #define CMD_DELETE	8		/* -D */
-#define CMD_VERSION	9		/* +version */
+#define CMD_VERSION	9		/* --version */
 
 					/* -[0-9][lmh] */
 			/* CMD_CAT	   -A */
@@ -198,7 +193,9 @@ TAR_EXTERN int	f_reblock;		/* -B */
 			/* CMD_CREATE	   -c */
 					/* -C */
 			/* CMD_DIFF	   -d */
-/* TAR_EXTERN char	f_dironly;	/* -D */
+#if 0
+TAR_EXTERN char	f_dironly;		/* -D */
+#endif
 					/* -f */
 TAR_EXTERN int	f_run_script_at_end;	/* -F */
 TAR_EXTERN int 	f_gnudump;		/* -G */
@@ -229,11 +226,18 @@ TAR_EXTERN int  f_verify;		/* -W */
 TAR_EXTERN int  f_exclude;		/* -X */
 TAR_EXTERN int 	f_compress;		/* -z */
 					/* -Z */
-TAR_EXTERN int	f_do_chown;		/* +do-chown */
-TAR_EXTERN int  f_totals;		/* +totals */
+TAR_EXTERN int	f_do_chown;		/* --do-chown */
+TAR_EXTERN int  f_totals;		/* --totals */
+TAR_EXTERN int	f_remove_files;		/* --remove-files */
+TAR_EXTERN int	f_ignore_failed_read;	/* --ignore-failed-read */
+TAR_EXTERN int	f_checkpoint;		/* --checkpoint */
+TAR_EXTERN int	f_show_omitted_dirs;	/* --show-omitted-dirs */
+TAR_EXTERN char *f_volno_file;		/* --volno-file */
+TAR_EXTERN int	f_force_local;		/* --force-local */
+TAR_EXTERN int	f_atime_preserve;	/* --atime-preserve */
 
 /*
- * We now default to Unix Standard format rather than 4.2BSD tar format.
+ * We default to Unix Standard format rather than 4.2BSD tar format.
  * The code can actually produce all three:
  *	f_standard	ANSI standard
  *	f_oldarch	V7
@@ -281,13 +285,10 @@ void userec();
 union record *endofrecs();
 void anno();
 
-/* Do not prototype these for BSD--see port.c [DOPRNT_MSG].  */
-#if defined(__STDC__) && (!defined(BSD42) || defined(STDC_MSG))
+#if defined (HAVE_VPRINTF) && __STDC__
 void msg(char *, ...);
 void msg_perror(char *, ...);
 #else
 void msg();
 void msg_perror();
 #endif
-/* #define	 annorec(stream, msg)	anno(stream, msg, 0)	/* Cur rec */
-/* #define	annofile(stream, msg)	anno(stream, msg, 1)	/* Saved rec */

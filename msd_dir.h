@@ -15,7 +15,7 @@ typedef int ino_t;
 typedef int dev_t;
 #endif
 
-struct direct {
+struct dirent {
 	ino_t	d_ino;			/* a bit of a farce */
 	int	d_reclen;		/* more farce */
 	int	d_namlen;		/* length of d_name */
@@ -35,7 +35,7 @@ typedef struct _dirdesc {
 } DIR;
 
 extern	DIR		*opendir();
-extern	struct direct	*readdir();
+extern	struct dirent	*readdir();
 extern	void		seekdir();
 extern	long		telldir();
 extern	void		closedir();

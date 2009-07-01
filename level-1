@@ -29,7 +29,7 @@ if [ "$1" != "now" ]; then
    fi
    pausetime=`date | awk '{hr=substr($4,1,2);\\
       mn=substr($4,4,2);\\
-      if((hr+0)<spec)\\
+      if((hr+0)<spec+0)\\
          print 3600*(spec-hr)-60*mn;\\
       else\\
          print 3600*(spec+(24-hr))-60*mn; }' spec=$spec`
@@ -43,8 +43,7 @@ fi
 here=`pwd`
 LOGFILE=log-`date | awk '{print $2 "-" $3 "-" $6}'`-level-1
 HOST=`hostname | sed 's/\..*//'`
-TAR_PART1="/usr/local/bin/tar -c +multi-volume +one-file-system +block=$BLOCKING +sparse"
-#TAR_PART1="/usr/local/bin/tar -c +multi-volume +one-file-system +block=$BLOCKING "
+TAR_PART1="/usr/local/bin/tar -c --multi-volume --one-file-system --block=$BLOCKING --sparse --volno-file=$VOLNO_FILE" --atime-preserve
 
 # Make sure the log file did not already exist.  Create it.
 
@@ -56,6 +55,7 @@ else
 fi
 
 mt -f $TAPE_FILE rewind
+rm $VOLNO_FILE
 
 set $BACKUP_DIRS
 while [ $# -ne 0 ] ; do
@@ -65,8 +65,8 @@ while [ $# -ne 0 ] ; do
    fsname=`echo $1 | sed 's/\//:/g'`
 
 # This filename must be absolute; it is opened on the machine that runs tar.
-   TAR_PART2="+listed=/etc/tar-backup/temp.level-1"
-   TAR_PART3="+label='level 1 backup of $fs on $host at $date' -C $fs ."
+   TAR_PART2="--listed=/etc/tar-backup/temp.level-1"
+   TAR_PART3="--label='level 1 backup of $fs on $host at $date' -C $fs ."
 
    echo Backing up $1 at $date | tee -a $LOGFILE
    echo Last full dump on this filesystem: | tee -a $LOGFILE
@@ -109,8 +109,8 @@ done
 
 if [ x != "x$BACKUP_FILES" ] ; then
    date=`date`
-   TAR_PART2="+listed=/etc/tar-backup/temp.level-1"
-   TAR_PART3="+label='Incremental backup of miscellaneous files at $date'"
+   TAR_PART2="--listed=/etc/tar-backup/temp.level-1"
+   TAR_PART3="--label='Incremental backup of miscellaneous files at $date'"
 
    echo Backing up miscellaneous files at $date | tee -a $LOGFILE
    echo Last full dump of these files: | tee -a $LOGFILE  

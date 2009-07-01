@@ -21,12 +21,6 @@ char copyright[] =
  All rights reserved.\n";
 #endif /* not lint */
 
-#ifndef lint
-static char sccsid[] = "@(#)rmt.c	5.4 (Berkeley) 6/29/88";
-#endif /* not lint */
-
-/* JF added #ifdef about SO_RCVBUF in attempt to make this run on more
-   machines.  Maybe it'll work */
 /*
  * rmt
  */
@@ -34,11 +28,28 @@ static char sccsid[] = "@(#)rmt.c	5.4 (Berkeley) 6/29/88";
 #include <sgtty.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#ifdef HAVE_SYS_GENTAPE_H	/* e.g., ISC UNIX */
+#include <sys/gentape.h>
+#else
 #include <sys/mtio.h>
+#endif
 #include <errno.h>
 
-#if defined (i386) && defined (AIX)
+#if defined (_I386) && defined (_AIX)
 #include <fcntl.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#else
+long	lseek();
+#endif
+
+#ifdef STDC_HEADERS
+#include <string.h>
+#include <stdlib.h>
+#else
+extern char *malloc();
 #endif
 
 int	tape = -1;
@@ -46,22 +57,23 @@ int	tape = -1;
 char	*record;
 int	maxrecsize = -1;
 char	*checkbuf();
+void	getstring();
+void	error();
 
 #define	SSIZE	64
 char	device[SSIZE];
 char	count[SSIZE], mode[SSIZE], pos[SSIZE], op[SSIZE];
 
 extern	errno;
-char	*sys_errlist[];
+extern char	*sys_errlist[];
 char	resp[BUFSIZ];
-
-long	lseek();
 
 FILE	*debug;
 #define	DEBUG(f)	if (debug) fprintf(debug, f)
 #define	DEBUG1(f,a)	if (debug) fprintf(debug, f, a)
 #define	DEBUG2(f,a1,a2)	if (debug) fprintf(debug, f, a1, a2)
 
+int
 main(argc, argv)
 	int argc;
 	char **argv;
@@ -167,6 +179,7 @@ top:
 	case 'I':
 		getstring(op); getstring(count);
 		DEBUG2("rmtd: I %s %s\n", op, count);
+#ifdef MTIOCTOP
 		{ struct mtop mtop;
 		  mtop.mt_op = atoi(op);
 		  mtop.mt_count = atoi(count);
@@ -174,17 +187,21 @@ top:
 			goto ioerror;
 		  rval = mtop.mt_count;
 		}
+#endif
 		goto respond;
 
 	case 'S':		/* status */
 		DEBUG("rmtd: S\n");
-		{ struct mtget mtget;
+		{
+#ifdef MTIOCGET
+		  struct mtget mtget;
 		  if (ioctl(tape, MTIOCGET, (char *)&mtget) < 0)
 			goto ioerror;
 		  rval = sizeof (mtget);
 		  (void) sprintf(resp, "A%d\n", rval);
 		  (void) write(1, resp, strlen(resp));
 		  (void) write(1, (char *)&mtget, sizeof (mtget));
+#endif
 		  goto top;
 		}
 
@@ -202,6 +219,7 @@ ioerror:
 	goto top;
 }
 
+void
 getstring(bp)
 	char *bp;
 {
@@ -222,8 +240,6 @@ checkbuf(record, size)
 	char *record;
 	int size;
 {
-	extern char *malloc();
-
 	if (size <= maxrecsize)
 		return (record);
 	if (record != 0)
@@ -244,6 +260,7 @@ checkbuf(record, size)
 	return (record);
 }
 
+void
 error(num)
 	int num;
 {

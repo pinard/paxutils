@@ -1,11 +1,11 @@
 /* List a tar archive.
-   Copyright (C) 1988 Free Software Foundation
+   Copyright (C) 1988, 1992 Free Software Foundation
 
 This file is part of GNU Tar.
 
 GNU Tar is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Tar is distributed in the hope that it will be useful,
@@ -23,22 +23,24 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
  * Also includes support routines for reading a tar archive.
  *
  * this version written 26 Aug 1985 by John Gilmore (ihnp4!hoptoad!gnu).
- *
- * @(#)list.c 1.31 11/5/87 - gnu
  */
+
 #include <stdio.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#ifndef	MSDOS
-#include <sys/file.h>
-#endif	/* MSDOS */
-
-#ifdef USG
-#include <sys/sysmacros.h>	/* major() and minor() defined here */
+#include <errno.h>
+#ifndef STDC_HEADERS
+extern int errno;
 #endif
+#include <time.h>
 
-char *ctime();				/* From libc.a */
+#ifdef BSD42
+#include <sys/file.h>
+#else
+#ifndef V7
+#include <fcntl.h>
+#endif
+#endif
 
 #define	isodigit(c)	( ((c) >= '0') && ((c) <= '7') )
 
@@ -54,7 +56,18 @@ union record *head;			/* Points to current archive header */
 struct stat hstat;			/* Stat struct corresponding */
 int head_standard;			/* Tape header is in ANSI format */
 
+int check_exclude();
+void close_archive();
+void decode_header();
+int findgid();
+int finduid();
+void name_gather();
+int name_match();
+void names_notfound();
+void open_archive();
 void print_header();
+int read_header();
+void saverec();
 void skip_file();
 void skip_extended_headers();
 
@@ -84,11 +97,10 @@ read_and(do_something)
 		case 1:			/* Valid header */
 			/* We should decode next field (mode) first... */
 			/* Ensure incoming names are null terminated. */
-			head->header.name[NAMSIZ-1] = '\0';
 
-			if (   !name_match(head->header.name)
+			if (   !name_match(current_file_name)
  			    || (f_new_files && hstat.st_mtime<new_time)
- 			    || (f_exclude && check_exclude(head->header.name))) {
+ 			    || (f_exclude && check_exclude(current_file_name))) {
 
 				int isextended = 0;
 
@@ -98,6 +110,9 @@ read_and(do_something)
 					(*do_something)();
 					continue;
 				}
+				if (f_show_omitted_dirs
+				    && head->header.linkflag == LF_DIR)
+				  msg ("Omitting %s\n", current_file_name);
 				/* Skip past it in the archive */
 				if (head->header.isextended)
 					isextended = 1;
@@ -156,6 +171,7 @@ read_and(do_something)
 		break;
 	};
 
+	restore_saved_dir_info ();
 	close_archive();
 	names_notfound();		/* Print names not found */
 }		
@@ -183,13 +199,12 @@ list_archive()
 	if(f_gnudump && head->header.linkflag==LF_DUMPDIR) {
 		size_t	size, written, check;
 		char	*data;
-		extern int errno;
 		extern long save_totsize;
 		extern long save_sizeleft;
 
 		userec(head);
 		if(f_multivol) {
-			save_name = head->header.name;
+			save_name = current_file_name;
 			save_totsize=hstat.st_size;
 		}
 		for(size = hstat.st_size;size>0;size-=written) {
@@ -207,7 +222,7 @@ list_archive()
 			check=fwrite(data,sizeof(char), written, msg_file);
 			userec((union record *)(data+written - 1));
 			if(check!=written) {
-				msg_perror("only wrote %ld of %ld bytes to file %s",check, written,head->header.name);
+				msg_perror("only wrote %ld of %ld bytes to file %s",check, written,current_file_name);
 				skip_file((long)(size)-written);
 				break;
 			}
@@ -249,7 +264,7 @@ list_archive()
 	}
 			
 	if(f_multivol)
-		save_name=head->header.name;
+		save_name=current_file_name;
 	/* Skip to the next header on the archive */
 		
 	skip_file((long) hstat.st_size);
@@ -278,7 +293,13 @@ read_header()
 	register char	*p;
 	register union record *header;
 	long	from_oct();
+	char **longp;
+	char *bp, *data;
+	int size, written;
+	static char *next_long_name, *next_long_link;
 
+      recurse:
+	
 	header = findrec();
 	head = header;		/* This is our current header */
 	if (NULL == header)
@@ -301,17 +322,6 @@ read_header()
 		sum -= 0xFF & header->header.chksum[i];
 	sum += ' '* sizeof header->header.chksum;	
 
-	if (sum == recsum) {
-		/*
-		 * Good record.  Decode file size and return.
-		 */
-		if (header->header.linkflag == LF_LINK)
-			hstat.st_size = 0;	/* Links 0 size on tape */
-		else
-			hstat.st_size = from_oct(1+12, header->header.size);
-		return 1;
-	}
-
 	if (sum == 8*' ') {
 		/*
 		 * This is a zeroed record...whole record is 0's except
@@ -320,7 +330,61 @@ read_header()
 		return 2;
 	}
 
-	return 0;
+	if (sum != recsum) 
+	  return 0;
+	
+	/*
+	 * Good record.  Decode file size and return.
+	 */
+	if (header->header.linkflag == LF_LINK)
+	  hstat.st_size = 0;	/* Links 0 size on tape */
+	else
+	  hstat.st_size = from_oct(1+12, header->header.size);
+	
+	header->header.arch_name[NAMSIZ-1] = '\0';
+	if (header->header.linkflag == LF_LONGNAME
+	    || header->header.linkflag == LF_LONGLINK)
+	  {
+	    longp = ((header->header.linkflag == LF_LONGNAME)
+		     ? &next_long_name
+		     : &next_long_link);
+	    
+	    userec (header);
+	    if (*longp)
+	      free (*longp);
+	    bp = *longp = (char *) ck_malloc (hstat.st_size);
+
+	    for (size = hstat.st_size;
+		 size > 0;
+		 size -= written)
+	      {
+		data = findrec ()->charptr;
+		if (data == NULL)
+		  {
+		    msg ("Unexpected EOF on archive file");
+		    break;
+		  }
+		written = endofrecs () ->charptr - data;
+		if (written > size)
+		  written = size;
+		     
+		bcopy (data, bp, written);
+		bp += written;
+		userec ((union record *) (data + written - 1));
+	      }
+	    goto recurse;
+	  }
+	else
+	  {
+	    current_file_name = (next_long_name
+				 ? next_long_name
+				 : header->header.arch_name);
+	    current_link_name = (next_long_link
+				 ? next_long_link
+				 : header->header.arch_linkname);
+	    next_long_link = next_long_name = 0;
+	    return 1;
+	  }
 }
 
 
@@ -340,14 +404,17 @@ read_header()
  * should decode it first, and other callers should decode it without uid/gid
  * before calling a routine, e.g. print_header, that assumes decoded data.
  */
+void
 decode_header(header, st, stdp, wantug)
 	register union record	*header;
 	register struct stat	*st;
 	int	*stdp;
 	int	wantug;
 {
-
 	long from_oct();
+	char **longp;
+	char *bp, *data;
+	int size, written;
 
 	st->st_mode = from_oct(8,  header->header.mode);
 	st->st_mtime = from_oct(1+12, header->header.mtime);
@@ -364,15 +431,23 @@ decode_header(header, st, stdp, wantug)
 			st->st_uid = from_oct(8,  header->header.uid);
 			st->st_gid = from_oct(8,  header->header.gid);
 #else
-			st->st_uid = finduid(header->header.uname);
-			st->st_gid = findgid(header->header.gname);
+			st->st_uid = 
+			  (*header->header.uname
+			   ? finduid (header->header.uname)
+			   : from_oct (8, header->header.uid));
+			st->st_gid =
+			  (*header->header.gname
+			   ? findgid (header->header.gname)
+			   : from_oct (8, header->header.gid));
 #endif
 		}
+#if defined(S_IFBLK) || defined(S_IFCHR)
 		switch (header->header.linkflag) {
 		case LF_BLK: case LF_CHR:
 		    st->st_rdev = makedev(from_oct(8, header->header.devmajor),
 			 		  from_oct(8, header->header.devminor));
 		}
+#endif
 	} else {
 		/* Old fashioned tar archive */
 		*stdp = 0;
@@ -428,7 +503,9 @@ from_oct(digs, where)
  * <head_standard>, which must be set up in advance.  This is not very clean
  * and should be cleaned up.  FIXME.
  */
-#define	UGSWIDTH	11		/* min width of User, group, size */
+#define	UGSWIDTH	18		/* min width of User, group, size */
+/* UGSWIDTH of 18 means that with user and group names <= 8 chars the columns
+   never shift during the listing.  */
 #define	DATEWIDTH	19		/* Last mod date */
 static int	ugswidth = UGSWIDTH;	/* Max width encountered so far */
 
@@ -440,24 +517,27 @@ print_header()
 	char uform[11], gform[11];	/* These hold formatted ints */
 	char *user, *group;
 	char size[24];		/* Holds a formatted long or maj, min */
-	long longie;		/* To make ctime() call portable */
+	time_t longie;		/* To make ctime() call portable */
 	int	pad;
 	char *name;
 	extern long baserec;
+	static char *longname;
+	static char *longlink;
+	int bumplongs;
 
 	if(f_sayblock)
 		fprintf(msg_file,"rec %10d: ",baserec + (ar_record - ar_block));
 	/* annofile(msg_file, (char *)NULL); */
-
+	
 	if (f_verbose <= 1) {
 		/* Just the fax, mam. */
 		char *name;
 
-		name=quote_copy_string(head->header.name);
+		name=quote_copy_string(current_file_name);
 		if(name==0)
-			name=head->header.name;
+			name=current_file_name;
 		fprintf(msg_file, "%s\n", name);
-		if(name!=head->header.name)
+		if(name!=current_file_name)
 			free(name);
 	} else {
 		/* File type and modes */
@@ -475,12 +555,17 @@ print_header()
 			modes[0]='N';
 			break;
 
+		case LF_LONGNAME:
+		case LF_LONGLINK:
+			msg ("Visible longname error\n");
+			break;
+
 		case LF_SPARSE:
 		case LF_NORMAL:
 		case LF_OLDNORMAL:
 		case LF_LINK:
 				modes[0] = '-'; 
-				if ('/' == head->header.name[strlen(head->header.name)-1])
+				if ('/' == current_file_name[strlen(current_file_name)-1])
 					modes[0] = 'd';
 				break;
 		case LF_DUMPDIR:modes[0] = 'd'; break;
@@ -505,23 +590,27 @@ print_header()
 			user  = head->header.uname;
 		} else {
 			user = uform;
-			(void)sprintf(uform, "%d", (int)hstat.st_uid);
+			(void)sprintf(uform, "%d",
+				      from_oct (8, head->header.uid));
 		}
 		if (*head->header.gname && head_standard) {
 			group = head->header.gname;
 		} else {
 			group = gform;
-			(void)sprintf(gform, "%d", (int)hstat.st_gid);
+			(void)sprintf(gform, "%d",
+				      from_oct (8, head->header.gid));
 		}
 
 		/* Format the file size or major/minor device numbers */
 		switch (head->header.linkflag) {
+#if defined(S_IFBLK) || defined(S_IFCHR)
 		case LF_CHR:
 		case LF_BLK:
 			(void)sprintf(size, "%d,%d",
 					major(hstat.st_rdev),
 					minor(hstat.st_rdev));
 			break;
+#endif
 		case LF_SPARSE:
 			(void)sprintf(size, "%ld",
  				from_oct(1+12, head->header.realsize));
@@ -534,10 +623,10 @@ print_header()
 		pad = strlen(user) + strlen(group) + strlen(size) + 1;
 		if (pad > ugswidth) ugswidth = pad;
 
-		name = quote_copy_string(head->header.name);
+		name = quote_copy_string(current_file_name);
 		if(!name)
-			name=head->header.name;
-		fprintf(msg_file, "%s %s/%s %*s%s %s %s %.*s",
+			name=current_file_name;
+		fprintf(msg_file, "%s %s/%s %*s%s %s %s %s",
 			modes,
 			user,
 			group,
@@ -545,27 +634,26 @@ print_header()
 			"",
 			size,
 			timestamp+4, timestamp+20,
-			sizeof(head->header.name),
 			name);
 
-		if(name!=head->header.name)
+		if(name!=current_file_name)
 			free(name);
 		switch (head->header.linkflag) {
 		case LF_SYMLINK:
-			name=quote_copy_string(head->header.linkname);
+			name=quote_copy_string(current_link_name);
 			if(!name)
-				name=head->header.linkname;
+				name=current_link_name;
 			fprintf(msg_file, " -> %s\n", name);
-			if(name!=head->header.linkname)
+			if(name!=current_link_name)
 				free(name);
 			break;
 
 		case LF_LINK:
-			name=quote_copy_string(head->header.linkname);
+			name=quote_copy_string(current_link_name);
 			if(!name)
-				name=head->header.linkname;
-			fprintf(msg_file, " link to %s\n", head->header.linkname);
-			if(name!=head->header.linkname)
+				name=current_link_name;
+			fprintf(msg_file, " link to %s\n", current_link_name);
+			if(name!=current_link_name)
 				free(name);
 			break;
 

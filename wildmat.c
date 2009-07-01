@@ -5,7 +5,7 @@ This file is part of GNU Tar.
 
 GNU Tar is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Tar is distributed in the hope that it will be useful,
@@ -18,8 +18,6 @@ along with GNU Tar; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /*
- * @(#)wildmat.c 1.3 87/11/06
- *
 From: rs@mirror.TMC.COM (Rich Salz)
 Newsgroups: net.sources
 Subject: Small shell-style pattern matcher
@@ -30,7 +28,7 @@ There have been several regular-expression subroutines and one or two
 filename-globbing routines in mod.sources.  They handle lots of
 complicated patterns.  This small piece of code handles the *?[]\
 wildcard characters the way the standard Unix(tm) shells do, with the
-addition that "[^.....]" is an inverse character class -- it matches
+addition that "[!.....]" is an inverse character class -- it matches
 any character not in the range ".....".  Read the comments for more
 info.
 
@@ -64,6 +62,7 @@ were, I'd use the code I mentioned above.
 #define TRUE		1
 #define FALSE		0
 
+int wildmat();
 
 static int
 Star(s, p)
@@ -104,8 +103,8 @@ wildmat(s, p)
 		/* Trailing star matches everything. */
 		return(*++p ? Star(s, p) : TRUE);
 	    case '[':
-		/* [^....] means inverse character class. */
-		if (reverse = p[1] == '^')
+		/* [!....] means inverse character class. */
+		if (reverse = p[1] == '!')
 		    p++;
 		for (last = 0400, matched = FALSE; *++p && *p != ']'; last = *p)
 		    /* This next line requires a good C compiler. */

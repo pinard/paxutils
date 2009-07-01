@@ -1,17 +1,37 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include "tar.h"
+/* mangle.c -- encode long filenames
+   Copyright (C) 1988, 1992 Free Software Foundation
 
-#ifdef __STDC__
-#define VOIDSTAR void *
-#else
-#define VOIDSTAR char *
-#endif
-extern VOIDSTAR ck_malloc();
-extern VOIDSTAR init_buffer();
+This file is part of GNU Tar.
+
+GNU Tar is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+GNU Tar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU Tar; see the file COPYING.  If not, write to
+the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <time.h>
+time_t time();
+
+#include "tar.h"
+#include "port.h"
+
+void add_buffer();
+extern PTR ck_malloc();
+void finish_header();
+extern PTR init_buffer();
 extern char *quote_copy_string();
 extern char *get_buffer();
-extern char *index();
+char *un_quote_string();
 
 extern union record *start_header();
 
@@ -30,6 +50,8 @@ struct mangled {
 struct mangled *first_mangle;
 int mangled_num = 0;
 
+#if 0 /* Deleted because there is now a better way to do all this */
+
 char *
 find_mangled (name)
 char *name;
@@ -43,8 +65,9 @@ char *name;
 }
 
 
-#ifdef S_IFLNK
-void add_symlink_mangle(symlink, linkto, buffer)
+#ifdef S_ISLNK
+void
+add_symlink_mangle(symlink, linkto, buffer)
 char *symlink;
 char *linkto;
 char *buffer;
@@ -98,7 +121,7 @@ write_mangled()
 	struct stat hstat;
 	union record *header;
 	char *ptr1,*ptr2;
-	VOIDSTAR the_buffer;
+	PTR the_buffer;
 	int size;
 	int bufsize;
 
@@ -155,6 +178,8 @@ write_mangled()
 	userec(header+(size-1)/RECORDSIZE);
 }
 
+#endif
+
 void
 extract_mangle(head)
 union record *head;
@@ -204,7 +229,7 @@ union record *head;
 			else if(f_verbose)
 				msg("Renamed %s to %s",nam1,nam1end+4);
 		}
-#ifdef S_IFLNK
+#ifdef S_ISLNK
 		else if(!strncmp(ptr,"Symlink ",8)) {
 			nam1=ptr+8;
 			nam1end=index(nam1,' ');

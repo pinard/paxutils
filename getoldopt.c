@@ -5,7 +5,7 @@ This file is part of GNU Tar.
 
 GNU Tar is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Tar is distributed in the hope that it will be useful,
@@ -23,12 +23,13 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
  * otherwise, it uses the old rules used by tar, dump, and ps.
  *
  * Written 25 August 1985 by John Gilmore (ihnp4!hoptoad!gnu)
- *
- * @(#)getoldopt.c 1.4 2/4/86 - gnu
  */
 
 #include <stdio.h>
 #include "getopt.h"
+#include "tar.h"		/* For msg() declaration if STDC_MSG. */
+#include <sys/types.h>
+#include "port.h"		/* For index() redefinition if USG. */
 
 int
 getoldopt(argc, argv, optstring, long_options, opt_index)
@@ -42,7 +43,6 @@ getoldopt(argc, argv, optstring, long_options, opt_index)
 	extern int	optind;		/* Global argv index */
 	static char	*key;		/* Points to next keyletter */
 	static char	use_getopt;	/* !=0 if argv[1][0] was '-' */
-	extern char	*index();
 	char		c;
 	char		*place;
 

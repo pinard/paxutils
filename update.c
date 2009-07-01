@@ -1,11 +1,11 @@
 /* Update a tar archive.
-   Copyright (C) 1988 Free Software Foundation
+   Copyright (C) 1988, 1992 Free Software Foundation
 
 This file is part of GNU Tar.
 
 GNU Tar is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Tar is distributed in the hope that it will be useful,
@@ -24,37 +24,28 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    tape or something like that, it'll probably lose. . . */
 
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
+#ifndef STDC_HEADERS
+extern int errno;
+#endif
 
-/* JF these includes are copied from create.c  I'm not sure if they're right
-   or not.  */
+#ifdef HAVE_SYS_MTIO_H
+#include <sys/ioctl.h>
+#include <sys/mtio.h>
+#endif
+
+#ifdef BSD42
+#include <sys/file.h>
+#else
 #ifndef V7
 #include <fcntl.h>
 #endif
+#endif
 
-#ifndef	MSDOS
+#ifndef	__MSDOS__
 #include <pwd.h>
 #include <grp.h>
-#endif
-
-#ifdef USG
-#include <sys/sysmacros.h>	/* major() and minor() defined here */
-#endif
-
-/*
- * V7 doesn't have a #define for this.
- */
-#ifndef O_RDONLY
-#define	O_RDONLY	0
-#endif
-
-/*
- * Most people don't have a #define for this.
- */
-#ifndef	O_BINARY
-#define	O_BINARY	0
 #endif
 
 #define STDIN 0
@@ -81,8 +72,24 @@ extern void skip_extended_headers();
 extern union record *head;
 extern struct stat hstat;
 
+void append_file();
+void close_archive();
+int confirm();
+void decode_header();
+void fl_read();
+void fl_write();
+void flush_archive();
+int move_arch();
 struct name *name_scan();
 char	*name_from_list();
+void name_expand();
+void name_gather();
+void names_notfound();
+void open_archive();
+int read_header();
+void reset_eof();
+void write_block();
+void write_eot();
 
 /* Implement the 'r' (add files to end of archive), and 'u' (add files to
    end of archive if they arent there, or are more up to date than the
@@ -128,14 +135,16 @@ update_archive()
 		case 1:
  /* printf("File %s\n",head->header.name); */
 			/* head->header.name[NAMSIZ-1]='\0'; */
-			if(cmd_mode==CMD_UPDATE && (name=name_scan(head->header.name))) {
+			if(cmd_mode==CMD_UPDATE && (name=name_scan(current_file_name)))
+			  {
+			    
 				/* struct stat hstat; */
 				struct stat nstat;
 				int head_standard;
 
 				decode_header(head,&hstat,&head_standard,0);
-				if(stat(head->header.name,&nstat)<0) {
-					msg_perror("can't stat %s:",head->header.name);
+				if(stat(current_file_name,&nstat)<0) {
+					msg_perror("can't stat %s:",current_file_name);
 				} else {
 					if(hstat.st_mtime>=nstat.st_mtime)
 						name->found++;
@@ -164,7 +173,7 @@ update_archive()
 		if(cmd_mode==CMD_CAT)
 			append_file(p);
 		else
-			dump_file(p,-1);
+			dump_file(p,-1, 1);
 	}
 
 	write_eot();
@@ -175,6 +184,7 @@ update_archive()
 /* Catenate file p to the archive without creating a header for it.  It had
    better be a tar file or the archive is screwed */
 
+void
 append_file(p)
 char *p;
 {
@@ -306,7 +316,7 @@ junk_archive()
 		case 1:
 			/* head->header.name[NAMSIZ-1] = '\0'; */
  /* fprintf(stderr,"file %s\n",head->header.name); */
-			if((name=name_scan(head->header.name))==(struct name *)0) {
+			if((name=name_scan(current_file_name))==(struct name *)0) {
 				userec(head);
  /* fprintf(stderr,"Skip %ld\n",(long)(hstat.st_size)); */
  				if (head->header.isextended)
@@ -387,7 +397,7 @@ junk_archive()
 		/* Found another header.  Yipee! */
 		/* head->header.name[NAMSIZ-1] = '\0'; */
  /* fprintf(stderr,"File %s ",head->header.name); */
-		if(name=name_scan(head->header.name)) {
+		if(name=name_scan(current_file_name)) {
 			name->found = 1;
  /* fprintf(stderr,"Flush it\n"); */
 		/* flush_file: */
@@ -463,7 +473,9 @@ junk_archive()
 	names_notfound();
 }
 
+void
 write_block(f)
+     int f;
 {
  /* fprintf(stderr,"Write block\n"); */
 	/* We've filled out a block.  Write it out. */
@@ -498,10 +510,11 @@ write_block(f)
    forward, else we move negative.   If its a tape, MTIOCTOP had better
    work.  If its something else, we try to seek on it.  If we can't
    seek, we lose! */
+int
 move_arch(n)
+     int n;
 {
 	long cur;
-	extern int errno;
 
 #ifdef MTIOCTOP
 	struct mtop t;

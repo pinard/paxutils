@@ -1,11 +1,11 @@
 /* Create a tar archive.
-   Copyright (C) 1988 Free Software Foundation
+   Copyright (C) 1985, 1992 Free Software Foundation
 
 This file is part of GNU Tar.
 
 GNU Tar is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Tar is distributed in the hope that it will be useful,
@@ -21,79 +21,55 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
  * Create a tar archive.
  *
  * Written 25 Aug 1985 by John Gilmore, ihnp4!hoptoad!gnu.
- *
- * @(#)create.c 1.36 11/6/87 - gnu
  */
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdio.h>
 
-#ifndef V7
-#include <fcntl.h>
+#ifdef _AIX
+ #pragma alloca
 #endif
-
-#ifndef	__MSDOS__
-#include <sys/file.h>
-#include <sys/param.h>		/* for MAXPATHLEN */
-#include <pwd.h>
-#include <grp.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <errno.h>
+#ifndef STDC_HEADERS
+extern int	errno;
 #endif
 
 #ifdef BSD42
-#include <sys/dir.h>
+#include <sys/file.h>
 #else
-#ifdef __MSDOS__
-#include "msd_dir.h"
-#else
-#ifdef USG
-#ifdef NDIR
-#include <ndir.h>
-#else
-#include <dirent.h>
+#ifndef V7
+#include <fcntl.h>
 #endif
-#ifndef DIRECT
-#define direct dirent
-#endif
-#define DP_NAMELEN(x) strlen((x)->d_name)
-#else
-/*
- * FIXME: On other systems there is no standard place for the header file
- * for the portable directory access routines.  Change the #include line
- * below to bring it in from wherever it is.
- */
-#include "ndir.h"
-#endif
-#endif
-#endif
-
-#ifndef DP_NAMELEN
-#define DP_NAMELEN(x)	(x)->d_namlen
-#endif
-
-#ifdef USG
-#include <sys/sysmacros.h>	/* major() and minor() defined here */
-#endif
-
-/*
- * V7 doesn't have a #define for this.
- */
-#ifndef O_RDONLY
-#define	O_RDONLY	0
-#endif
-
-/*
- * Most people don't have a #define for this.
- */
-#ifndef	O_BINARY
-#define	O_BINARY	0
-#endif
-
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
 #endif
 
 #include "tar.h"
 #include "port.h"
+
+#ifndef	__MSDOS__
+#include <pwd.h>
+#include <grp.h>
+#endif
+
+#if defined(_POSIX_VERSION) || defined(DIRENT)
+#include <dirent.h>
+#ifdef direct
+#undef direct
+#endif /* direct */
+#define direct dirent
+#define DP_NAMELEN(x) strlen((x)->d_name)
+#endif /* _POSIX_VERSION or DIRENT */
+#if !defined(_POSIX_VERSION) && !defined(DIRENT) && defined(BSD42)
+#include <sys/dir.h>
+#define DP_NAMELEN(x)	(x)->d_namlen
+#endif /* not _POSIX_VERSION and BSD42 */
+#ifdef __MSDOS__
+#include "msd_dir.h"
+#define DP_NAMELEN(x)	(x)->d_namlen
+#define direct dirent
+#endif
+#if defined(USG) && !defined(_POSIX_VERSION) && !defined(DIRENT)
+#include <ndir.h>
+#define DP_NAMELEN(x) strlen((x)->d_name)
+#endif /* USG and not _POSIX_VERSION and not DIRENT */
 
 extern struct stat hstat;		/* Stat struct corresponding */
 
@@ -108,32 +84,40 @@ extern struct name *gnu_list_name;
 /*
  * If there are no symbolic links, there is no lstat().  Use stat().
  */
-#ifndef S_IFLNK
+#ifndef S_ISLNK
 #define lstat stat
 #endif
-
-extern char	*malloc();
-extern char	*strcpy();
-extern char	*strncpy();
-extern void	bzero();
-extern void	bcopy();
-extern int	errno;
 
 extern void print_header();
 
 union record *start_header();
+void blank_name_list();
+int check_exclude();
+PTR ck_malloc();
+PTR ck_realloc();
+void clear_buffer();
+void close_archive();
+void collect_and_sort_names();
+int confirm();
+int deal_with_sparse();
+void find_new_file_size();
 void finish_header();
+int finish_sparse_file();
 void finduname();
 void findgname();
+int is_dot_or_dotdot();
+void open_archive();
 char *name_next();
+void name_close();
 void to_oct();
 void dump_file();
-
+void write_dir_file();
+void write_eot();
+int zero_record();
 
 /* This code moved from tar.h since create.c is the only file that cares
    about 'struct link's.  This means that other files might not have to
-   include sys/types.h any more.
- */
+   include sys/types.h any more. */
 
 struct link {
 	struct link	*next;
@@ -165,12 +149,13 @@ create_archive()
 	open_archive(0);		/* Open for writing */
 
 	if(f_gnudump) {
-		char buf[MAXNAMLEN],*q,*bufp;
+		char *buf = ck_malloc(PATH_MAX);
+		char *q,*bufp;
 
 		collect_and_sort_names();
 
 		while(p=name_from_list())
-			dump_file(p,-1);
+			dump_file(p,-1, 1);
 		/* if(!f_dironly) { */
 			blank_name_list();
 			while(p=name_from_list()) {
@@ -181,23 +166,19 @@ create_archive()
 				for(q=gnu_list_name->dir_contents;q && *q;q+=strlen(q)+1) {
 					if(*q=='Y') {
 						strcpy(bufp,q+1);
-						dump_file(buf,-1);
+						dump_file(buf,-1, 1);
 					}
 				}
 			}
 		/* } */
-	
+		free(buf);
 	} else {
 		p = name_next(1);
-		if(!p)
-			dump_file(".", -1);
-		else {
-			do dump_file(p, -1);
-			while (p = name_next(1));
-		}
+		do 
+		  dump_file(p, -1, 1);
+		while (p = name_next(1));
 	}
 
-	write_mangled();
 	write_eot();
 	close_archive();
 	if(f_gnudump)
@@ -211,9 +192,10 @@ create_archive()
  * Sets global "hstat" to stat() output for this file.
  */
 void
-dump_file (p, curdev)
+dump_file (p, curdev, toplevel)
 	char	*p;			/* File name to dump */
 	int	curdev;			/* Device our parent dir was on */
+	int 	toplevel;		/* Whether we are a toplevel call */
 {
 	union record	*header;
 	char type;
@@ -223,7 +205,9 @@ dump_file (p, curdev)
 	union record	*exhdr;
 	char save_linkflag;
 	extern time_t new_time;
-	int sparse_ind = 0;
+	int critical_error = 0;
+	time_t restore_times[2];
+/*	int sparse_ind = 0;*/
 
 
 	if(f_confirm && !confirm("add",p))
@@ -234,38 +218,42 @@ dump_file (p, curdev)
 	 * symbolic links.  Otherwise, use lstat (which, on non-4.2
 	 * systems, is #define'd to stat anyway.
 	 */
-#ifdef AIX
+#ifdef STX_HIDDEN /* AIX */
 	if (0 != f_follow_links ?
 	    statx (p, &hstat, STATSIZE, STX_HIDDEN):
 	    statx (p, &hstat, STATSIZE, STX_HIDDEN|STX_LINK))
 #else
 	if (0 != f_follow_links? stat(p, &hstat): lstat(p, &hstat))
-#endif /* AIX */
+#endif
 	{
 badperror:
 		msg_perror("can't add file %s",p);
 badfile:
-		errors++;
+		if (!f_ignore_failed_read || critical_error)
+		  errors++;
 		return;
 	}
+	
+	restore_times[0] = hstat.st_atime;
+	restore_times[1] = hstat.st_mtime;
 
-#ifdef AIX
+#ifdef S_ISHIDDEN
 	if (S_ISHIDDEN (hstat.st_mode)) {
-		char *new = (char *)allocate (strlen (p) + 2);
+		char *new = (char *)alloca (strlen (p) + 2);
 		if (new) {
 			strcpy (new, p);
 			strcat (new, "@");
 			p = new;
 		}
 	}
-#endif /* AIX */
+#endif
 
 	/* See if we only want new files, and check if this one is too old to
 	   put in the archive. */
 	if(   f_new_files
 	   && !f_gnudump
  	   && new_time>hstat.st_mtime
- 	   && (hstat.st_mode&S_IFMT)!=S_IFDIR
+ 	   && !S_ISDIR(hstat.st_mode)
  	   && (f_new_files>1 || new_time>hstat.st_ctime)) {
 		if(curdev<0) {
 			msg("%s: is unchanged; not dumped",p);
@@ -287,24 +275,22 @@ badfile:
 	 * far.  Any time we see another, we check the list and
 	 * avoid dumping the data again if we've done it once already.
 	 */
-	if (hstat.st_nlink > 1) switch (hstat.st_mode & S_IFMT) {
-		register struct link	*lp;
-
-	case S_IFREG:			/* Regular file */
-#ifdef S_IFCTG
-	case S_IFCTG:			/* Contigous file */
+	if (hstat.st_nlink > 1
+	    && (S_ISREG(hstat.st_mode)
+#ifdef S_ISCTG
+		|| S_ISCTG(hstat.st_mode)
 #endif
-#ifdef S_IFCHR
-	case S_IFCHR:			/* Character special file */
+#ifdef S_ISCHR
+		|| S_ISCHR(hstat.st_mode)
 #endif
-
-#ifdef S_IFBLK
-	case S_IFBLK:			/* Block     special file */
+#ifdef S_ISBLK
+		|| S_ISBLK(hstat.st_mode)
 #endif
-
-#ifdef S_IFIFO
-	case S_IFIFO:			/* Fifo      special file */
+#ifdef S_ISFIFO
+		|| S_ISFIFO(hstat.st_mode)
 #endif
+		)) {
+	  	register struct link	*lp;
 
 		/* First quick and dirty.  Hashing, etc later FIXME */
 		for (lp = linklist; lp; lp = lp->next) {
@@ -313,9 +299,6 @@ badfile:
 				char *link_name = lp->name;
 
 				/* We found a link. */
-				hstat.st_size = 0;
-				header = start_header(p, &hstat);
-				if (header == NULL) goto badfile;
 				while(!f_absolute_paths && *link_name == '/') {
 					static int link_warn = 0;
 
@@ -325,19 +308,30 @@ badfile:
 					}
 					link_name++;
 				}
-  				strncpy(header->header.linkname,
-					link_name,NAMSIZ);
-				if(header->header.linkname[NAMSIZ-1]) {
-					char *mangled;
-					extern char *find_mangled();
+				if (link_name - lp->name >= NAMSIZ)
+				  write_long (link_name, LF_LONGLINK);
 
-					mangled=find_mangled(link_name);
-					msg("%s: link name too long: mangled to %s",link_name,mangled);
-					strncpy(header->header.linkname,mangled,NAMSIZ);
-				}
+				hstat.st_size = 0;
+				header = start_header(p, &hstat);
+				if (header == NULL) 
+				  {
+				    critical_error = 1;
+				    goto badfile;
+				  }
+  				strncpy(header->header.arch_linkname,
+					link_name,NAMSIZ);
+
+				/* Force null truncated */
+				header->header.arch_linkname [NAMSIZ-1] = 0;
+
 				header->header.linkflag = LF_LINK;
 				finish_header(header);
 		/* FIXME: Maybe remove from list after all links found? */
+				if (f_remove_files)
+				  {
+				    if (unlink (p) == -1)
+				      msg_perror ("cannot remove %s", p);
+				  }
 				return;		/* We dumped it */
 			}
 		}
@@ -361,12 +355,11 @@ badfile:
 	/*
 	 * This is not a link to a previously dumped file, so dump it.
 	 */
-	switch (hstat.st_mode & S_IFMT) {
-
-	case S_IFREG:			/* Regular file */
-#ifdef S_IFCTG
-	case S_IFCTG:			/* Contiguous file */
+	if (S_ISREG(hstat.st_mode)
+#ifdef S_ISCTG
+	    || S_ISCTG(hstat.st_mode)
 #endif
+	    )
 	{
 		int	f;		/* File descriptor */
 		long	bufsize, count;
@@ -375,7 +368,7 @@ badfile:
 		int 	header_moved;
 		char	isextended = 0;
 		int 	upperbound;
-		int	end_nulls = 0;
+/*		int	end_nulls = 0; */
 		
 		header_moved = 0;
 
@@ -391,16 +384,20 @@ badfile:
 		 * a useless hole.
 		 */
 #ifdef hpux	/* Nice of HPUX to gratuitiously change it, huh?  - mib */
-		        if (hstat.st_size - (hstat.st_blocks * 1024) > 1024 ) {
+		        if (hstat.st_size - (hstat.st_blocks * 1024) > 1024 )
 #else
-			if (hstat.st_size - (hstat.st_blocks * RECORDSIZE) > RECORDSIZE) {
+			if (hstat.st_size - (hstat.st_blocks * RECORDSIZE) > RECORDSIZE)
 #endif
+			  {
 				int	filesize = hstat.st_size;
 				register int i;
 				
 				header = start_header(p, &hstat);
 				if (header == NULL)
-					goto badfile;
+				  {
+				    critical_error = 1;
+				    goto badfile;
+				  }
 				header->header.linkflag = LF_SPARSE;
 				header_moved++;
 				
@@ -476,12 +473,13 @@ badfile:
 			if (header == NULL) {
 				if(f>=0)
 					(void)close(f);
+				critical_error = 1;
 				goto badfile;
 			}
 		}
-#ifdef S_IFCTG
+#ifdef S_ISCTG
 		/* Mark contiguous files, if we support them */
-		if (f_standard && (hstat.st_mode & S_IFMT) == S_IFCTG) {
+		if (f_standard && S_ISCTG(hstat.st_mode)) {
 			header->header.linkflag = LF_CONTIG;
 		}
 #endif
@@ -489,15 +487,19 @@ badfile:
 		save_linkflag = header->header.linkflag;
 		finish_header(header);
 		if (isextended) {
-			int	 sum = 0;
+/*			int	 sum = 0;*/
 			register int i;
 /*			register union record *exhdr;*/
-			int	 arraybound = SPARSE_EXT_HDR;
+/*			int	 arraybound = SPARSE_EXT_HDR;*/
 			/* static */ int index_offset = SPARSE_IN_HDR;
 			
 	extend:		exhdr = findrec();
 			
-			if (exhdr == NULL) goto badfile;
+			if (exhdr == NULL) 
+			  {
+			    critical_error = 1;
+			    goto badfile;
+			  }
 			bzero(exhdr->charptr, RECORDSIZE);
 			for (i = 0; i < SPARSE_EXT_HDR; i++) {
 				if (i+index_offset > upperbound)
@@ -566,7 +568,14 @@ badfile:
 		if (f >= 0)
 			(void)close(f);
 
-		break;
+		if (f_remove_files)
+		  {
+		    if (unlink (p) == -1)
+		      msg_perror ("cannot remove %s", p);
+		  }
+		if (f_atime_preserve)
+		  utime (p, restore_times);
+		return;
 
 		/*
 		 * File shrunk or gave error, pad out tape to match
@@ -584,37 +593,47 @@ badfile:
 			save_name=0;
 		if(f>=0)
 			(void)close(f);
-		break;
-/*		abort(); */
+		if (f_atime_preserve)
+		  utime (p, restore_times);
+	        return;
 	}
 
-#ifdef S_IFLNK
-	case S_IFLNK:			/* Symbolic link */
+#ifdef S_ISLNK
+	else if(S_ISLNK(hstat.st_mode))
 	{
 		int size;
+		char *buf = alloca (PATH_MAX + 1);
 
+		size = readlink (p, buf, PATH_MAX + 1);
+		if (size < 0) 
+		  goto badperror;
+		buf[size] = '\0';
+		if (size >= NAMSIZ)
+		  write_long (buf, LF_LONGLINK);
+
+		buf[NAMSIZ - 1] = '\0';
+		if (size >= NAMSIZ)
+		  size = NAMSIZ - 1;
 		hstat.st_size = 0;		/* Force 0 size on symlink */
 		header = start_header(p, &hstat);
-		if (header == NULL) goto badfile;
-		size = readlink(p, header->header.linkname, NAMSIZ);
-		if (size < 0) goto badperror;
-		if (size == NAMSIZ) {
-			char buf[MAXPATHLEN];
-
-			readlink(p,buf,MAXPATHLEN);
-			/* next_mangle(header->header.linkname); */
-			add_symlink_mangle(buf,p,header->header.linkname);
-			msg("symbolic link %s too long: mangling to %s",p, header->header.linkname);
-			/* size=strlen(header->header.linkname); */
-		} else
-			header->header.linkname[size] = '\0';
+		if (header == NULL) 
+		  {
+		    critical_error = 1;
+		    goto badfile;
+		  }
+		strcpy (header->header.arch_linkname, buf);
 		header->header.linkflag = LF_SYMLINK;
 		finish_header(header);		/* Nothing more to do to it */
+		if (f_remove_files)
+		  {
+		    if (unlink (p) == -1)
+		      msg_perror ("cannot remove %s", p);
+		  }
+		return;
 	}
-		break;
 #endif
 
-	case S_IFDIR:			/* Directory */
+	else if (S_ISDIR(hstat.st_mode))
 	{
 		register DIR *dirp;
 		register struct direct *d;
@@ -622,7 +641,6 @@ badfile:
 		int buflen;
 		register int len;
 		int our_device = hstat.st_dev;
-		extern char *ck_malloc(),*ck_realloc();
 
 		/* Build new prototype name */
 		len = strlen(p);
@@ -650,7 +668,10 @@ badfile:
 			 */
 			header = start_header(namebuf, &hstat);
 			if (header == NULL)
-				goto badfile;	/* eg name too long */
+			  {
+			    critical_error = 1;
+			    goto badfile;	/* eg name too long */
+			  }
 
 			if (f_gnudump)
 				header->header.linkflag = LF_DUMPDIR;
@@ -705,20 +726,24 @@ badfile:
 			}
 			if(f_multivol)
 				save_name = 0;
- 			break;
+			if (f_atime_preserve)
+			  utime (p, restore_times);
+ 			return;
 		}
 
 		/* Now output all the files in the directory */
-		/* if (f_dironly)
-			break;		/* Unless the cmdline said not to */
+#if 0
+		if (f_dironly)
+			return;		/* Unless the cmdline said not to */
+#endif
 		/*
 		 * See if we are crossing from one file system to another,
 		 * and avoid doing so if the user only wants to dump one file system.
 		 */
-		if (f_local_filesys && curdev >= 0 && curdev != hstat.st_dev) {
+		if (f_local_filesys && !toplevel && curdev != hstat.st_dev) {
 			if(f_verbose)
 				msg("%s: is on a different filesystem; not dumped",p);
-			break;
+			return;
 		}
 
 
@@ -731,7 +756,7 @@ badfile:
 				msg("error opening directory %s",
 					p);
 			}
-			break;
+			return;
 		}
 
 		/* Hack to remove "./" from the front of all the file names */
@@ -755,65 +780,73 @@ badfile:
 			strcpy(namebuf+len, d->d_name);
 			if(f_exclude && check_exclude(namebuf))
 				continue;
-			dump_file(namebuf, our_device);
+			dump_file(namebuf, our_device, 0);
 		}
 
 		closedir(dirp);
 		free(namebuf);
+		if (f_atime_preserve)
+		  utime (p, restore_times);
+		return;
 	}
-		break;
 
-#ifdef S_IFCHR
-	case S_IFCHR:			/* Character special file */
+#ifdef S_ISCHR
+	else if (S_ISCHR(hstat.st_mode)) {
 		type = LF_CHR;
-		goto easy;
+	      }
 #endif
 
-#ifdef S_IFBLK
-	case S_IFBLK:			/* Block     special file */
+#ifdef S_ISBLK
+	else if (S_ISBLK(hstat.st_mode)) {
 		type = LF_BLK;
-		goto easy;
+	      }
 #endif
 
 /* Avoid screwy apollo lossage where S_IFIFO == S_IFSOCK */
-#if ((_ISP__M68K == 0) && (_ISP__A88K == 0))
-#ifdef S_IFIFO
-	case S_IFIFO:			/* Fifo      special file */
-		
+#if (_ISP__M68K == 0) && (_ISP__A88K == 0) && defined(S_ISFIFO)
+	else if (S_ISFIFO(hstat.st_mode)) {
 		type = LF_FIFO;
-		goto easy;
-#endif
+	      }
 #endif
 
-#ifdef S_IFSOCK
-	case S_IFSOCK:			/* Socket	pretend its a fifo? */
+#ifdef S_ISSOCK
+	else if (S_ISSOCK(hstat.st_mode)) {
 		type = LF_FIFO;
-		goto easy;
+	      }
 #endif
+	else
+		goto unknown;
 
-	easy:
-		if (!f_standard) goto unknown;
+	if (!f_standard) goto unknown;
 
-		hstat.st_size = 0;		/* Force 0 size */
-		header = start_header(p, &hstat);
-		if (header == NULL) goto badfile;	/* eg name too long */
+	hstat.st_size = 0;		/* Force 0 size */
+	header = start_header(p, &hstat);
+	if (header == NULL) 
+	  {
+	    critical_error = 1;
+	    goto badfile;	/* eg name too long */
+	  }
 
-		header->header.linkflag = type;
-		if (type != LF_FIFO) {
-			to_oct((long) major(hstat.st_rdev), 8,
-				header->header.devmajor);
-			to_oct((long) minor(hstat.st_rdev), 8,
-				header->header.devminor);
-		}
-
-		finish_header(header);
-		break;
-
-	default:
-	unknown:
-		msg("%s: Unknown file type; file ignored.", p);
-		break;
+	header->header.linkflag = type;
+#if defined(S_IFBLK) || defined(S_IFCHR)
+	if (type != LF_FIFO) {
+		to_oct((long) major(hstat.st_rdev), 8,
+			header->header.devmajor);
+		to_oct((long) minor(hstat.st_rdev), 8,
+			header->header.devminor);
 	}
+#endif
+
+	finish_header(header);
+	if (f_remove_files)
+	  {
+	    if (unlink (p) == -1)
+	      msg_perror ("cannot remove %s", p);
+	  }
+	return;
+
+	unknown:
+	msg("%s: Unknown file type; file ignored.", p);
 }
 
 int
@@ -895,12 +928,13 @@ finish_sparse_file(fd, sizeleft, fullsize, name)
 
 	}
 	free(sparsearray);
-	printf ("Amount actually written is (I hope) %d.\n", nwritten);
+/*	printf ("Amount actually written is (I hope) %d.\n", nwritten); */
 /*	userec(start+(count-1)/RECORDSIZE);*/
 	return 0;
 
 }
 
+void
 init_sparsearray()
 {
 	register int i;
@@ -938,17 +972,19 @@ int
 deal_with_sparse(name, header, nulls_at_end)
 	char		*name;
 	union record 	*header;
-	
+	int		nulls_at_end;
 {
 	long	numbytes = 0;
 	long	offset = 0;
-	long	save_offset;
+/*	long	save_offset;*/
 	int	fd;
-	int	current_size = hstat.st_size;
+/*	int	current_size = hstat.st_size;*/
 	int	sparse_ind = 0,
 		cc;
 	char	buf[RECORDSIZE];
+#if 0
 	int	read_last_data = 0; /* did we just read the last record? */
+#endif
 	int 	amidst_data = 0;
 	
 	header->header.isextended = 0;
@@ -1018,6 +1054,7 @@ deal_with_sparse(name, header, nulls_at_end)
  * Just zeroes out the buffer so we don't confuse ourselves with leftover
  * data.
  */
+void
 clear_buffer(buf)
 	char	*buf;
 {
@@ -1027,7 +1064,7 @@ clear_buffer(buf)
 		buf[i] = '\0';
 }
 
-#if 0  /* I'm leaving this as a monument to Joy Kendall, who wrote it */
+#if 0  /* I'm leaving this as a monument to Joy Kendall, who wrote it -mib */
 /* 
  * JK - 
  * This routine takes a character array, and tells where within that array
@@ -1103,6 +1140,7 @@ where_is_data (from, to, buffer)
  * it's made *entirely* of zeros, returning a 0 the instant it finds
  * something that is a non-zero, i.e., useful data.
  */
+int
 zero_record(buffer)
 	char	*buffer;
 {
@@ -1114,6 +1152,7 @@ zero_record(buffer)
 	return 1;
 }
 
+void
 find_new_file_size(filesize, highest_index)
 	int	*filesize;
 	int	highest_index;
@@ -1136,6 +1175,9 @@ start_header(name, st)
 {
 	register union record *header;
 
+	if (strlen (name) >= NAMSIZ)
+	  write_long (name, LF_LONGNAME);
+
 	header = (union record *) findrec();
 	bzero(header->charptr, sizeof(*header)); /* XXX speed up */
 
@@ -1157,16 +1199,10 @@ start_header(name, st)
 				msg("Removing leading / from absolute path names in the archive.");
 		}
 	}
-	strncpy(header->header.name, name, NAMSIZ);
-	if (header->header.name[NAMSIZ-1]) {
-		char *mangled;
+	strncpy(header->header.arch_name, name, NAMSIZ);
+	header->header.arch_name[NAMSIZ-1] = '\0';
 
-		/* next_mangle(header->header.name); */
-		add_mangle(name,header->header.name);
-		msg("%s: is too long: mangling to %s", name, header->header.name);
-	}
-
-	to_oct((long) (st->st_mode & ~S_IFMT),
+	to_oct((long) (st->st_mode & 07777),
 					8,  header->header.mode);
 	to_oct((long) st->st_uid,	8,  header->header.uid);
 	to_oct((long) st->st_gid,	8,  header->header.gid);
@@ -1200,7 +1236,6 @@ finish_header(header)
 {
 	register int	i, sum;
 	register char	*p;
-	void bcopy();
 
 	bcopy(CHKBLANKS, header->header.chksum, sizeof(header->header.chksum));
 
@@ -1286,11 +1321,11 @@ to_oct(value, digs, where)
  * We actually zero at least one record, through the end of the block.
  * Old tar writes garbage after two zeroed records -- and PDtar used to.
  */
+void
 write_eot()
 {
 	union record *p;
 	int bufsize;
-	void bzero();
 
 	p = findrec();
 	if (p)
@@ -1299,4 +1334,38 @@ write_eot()
 	    bzero(p->charptr, bufsize);
 	    userec(p);
 	  }
+}
+
+/* Write a LF_LONGLINK or LF_LONGNAME record. */
+write_long (p, type)
+     char *p;
+     char type;
+{
+  int size = strlen (p) + 1;
+  int bufsize;
+  union record *header;
+  
+  /* Link name won't fit, so we write
+     an LF_LONGLINK record. */
+  hstat.st_size = size;
+  header = start_header ("././@LongLink", &hstat);
+  header->header.linkflag = type;
+  finish_header (header);
+
+  header = findrec ();
+  
+  bufsize = endofrecs ()->charptr - header->charptr;
+  
+  while (bufsize < size)
+    {
+      bcopy (p, header->charptr, bufsize);
+      p += bufsize;
+      size -= bufsize;
+      userec (header + (bufsize - 1)/RECORDSIZE);
+      header = findrec ();
+      bufsize = endofrecs ()->charptr - header->charptr;
+    }
+  bcopy (p, header->charptr, size);
+  bzero (header->charptr + size, bufsize - size);
+  userec (header + (size - 1)/RECORDSIZE);
 }

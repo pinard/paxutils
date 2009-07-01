@@ -5,7 +5,7 @@ This file is part of GNU Tar.
 
 GNU Tar is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Tar is distributed in the hope that it will be useful,
@@ -17,207 +17,45 @@ You should have received a copy of the GNU General Public License
 along with GNU Tar; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-/*
- * @(#)port.c 1.15	87/11/05	by John Gilmore, 1986
- *
- * These are routines not available in all environments.
- *
- * I know this introduces an extra level of subroutine calls and is
- * slightly slower.  Frankly, my dear, I don't give a damn.  Let the
- * Missed-Em Vee losers suffer a little.  This software is proud to
- * have been written on a BSD system.
- */
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
+#ifndef STDC_HEADERS
+extern int errno;
+#endif
 
-#if	defined(__MSDOS__) || defined(USG)
-#include <fcntl.h>
-#else
+#ifdef BSD42
 #include <sys/file.h>
+#else
+#ifndef V7
+#include <fcntl.h>
+#endif
 #endif
 
 #include "tar.h"
 #include "port.h"
 
-#ifdef USG
-#include <string.h>
-#else
-extern size_t strlen();
-#endif
-
 extern long baserec;
-/*
- * Some people (e.g. V7) don't have a #define for these.
- */
-#ifndef	O_BINARY
-#define	O_BINARY	0
-#endif
-#ifndef	O_RDONLY
-#define	O_RDONLY	0
-#endif
-#ifndef NULL
-#define NULL 0
-#endif
 
-/* JF: modified so all configuration information can appear here, instead of
-   being scattered through the file.  Add all the machine-dependent #ifdefs
-   here */
-#undef WANT_DUMB_GET_DATE/* WANT_DUMB_GET_DATE --> get_date() */
-#undef WANT_VALLOC	/* WANT_VALLOC --> valloc() */
-#undef WANT_MKDIR	/* WANT_MKDIR --> mkdir() rmdir() */
-#undef WANT_STRING	/* WANT_STRING --> index() bcopy() bzero() bcmp() */
-#undef WANT_BZERO	/* WANT_BZERO --> bzero() bcmp() execlp() */
-			/* EMUL_OPEN3 --> open3() */
-#undef WANT_MKNOD	/* WANT_MKNOD --> mknod() link() chown() geteuid() */
-#undef WANT_UTILS	/* WANT_UTILS --> panic() ck_*() *_buffer()
-			   merge_sort() quote_copy_string() un_quote_string() */
-#undef WANT_CK_PIPE	/* WANT_CK_PIPE --> ck_pipe() */
-#undef WANT_GETWD	/* WANT_GETWD --> getwd() */
-#undef WANT_STRSTR	/* WANT_STRSTR --> strstr() */
-#undef WANT_FTRUNCATE	/* WANT_FTRUNCATE --> frtruncate() */
-
-/* Define only ONE of these four . . . */
-/* #undef DOPRNT_MSG	/* Define this one if you have _doprnt() and
-			   no varargs support */
-/* #undef VARARGS_MSG	/* Define this one if you have varargs.h and
-			   vfprintf() */
-/* #undef STDC_MSG 	/* Define this one if you are using ANSI C and
-			   and have vfprintf() */
-/* #undef LOSING_MSG	/* Define this one if you don't have any of the
-			   above */
-#ifdef USG
-#define WANT_STRING
-#define WANT_VALLOC
-
-#if defined(sgi) && defined(mips)
-#define WANT_GETWD
-#endif
-
-#if defined(i386)
-#define WANT_FTRUNCATE
-#endif
-
-#endif
-
-#ifdef hpux
-#define WANT_VALLOC
-#endif
-
-#ifdef MINIX
-#define WANT_BZERO
-#endif
+/* All machine-dependent #ifdefs should appear here, instead of
+   being scattered through the file.  For UN*X systems, it is better to
+   figure out what is needed in the configure script, for most of the
+   features. */
 
 #ifdef __MSDOS__
 char TTY_NAME[] = "con";
 
-#define WANT_STRING
-#define WANT_MKNOD
-#define WANT_UTILS
-#define WANT_VALLOC
+#else /* not __MSDOS__ */
 
-#if (!defined(STDC_MSG) && !defined(DOPRNT_MSG) && !defined(VARARGS_MSG) && !defined(LOSING_MSG))
-#ifdef __STDC__
-#define STDC_MSG
-#else
-#define LOSING_MSG
-#endif
-#endif
-
-#else /* not MSDOS */
 char TTY_NAME[] ="/dev/tty";
 
-#define WANT_UTILS
-#define WANT_CK_PIPE
-#ifndef HAVE_STRSTR
-#define WANT_STRSTR
-#endif
-
-#if (!defined(STDC_MSG) && !defined(DOPRNT_MSG) && !defined(VARARGS_MSG) && !defined(LOSING_MSG))
-#ifdef BSD42
-/* BSD systems should do this even if __STDC__, because
-   we might be using an ANSI compiler without an ANSI library. (sigh) */
-#ifdef sparc
-#define LOSING_MSG
-#else
-#define DOPRNT_MSG
-#endif
-#else /* not BSD */
-#ifdef __STDC__
-#define STDC_MSG
-#else /* not ANSI C */
-#define LOSING_MSG
-#endif /* not ANSI C */
-#endif /* not BSD */
-#endif /* Need to define some form of _MSG */
-#endif /* not MSDOS */
+#endif /* not __MSDOS__ */
 
 /* End of system-dependent #ifdefs */
 
-#ifdef WANT_DUMB_GET_DATE
-/* JF a get_date() routine takes a date/time/etc and turns it into a time_t */
-/* This one is a quick hack I wrote in about five minutes to see if the N
-   option works.  Someone should replace it with one that works */
 
-/* This get_date takes an arg of the form mm/dd/yyyy hh:mm:ss and turns it
-   into a time_t .  Its not well tested or anything. . .  */
-/* In general, you should use the get_date() supplied in getdate.y */
-
-#define OFF_FROM GMT 18000		/* Change for your time zone! */
-
-time_t
-get_date(str)
-char *str;
-{
-	int month,day,year,hour,minute,second;
-	time_t ret;
-	int	n;
-
-#define SECS_PER_YEAR (365L*SECS_PER_DAY)
-#define SECS_PER_LEAP_YEAR (366L*SECS_PER_DAY)
-
-#define SECS_PER_DAY (24L*60*60)
-	static int days_per_month[2][12] = {
-		31,28,31,30,31,30,31,31,30,31,30,31,
-		31,29,31,30,31,30,31,31,30,31,30,31
-	};
-
-	static int days_per_year[2]={365,366};
-
-	month=day=year=hour=minute=second=0;
-	n=sscanf(str,"%d/%d/%d %d:%d:%d",&month,&day,&year,&hour,&minute,&second);
-	if(n<3)
-		return 0;
-	if(year<100)
-		year+=1900;
-	if(year<1970)
-		return 0;
-	ret=0;
-
-	ret+=OFF_FROM_GMT;
-
-	for(n=1970;n<year;n++)
-		if(n%4==0 && n%400!=0)
-			ret+=SECS_PER_LEAP_YEAR;
-		else
-			ret+=SECS_PER_YEAR;
-
-	month--;
-	for(n=0;n<month;n++) {
-		if(year%4==0 && year%400!=0)
-			ret+=SECS_PER_DAY*days_per_month[1][n];
-		else
-			ret+=SECS_PER_DAY*days_per_month[0][n];
-	}
-	ret+=SECS_PER_DAY*(day-1);
-	ret+=second+minute*60+hour*60*60;
-	return ret;
-}
-#endif
-
-#ifdef WANT_VALLOC
+#ifndef HAVE_VALLOC
 /*
  * valloc() does a malloc() on a page boundary.  On some systems,
  * this can make large block I/O more efficient.
@@ -226,34 +64,29 @@ char *
 valloc (size)
 	unsigned size;
 {
-	extern char *malloc ();
 	return (malloc (size));
 }
-#endif
+#endif /* !HAVE_VALLOC */
+
+#ifndef HAVE_MKDIR
 /*
- *				NMKDIR.C
- *
  * Written by Robert Rother, Mariah Corporation, August 1985. 
- *
- * I wrote this out of shear disgust with myself because I couldn't
- * figure out how to do this in /bin/sh.
  *
  * If you want it, it's yours.  All I ask in return is that if you
  * figure out how to do this in a Bourne Shell script you send me
  * a copy.
  *					sdcsvax!rmr or rmr@uscd
-*
-* Severely hacked over by John Gilmore to make a 4.2BSD compatible
-* subroutine.	11Mar86; hoptoad!gnu
-*
-* Modified by rmtodd@uokmax 6-28-87 -- when making an already existing dir,
-* subroutine didn't return EEXIST.  It does now.
-*/
+ *
+ * Severely hacked over by John Gilmore to make a 4.2BSD compatible
+ * subroutine.	11Mar86; hoptoad!gnu
+ *
+ * Modified by rmtodd@uokmax 6-28-87 -- when making an already existing dir,
+ * subroutine didn't return EEXIST.  It does now.
+ */
 
 /*
- * Make a directory.  Compatible with the mkdir() system call on 4.2BSD.
+ * Make a directory.
  */
-#ifdef WANT_MKDIR
 int
 mkdir(dpath, dmode)
 	char *dpath;
@@ -261,7 +94,6 @@ mkdir(dpath, dmode)
 {
 	int cpid, status;
 	struct stat statbuf;
-	extern int errno;
 
 	if (stat(dpath,&statbuf) == 0) {
 		errno = EEXIST;		/* Stat worked, so it already exists */
@@ -292,20 +124,20 @@ mkdir(dpath, dmode)
 		while (cpid != wait(&status)) ;	/* Wait for kid to finish */
 	}
 
-	if (TERM_SIGNAL(status) != 0 || TERM_VALUE(status) != 0) {
+	if (WTERMSIG(status) != 0 || WEXITSTATUS(status) != 0) {
 		errno = EIO;		/* We don't know why, but */
 		return -1;		/* /bin/mkdir failed */
 	}
 
 	return 0;
 }
+
 int
 rmdir(dpath)
 	char *dpath;
 {
 	int cpid, status;
 	struct stat statbuf;
-	extern int errno;
 
 	if (stat(dpath,&statbuf) != 0) {
 		/* Stat just set errno.  We don't have to */
@@ -325,66 +157,46 @@ rmdir(dpath)
 		while (cpid != wait(&status)) ;	/* Wait for kid to finish */
 	}
 
-	if (TERM_SIGNAL(status) != 0 || TERM_VALUE(status) != 0) {
+	if (WTERMSIG(status) != 0 || WEXITSTATUS(status) != 0) {
 		errno = EIO;		/* We don't know why, but */
 		return -1;		/* /bin/mkdir failed */
 	}
 
 	return 0;
 }
-#endif
+#endif /* !HAVE_MKDIR */
 
-#ifdef WANT_STRING
-/*
- * Translate V7 style into Sys V style.
- */
-#include <string.h>
-#ifndef __MSDOS__
-#include <memory.h>
-#endif
-
-char *
-index (s, c)
-	char *s;
-	int c;
-{
-	return (strchr (s, c));
-}
-
-char *
-rindex(s,c)
-char *s;
-int c;
-{
-	return strrchr(s,c);
-}
-
-void
-bcopy (s1, s2, n)
-	char *s1, *s2;
-	int n;
-{
-	(void) memcpy (s2, s1, n);
-}
-
-void
-bzero (s1, n)
-	char *s1;
-	int n;
-{
-	(void) memset(s1, 0, n);
-}
+#ifndef HAVE_RENAME
+/* Rename file FROM to file TO.
+   Return 0 if successful, -1 if not. */
 
 int
-bcmp(s1, s2, n)
-	char	*s1, *s2;
-	int	n;
+rename (from, to)
+     char *from;
+     char *to;
 {
-	return memcmp(s1, s2, n);
-}
-#endif
+  struct stat from_stats;
 
-#ifdef WANT_BZERO
+  if (stat (from, &from_stats))
+    return -1;
+
+  if (unlink (to) && errno != ENOENT)
+    return -1;
+
+  if (link (from, to))
+    return -1;
+
+  if (unlink (from) && errno != ENOENT)
+    {
+      unlink (to);
+      return -1;
+    }
+
+  return 0;
+}
+#endif /* !HAVE_RENAME */
+
+#ifdef minix
 /* Minix has bcopy but not bzero, and no memset.  Thanks, Andy. */
 void
 bzero (s1, n)
@@ -426,8 +238,6 @@ execlp(filename, arg0)
 	char **argstart = &arg0;
 	struct stat statbuf;
 	extern char **environ;
-	extern int errno;
-	extern char *malloc(), *getenv(), *index();
 
 	if ((p = getenv("PATH")) == NULL) {
 		/* couldn't find path variable -- try to exec given filename */
@@ -468,7 +278,7 @@ execlp(filename, arg0)
 			else
 				goto fail; /* failed for some reason, return */
 		}
-		if ( (statbuf.st_mode & S_IFMT) != S_IFREG) continue;
+		if (!S_ISREG(statbuf.st_mode)) continue;
 
 		if (execve(fnbuffer, argstart, environ) < 0
 		    && errno != ENOENT
@@ -517,7 +327,7 @@ fail:
 	free(fnbuffer);
 	return -1;
 }
-#endif
+#endif /* minix */
 
 
 #ifdef EMUL_OPEN3
@@ -567,7 +377,6 @@ open3(path, flags, mode)
 char *path;
 int flags, mode;
 {
-	extern int errno;
 	int exists = 1;
 	int call_creat = 0;
 	int fd;
@@ -647,9 +456,9 @@ int flags, mode;
 	 */
 	return open(path, flags & (O_RDONLY|O_WRONLY|O_RDWR|O_BINARY));
 }
-#endif
+#endif /* EMUL_OPEN3 */
 
-#ifdef	WANT_MKNOD
+#ifndef HAVE_MKNOD
 #ifdef __MSDOS__
 typedef int dev_t;
 #endif
@@ -660,7 +469,6 @@ mknod(path, mode, dev)
 	unsigned short	mode;
 	dev_t		dev;
 {
-	extern int	errno;
 	int		fd;
 	
 	errno = ENXIO;		/* No such device or address */
@@ -716,9 +524,57 @@ geteuid()
 {
 	return 0;
 }
-#endif	/* WANT_MKNOD */
+#endif	/* !HAVE_MKNOD */
 
-#ifdef WANT_UTILS
+#ifdef __TURBOC__
+#include <time.h>
+#include <fcntl.h>
+#include <io.h>
+
+struct utimbuf
+{
+  time_t  actime;		/* Access time. */
+  time_t  modtime;		/* Modification time. */
+};
+
+int
+utime (char *filename, struct utimbuf *utb)
+{
+  struct tm *tm;
+  struct ftime filetime;
+  time_t when;
+  int fd;
+  int status;
+
+  if (utb == 0)
+    when = time (0);
+  else
+    when = utb->modtime;
+
+  fd = _open (filename, O_RDWR);
+  if (fd == -1)
+    return -1;
+
+  tm = localtime (&when);
+  if (tm->tm_year < 80)
+    filetime.ft_year = 0;
+  else
+    filetime.ft_year = tm->tm_year - 80;
+  filetime.ft_month = tm->tm_mon + 1;
+  filetime.ft_day = tm->tm_mday;
+  if (tm->tm_hour < 0)
+    filetime.ft_hour = 0;
+  else
+    filetime.ft_hour = tm->tm_hour;
+  filetime.ft_min = tm->tm_min;
+  filetime.ft_tsec = tm->tm_sec / 2;
+
+  status = setftime (fd, &filetime);
+  _close (fd);
+  return status;
+}
+#endif /* __TURBOC__ */
+
 /* Stash argv[0] here so panic will know what the program is called */
 char *myname = 0;
 
@@ -734,12 +590,11 @@ char *s;
 }
 
 
-char *
+PTR
 ck_malloc(size)
 size_t size;
 {
-	char *ret;
-	char *malloc();
+	PTR ret;
 
 	if(!size)
 		size++;
@@ -749,13 +604,20 @@ size_t size;
 	return ret;
 }
 
+/* Used by alloca.c and bison.simple. */
 char *
-ck_realloc(ptr,size)
-char *ptr;
+xmalloc(size)
 size_t size;
 {
-	char *ret;
-	char *realloc();
+	return (char *) ck_malloc(size);
+}
+
+PTR
+ck_realloc(ptr,size)
+PTR ptr;
+size_t size;
+{
+	PTR ret;
 
 	if(!ptr)
 		ret=ck_malloc(size);
@@ -980,7 +842,8 @@ char *string;
 
 /* There is no un-quote-copy-string.  Write it yourself */
 
-char *un_quote_string(string)
+char *
+un_quote_string(string)
 char *string;
 {
 	char *ret;
@@ -1062,9 +925,7 @@ char *string;
 		*to_there++='\0';
 	return ret;
 }
-#endif
 
-#ifdef WANT_CK_PIPE
 void ck_pipe(pipes)
 int *pipes;
 {
@@ -1074,30 +935,8 @@ int *pipes;
 	}
 }
 
-#endif
 
-#ifdef WANT_GETWD
-char *
-getwd(path)
-char *path;
-{
-	FILE *fp;
-	FILE *popen();
-
-	fp=popen("pwd","r");
-	if(!fp)
-		return 0;
-	if(!fgets(path,100,fp))
-		return 0;
-	if(!pclose(fp))
-		return 0;
-	return path;
-}
-#endif /* WANT_CK_PIPE */
-
-
-#ifdef WANT_STRSTR
-
+#ifndef HAVE_STRSTR
 /*
  * strstr - find first occurrence of wanted in s
  */
@@ -1110,7 +949,6 @@ char *wanted;
 	register char *scan;
 	register size_t len;
 	register char firstc;
-	extern int strcmp();
 
 	if (*wanted == '\0')
 	  return (char *)0;
@@ -1126,12 +964,21 @@ char *wanted;
 			return (char *)0;
 	return scan;
 }
-#endif
+#endif /* !HAVE_STRSTR */
 
-#ifdef WANT_FTRUNCATE
+#ifndef HAVE_FTRUNCATE
 
+#ifdef F_CHSIZE
+int
+ftruncate (fd, length)
+     int fd;
+     off_t length;
+{
+  return fcntl (fd, F_CHSIZE, length);
+}
+#else /* !F_CHSIZE */
 #ifdef F_FREESP
-/* code courtesy of William Kucharski */
+/* code courtesy of William Kucharski, kucharsk@Solbourne.com */
 
 int
 ftruncate(fd, length)
@@ -1159,8 +1006,8 @@ off_t length;         /* length to set file to */
 	return 0;
 }
 
+#else /* !F_FREESP */
 
-#else
 int
 ftruncate(fd, length)
 int fd;
@@ -1169,16 +1016,14 @@ off_t length;
 	errno = EIO;
 	return -1;
 }
-#endif
-
-#endif
-
-
+#endif /* !F_FREESP */
+#endif /* !F_CHSIZE */
+#endif /* !HAVE_FTRUNCATE */
 
 
 extern FILE *msg_file;
 
-#ifdef STDC_MSG
+#if defined (HAVE_VPRINTF) && __STDC__
 #include <stdarg.h>
 
 void
@@ -1202,7 +1047,6 @@ msg_perror(char *str,...)
 {
 	va_list args;
 	int save_e;
-	extern int errno;
 
 	save_e=errno;
 	fflush(msg_file);
@@ -1216,11 +1060,12 @@ msg_perror(char *str,...)
 	perror(" ");
 	fflush(stderr);
 }
-#endif
+#endif /* HAVE_VPRINTF and __STDC__ */
 
-#ifdef VARARGS_MSG
+#if defined(HAVE_VPRINTF) && !__STDC__
 #include <varargs.h>
-void msg(str,va_alist)
+void
+msg(str,va_alist)
 char *str;
 va_dcl
 {
@@ -1237,13 +1082,13 @@ va_dcl
 	fflush(stderr);
 }
 
-void msg_perror(str,va_alist)
+void
+msg_perror(str,va_alist)
 char *str;
 va_dcl
 {
 	va_list args;
 	int save_e;
-	extern int errno;
 
 	save_e=errno;
 	fflush(msg_file);
@@ -1257,10 +1102,11 @@ va_dcl
 	perror(" ");
 	fflush(stderr);
 }
-#endif
+#endif /* HAVE_VPRINTF and not __STDC__ */
 
-#ifdef DOPRNT_MSG
-void msg(str,args)
+#if !defined(HAVE_VPRINTF) && defined(HAVE_DOPRNT)
+void
+msg(str,args)
 char *str;
 int args;
 {
@@ -1273,11 +1119,11 @@ int args;
 	fflush(stderr);
 }
 
-void msg_perror(str,args)
+void
+msg_perror(str,args)
 char *str;
 {
 	int save_e;
-	extern int errno;
 
 	save_e=errno;
 	fflush(msg_file);
@@ -1289,9 +1135,9 @@ char *str;
 	perror(" ");
 	fflush(stderr);
 }
+#endif /* !HAVE_VPRINTF and HAVE_DOPRNT */
 
-#endif
-#ifdef LOSING_MSG
+#if !defined(HAVE_VPRINTF) && !defined(HAVE_DOPRNT)
 void msg(str,a1,a2,a3,a4,a5,a6)
 char *str;
 {
@@ -1304,11 +1150,11 @@ char *str;
 	fflush(stderr);
 }
 
-void msg_perror(str,a1,a2,a3,a4,a5,a6)
+void
+msg_perror(str,a1,a2,a3,a4,a5,a6)
 char *str;
 {
 	int save_e;
-	extern int errno;
 
 	save_e=errno;
 	fflush(msg_file);
@@ -1320,5 +1166,4 @@ char *str;
 	errno=save_e;
 	perror(" ");
 }
-
-#endif
+#endif /* !HAVE_VPRINTF and !HAVE_DOPRNT */

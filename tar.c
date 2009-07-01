@@ -1,85 +1,33 @@
 /* Tar -- a tape archiver.
+   Copyright (C) 1988, 1992 Free Software Foundation
 
-	Copyright (C) 1988 Free Software Foundation
+This file is part of GNU Tar.
 
-GNU tar is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY.  No author or distributor accepts responsibility to anyone
-for the consequences of using it or for whether it serves any
-particular purpose or works at all, unless he says so in writing.
-Refer to the GNU tar General Public License for full details.
+GNU Tar is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
-Everyone is granted permission to copy, modify and redistribute GNU tar,
-but only under the conditions described in the GNU tar General Public
-License.  A copy of this license is supposed to have been given to you
-along with GNU tar so you can know your rights and responsibilities.  It
-should be in a file named COPYING.  Among other things, the copyright
-notice and this notice must be preserved on all copies.
+GNU Tar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-In other words, go ahead and share GNU tar, but don't try to stop
-anyone else from sharing it farther.  Help stamp out software hoarding!
-*/
+You should have received a copy of the GNU General Public License
+along with GNU Tar; see the file COPYING.  If not, write to
+the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /*
  * A tar (tape archiver) program.
  *
  * Written by John Gilmore, ihnp4!hoptoad!gnu, starting 25 Aug 85.
- *
- * @(#)tar.c 1.34 11/6/87 - gnu
  */
 
 #include <stdio.h>
 #include <sys/types.h>		/* Needed for typedefs in tar.h */
-#include <sys/stat.h>		/* JF */
 #include "getopt.h"
 #include "regex.h"
 
-#ifdef USG
-#define rindex strrchr
-#endif
-
-#ifdef BSD42
-#include <sys/dir.h>
-#else
-#ifdef __MSDOS__
-#include "msd_dir.h"
-#else
-#ifdef USG
-#ifdef NDIR
-#include <ndir.h>
-#else
-#include <dirent.h>
-#endif
-#ifndef DIRECT
-#define direct dirent
-#endif
-#define DP_NAMELEN(x) strlen((x)->d_name)
-#else
-/*
- * FIXME: On other systems there is no standard place for the header file
- * for the portable directory access routines.  Change the #include line
- * below to bring it in from wherever it is.
- */
-#include "ndir.h"
-#endif
-#endif
-#endif
-
-#ifndef DP_NAMELEN
-#define DP_NAMELEN(x)	(x)->d_namlen
-#endif
-
-extern char 	*malloc();
-extern char 	*getenv();
-extern char	*strncpy();
-extern char	*index();
-extern char	*strcpy();	/* JF */
-extern char	*strcat();	/* JF */
-
-extern char	*optarg;	/* Pointer to argument */
-extern int	optind;		/* Global argv index from getopt */
-
-extern char 	*ck_malloc();
-extern char 	*ck_realloc();
 /*
  * The following causes "tar.h" to produce definitions of all the
  * global variables, rather than just "extern" declarations of them.
@@ -87,11 +35,37 @@ extern char 	*ck_realloc();
 #define TAR_EXTERN /**/
 #include "tar.h"
 
+#include "port.h"
+
+#if defined(_POSIX_VERSION) || defined(DIRENT)
+#include <dirent.h>
+#ifdef direct
+#undef direct
+#endif /* direct */
+#define direct dirent
+#define DP_NAMELEN(x) strlen((x)->d_name)
+#endif /* _POSIX_VERSION or DIRENT */
+#if !defined(_POSIX_VERSION) && !defined(DIRENT) && defined(BSD42)
+#include <sys/dir.h>
+#define DP_NAMELEN(x)	(x)->d_namlen
+#endif /* not _POSIX_VERSION and BSD42 */
+#ifdef __MSDOS__
+#include "msd_dir.h"
+#define DP_NAMELEN(x)	(x)->d_namlen
+#define direct dirent
+#endif
+#if defined(USG) && !defined(_POSIX_VERSION) && !defined(DIRENT)
+#include <ndir.h>
+#define DP_NAMELEN(x) strlen((x)->d_name)
+#endif /* USG and not _POSIX_VERSION and not DIRENT */
+
 /*
  * We should use a conversion routine that does reasonable error
  * checking -- atoi doesn't.  For now, punt.  FIXME.
  */
 #define intconv	atoi
+PTR ck_malloc();
+PTR ck_realloc();
 extern int	getoldopt();
 extern void	read_and();
 extern void	list_archive();
@@ -117,10 +91,21 @@ static int	n_indscan;	/* How many of the entries have we scanned? */
 
 extern FILE *msg_file;
 
+int	check_exclude();
+void	add_exclude();
+void	add_exclude_file();
+void	addname();
 void	describe();
+void	diff_init();
+void	extr_init();
+int	is_regex();
+void	name_add();
+void	name_init();
 void	options();
+char	*un_quote_string();
+int	wildmat();
 
-#ifndef S_IFLNK
+#ifndef S_ISLNK
 #define lstat stat
 #endif
 
@@ -154,6 +139,7 @@ struct option long_options[] =
 	{"delete",		0,	0,			14},
 	{"help",		0,	0,			12},
 
+	{"null",		0,	0,			16},
 	{"directory",		1,	0,			'C'},
 	{"record-number",	0,	&f_sayblock,		1},
 	{"files-from",		1,	0,			'T'},
@@ -186,7 +172,7 @@ struct option long_options[] =
 	{"incremental",		0,	0,			'G'},
 	{"listed-incremental",	1,	0,			'g'},
 	{"multi-volume",	0,	&f_multivol,		1},
-	{"info-script",		1,	&f_run_script_at_end,	1},
+	{"info-script",		1,	0,			'F'},
 	{"absolute-paths",	0,	&f_absolute_paths,	1},
 	{"interactive",		0,	&f_confirm,		1},
 	{"confirmation",	0,	&f_confirm,		1},
@@ -200,6 +186,13 @@ struct option long_options[] =
 	{"compress-block",	0,	&f_compress,		2},
 	{"sparse",		0,	&f_sparse_files,	1},
 	{"tape-length",		1,	0,			'L'},
+	{"remove-files",	0,	&f_remove_files,	1},
+	{"ignore-failed-read",	0,	&f_ignore_failed_read,	1},
+	{"checkpoint",		0,	&f_checkpoint,		1},
+	{"show-omitted-dirs",	0,	&f_show_omitted_dirs,	1},
+	{"volno-file",		1,	0,			17},
+	{"force-local",		0,	&f_force_local,		1},
+	{"atime-preserve",	0,	&f_atime_preserve,	1},
 
 	{0, 0, 0, 0}
 };
@@ -207,6 +200,7 @@ struct option long_options[] =
 /*
  * Main routine for tar.
  */
+void
 main(argc, argv)
 	int	argc;
 	char	**argv;
@@ -214,6 +208,7 @@ main(argc, argv)
 	extern char version_string[];
 
 	tar = argv[0];		/* JF: was "tar" Set program name */
+	filename_terminator = '\n';
 	errors = 0;
 
 	options(argc, argv);
@@ -221,6 +216,9 @@ main(argc, argv)
 	if(!n_argv)
 		name_init(argc, argv);
 
+	if (f_volno_file)
+	  init_volume_number ();
+	
 	switch(cmd_mode) {
 	case CMD_CAT:
 	case CMD_UPDATE:
@@ -237,7 +235,7 @@ main(argc, argv)
 		break;
 	case CMD_EXTRACT:
 		if (f_volhdr) {
-			char *err;
+			const char *err;
 			label_pattern = (struct re_pattern_buffer *)
 			  ck_malloc (sizeof *label_pattern);
 		 	err = re_compile_pattern (f_volhdr, strlen (f_volhdr),
@@ -255,7 +253,7 @@ main(argc, argv)
 		break;
 	case CMD_LIST:
 		if (f_volhdr) {
-			char *err;
+			const char *err;
 			label_pattern = (struct re_pattern_buffer *)
 			  ck_malloc (sizeof *label_pattern);
 		 	err = re_compile_pattern (f_volhdr, strlen (f_volhdr),
@@ -285,6 +283,8 @@ main(argc, argv)
  		fprintf(stderr,"For more information, type ``%s +help''.\n",tar);
 		exit(EX_ARGSBAD);
 	}
+	if (f_volno_file)
+	  closeout_volume_number ();
 	exit(errors);
 	/* NOTREACHED */
 }
@@ -303,9 +303,10 @@ options(argc, argv)
 
 	/* Set default option values */
 	blocking = DEFBLOCKING;		/* From Makefile */
-	ar_file = getenv("TAPE");	/* From environment, or */
-	if (ar_file == 0)
-		ar_file = DEF_AR_FILE;	/* From Makefile */
+	ar_files = (char **) malloc (sizeof (char *) * 10);
+	ar_files_len = 10;
+	n_ar_files = 0;
+	cur_ar_file = 0;
 
 	/* Parse options */
 	while ((c = getoldopt(argc, argv,
@@ -331,14 +332,14 @@ options(argc, argv)
 			cmd_mode=CMD_VERSION;
 			break;
 		case 12:	/* help */
-			fprintf(stderr,"This is GNU tar, the tape archiving program.\n");
+			printf("This is GNU tar, the tape archiving program.\n");
 			describe();
 			exit(1);
 		case 13:
 			f_new_files++;
 			goto get_newer;
 
-		case 14:			/* Delete in the archive */
+		case 14:	/* Delete in the archive */
 			if(cmd_mode!=CMD_NONE)
 				goto badopt;
 			cmd_mode=CMD_DELETE;
@@ -349,10 +350,18 @@ options(argc, argv)
 			add_exclude(optarg);
 			break;
 
-		case 'g':			/* We are making a GNU dump; save
-						   directories at the beginning of
-						   the archive, and include in each
-						   directory its contents */
+		case 16:	/* -T reads null terminated filenames. */
+			filename_terminator = '\0';
+			break;
+
+		case 17:
+			f_volno_file = optarg;
+			break;
+			
+		case 'g':	/* We are making a GNU dump; save
+				   directories at the beginning of
+				   the archive, and include in each
+				   directory its contents */
 			if(f_oldarch)
 				goto badopt;
 			f_gnudump++;
@@ -390,23 +399,28 @@ options(argc, argv)
 
 				sprintf(buf,"/dev/rmt%d",add+c-'0');
 #endif
-				ar_file=buf;
+				if (n_ar_files == ar_files_len)
+				  ar_files 
+				    = (char **) 
+				      ck_malloc (sizeof (char *)
+						 * (ar_files_len *= 2));
+				ar_files[n_ar_files++]=buf;
 			}
 			break;
 
-		case 'A':			/* Arguments are tar files,
-						   just cat them onto the end
-						   of the archive.  */
+		case 'A':	/* Arguments are tar files,
+				   just cat them onto the end
+				   of the archive.  */
 			if(cmd_mode!=CMD_NONE)
 				goto badopt;
 			cmd_mode=CMD_CAT;
 			break;
 
-		case 'b':			/* Set blocking factor */
+		case 'b':	/* Set blocking factor */
 			blocking = intconv(optarg);
 			break;
 
-		case 'B':			/* Try to reblock input */
+		case 'B':	/* Try to reblock input */
 			f_reblock++;		/* For reading 4.2BSD pipes */
 			break;
 
@@ -416,19 +430,26 @@ options(argc, argv)
 			cmd_mode=CMD_CREATE;
 			break;
 
-/*		case 'C':
+#if 0
+		case 'C':
 			if(chdir(optarg)<0)
 				msg_perror("Can't change directory to %d",optarg);
-			break; */
+			break;
+#endif
 
-		case 'd':			/* Find difference tape/disk */
+		case 'd':	/* Find difference tape/disk */
 			if(cmd_mode!=CMD_NONE)
 				goto badopt;
 			cmd_mode=CMD_DIFF;
 			break;
 
-		case 'f':			/* Use ar_file for the archive */
-			ar_file = optarg;
+		case 'f':	/* Use ar_file for the archive */
+			if (n_ar_files == ar_files_len)
+			  ar_files
+			    = (char **) ck_malloc (sizeof (char *)
+						   * (ar_files_len *= 2));
+		
+			ar_files[n_ar_files++] = optarg;
 			break;
 
 		case 'F':
@@ -438,10 +459,10 @@ options(argc, argv)
 			f_multivol++;
 			break;
 
-		case 'G':			/* We are making a GNU dump; save
-						   directories at the beginning of
-						   the archive, and include in each
-						   directory its contents */
+		case 'G':	/* We are making a GNU dump; save
+				   directories at the beginning of
+				   the archive, and include in each
+				   directory its contents */
 			if(f_oldarch)
 				goto badopt;
 			f_gnudump++;
@@ -461,9 +482,9 @@ options(argc, argv)
 			 */
 			break;
 
-		case 'k':			/* Don't overwrite files */
+		case 'k':	/* Don't overwrite files */
 #ifdef NO_OPEN3
-			msg("can't do -k option on this system");
+			msg("can't keep old files on this system");
 			exit(EX_ARGSBAD);
 #else
 			f_keep++;
@@ -475,9 +496,9 @@ options(argc, argv)
 			addname(optarg);
 			break;
 
-		case 'l':			/* When dumping directories, don't
-						   dump files/subdirectories that are
-						   on other filesystems. */
+		case 'l':	/* When dumping directories, don't
+				   dump files/subdirectories that are
+				   on other filesystems. */
 			f_local_filesys++;
 			break;
 
@@ -489,20 +510,24 @@ options(argc, argv)
 			f_modified++;
 			break;
 
-		case 'M':			/* Make Multivolume archive:
-						   When we can't write any more
-						   into the archive, re-open it,
-						   and continue writing */
+		case 'M':	/* Make Multivolume archive:
+				   When we can't write any more
+				   into the archive, re-open it,
+				   and continue writing */
 			f_multivol++;
 			break;
 
-		case 'N':			/* Only write files newer than X */
+		case 'N':	/* Only write files newer than X */
 		get_newer:
 			f_new_files++;
-			new_time=get_date(optarg,(struct timeb *)0);
+			new_time=get_date(optarg, (PTR) 0);
+			if (new_time == (time_t) -1) {
+			  msg("invalid date format `%s'", optarg);
+			  exit(EX_ARGSBAD);
+			}
 			break;
 
-		case 'o':			/* Generate old archive */
+		case 'o':	/* Generate old archive */
 			if(f_gnudump /* || f_dironly */)
 				goto badopt;
 			f_oldarch++;
@@ -520,7 +545,7 @@ options(argc, argv)
 			f_absolute_paths++;
 			break;
 
-		case 'r':			/* Append files to the archive */
+		case 'r':	/* Append files to the archive */
 			if(cmd_mode!=CMD_NONE)
 				goto badopt;
 			cmd_mode=CMD_APPEND;
@@ -549,9 +574,9 @@ options(argc, argv)
 			f_namefile++;
 			break;
 
-		case 'u':			/* Append files to the archive that
-						   aren't there, or are newer than the
-						   copy in the archive */
+		case 'u':	/* Append files to the archive that
+				   aren't there, or are newer than the
+				   copy in the archive */
 			if(cmd_mode!=CMD_NONE)
 				goto badopt;
 			cmd_mode=CMD_UPDATE;
@@ -573,7 +598,7 @@ options(argc, argv)
 			f_verify++;
 			break;
 
-		case 'x':			/* Extract files from the archive */
+		case 'x':	/* Extract files from the archive */
 			if(cmd_mode!=CMD_NONE)
 				goto badopt;
 			cmd_mode=CMD_EXTRACT;
@@ -598,6 +623,18 @@ options(argc, argv)
 	}
 
 	blocksize = blocking * RECORDSIZE;
+	if (n_ar_files == 0)
+	  {
+	    n_ar_files = 1;
+	    ar_files[0] = getenv("TAPE");	/* From environment, or */
+	    if (ar_files[0] == 0)
+	      ar_files[0] = DEF_AR_FILE;	/* From Makefile */
+	  }
+	if (n_ar_files > 1 && !f_multivol)
+	  {
+	    msg ("Multiple archive files requires --multi-volume\n");
+	    exit (EX_ARGSBAD);
+	  }
 }
 
 
@@ -606,79 +643,86 @@ options(argc, argv)
  *
  * We have to sprinkle in the KLUDGE lines because too many compilers
  * cannot handle character strings longer than about 512 bytes.  Yuk!
- * In particular, MSDOS and Xenix MSC and PDP-11 V7 Unix have this
+ * In particular, MS-DOS and Xenix MSC and PDP-11 V7 Unix have this
  * problem.
  */
 void
 describe()
 {
-	msg("choose one of the following:");
+	puts("choose one of the following:");
 	fputs("\
--A, +catenate,\n\
-    +concatenate	append tar files to an archive\n\
--c, +create		create a new archive\n\
--d, +diff,\n\
-    +compare		find differences between archive and file system\n\
-+delete			delete from the archive (not for use on mag tapes!)\n\
--r, +append		append files to the end of an archive\n\
--t, +list		list the contents of an archive\n\
--u, +update		only append files that are newer than copy in archive\n\
--x, +extract,\n\
-    +get		extract files from an archive\n",stderr);
+-A, --catenate,\n\
+    --concatenate	append tar files to an archive\n\
+-c, --create		create a new archive\n\
+-d, --diff,\n\
+    --compare		find differences between archive and file system\n\
+--delete			delete from the archive (not for use on mag tapes!)\n\
+-r, --append		append files to the end of an archive\n\
+-t, --list		list the contents of an archive\n\
+-u, --update		only append files that are newer than copy in archive\n\
+-x, --extract,\n\
+    --get		extract files from an archive\n",stdout);
 
-	fprintf(stderr, "\
+	fprintf(stdout, "\
 Other options:\n\
--b, +block-size N	block size of Nx512 bytes (default N=%d)\n", DEFBLOCKING);
+--atime-preserve	don't change access times on dumped files\n\
+-b, --block-size N	block size of Nx512 bytes (default N=%d)\n", DEFBLOCKING);
 	fputs ("\
--B, +read-full-blocks	reblock as we read (for reading 4.2BSD pipes)\n\
--C, +directory DIR	change to directory DIR\n\
-", stderr); /* KLUDGE */ fprintf(stderr, "\
--f, +file [HOSTNAME:]F	use archive file or device F (default %s)\n",
+-B, --read-full-blocks	reblock as we read (for reading 4.2BSD pipes)\n\
+-C, --directory DIR	change to directory DIR\n\
+--checkpoint		print directory names while reading the archive\n\
+", stdout); /* KLUDGE */ fprintf(stdout, "\
+-f, --file [HOSTNAME:]F	use archive file or device F (default %s)\n",
 				 DEF_AR_FILE); fputs("\
--F, +info-script F	run script at end of each tape (implies -M)\n\
--G, +incremental	create/list/extract old GNU-format incremental backup\n\
--g, +listed-incremental F create/list/extract new GNU-format incremental backup\n\
--h, +dereference	don't dump symlinks; dump the files they point to\n\
--i, +ignore-zeros	ignore blocks of zeros in archive (normally mean EOF)\n\
--k, +keep-old-files	keep existing files; don't overwrite them from archive\n\
--K, +starting-file FILE	begin at FILE in the archive\n\
--l, +one-file-system	stay in local file system when creating an archive\n\
--L, +tape-length LENGTH change tapes after writing LENGTH\n\
-", stderr); /* KLUDGE */ fputs("\
--m, +modification-time	don't extract file modified time\n\
--M, +multi-volume	create/list/extract multi-volume archive\n\
--N, +after-date DATE,\n\
-    +newer DATE		only store files newer than DATE\n\
--o, +old-archive,\n\
-    +portability	write a V7 format archive, rather than ANSI format\n\
--O, +to-stdout		extract files to standard output\n\
--p, +same-permissions,\n\
-    +preserve-permissions extract all protection information\n\
--P, +absolute-paths	don't strip leading `/'s from file names\n\
-+preserve		like -p -s\n\
-", stderr); /* KLUDGE */ fputs("\
--R, +record-number	show record number within archive with each message\n\
--s, +same-order,\n\
-    +preserve-order	list of names to extract is sorted to match archive\n\
-+same-order		create extracted files with the same ownership \n\
--S, +sparse		handle sparse files efficiently\n\
--T, +files-from F	get names to extract or create from file F\n\
-+totals			print total bytes written with +create\n\
--v, +verbose		verbosely list files processed\n\
--V, +label NAME		create archive with volume name NAME\n\
-+version		print tar program version number\n\
--w, +interactive,\n\
-    +confirmation	ask for confirmation for every action\n\
-", stderr); /* KLUDGE */ fputs("\
--W, +verify		attempt to verify the archive after writing it\n\
--X, +exclude FILE	exclude file FILE\n\
-+exclude-from FILE	exclude files listed in FILE\n\
--z, -Z, +compress,\n\
-    +uncompress      	filter the archive through compress\n\
+--force-local		archive file is local even if has a colon\n\
+-F, --info-script F	run script at end of each tape (implies -M)\n\
+-G, --incremental	create/list/extract old GNU-format incremental backup\n\
+-g, --listed-incremental F create/list/extract new GNU-format incremental backup\n\
+-h, --dereference	don't dump symlinks; dump the files they point to\n\
+-i, --ignore-zeros	ignore blocks of zeros in archive (normally mean EOF)\n\
+--ignore-failed-read	don't exit with non-zero status on unreadable files\n\
+-k, --keep-old-files	keep existing files; don't overwrite them from archive\n\
+-K, --starting-file FILE	begin at FILE in the archive\n\
+-l, --one-file-system	stay in local file system when creating an archive\n\
+-L, --tape-length LENGTH change tapes after writing LENGTH\n\
+", stdout); /* KLUDGE */ fputs("\
+-m, --modification-time	don't extract file modified time\n\
+-M, --multi-volume	create/list/extract multi-volume archive\n\
+-N, --after-date DATE,\n\
+    --newer DATE		only store files newer than DATE\n\
+-o, --old-archive,\n\
+    --portability	write a V7 format archive, rather than ANSI format\n\
+-O, --to-stdout		extract files to standard output\n\
+-p, --same-permissions,\n\
+    --preserve-permissions extract all protection information\n\
+-P, --absolute-paths	don't strip leading `/'s from file names\n\
+--preserve		like -p -s\n\
+", stdout); /* KLUDGE */ fputs("\
+-R, --record-number	show record number within archive with each message\n\
+--remove-files		remove files after adding them to the archive\n\
+-s, --same-order,\n\
+    --preserve-order	list of names to extract is sorted to match archive\n\
+--same-owner		create extracted files with the same ownership \n\
+-S, --sparse		handle sparse files efficiently\n\
+-T, --files-from F	get names to extract or create from file F\n\
+--null			-T reads null-terminated names, disable -C\n\
+--totals			print total bytes written with --create\n\
+-v, --verbose		verbosely list files processed\n\
+-V, --label NAME		create archive with volume name NAME\n\
+--version		print tar program version number\n\
+-w, --interactive,\n\
+    --confirmation	ask for confirmation for every action\n\
+", stdout); /* KLUDGE */ fputs("\
+-W, --verify		attempt to verify the archive after writing it\n\
+--exclude FILE		exclude file FILE\n\
+-X, --exclude-from FILE	exclude files listed in FILE\n\
+-z, -Z, --compress,\n\
+    --uncompress      	filter the archive through compress\n\
 -[0-7][lmh]		specify drive and density\n\
-", stderr);
+", stdout);
 }
 
+void
 name_add(name)
 char *name;
 {
@@ -694,6 +738,7 @@ char *name;
  *
  * They can either come from stdin or from argv.
  */
+void
 name_init(argc, argv)
 	int	argc;
 	char	**argv;
@@ -720,27 +765,68 @@ name_init(argc, argv)
 	}
 }
 
+/* Read the next filename read from STREAM and null-terminate it.
+   Put it into BUFFER, reallocating and adjusting *PBUFFER_SIZE if necessary.
+   Return the new value for BUFFER, or NULL at end of file. */
+
+char *
+read_name_from_file (buffer, pbuffer_size, stream)
+     char *buffer;
+     size_t *pbuffer_size;
+     FILE *stream;
+{
+  register int c;
+  register int indx = 0;
+  register size_t buffer_size = *pbuffer_size;
+
+  while ((c = getc (stream)) != EOF && c != filename_terminator)
+    {
+      if (indx == buffer_size)
+	{
+	  buffer_size += NAMSIZ;
+	  buffer = ck_realloc (buffer, buffer_size + 2);
+	}
+      buffer[indx++] = c;
+    }
+  if (indx == 0 && c == EOF)
+    return NULL;
+  if (indx == buffer_size)
+    {
+      buffer_size += NAMSIZ;
+      buffer = ck_realloc (buffer, buffer_size + 2);
+    }
+  buffer[indx] = '\0';
+  *pbuffer_size = buffer_size;
+  return buffer;
+}
+
 /*
  * Get the next name from argv or the name file.
  *
  * Result is in static storage and can't be relied upon across two calls.
+ *
+ * If CHANGE_DIRS is non-zero, treat a filename of the form "-C" as
+ * meaning that the next filename is the name of a directory to change to.
+ * If `filename_terminator' is '\0', CHANGE_DIRS is effectively always 0.
  */
 
-/* C is non-zero if we should deal with -C */
 char *
-name_next(c)
+name_next(change_dirs)
+     int change_dirs;
 {
 	static char	*buffer;	/* Holding pattern */
-	static buffer_siz;
+	static int buffer_siz;
 	register char	*p;
 	register char	*q = 0;
-	register char	*q2 = 0;
+	register int	next_name_is_dir = 0;
 	extern char *un_quote_string();
 
 	if(buffer_siz==0) {
 		buffer=ck_malloc(NAMSIZ+2);
 		buffer_siz=NAMSIZ;
 	}
+	if (filename_terminator == '\0')
+		change_dirs = 0;
  tryagain:
 	if (namef == NULL) {
 		if(n_indscan<n_indused)
@@ -757,7 +843,7 @@ name_next(c)
 		/* JF trivial support for -C option.  I don't know if
 		   chdir'ing at this point is dangerous or not.
 		   It seems to work, which is all I ask. */
-		if(c && !q && p[0]=='-' && p[1]=='C' && p[2]=='\0') {
+		if(change_dirs && !q && p[0]=='-' && p[1]=='C' && p[2]=='\0') {
 			q=p;
 			goto tryagain;
 		}
@@ -773,29 +859,22 @@ name_next(c)
 			goto tryagain;
 		return un_quote_string(p);
 	}
-	while(p = fgets(buffer, buffer_siz+1 /*nl*/, namef)) {
-		q = p+strlen(p)-1;		/* Find the newline */
-		if (q <= p)			/* Ignore empty lines */
-			continue;
-		while(q==p+buffer_siz && *q!='\n') {
-			buffer=ck_realloc(buffer,buffer_siz+NAMSIZ+2);
-			p=buffer;
-			q=buffer+buffer_siz;
-			buffer_siz+=NAMSIZ;
-			fgets(q+1,NAMSIZ,namef);
-			q=p+strlen(p)-1;
-		}
-		*q-- = '\0';			/* Zap the newline */
-		while (q > p && *q == '/')	/* Zap trailing /s */
+	while (p = read_name_from_file (buffer, &buffer_siz, namef)) {
+		buffer = p;
+		if (*p == '\0')
+			continue; /* Ignore empty lines. */
+		q = p + strlen (p) - 1;
+		while (q > p && *q == '/')	/* Zap trailing "/"s. */
 			*q-- = '\0';
-		if (c && !q2 && p[0] == '-' && p[1] == 'C' && p[2] == '\0') {
-			q2 = p;
+		if (change_dirs && next_name_is_dir == 0
+		    && p[0] == '-' && p[1] == 'C' && p[2] == '\0') {
+			next_name_is_dir = 1;
 			goto tryagain;
 		}
-		if (q2) {
+		if (next_name_is_dir) {
 			if (chdir (p) < 0)
-				msg_perror ("Can't chdir to %s", p);
-			q2 = 0;
+				msg_perror ("Can't change to directory %s", p);
+			next_name_is_dir = 0;
 			goto tryagain;
 		}
 		if(f_exclude && check_exclude(p))
@@ -809,6 +888,7 @@ name_next(c)
 /*
  * Close the name file, if any.
  */
+void
 name_close()
 {
 
@@ -827,6 +907,7 @@ name_close()
  * This option lets users of small machines extract an arbitrary
  * number of files by doing "tar t" and editing down the list of files.
  */
+void
 name_gather()
 {
 	register char *p;
@@ -873,6 +954,7 @@ name_gather()
 /*
  * Add a name to the namelist.
  */
+void
 addname(name)
 	char	*name;			/* pointer to name */
 {
@@ -880,7 +962,6 @@ addname(name)
 	register struct name	*p;	/* Current struct pointer */
 	static char *chdir_name;
 	char *new_name();
-#define MAXPATHLEN 1024
 
 	if(name[0]=='-' && name[1]=='C' && name[2]=='\0') {
 		chdir_name=name_next(0);
@@ -890,11 +971,9 @@ addname(name)
 			exit(EX_ARGSBAD);
 		}
 		if(chdir_name[0]!='/') {
-			char path[MAXPATHLEN];
-#if defined(MSDOS) || defined(USG)
-			int getcwd();
-
-			if(!getcwd(path,MAXPATHLEN))
+			char *path = ck_malloc(PATH_MAX);
+#if defined(__MSDOS__) || defined(USG) || defined(_POSIX_VERSION)
+			if(!getcwd(path,PATH_MAX))
 				msg("Couldn't get current directory.");
 				exit(EX_SYSTEM);
 #else
@@ -906,6 +985,7 @@ addname(name)
 			}
 #endif
 			chdir_name=new_name(path,chdir_name);
+			free(path);
 		}
 	}
 
@@ -952,9 +1032,12 @@ addname(name)
 	namelast = p;
 	if (!namelist) namelist = p;
 }
+
 /*
- * Match a name from an archive, p, with a name from the namelist.
+ * Return nonzero if name P (from an archive) matches any name from
+ * the namelist, zero if not.
  */
+int
 name_match(p)
 	register char *p;
 {
@@ -977,7 +1060,7 @@ again:
 		if (nlp->firstch && nlp->name[0] != p[0])
 			continue;
 
-		/* Regular expressions */
+		/* Regular expressions (shell globbing, actually). */
 		if (nlp->regexp) {
 			if (wildmat(p, nlp->name)) {
 				nlp->found = 1;	/* Remember it matched */
@@ -1027,6 +1110,7 @@ again:
 /*
  * Print the names of things in the namelist that were not matched.
  */
+void
 names_notfound()
 {
 	register struct name	*nlp,*next;
@@ -1043,7 +1127,7 @@ names_notfound()
 		 * other similarly broken software will need to waste
 		 * the time, though.
 		 */
-#ifndef unix
+#ifdef amiga
 		if (!f_sorted_names)
 			free(nlp);
 #endif
@@ -1059,6 +1143,7 @@ names_notfound()
 
 /* These next routines were created by JF */
 
+void
 name_expand()
 {
 ;
@@ -1137,6 +1222,7 @@ name_from_list()
 	return (char *)0;
 }
 
+void
 blank_name_list()
 {
 	struct name *n;
@@ -1199,11 +1285,12 @@ char **re_exclude = 0;
 int size_re_exclude = 0;
 int free_re_exclude = 0;
 
+void
 add_exclude(name)
 char *name;
 {
-	char *rname;
-	char **tmp_ptr;
+/*	char *rname;*/
+/*	char **tmp_ptr;*/
 	int size_buf;
 
 	un_quote_string(name);
@@ -1247,6 +1334,7 @@ char *name;
 	free_x_buffer-=size_buf+1;
 }
 
+void
 add_exclude_file(file)
 char *file;
 {
@@ -1267,7 +1355,7 @@ char *file;
 		exit(2);
 	}
 	while(fgets(buf,1024,fp)) {
-		int size_buf;
+/*		int size_buf;*/
 		char *end_str;
 
 		end_str=rindex(buf,'\n');
