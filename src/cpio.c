@@ -1,5 +1,5 @@
 /* Main program and argument processing for cpio.
-   Copyright (C) 1990, 1991, 1992, 1995, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1995, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -524,7 +524,31 @@ process_args (int argc, char *argv[])
 int
 main (int argc, char *argv[])
 {
+#if DOSWIN
+# if 0
+  program_name = get_program_base_name (argv[0]);
+# else
+  /* Drop the full path and .exe suffix.  */
+  {
+    char *p = program_name + strlen (program_name) - 4;
+
+    if (p > program_name
+	&& (strcmp (p, ".exe") == 0 || strcmp (p, ".EXE") == 0))
+      *p-- = '\0';
+    else
+      p += 3;
+
+    for ( ; p > program_name; p--)
+      if (*p == '/' || *p == '\\' || *p == ':')
+	{
+	  program_name = p + 1;
+	  break;
+	}
+  }
+# endif
+#else
   program_name = argv[0];
+#endif
   umask (0);
 
   setlocale (LC_ALL, "");

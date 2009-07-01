@@ -1,5 +1,5 @@
 /* Dump extensions to tar.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -532,9 +532,10 @@ write_dir_file (void)
     ERROR ((0, errno, "%s", listed_incremental_option));
 }
 
-/*---.
-| ?  |
-`---*/
+/*--------------------------------------------------------------------------.
+| Order two names lexicographically, yet group all those having match_found |
+| at the beginning (directories are marked that way).                       |
+`--------------------------------------------------------------------------*/
 
 static int
 compare_names (char *param1, char *param2)
@@ -542,11 +543,8 @@ compare_names (char *param1, char *param2)
   struct name *name1 = (struct name *) param1;
   struct name *name2 = (struct name *) param2;
 
-  if (name1->match_found)
-    return name2->match_found ? strcmp (name1->name, name2->name) : -1;
-
-  if (name2->match_found)
-    return 1;
+  if (name1->match_found != name2->match_found)
+    return name1->match_found ? -1 : 1;
 
   return strcmp (name1->name, name2->name);
 }

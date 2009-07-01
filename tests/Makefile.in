@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.3b from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
-# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -10,8 +10,8 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-# Makefile for tar regression tests.
-# Copyright © 1996, 1997, 1998 Free Software Foundation, Inc.
+# Makefile for Free paxutils regression tests.
+# Copyright © 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
 # François Pinard <pinard@iro.umontreal.ca>, 1988.
 
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@
 # 02111-1307, USA.
 
 
-SHELL = /bin/sh
+SHELL = @SHELL@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -65,7 +65,7 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 transform = @program_transform_name@
@@ -97,7 +97,6 @@ TEST_GID = @TEST_GID@
 TEST_GID2 = @TEST_GID2@
 TEST_GID2NAME = @TEST_GID2NAME@
 TEST_GIDNAME = @TEST_GIDNAME@
-TEST_GNUTAR = @TEST_GNUTAR@
 TEST_ID = @TEST_ID@
 TEST_MKFIFO = @TEST_MKFIFO@
 TEST_TAR = @TEST_TAR@
@@ -112,11 +111,8 @@ extra_libexec_progs = @extra_libexec_progs@
 AUTOMAKE_OPTIONS = gnits ../src/ansi2knr
 check_PROGRAMS = echotime genfile swapb swaphw verify wrsparse
 
-SUITE = c-append.m4 c-block.m4 c-crc.m4 c-default.m4 c-junk.m4 \
-c-long.m4 c-newc.m4 c-nopipe.m4 c-oldc.m4 c-owner.m4 c-pass.m4 \
-c-reset.m4 c-skip.m4 c-swap.m4 c-tar.m4 suite.m4 t-append.m4 \
-t-create.m4 t-delete.m4 t-exclude.m4 t-extract.m4 t-gzip.m4 \
-t-incremen.m4 t-volume.m4
+SUITE = c-append.m4 c-block.m4 c-crc.m4 c-default.m4 c-junk.m4 c-long.m4 c-newc.m4 c-nopipe.m4 c-oldc.m4 c-owner.m4 c-pass.m4 c-reset.m4 c-skip.m4 c-swap.m4 c-tar.m4 suite.m4 t-append.m4 t-create.m4 t-delete.m4 t-exclude.m4 t-extract.m4 t-gzip.m4 t-incremen.m4 t-volume.m4
+
 
 EXTRA_DIST = atgeneral.m4 make-mix test-one testsuite $(SUITE)
 
@@ -163,22 +159,23 @@ wrsparse_DEPENDENCIES =  ../lib/libpu.a
 wrsparse_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LINK = $(CC) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
-DIST_COMMON =  ChangeLog Makefile.am Makefile.in atconfig.in atlocal.in
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+DIST_COMMON =  README ChangeLog Makefile.am Makefile.in atconfig.in \
+atlocal.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
-GZIP = --best
+GZIP_ENV = --best
 SOURCES = echotime.c genfile.c swapb.c swaphw.c verify.c wrsparse.c
 OBJECTS = echotime$U.o genfile$U.o swapb$U.o swaphw$U.o verify$U.o wrsparse$U.o
 
-all: Makefile all-local
-
+all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --gnits --include-deps tests/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
@@ -257,25 +254,29 @@ wrsparse: $(wrsparse_OBJECTS) $(wrsparse_DEPENDENCIES)
 	@rm -f wrsparse
 	$(LINK) $(wrsparse_LDFLAGS) $(wrsparse_OBJECTS) $(wrsparse_LDADD) $(LIBS)
 echotime_.c: echotime.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/echotime.c; then echo $(srcdir)/echotime.c; else echo echotime.c; fi` | $(ANSI2KNR) > echotime_.c
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/echotime.c; then echo $(srcdir)/echotime.c; else echo echotime.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > echotime_.c
 genfile_.c: genfile.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/genfile.c; then echo $(srcdir)/genfile.c; else echo genfile.c; fi` | $(ANSI2KNR) > genfile_.c
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/genfile.c; then echo $(srcdir)/genfile.c; else echo genfile.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > genfile_.c
 swapb_.c: swapb.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/swapb.c; then echo $(srcdir)/swapb.c; else echo swapb.c; fi` | $(ANSI2KNR) > swapb_.c
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/swapb.c; then echo $(srcdir)/swapb.c; else echo swapb.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > swapb_.c
 swaphw_.c: swaphw.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/swaphw.c; then echo $(srcdir)/swaphw.c; else echo swaphw.c; fi` | $(ANSI2KNR) > swaphw_.c
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/swaphw.c; then echo $(srcdir)/swaphw.c; else echo swaphw.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > swaphw_.c
 verify_.c: verify.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/verify.c; then echo $(srcdir)/verify.c; else echo verify.c; fi` | $(ANSI2KNR) > verify_.c
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/verify.c; then echo $(srcdir)/verify.c; else echo verify.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > verify_.c
 wrsparse_.c: wrsparse.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/wrsparse.c; then echo $(srcdir)/wrsparse.c; else echo wrsparse.c; fi` | $(ANSI2KNR) > wrsparse_.c
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/wrsparse.c; then echo $(srcdir)/wrsparse.c; else echo wrsparse.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > wrsparse_.c
 echotime_.o genfile_.o swapb_.o swaphw_.o verify_.o wrsparse_.o : \
 $(ANSI2KNR)
 
 tags: TAGS
 
 ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
 	here=`pwd` && cd $(srcdir) \
-	  && mkid -f$$here/ID $(SOURCES) $(HEADERS) $(LISP)
+	  && mkid -f$$here/ID $$unique $(LISP)
 
 TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
@@ -303,37 +304,54 @@ subdir = tests
 distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
-	  test -f $(distdir)/$$file \
-	  || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
-	  || cp -p $$d/$$file $(distdir)/$$file; \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
 	done
-echotime.o: echotime.c
+echotime.o: echotime.c ../src/system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h
 genfile.o: genfile.c ../src/system.h ../config.h ../lib/pathmax.h \
 	../lib/gettext.h ../lib/error.h ../lib/getopt.h
-rediff.o: rediff.c ../lib/regex.h
-swapb.o: swapb.c
-swaphw.o: swaphw.c
-verify.o: verify.c ../config.h ../lib/filetypes.h ../lib/getopt.h
-wrsparse.o: wrsparse.c
+rediff.o: ../dist/tests/rediff.c ../dist/lib/regex.h
+swapb.o: swapb.c ../src/system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h
+swaphw.o: swaphw.c ../src/system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h
+verify.o: verify.c ../src/system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h ../lib/filetypes.h \
+	../lib/getopt.h
+wrsparse.o: wrsparse.c ../src/system.h ../config.h ../lib/pathmax.h \
+	../lib/gettext.h ../lib/error.h
 
-info:
-dvi:
-check: all $(check_PROGRAMS)
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-local
-installcheck:
-install-exec: 
-	@$(NORMAL_INSTALL)
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am:
+install-exec: install-exec-am
 
-install-data: 
-	@$(NORMAL_INSTALL)
+install-data-am:
+install-data: install-data-am
 
-install: install-exec install-data all
-	@:
-
-uninstall: 
-
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am:
+uninstall: uninstall-am
+all-am: Makefile all-local
+all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s' INSTALL_SCRIPT='$(INSTALL_PROGRAM)' install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 
 
@@ -346,30 +364,39 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean:  mostlyclean-checkPROGRAMS mostlyclean-compile \
+mostlyclean-am:  mostlyclean-checkPROGRAMS mostlyclean-compile \
 		mostlyclean-kr mostlyclean-tags mostlyclean-generic
 
-clean:  clean-checkPROGRAMS clean-compile clean-kr clean-tags \
-		clean-generic mostlyclean clean-local
+mostlyclean: mostlyclean-am
 
-distclean:  distclean-checkPROGRAMS distclean-compile distclean-kr \
-		distclean-tags distclean-generic clean
-	-rm -f config.status
+clean-am:  clean-checkPROGRAMS clean-compile clean-kr clean-tags \
+		clean-generic mostlyclean-am clean-local
 
-maintainer-clean:  maintainer-clean-checkPROGRAMS \
+clean: clean-am
+
+distclean-am:  distclean-checkPROGRAMS distclean-compile distclean-kr \
+		distclean-tags distclean-generic clean-am
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-checkPROGRAMS \
 		maintainer-clean-compile maintainer-clean-kr \
 		maintainer-clean-tags maintainer-clean-generic \
-		distclean
+		distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
 
 .PHONY: mostlyclean-checkPROGRAMS distclean-checkPROGRAMS \
 clean-checkPROGRAMS maintainer-clean-checkPROGRAMS mostlyclean-compile \
 distclean-compile clean-compile maintainer-clean-compile mostlyclean-kr \
 distclean-kr clean-kr maintainer-clean-kr tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir info dvi \
-check-local installcheck install-exec install-data install uninstall \
-all installdirs mostlyclean-generic distclean-generic clean-generic \
+distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
+dvi-am dvi check-local check check-am installcheck-am installcheck \
+install-exec-am install-exec install-data-am install-data install-am \
+install uninstall-am uninstall all-local all-redirect all-am all \
+installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
@@ -384,7 +411,7 @@ $(srcdir)/testsuite: atgeneral.m4 $(SUITE)
 	chmod +x $@
 
 clean-local:
-	rm -f FAIL-*.sh
+	rm -f debug-*.sh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

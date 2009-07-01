@@ -1,5 +1,5 @@
 /* Miscellaneous functions, not really specific to tar.
-   Copyright (C) 1988, 92, 94, 95, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 95, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -58,6 +58,85 @@ time_compare (time_t mt1, time_t mt2)
 
 #define ISPRINT(Char) (ISASCII (Char) && isprint (Char))
 
+/*------------------------------------------------.
+| Check if STRING looks like a globbing pattern.  |
+`------------------------------------------------*/
+
+/* FIXME: I should better check more closely.  It seems at first glance that
+   is_pattern is only used when reading a file, and ignored for all
+   command line arguments.  */
+
+bool
+is_pattern (const char *string)
+{
+  return (strchr (string, '*') != 0
+	  || strchr (string, '[') != 0
+	  || strchr (string, '?') != 0);
+}
+
+#if DOSWIN
+
+/*------------------------------------------------------------------------.
+| Return the program base name from the program name, excluding directory |
+| and suffix information.  The test suite wants it simple.                |
+`------------------------------------------------------------------------*/
+
+/* On DOS and Windows, the parent program have no real control on argv[0] of
+   its children.  It is the OS that computes it and puts it in the special
+   place where the startup code gets at it.  And DOS and Windows always place
+   there a full pathname, unless the system call which invokes the subsidiary
+   program already mentions a fully-qualified pathname.  The DJGPP startup
+   code does perform some massaging on argv[0] it gets, like mirroring the
+   slashes to the Unix forward style, but it cannot go further in adopting the
+   Unix behavior by dropping the leading directories because many DOS/Windows
+   programs and programmers are used to depend on that (for example, it makes
+   looking for files in the same directory as the executable a snap).  */
+
+const char *
+get_programe_base_name (const char *name)
+{
+  /* The test suite needs the program_name to be rather bare.  We need to find
+     the basename and drop the .exe suffix, if any; any other solution could
+     fail, since there are too many different shells on MS-DOS.  (Does this
+     really work with every Unix shell?)  */
+
+  const char *cursor = name;
+  const char *base = name;
+  const char *extension = name;
+
+  for (; *cursor; cursor++)
+    if (*cursor == '/' || *cursor == '\\' || *cursor == ':')
+      base = cursor + 1;
+    else if (*cursor == '.')
+      extension = cursor + 1;
+
+  if (extension > base
+      && tolower (extension[0]) == 'e' && tolower (extension[1]) == 'x'
+      && tolower (extension[2]) == 'e' && tolower (extension[3]) == '\0')
+    {
+      char *copy = xmalloc (extension - base + 1);
+
+      memcpy (copy, base, extension - base);
+      copy[extension - base] = '\0';
+      return copy;
+    }
+
+  return base;
+}
+
+void
+unixify_file_name (char *file_name)
+{
+  if (file_name == NULL)
+    return;
+
+  for (; *file_name; file_name++)
+    if (*file_name == '\\')
+      *file_name = '/';
+}
+
+#endif /* DOSWIN */
+
 /*-------------------------------------------------------------------------.
 | Assign STRING to a copy of VALUE if not NULL, or to NULL.  If STRING was |
 | not NULL, it is freed first.						   |
@@ -71,16 +150,15 @@ assign_string (char **string, const char *value)
   *string = value ? xstrdup (value) : NULL;
 }
 
-/*------------------------------------------------------------------------.
-| Allocate a copy of the string quoted as in C, and returns that.  If the |
-| string does not have to be quoted, it returns the NULL string.  The	  |
-| allocated copy should normally be freed with free() after the caller is |
-| done with it.								  |
-| 									  |
-| This is used in two contexts only: either listing a tar file for the	  |
-| --list (-t) option, or generating the directory file in incremental	  |
-| dumps.								  |
-`------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------.
+| Allocate a copy of the string quoted as in C, and returns that.  If the   |
+| string does not have to be quoted, it returns the NULL string.  The       |
+| allocated copy should normally be freed with free() after the caller is   |
+| done with it.                                                             |
+|                                                                           |
+| This is used while listing a tar file for the --list (-t) option, or when |
+| generating the directory file in incremental dumps.                       |
+`--------------------------------------------------------------------------*/
 
 char *
 quote_copy_string (const char *string)
@@ -167,17 +245,17 @@ quote_copy_string (const char *string)
   return NULL;
 }
 
-/*-------------------------------------------------------------------------.
-| Takes a quoted C string (like those produced by quote_copy_string) and   |
-| turns it back into the un-quoted original.  This is done in place.       |
-| Returns false only if the string was not properly quoted, but completes  |
-| the unquoting anyway (FIXME: the returned result is never checked).      |
-|                                                                          |
-| This is used for reading the saved directory file in incremental dumps.  |
-| It is used for decoding old `N' records (demangling names).  But also,   |
-| it is used for decoding file arguments, would they come from the shell   |
-| or a -T file, and for decoding the --exclude argument.                   |
-`-------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Takes a quoted string (like those produced by quote_copy_string) and turns |
+| it back into the un-quoted original.  This is done in place.  Returns      |
+| false only if the string was not properly quoted, but completes the        |
+| unquoting anyway (FIXME: the returned result is never checked).            |
+|                                                                            |
+| This is used for reading the saved directory file in incremental dumps.    |
+| It is used for decoding old `N' records (demangling names).  But also, it  |
+| is used for decoding file arguments, would they come from the shell or a   |
+| -T file, and for decoding the --exclude argument.                          |
+`---------------------------------------------------------------------------*/
 
 bool
 unquote_string (char *string)
@@ -406,6 +484,38 @@ is_dot_or_dotdot (const char *p)
   return (p[0] == '\0'
 	  || (p[0] == '.' && (p[1] == '\0'
 			      || (p[1] == '.' && p[2] == '\0'))));
+}
+
+/*------------------------------------------------------------------.
+| Close file having descriptor FD, and abort if close unsucessful.  |
+`------------------------------------------------------------------*/
+
+void
+xclose (int fd)
+{
+  if (close (fd) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot close file #%d"), fd));
+}
+
+/*-----------------------------------------------------------------------.
+| Duplicate file descriptor FROM into becoming INTO, or else, issue	 |
+| MESSAGE.  INTO is closed first and has to be the next available slot.	 |
+`-----------------------------------------------------------------------*/
+
+void
+xdup2 (int from, int into, const char *message)
+{
+  if (from != into)
+    {
+      int status = close (into);
+
+      if (status < 0 && errno != EBADF)
+	FATAL_ERROR ((0, errno, _("Cannot close descriptor %d"), into));
+      status = dup (from);
+      if (status != into)
+	FATAL_ERROR ((0, errno, _("Cannot properly duplicate %s"), message));
+      xclose (from);
+    }
 }
 
 /*-------------------------------------------------------------------------.

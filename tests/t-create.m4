@@ -53,6 +53,26 @@ directory/
 
 AT_CLEANUP(archive directory)
 
+AT_SETUP(if --from-files and --directory may be used together)
+dnl      ----------------------------------------------------
+
+AT_CHECK(
+[set -e
+> file
+mkdir directory
+cd directory
+tar cfv archive -C .. file
+tar cfCv archive .. file
+echo file | tar cfCTv archive .. -
+cd ..
+], ,
+[file
+file
+file
+])
+
+AT_CLEANUP(directory file)
+
 AT_SETUP(if --ignore-failed-read handles unreadable directories)
 dnl      ------------------------------------------------------
 
@@ -92,6 +112,8 @@ tar cf archive file
 status=$?
 chmod 600 file
 test $status = 2 || exit 1
+sed 's/denied (.*)$/denied/' stderr > stderr2
+mv stderr2 stderr
 ], , ,
 [tar: Cannot add file file: Permission denied
 tar: Processed all files possible, despite earlier errors
@@ -103,6 +125,8 @@ tar cf archive --ignore-failed-read file || exit 1
 status=$?
 chmod 600 file
 test $status = 0 || exit 1
+sed 's/denied (.*)$/denied/' stderr > stderr2
+mv stderr2 stderr
 ], , ,
 [tar: Cannot add file file: Permission denied
 ])
@@ -113,6 +137,8 @@ tar cf archive directory
 status=$?
 chmod 700 directory
 test $status = 2 || exit 1
+sed 's/denied (.*)$/denied/' stderr > stderr2
+mv stderr2 stderr
 ], , ,
 [tar: Cannot add directory directory: Permission denied
 tar: Processed all files possible, despite earlier errors
@@ -124,6 +150,8 @@ tar cf archive --ignore-failed-read directory || exit 1
 status=$?
 chmod 700 directory
 test $status = 0 || exit 1
+sed 's/denied (.*)$/denied/' stderr > stderr2
+mv stderr2 stderr
 ], , ,
 [tar: Cannot add directory directory: Permission denied
 ])

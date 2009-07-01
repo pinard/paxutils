@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4g.
+   This file documents `paxutils' 2.4h.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -28,6 +28,100 @@ permission notice identical to this one.
 manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: backup,  Next: suffix,  Prev: to-stdout,  Up: Preventing overwrite
+
+Backup options
+..............
+
+   `tar' offers options for making backups of files before writing new
+versions.  These options control the details of these backups.  They may
+apply to the archive itself before it is created or rewritten, as well
+as to individual extracted members.  Other free programs (GNU `cp',
+`install', `ln', and `mv', for example) offer similar options.
+
+   Backup options may prove unexpectedly useful when extracting archives
+containing many members having identical names, or when extracting
+archives on systems having file name limitations, making different
+members appear as having similar names through the side-effect of name
+truncation.  (This is true only if we have a good scheme for truncated
+backup names, of which we are not sure at all: we suspect work is
+needed in this area.  The MS-DOS/MS-Windows version works with numbered
+backups even when file names are truncated.)  When any existing file is
+backed up before being overwritten by extraction, clashing files are
+automatically renamed to be unique, and the true name is kept for only
+the last file of a series of clashing files.  By using verbose mode,
+users may track exactly what happens.  We recommend that you *always*
+use numbered backups when unpacking archives on MS-DOS and on other
+systems that have file name limitations.
+
+   When `tar' is given the `--backup'[=METHOD] option, it makes backups
+of files that are about to be overwritten or removed.  Without this
+option, the original versions are destroyed.  However, *Note
+keep-old-files::.
+
+   At the detail level, some decisions are still experimental, and may
+change in the future.  We are awaiting comments from our users.  So
+please do not get in the habit of depending blindly on the details of
+the backup features.  For example, currently, directories themselves
+are never renamed through using these options, so extracting a file
+over a directory still has good chances to fail.  Also, backup options
+apply to created archives, not only to extracted members.  For created
+archives, backups will not be attempted when the archive is a block or
+character device, or when it refers to a remote file.
+
+   For the sake of simplicity and efficiency, backups are made by
+renaming old files prior to creation or extraction, and not by copying.
+The original name is restored if the file creation fails.  If a
+failure occurs after a partial extraction of a file, both the backup
+and the partially extracted file are kept.
+
+   Some people express the desire to *always* use the
+`--backup'[=METHOD] option by defining some kind of alias or script.
+This is not as easy as one may think, due to the fact that old-style
+options should appear first and consume arguments a bit unpredictably
+for an alias or script.  But if you are ready to give up using
+old-style options, you may resort to using something like a (Bourne
+shell) function here:
+
+     $ tar () { /usr/local/bin/tar --backup $*; }
+
+   The `--backup'[=METHOD] option also accepts an optional value,
+METHOD, which determines the type of backups that will be made.  If
+this value is not given, the value of the `VERSION_CONTROL' environment
+variable is used.  And if `VERSION_CONTROL' is not set, the default
+backup method is `existing'.
+
+   This value corresponds to the Emacs variable `version-control'; the
+same values for METHOD are accepted as in Emacs.  The values also have
+more descriptive names.  Here are the valid METHODs (unique
+abbreviations are accepted):
+
+`t'
+`numbered'
+     Always make numbered backups.
+
+`nil'
+`existing'
+     Make numbered backups of files that already have them, simple
+     backups of the others.
+
+`never'
+`simple'
+     Always make simple backups.
+
+
+File: paxutils.info,  Node: suffix,  Prev: backup,  Up: Preventing overwrite
+
+Deciding the backup file suffixes
+.................................
+
+   The `--suffix=SUFFIX' option informs `tar' about the SUFFIX which
+should be appended to each backup file made when `--backup'[=METHOD] is
+used.  If the `--suffix=SUFFIX' option is not specified, the value of
+the `SIMPLE_BACKUP_SUFFIX' environment variable is used.  And if
+`SIMPLE_BACKUP_SUFFIX' is not set, the default is `~', just as in Emacs.
 
 
 File: paxutils.info,  Node: Unlinking,  Next: Attributes,  Prev: Preventing overwrite,  Up: extract
@@ -410,16 +504,31 @@ File: paxutils.info,  Node: atime-preserve,  Next: remove-files,  Prev: name-pre
 Preserving last access time
 ---------------------------
 
-   When `tar' reads files, their access times get updated.  To have
+   When `tar' reads files, their access time gets updated.  To have
 `tar' attempt to set the access times back to what they were before
 they were read, use the `--atime-preserve' option.  This doesn't work
 for files that you don't own, unless you're root, and it doesn't
 interact nicely with incremental dumps (*note Backups::.), but it is
 good enough for some purposes.
 
+   This options also preserves the modification time field, which has no
+effect unless the file is being modified simultaneously by another
+program.  As such, it also can eliminate evidence of reading or writing
+of the file by another program, if the access happens between the
+beginning and ending of `tar' reading the file.
+
+   A drawback of the `--atime-preserve' option is that it alters the
+`ctime' of the dumped files.  Some system administrators value `ctime'
+much more than `atime'.(1)  They should ponder carefully the advantages
+and disadvantages before using this option in system backups.
+
    This option doesn't have any effect on MS-DOS, since `atime' is not
 supported by the DOS FAT file system.  (It *does* work on MS-Windows
 9X.)
+
+   ---------- Footnotes ----------
+
+   (1) This is at least the case of the current `paxutils' maintainer!
 
 
 File: paxutils.info,  Node: remove-files,  Next: append,  Prev: atime-preserve,  Up: create
@@ -997,129 +1106,4 @@ used with `tar', has an initial sizing pass which uses this feature.
 * force-local::                 Inhibiting remote access
 * rsh-command::                 Selecting the remote access mechanism
 * rmt invocation::              How `rmt' works
-
-
-File: paxutils.info,  Node: Using file,  Next: Standard archive,  Prev: file,  Up: file
-
-Using the `--file' option
--------------------------
-
-   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option allows you to
-specify a file to use as the archive instead of the default archive
-file location.
-
-   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option names the
-archive to create or operate on.  Use in conjunction with any
-subcommand.
-
-   For example, in this `tar' command,
-
-     $ tar -cvf genres.tar blues folk jazz
-
-`genres.tar' is the name of the archive.  It must directly follow the
-`-f' option, since whatever directly follows `-f' will end up naming
-the archive.  If you neglect to specify an archive name, you may end up
-overwriting a file in the working directory with the archive you
-create, since `tar' will use this file's name for the archive name.
-
-   When the archive is being created to `/dev/null', `tar' tries to
-minimize input and output subcommands.  The Amanda backup system, when
-used with `tar', has an initial sizing pass which uses this feature.
-
-   If you do not name the archive, `tar' uses the value of the
-environment variable `TAPE' as the file name for the archive.  If that
-is not available, `tar' uses a default, compiled-in archive name,
-usually that for tape unit zero (ie. `/dev/tu00').  `tar' always needs
-an archive name.
-
-   If you use `-' as an archive name, `tar' reads the archive from
-standard input (when listing or extracting files), or writes it to
-standard output (when creating an archive).  If you use `-' as an
-archive name when modifying an archive, `tar' reads the original
-archive from its standard input and writes the entire new archive to
-its standard output.
-
-     $ cd sourcedir; tar -cf - . | (cd targetdir; tar -xf -)
-
-   The `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') option is used to
-specify the file name of the archive `tar' works on.  A few particular
-values are recognized especially, and then trigger special internal
-mechanics for accessing the archive.  For example:
-
-     -f [HOSTNAME:]FILE
-     --file=[HOSTNAME:]FILE
-
-may be used to access the archive file or device FILE on a networked
-computer named HOSTNAME.  Such special notations are described here.
-
-   If the file name is `-', `tar' reads the archive from standard input
-(when listing or extracting), or writes it to standard output (when
-creating).  If the `-' file name is given when updating an archive,
-`tar' will read the original archive from its standard input, and will
-write the entire new archive to its standard output.
-
-   If the file name contains a `:', it is interpreted as `hostname:file
-name'.  If the HOSTNAME contains an "at" sign (`@'), it is treated as
-`user@hostname:file name'.  In either case, `tar' will invoke the
-command `rsh' (or `remsh') to start up an `/etc/rmt' on the remote
-machine.  If you give an alternate login name, it will be given to the
-`rsh'.  Naturally, the remote machine must have an executable
-`/etc/rmt'.  This program is free software from the University of
-California, and a copy of the source code can be found with the sources
-for `tar'; it's compiled and installed by default.
-
-   Since absolute file names on MS-DOS and MS-Windows include a drive
-letter, like in `d:/dir/subdir/file', `tar' compiled for these
-platforms does not treat file names with `:' as remote files if there
-is a single letter before the colon.  `tar' also does not currently
-support archives on remote machines when it runs on MS-DOS/MS-Windows.
-
-   If `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') is not given, but the
-environment variable `TAPE' is set, its value is used; otherwise, old
-versions of `tar' used a default archive name (which was picked when
-`tar' was compiled).  The default is normally set up to be the "first"
-tape drive or other transportable I/O medium on the system.
-
-   Starting with version 1.11.5, `tar' uses standard input and standard
-output as the default device, and we will no longer try to support
-automatic device detection at installation time.  This was failing in
-so many cases that it was hopeless to repair.  It is now completely
-left to the installer to override standard input and standard output in
-favor of some default device, if this seems preferable to him/her.
-Further, we think *most* actual uses of `tar' are with pipes or disks,
-not tapes, cartridges, or diskettes.
-
-   Some users think that using standard input and output is asking for
-trouble.  This could lead to a nasty surprise on your screen if you
-forget to specify an output file name--especially if you are going
-through a network or terminal server capable of buffering large amounts
-of output.  We had so many bug reports in that area of configuring
-default tapes automatically, and so many contradicting requests, that
-we finally considered the problem to be intractable, at least if
-portability is demanded.  We could of course use something like
-`/dev/tape' as a default, but this is *also* asking for various kind of
-trouble, ranging from hung processes to accidental destruction of real
-tapes.  After having seen all this mess, using standard input and
-output as a default really sounds like the only clean choice left, and
-a very useful one too.
-
-   `tar' reads and writes archive in records; we suspect this is to be
-the main reason why block devices are preferred over character devices.
-Most probably, block devices are more efficient too.  The installer
-could also check for `DEFTAPE' in `<sys/mtio.h>'.
-
-
-File: paxutils.info,  Node: Standard archive,  Next: lmh,  Prev: Using file,  Up: file
-
-Archive on standard input or output
------------------------------------
-
-
-File: paxutils.info,  Node: lmh,  Next: Remote,  Prev: Standard archive,  Up: file
-
-Abbreviating drive and density
-------------------------------
-
-   In some circumstances, the special `-[0-7][lmh]' option may be used
-to specify drive and density.  (Not supported on MS-DOS/MS-Windows.)
 

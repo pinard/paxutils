@@ -97,7 +97,7 @@
 #undef uid_t
 
 /* Define if tar format support should be included.  (It doesn't work) */
-#undef CPIO_USE_GNU_TAR
+#undef CPIO_USE_OLDGNU
 
 /* Define if internal debugging code should be enabled.  */
 #undef DEBUG_CPIO
@@ -118,6 +118,9 @@
 /* Define to 1 if you lack a 3-argument version of open, and want to
    emulate it with system calls you do have.  */
 #undef EMUL_OPEN3
+
+/* Define to 1 if --per-file-compress option should be compiled in.  */
+#undef ENABLE_DALE_CODE
 
 /* Define to 1 if NLS is requested.  */
 #undef ENABLE_NLS
@@ -146,17 +149,8 @@
 /* Define to mt_model (v.g., for DG/UX), else to mt_type.  */
 #undef MTIO_CHECK_FIELD
 
-/* Define to the name of the distribution.  */
-#undef PACKAGE
-
-/* Define to 1 if ANSI function prototypes are usable.  */
-#undef PROTOTYPES
-
 /* Define to the full path of your rsh, if any.  */
 #undef REMOTE_SHELL
-
-/* Define to the version of the distribution.  */
-#undef VERSION
 
 /* Define to 1 for better use of the debugging malloc library.  See
    site ftp.antaire.com in antaire/src, file dmalloc/dmalloc.tar.gz.  */
@@ -276,6 +270,9 @@
 /* Define if you have the strstr function.  */
 #undef HAVE_STRSTR
 
+/* Define if you have the tcflush function.  */
+#undef HAVE_TCFLUSH
+
 /* Define if you have the usleep function.  */
 #undef HAVE_USLEEP
 
@@ -314,6 +311,9 @@
 
 /* Define if you have the <sgtty.h> header file.  */
 #undef HAVE_SGTTY_H
+
+/* Define if you have the <signal.h> header file.  */
+#undef HAVE_SIGNAL_H
 
 /* Define if you have the <stdbool.h> header file.  */
 #undef HAVE_STDBOOL_H
@@ -369,6 +369,9 @@
 /* Define if you have the <sys/wait.h> header file.  */
 #undef HAVE_SYS_WAIT_H
 
+/* Define if you have the <termio.h> header file.  */
+#undef HAVE_TERMIO_H
+
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
@@ -377,6 +380,19 @@
 
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+
+/* Define if compiler has function prototypes */
+#undef PROTOTYPES
+
+/* Define if using the dmalloc debugging malloc package */
+#undef WITH_DMALLOC
+
 
 /* This is recommended for all GNU sources.  We conditionalize it in
    case some library file defines it.  */

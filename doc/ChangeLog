@@ -1,3 +1,37 @@
+1999-05-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi (quick): Quick and wildcards are a usage error.
+
+1999-05-27  François Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi (directory, files-from): How to use these together.
+	Reported by Angelo Fumagalli.
+
+1999-05-23  François Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi (quick): New node.
+
+1999-05-04  François Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi (files-from): Document backslashed sequences.
+
+1999-04-13  François Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi (files-from): This options may be used many times
+	and intermixed with names on the command.
+	(null): Disable -C when from within files-from.
+
+	* paxutils.texi: Many editorial and various corrections for cpio.
+	Explanation of a few MS-DOS and Windows specificities.
+	Reported by Eli Zaretskii.
+
+1999-03-16  Dale R. Worley <worley@ariadne.com>
+
+	* paxutils.texi: Add notes to the documentation to describe how
+	--atime-preserve works, including that it restores the
+	modification time and that it may interact badly with simultaneous
+	access by other programs.
+
 1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
 	* help2man: New, from Brendan's version 1.5c.
@@ -6,7 +40,7 @@
 	* Makefile.am (tar.1): Adjust rule.
 	(cpio.1, mt.1, pax.1): New rules.
 	(man_MANS): Add pax.1.
-
+
 1998-06-24  François Pinard  <pinard@iro.umontreal.ca>
 
 	* tar.h: Many corrections to comments.

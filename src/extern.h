@@ -20,7 +20,7 @@
 enum archive_format
 {
   arf_unknown, arf_binary, arf_oldascii, arf_newascii, arf_crcascii,
-  arf_tar, arf_ustar, arf_gnutar, arf_hpoldascii, arf_hpbinary
+  arf_tar, arf_ustar, arf_oldgnu, arf_hpoldascii, arf_hpbinary
 };
 extern enum archive_format archive_format;
 extern int reset_time_flag;

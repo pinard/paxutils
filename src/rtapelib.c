@@ -1,5 +1,5 @@
 /* Functions for communicating with a remote tape drive.
-   Copyright (C) 1988, 92, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -32,7 +32,11 @@
 
 #include "system.h"
 
-#include <signal.h>
+#if HAVE_SIGNAL_H
+# include <signal.h>
+#else
+# include <sys/signal.h>
+#endif
 
 #if HAVE_NETDB_H
 # include <netdb.h>
@@ -83,7 +87,6 @@ char *rmt_path__;
 
 const char *rmt_program_array[] =
 {
-  "/zorglub/rmt",		/* FIXME! */
   "/sbin/rmt",
   "/etc/rmt",
   NULL
@@ -213,17 +216,17 @@ get_status (int handle)
 
 #if HAVE_NETDB_H
 
-/*--------------------------------------------------------------------------.
-| Execute the rmt program as user USER on remote system HOST using rexec.   |
-| Return a file descriptor of a bidirectional socket for stdin and stdout.  |
-| If USER is NULL, use the current username.                                |
-|                                                                           |
-| By default, this code is not used, since it requires that the user have   |
-| a .netrc file in his/her home directory, or that the application          |
-| designer be willing to have rexec prompt for login and password info.     |
-| This may be unacceptable, and .rhosts files for use with rsh are much     |
-| more common on BSD systems.                                               |
-`--------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Execute the rmt program as user USER on remote system HOST using rexec.    |
+| Return a file descriptor of a bidirectional socket for stdin and stdout.   |
+| If USER is NULL, or the empty string, use the current username.            |
+|                                                                            |
+| By default, this code is not used, since it requires that the user have a  |
+| .netrc file in his/her home directory, or that the application designer be |
+| willing to have rexec prompt for login and password info.  This may be     |
+| unacceptable, and .rhosts files for use with rsh are much more common on   |
+| BSD systems.                                                               |
+`---------------------------------------------------------------------------*/
 
 static int
 do_rexec (char *host, char *user)
@@ -232,6 +235,9 @@ do_rexec (char *host, char *user)
   int saved_stdout = dup (fileno (stdout));
   struct servent *rexecserv;
   int result;
+
+  if (user && *user == '\0')
+    user = NULL;
 
   /* When using cpio -o < filename, stdin is no longer the tty.  But the rexec
      subroutine reads the login and the passwd on stdin, to allow remote
@@ -276,6 +282,9 @@ do_rexec (char *host, char *user)
 | O_RDONLY, O_WRONLY, etc.  If successful, return the remote pipe number  |
 | plus BIAS.  REMOTE_SHELL may be overriden.  On error, return -1.	  |
 `------------------------------------------------------------------------*/
+
+/* There once was a COMPAT compilation define which, when defined, also
+   decoded PATH having the form `HOST[.USER]:FILE'.  */
 
 int
 rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
@@ -341,115 +350,116 @@ rmt_open__ (const char *path, int open_mode, int bias, const char *remote_shell)
   if (remote_user && *remote_user == '\0')
     remote_user = NULL;
 
-#if HAVE_NETDB_H
-
-  /* Execute the remote command using rexec.  */
-
-  READ_SIDE (remote_pipe_number) = do_rexec (remote_host, remote_user);
-  if (READ_SIDE (remote_pipe_number) < 0)
+  if (remote_shell)
     {
-      free (path_copy);
-      return -1;
-    }
+      /* Execute the remote command using execl.  */
 
-  WRITE_SIDE (remote_pipe_number) = READ_SIDE (remote_pipe_number);
+      const char *remote_shell_basename;
+      pid_t child;
 
-#else /* not HAVE_NETDB_H */
-  {
-    const char *remote_shell_basename;
-    pid_t child;
+      /* Identify the remote command to be executed.  */
 
-    /* Identify the remote command to be executed.  */
+      remote_shell_basename = strrchr (remote_shell, '/');
+      if (remote_shell_basename)
+	remote_shell_basename++;
+      else
+	remote_shell_basename = remote_shell;
 
-    if (!remote_shell)
-      {
-#ifdef REMOTE_SHELL
-	remote_shell = REMOTE_SHELL;
-#else
-	errno = EIO;		/* FIXME: errno should be read-only */
-	free (path_copy);
-	return -1;
-#endif
-      }
-    remote_shell_basename = strrchr (remote_shell, '/');
-    if (remote_shell_basename)
-      remote_shell_basename++;
-    else
-      remote_shell_basename = remote_shell;
+      /* Set up the pipes for the `rsh' command, and fork.  */
 
-    /* Set up the pipes for the `rsh' command, and fork.  */
-
-    if (pipe (to_remote[remote_pipe_number]) == -1
-	|| pipe (from_remote[remote_pipe_number]) == -1)
-      {
-	free (path_copy);
-	return -1;
-      }
-
-    child = fork ();
-    if (child == -1)
-      {
-	free (path_copy);
-	return -1;
-      }
-
-    if (child == 0)
-      {
-	/* Child.  */
-
-	close (0);
-	dup (to_remote[remote_pipe_number][PREAD]);
-	close (to_remote[remote_pipe_number][PREAD]);
-	close (to_remote[remote_pipe_number][PWRITE]);
-
-	close (1);
-	dup (from_remote[remote_pipe_number][PWRITE]);
-	close (from_remote[remote_pipe_number][PREAD]);
-	close (from_remote[remote_pipe_number][PWRITE]);
-
-#if !DOSWIN
-	setuid (getuid ());
-	setgid (getgid ());
-#endif
-
+      if (pipe (to_remote[remote_pipe_number]) == -1
+	  || pipe (from_remote[remote_pipe_number]) == -1)
 	{
-	  const char **rmt_cursor;
-
-	  for (rmt_cursor = rmt_program_array; *rmt_cursor; rmt_cursor++)
-	    if (remote_user)
-	      execl (remote_shell, remote_shell_basename, remote_host,
-		     "-l", remote_user, *rmt_cursor, (char *) 0);
-	    else
-	      execl (remote_shell, remote_shell_basename, remote_host,
-		     *rmt_cursor, (char *) 0);
+	  free (path_copy);
+	  return -1;
 	}
 
-	/* Bad problems if we get here.  */
+      child = fork ();
+      if (child == -1)
+	{
+	  free (path_copy);
+	  return -1;
+	}
 
-	/* In a previous version, _exit was used here instead of exit.  */
-	error (EXIT_ON_EXEC_ERROR, errno, _("Cannot execute remote shell"));
-      }
+      if (child == 0)
+	{
+	  /* Child.  */
 
-    /* Parent.  */
+	  close (0);
+	  dup (to_remote[remote_pipe_number][PREAD]);
+	  close (to_remote[remote_pipe_number][PREAD]);
+	  close (to_remote[remote_pipe_number][PWRITE]);
 
-    close (from_remote[remote_pipe_number][PWRITE]);
-    close (to_remote[remote_pipe_number][PREAD]);
-  }
-#endif /* not HAVE_NETDB_H */
+	  close (1);
+	  dup (from_remote[remote_pipe_number][PWRITE]);
+	  close (from_remote[remote_pipe_number][PREAD]);
+	  close (from_remote[remote_pipe_number][PWRITE]);
 
-  /* Attempt to open the tape device.  */
+#if !DOSWIN
+	  setuid (getuid ());
+	  setgid (getgid ());
+#endif
+
+	  {
+	    const char **rmt_cursor;
+
+	    for (rmt_cursor = rmt_program_array; *rmt_cursor; rmt_cursor++)
+	      if (remote_user)
+		execl (remote_shell, remote_shell_basename, remote_host,
+		       "-l", remote_user, *rmt_cursor, (char *) 0);
+	      else
+		execl (remote_shell, remote_shell_basename, remote_host,
+		       *rmt_cursor, (char *) 0);
+	  }
+
+	  /* Bad problems if we get here.  */
+
+	  /* In a previous version, _exit was used here instead of exit.  */
+	  error (EXIT_ON_EXEC_ERROR, errno, _("Cannot execute remote shell"));
+	}
+
+      /* Parent.  */
+
+      close (from_remote[remote_pipe_number][PWRITE]);
+      close (to_remote[remote_pipe_number][PREAD]);
+    }
+  else
+    {
+#if HAVE_NETDB_H
+      /* Execute the remote command using rexec.  */
+
+      READ_SIDE (remote_pipe_number) = do_rexec (remote_host, remote_user);
+      if (READ_SIDE (remote_pipe_number) < 0)
+	{
+	  free (path_copy);
+	  return -1;
+	}
+      WRITE_SIDE (remote_pipe_number) = READ_SIDE (remote_pipe_number);
+#else
+      /* The remote command cannot be executed.  */
+
+      errno = EIO;		/* FIXME: errno should be read-only */
+      free (path_copy);
+      return -1;
+#endif
+    }
+
+  /* Finally, attempt to open the tape device.  */
 
   {
-    char command_buffer[COMMAND_BUFFER_SIZE];
+    char *command_buffer = (char *)
+      xmalloc (30 + strlen (remote_file));
 
     sprintf (command_buffer, "O%s\n%d\n", remote_file, open_mode);
     if (do_command (remote_pipe_number, command_buffer) == -1
 	|| get_status (remote_pipe_number) == -1)
       {
 	do_shutdown (remote_pipe_number, errno);
+	free (command_buffer);
 	free (path_copy);
 	return -1;
       }
+    free (command_buffer);
   }
 
   free (path_copy);

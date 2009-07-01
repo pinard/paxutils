@@ -1,5 +1,5 @@
 /* Remote connection server.
-   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -199,7 +199,12 @@ main (int argc, char *const *argv)
      locally used.  Localisation would be best accomplished by the calling
      tar, on messages found within error packets.  */
 
+#if DOSWIN
+  program_name = get_program_base_name (argv[0]);
+#else
   program_name = argv[0];
+#endif
+
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);

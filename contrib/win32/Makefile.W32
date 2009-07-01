@@ -1,0 +1,74 @@
+# Tar makefile for Windows NT
+#   Geoff Voelker (voelker@cs.washington.edu)
+#   Revised for 1.12 by Paul E. Jones <paulej@acm.org>
+#
+# Copyright (C) 1993 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+.silent:
+
+!include <ntwin32.mak>
+
+#
+# definitions
+#
+
+RM	      = del /q
+
+DEFS	      = -DSTDC_HEADERS -DHAVE_FCNTL_H -DHAVE_UTIME_H \
+		-DHAVE_GETCWD -DHAVE_STRING_H -DHAVE_STRSTR \
+		-DHAVE_NDIR_H -DSIZEOF_LONG=4 -DSIZEOF_UNSIGNED_LONG=4 \
+		-DVERSION=\"1.13\" -DWIN32 -D_CONSOLE
+
+INCDIRS	      = -I. -I../lib
+
+LIBS	      = $(conlibs) setargv.obj
+
+OBJS 	      = argmatch.obj arith.obj backupfile.obj \
+		buffer.obj compare.obj create.obj delete.obj \
+		error.obj extract.obj fnmatch.obj \
+		getopt.obj getopt1.obj getversion.obj \
+		incremen.obj list.obj mangle.obj misc.obj missing.obj \
+		modechange.obj ndir.obj names.obj popen.obj tar.obj \
+		update.obj wnt_dir.obj xmalloc.obj \
+		xstrdup.obj
+
+#
+# everything in this directory
+#
+all:		tar.exe
+
+#
+# tar
+#
+tar.exe:	$(OBJS)
+		$(link) $(linkdebug) $(conflags) -out:$@ $(OBJS) $(LIBS)
+
+#
+# source to object
+#
+argmatch.obj backupfile.obj error.obj fnmatch.obj getopt.obj getopt1.obj \
+getversion.obj modechange.obj wnt_dir.obj xmalloc.obj xstrdup.obj:
+		$(cc) $(DEFS) $(INCDIRS) -Ox $(cflags) $(cvars) ../lib/$*.c
+
+.c.obj:;	$(cc) $(DEFS) $(INCDIRS) -Ox $(cflags) $(cvars) $<
+
+
+clean:;		$(RM) *.obj tar.exe
+
+mostlyclean: 	clean
+distclean: 	clean
+realclean: 	clean

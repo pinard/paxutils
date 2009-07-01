@@ -1,5 +1,5 @@
 /* copyout.c - create a cpio archive
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ pax_copy_out_one_file (int top_level, int out_file_des,
      aren't required to).  */
   if (archive_format == arf_tar
       || archive_format == arf_ustar
-      || archive_format == arf_gnutar)
+      || archive_format == arf_oldgnu)
     {
       /* In tar, we dump directories first.  */
       tar_flag = 1;
@@ -206,6 +206,10 @@ process_copy_out (void)
 #ifdef __MSDOS__
   setmode (archive_des, O_BINARY);
 #endif
+#if DOSWIN
+  if (!isatty (archive_des))
+    setmode (archive_des, O_BINARY);
+#endif
 
   /* Check whether the output file might be a tape.  */
   out_file_des = archive_des;
@@ -225,6 +229,13 @@ process_copy_out (void)
 			   S_ISCHR (stat_info.st_mode));
       output_is_seekable = S_ISREG (stat_info.st_mode);
     }
+
+#if DOSWIN
+  /* We might as well give the user an opportunity to recover from "No space
+     on device" even if they are writing to disk files.  It is specifically
+     handy with floppies.  */
+  output_is_special = !isatty (out_file_des);
+#endif
 
   if (append_flag)
     {
@@ -275,6 +286,10 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
   file_hdr.c_dev_maj = major (stat_info->st_dev);
   file_hdr.c_dev_min = minor (stat_info->st_dev);
   file_hdr.c_ino = stat_info->st_ino;
+#if DOSWIN
+  /* DJGPP doesn't support st_rdev.  Repair that.  */
+  stat_info->st_rdev = stat_info->st_dev;
+#endif
   /* For POSIX systems that don't define the S_IF macros, we can't assume that
      S_ISfoo means the standard Unix S_IFfoo bit(s) are set.  So do it
      manually, with a different name.  Bleah.  */
@@ -336,7 +351,7 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
     case CP_IFREG:
 #ifndef __MSDOS__
       if (archive_format == arf_tar || archive_format == arf_ustar
-	  || archive_format == arf_gnutar)
+	  || archive_format == arf_oldgnu)
 	{
 	  char *otherfile;
 	  if ((otherfile = find_inode_file (file_hdr.c_ino,
@@ -382,7 +397,7 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
 
 #ifndef __MSDOS__
       if (archive_format == arf_tar || archive_format == arf_ustar
-	  || archive_format == arf_gnutar)
+	  || archive_format == arf_oldgnu)
 	add_inode (file_hdr.c_ino, file_hdr.c_name, file_hdr.c_dev_maj,
 		   file_hdr.c_dev_min);
 #endif
@@ -426,7 +441,7 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
 		 file_hdr.c_name);
 	  return;
 	}
-      else if (archive_format == arf_ustar || archive_format == arf_gnutar)
+      else if (archive_format == arf_ustar || archive_format == arf_oldgnu)
 	{
 	  char *otherfile;
 	  if ((otherfile = find_inode_file (file_hdr.c_ino,
@@ -465,7 +480,7 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
 	  }
 	file_hdr.c_filesize = link_size;
 	if (archive_format == arf_tar || archive_format == arf_ustar
-	    || archive_format == arf_gnutar)
+	    || archive_format == arf_oldgnu)
 	  {
 	    /* FIXME: gnu tar can do long symlinks.  */
 	    if (link_size + 1 > 100)
@@ -562,7 +577,7 @@ tape_pad_output (int out_file_des, int offset)
   if (archive_format == arf_newascii || archive_format == arf_crcascii)
     pad = (4 - (offset % 4)) % 4;
   else if (archive_format == arf_tar || archive_format == arf_ustar
-	   || archive_format == arf_gnutar)
+	   || archive_format == arf_oldgnu)
     pad = (512 - (offset % 512)) % 512;
   else if (archive_format != arf_oldascii && archive_format != arf_hpoldascii)
     pad = (2 - (offset % 2)) % 2;
@@ -751,7 +766,7 @@ writeout_defered_file (struct new_cpio_header *header,
 
 #ifndef __MSDOS__
   if (archive_format == arf_tar || archive_format == arf_ustar
-      || archive_format == arf_gnutar)
+      || archive_format == arf_oldgnu)
     add_inode (file_hdr.c_ino, file_hdr.c_name, file_hdr.c_dev_maj,
 	       file_hdr.c_dev_min);
 #endif

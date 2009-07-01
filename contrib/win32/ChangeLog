@@ -1,0 +1,12 @@
+1998-11-20  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am: New file.
+	Reported by Paul E. Jones.
+
+1998-03-07  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* wnt_dir.c, ndir.h, missing.c, missing.h: New files, for
+	Windows/NT.
+
+	* Makefile.W32: New file, for building with WIN32 compilers.
+	From Geoff Voelker and Paul E. Jones.

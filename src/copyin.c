@@ -1,5 +1,5 @@
 /* copyin.c - extract or list a cpio archive
-   Copyright (C) 1990, 91, 92, 95, 96, 98 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 95, 96, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ read_in_header (struct new_cpio_header *file_hdr, int in_des)
     }
 
   if (archive_format == arf_tar || archive_format == arf_ustar
-      || archive_format == arf_gnutar)
+      || archive_format == arf_oldgnu)
     {
       if (append_flag)
 	last_header_start = input_bytes - io_block_size +
@@ -194,6 +194,10 @@ process_copy_in (void)
 #ifdef __MSDOS__
   setmode (archive_des, O_BINARY);
 #endif
+#if DOSWIN
+  if (!isatty (archive_des))
+    setmode (archive_des, O_BINARY);
+#endif
   /* Check whether the input file might be a tape.  */
   in_file_des = archive_des;
   if (_isrmt (in_file_des))
@@ -212,6 +216,14 @@ process_copy_in (void)
 	S_ISCHR (stat_info.st_mode);
       input_is_seekable = S_ISREG (stat_info.st_mode);
     }
+
+#if DOSWIN
+  /* We might as well give the user an opportunity to recover from premature
+     end of input even if they are reading from a disk file.  It is
+     specifically handy with floppies.  */
+  input_is_special = !isatty (in_file_des);
+#endif
+
   output_is_seekable = true;
 
   /* While there is more input in the collection, process the input.  */
@@ -254,6 +266,15 @@ process_copy_in (void)
 
       /* Do we have to ignore absolute paths, and if so, does the filename
          have an absolute path?  */
+#if defined (__MSDOS__) || defined (DOSWIN)
+      /* On MS-DOS and MS-Windows, absolute pathnames might include drive
+	 letters.  Remove them, if absolute paths are to be ignored.  */
+      if (no_abs_paths_flag && file_hdr.c_name
+	  && file_hdr.c_name [0] >= 'A' && file_hdr.c_name [0] <= 'z'
+	  && file_hdr.c_name [1] == ':')
+	memmove (file_hdr.c_name, file_hdr.c_name + 2,
+		 strlen (file_hdr.c_name) - 1);
+#endif
       if (no_abs_paths_flag && file_hdr.c_name && file_hdr.c_name[0] == '/')
 	{
 	  char *p;
@@ -264,7 +285,7 @@ process_copy_in (void)
 	  if (*p == '\0')
 	    strcpy (file_hdr.c_name, ".");
 	  else if (archive_format == arf_tar || archive_format == arf_ustar
-		   || archive_format == arf_gnutar)
+		   || archive_format == arf_oldgnu)
 	    /* read_in_tar_header doesn't allocate the name dynamically.  */
 	    file_hdr.c_name = p;
 	  else
@@ -309,7 +330,7 @@ process_copy_in (void)
 		{
 		  if (archive_format != arf_tar
 		      && archive_format != arf_ustar
-		      && archive_format != arf_gnutar)
+		      && archive_format != arf_oldgnu)
 		    {
 		      link_name = (char *) xmalloc ((unsigned int)
 						    file_hdr.c_filesize + 1);
@@ -458,14 +479,15 @@ process_copy_in (void)
 		      tape_skip_padding (in_file_des, file_hdr.c_filesize);
 		      break;
 		    }
-		  /* If the file has data (filesize != 0), then presumably
-		     any other links have already been defer_copyin'ed(),
-		     but GNU cpio version 2.0-2.2 didn't do that, so we
-		     still have to check for links here (and also in case
-		     the archive was created and later appeneded to). */
+		  /* If the file has data (filesize != 0), then presumably any
+		     other links have already been defer_copyin'ed(), but cpio
+		     2.0-2.2 didn't do that, so we still have to check for
+		     links here (and also in case the archive was created and
+		     later appeneded to).  */
 		  link_res = link_to_maj_min_ino (file_hdr.c_name,
-				file_hdr.c_dev_maj, file_hdr.c_dev_min,
-				file_hdr.c_ino);
+						  file_hdr.c_dev_maj,
+						  file_hdr.c_dev_min,
+						  file_hdr.c_ino);
 		  if (link_res == 0)
 		    {
 		      tape_toss_input (in_file_des, file_hdr.c_filesize);
@@ -476,12 +498,13 @@ process_copy_in (void)
 	      else if (file_hdr.c_nlink > 1
 		       && archive_format != arf_tar
 		       && archive_format != arf_ustar
-		       && archive_format != arf_gnutar)
+		       && archive_format != arf_oldgnu)
 		{
 		  int link_res;
 		  link_res = link_to_maj_min_ino (file_hdr.c_name,
-				file_hdr.c_dev_maj, file_hdr.c_dev_min,
-				file_hdr.c_ino);
+						  file_hdr.c_dev_maj,
+						  file_hdr.c_dev_min,
+						  file_hdr.c_ino);
 		  if (link_res == 0)
 		    {
 		      tape_toss_input (in_file_des, file_hdr.c_filesize);
@@ -491,7 +514,7 @@ process_copy_in (void)
 		}
 	      else if ((archive_format == arf_tar
 			|| archive_format == arf_ustar
-			|| archive_format == arf_gnutar)
+			|| archive_format == arf_oldgnu)
 		       && file_hdr.c_tar_linkname
 		       && file_hdr.c_tar_linkname[0] != '\0')
 		{
@@ -521,7 +544,19 @@ process_copy_in (void)
 		    }
 		  if (out_file_des < 0)
 		    {
-		      error (0, errno, "%s", file_hdr.c_name);
+		      /* If we cannot copy because -d wasn't given, make the
+			 error message mention the directory part of name.  */
+		      if (!create_dir_flag)
+			{
+			  char *dirpart = dir_name (file_hdr.c_name);
+			  struct stat dirpart_stat;
+
+			  if (stat (dirpart, &dirpart_stat) < 0)
+			    error (0, errno, "%s", dirpart);
+			  free (dirpart);
+			}
+		      else
+			error (0, errno, "%s", file_hdr.c_name);
 		      tape_toss_input (in_file_des, file_hdr.c_filesize);
 		      tape_skip_padding (in_file_des, file_hdr.c_filesize);
 		      continue;
@@ -544,7 +579,8 @@ process_copy_in (void)
 			error (0, 0, _("cannot swap bytes of %s: odd number of bytes"),
 			       file_hdr.c_name);
 		    }
-		  copy_files_tape_to_disk (in_file_des, out_file_des, file_hdr.c_filesize);
+		  copy_files_tape_to_disk (in_file_des, out_file_des,
+					   file_hdr.c_filesize);
 		  disk_empty_output_buffer (out_file_des);
 		  if (close (out_file_des) < 0)
 		    error (0, errno, "%s", file_hdr.c_name);
@@ -626,11 +662,23 @@ process_copy_in (void)
 		}
 	      if (res < 0)
 		{
+		  /* If we aren't allowed to create intermediate directories,
+		     make the error message mention the parent directory.  */
+		  if (!create_dir_flag)
+		    {
+		      char *dirpart = dir_name (file_hdr.c_name);
+		      struct stat dirpart_stat;
+
+		      if (stat (dirpart, &dirpart_stat) < 0)
+			error (0, errno, "%s", dirpart);
+		      free (dirpart);
+		      continue;
+		    }
 		  /* In some odd cases where the file_hdr.c_name includes `.',
 		     the directory may have actually been created by
-		     create_all_directories(), so the mkdir will fail
-		     because the directory exists.  If that's the case,
-		     don't complain about it.  */
+		     create_all_directories(), so the mkdir will fail because
+		     the directory exists.  If that's the case, don't complain
+		     about it.  */
 		  if ( (errno != EEXIST) ||
 		       (lstat (file_hdr.c_name, &stat_info) != 0) ||
 		       !(S_ISDIR (stat_info.st_mode) ) )
@@ -658,7 +706,15 @@ process_copy_in (void)
 		{
 		  times.actime = times.modtime = file_hdr.c_mtime;
 		  if (utime (file_hdr.c_name, &times) < 0)
-		    error (0, errno, "%s", file_hdr.c_name);
+#if defined(__MSDOS__) || defined(DOSWIN)
+		    /* MS-DOS/Windows won't let us to set mod times of
+		       a directory.  Make the error message explicit.  */
+		    if (errno == EACCES)
+		      error (0, 0, "%s: Cannot set access time of a directory",
+			     file_hdr.c_name);
+		    else
+#endif
+		      error (0, errno, "%s", file_hdr.c_name);
 		}
 	      break;
 
@@ -674,17 +730,18 @@ process_copy_in (void)
 	      if (file_hdr.c_nlink > 1
 		  && archive_format != arf_tar
 		  && archive_format != arf_ustar
-		  && archive_format != arf_gnutar)
+		  && archive_format != arf_oldgnu)
 		{
 		  int link_res;
 		  link_res = link_to_maj_min_ino (file_hdr.c_name,
-				file_hdr.c_dev_maj, file_hdr.c_dev_min,
-				file_hdr.c_ino);
+						  file_hdr.c_dev_maj,
+						  file_hdr.c_dev_min,
+						  file_hdr.c_ino);
 		  if (link_res == 0)
 		    break;
 		}
 	      else if ((archive_format == arf_ustar
-			|| archive_format == arf_gnutar)
+			|| archive_format == arf_oldgnu)
 		       && file_hdr.c_tar_linkname
 		       && file_hdr.c_tar_linkname [0] != '\0')
 		{
@@ -740,7 +797,7 @@ process_copy_in (void)
 	    case CP_IFLNK:
 	      {
 		if (archive_format != arf_tar && archive_format != arf_ustar
-		    && archive_format != arf_gnutar)
+		    && archive_format != arf_oldgnu)
 		  {
 		    link_name = (char *) xmalloc ((unsigned int) file_hdr.c_filesize + 1);
 		    link_name[file_hdr.c_filesize] = '\0';
@@ -762,7 +819,19 @@ process_copy_in (void)
 		  }
 		if (res < 0)
 		  {
-		    error (0, errno, "%s", file_hdr.c_name);
+		    /* If we aren't allowed to create intermediate directories,
+		       make the error message mention the parent directory.  */
+		    if (!create_dir_flag)
+		      {
+			char *dirpart = dir_name (file_hdr.c_name);
+			struct stat dirpart_stat;
+
+			if (stat (dirpart, &dirpart_stat) < 0)
+			  error (0, errno, "%s", dirpart);
+			free (dirpart);
+		      }
+		    else
+		      error (0, errno, "%s", file_hdr.c_name);
 		    free (link_name);
 		    link_name = NULL;
 		    continue;
@@ -784,7 +853,7 @@ process_copy_in (void)
 #endif /* CP_IFLNK */
 
 	    default:
-	      error (0, 0, _("%s: unknown file type"), file_hdr.c_name);
+	      error (0, 0, _("%s: unsupported file type"), file_hdr.c_name);
 	      tape_toss_input (in_file_des, file_hdr.c_filesize);
 	      tape_skip_padding (in_file_des, file_hdr.c_filesize);
 	    }
@@ -832,7 +901,12 @@ long_format (struct new_cpio_header *file_hdr, char *link_name)
   char tbuf[40];
   time_t when;
 
+#if DOSWIN
+  /* The S_IFfoo bits are different from the corresponding CP_IFfoo.  */
+  cpio_mode_string (file_hdr->c_mode, mbuf);
+#else
   mode_string (file_hdr->c_mode, mbuf);
+#endif
   mbuf[10] = '\0';
 
   /* Get time values ready to print.  */
@@ -1001,7 +1075,7 @@ tape_skip_padding (int in_file_des, int offset)
   else if (archive_format == arf_binary || archive_format == arf_hpbinary)
     pad = (2 - (offset % 2)) % 2;
   else if (archive_format == arf_tar || archive_format == arf_ustar
-	   || archive_format == arf_gnutar)
+	   || archive_format == arf_oldgnu)
     pad = (512 - (offset % 512)) % 512;
   else
     pad = 0;
@@ -1102,8 +1176,9 @@ create_final_defers (void)
   for (d = deferments; d != NULL; d = d->next)
     {
       link_res = link_to_maj_min_ino (d->header.c_name,
-		    d->header.c_dev_maj, d->header.c_dev_min,
-		    d->header.c_ino);
+				      d->header.c_dev_maj,
+				      d->header.c_dev_min,
+				      d->header.c_ino);
       if (link_res == 0)
 	continue;
 

@@ -193,7 +193,12 @@ main (int argc, char **argv)
   int tapedesc;
   int i;
 
+#if DOSWIN
+  program_name = get_program_base_name (argv[0]);
+#else
   program_name = argv[0];
+#endif
+
   tapedev = NULL;
   count = 1;
 

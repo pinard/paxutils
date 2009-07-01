@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 1998-11-10 01:28-0500\n"
+"POT-Creation-Date: 1999-06-11 11:28-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -14,281 +14,267 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: ENCODING\n"
 
-#: src/buffer.c:176
+#: src/buffer.c:181
 msgid "Total bytes written: "
 msgstr ""
 
-#: src/buffer.c:321
-#, c-format
-msgid "Cannot close file #%d"
-msgstr ""
-
-#: src/buffer.c:337
-#, c-format
-msgid "Cannot close descriptor %d"
-msgstr ""
-
-#: src/buffer.c:340
-#, c-format
-msgid "Cannot properly duplicate %s"
-msgstr ""
-
-#: src/buffer.c:410 src/buffer.c:423 src/buffer.c:480 src/buffer.c:636
-#: src/buffer.c:696 src/buffer.c:709 src/buffer.c:759
+#: src/buffer.c:383 src/buffer.c:396 src/buffer.c:453 src/buffer.c:609
+#: src/buffer.c:669 src/buffer.c:682 src/buffer.c:732
 msgid "Cannot open pipe"
 msgstr ""
 
-#: src/buffer.c:427 src/buffer.c:713 src/buffer.c:2053
+#: src/buffer.c:400 src/buffer.c:686
 msgid "Cannot fork process"
 msgstr ""
 
 #. The new born child tar is here!
-#: src/buffer.c:440 src/buffer.c:727
+#: src/buffer.c:413 src/buffer.c:700
 msgid "tar (child)"
 msgstr ""
 
-#: src/buffer.c:442
+#: src/buffer.c:415
 msgid "(child) Pipe to stdin"
 msgstr ""
 
-#: src/buffer.c:467 src/buffer.c:513 src/buffer.c:630 src/buffer.c:747
-#: src/buffer.c:792 src/buffer.c:1695 src/buffer.c:1701
+#: src/buffer.c:440 src/buffer.c:486 src/buffer.c:603 src/buffer.c:720
+#: src/buffer.c:765 src/buffer.c:1676 src/buffer.c:1682
 #, c-format
 msgid "Cannot open archive %s"
 msgstr ""
 
-#: src/buffer.c:470
+#: src/buffer.c:443
 msgid "Archive to stdout"
 msgstr ""
 
-#: src/buffer.c:473 src/buffer.c:494 src/buffer.c:752 src/buffer.c:773
-#: src/buffer.c:1681
+#. Should not return.
+#: src/buffer.c:446 src/buffer.c:467 src/buffer.c:725 src/buffer.c:746
+#: src/buffer.c:1662 src/create.c:1009
 #, c-format
 msgid "Cannot exec %s"
 msgstr ""
 
-#: src/buffer.c:484 src/buffer.c:763
+#: src/buffer.c:457 src/buffer.c:736
 msgid "Child cannot fork"
 msgstr ""
 
 #. The child tar is still here!  Launch the compressor.
-#: src/buffer.c:490
+#: src/buffer.c:463
 msgid "((child)) Pipe to stdout"
 msgstr ""
 
 #. The new born grandchild tar is here!
-#: src/buffer.c:500 src/buffer.c:779
+#: src/buffer.c:473 src/buffer.c:752
 msgid "tar (grandchild)"
 msgstr ""
 
 #. Prepare for reblocking the data from the compressor into the archive.
-#: src/buffer.c:504
+#: src/buffer.c:477
 msgid "(grandchild) Pipe to stdin"
 msgstr ""
 
-#: src/buffer.c:541 src/buffer.c:1726 src/buffer.c:1773
+#: src/buffer.c:514 src/buffer.c:1707 src/buffer.c:1754
 msgid "Cannot read from compression program"
 msgstr ""
 
-#: src/buffer.c:585 src/buffer.c:849
+#: src/buffer.c:558 src/buffer.c:822
 #, c-format
 msgid "Cannot run `%s'"
 msgstr ""
 
-#: src/buffer.c:666 src/buffer.c:825 src/buffer.c:1770
+#: src/buffer.c:639 src/buffer.c:798 src/buffer.c:1751
 msgid "Cannot write to compression program"
 msgstr ""
 
-#: src/buffer.c:671
+#: src/buffer.c:644
 #, c-format
 msgid "Write to compression program short %d bytes"
 msgstr ""
 
-#: src/buffer.c:729
+#: src/buffer.c:702
 msgid "(child) Pipe to stdout"
 msgstr ""
 
-#: src/buffer.c:749
+#: src/buffer.c:722
 msgid "Archive from stdin"
 msgstr ""
 
 #. The child tar is still here!  Launch the uncompressor.
-#: src/buffer.c:769
+#: src/buffer.c:742
 msgid "((child)) Pipe to stdin"
 msgstr ""
 
 #. Prepare for unblocking the data from the archive into the uncompressor.
-#: src/buffer.c:783
+#: src/buffer.c:756
 msgid "(grandchild) Pipe to stdout"
 msgstr ""
 
-#: src/buffer.c:828
+#: src/buffer.c:801
 #, c-format
 msgid "Write to compression program short %lu bytes"
 msgstr ""
 
-#: src/buffer.c:898
+#: src/buffer.c:871
 msgid "Record size is zero"
 msgstr ""
 
-#: src/buffer.c:901
+#: src/buffer.c:874
 msgid "No archive name given"
 msgstr ""
 
-#: src/buffer.c:925
+#: src/buffer.c:898
 msgid "Cannot verify multi-volume archives"
 msgstr ""
 
-#: src/buffer.c:935
+#: src/buffer.c:908
 #, c-format
 msgid "Could not allocate memory for blocking factor %d"
 msgstr ""
 
-#: src/buffer.c:950
+#: src/buffer.c:929
 msgid "Cannot use multi-volume compressed archives"
 msgstr ""
 
-#: src/buffer.c:952
+#: src/buffer.c:931
 msgid "Cannot verify compressed archives"
 msgstr ""
 
-#: src/buffer.c:965
+#: src/buffer.c:944
 msgid "Cannot update compressed archives"
 msgstr ""
 
-#: src/buffer.c:977
+#: src/buffer.c:956
 msgid "Cannot verify stdin/stdout archive"
 msgstr ""
 
-#: src/buffer.c:1030 src/buffer.c:2112 src/compare.c:649 src/incremen.c:448
-#: src/names.c:747
+#: src/buffer.c:1009 src/buffer.c:2086 src/compare.c:941 src/incremen.c:448
+#: src/names.c:706
 #, c-format
 msgid "Cannot open %s"
 msgstr ""
 
-#: src/buffer.c:1043
+#: src/buffer.c:1022
 #, c-format
 msgid "Too many open files, cannot open %s"
 msgstr ""
 
-#: src/buffer.c:1105
+#: src/buffer.c:1084
 #, c-format
 msgid "Archive not labelled to match `%s'"
 msgstr ""
 
-#: src/buffer.c:1108 src/buffer.c:1439
+#: src/buffer.c:1087 src/buffer.c:1420
 #, c-format
 msgid "Volume `%s' does not match `%s'"
 msgstr ""
 
-#: src/buffer.c:1314 src/incremen.c:508
+#: src/buffer.c:1295 src/incremen.c:508
 #, c-format
 msgid "Cannot write to %s"
 msgstr ""
 
-#: src/buffer.c:1317
+#: src/buffer.c:1298
 #, c-format
 msgid "Only wrote %lu of %lu bytes to %s"
 msgstr ""
 
-#: src/buffer.c:1330
+#: src/buffer.c:1311
 #, c-format
 msgid "Read error on %s"
 msgstr ""
 
-#: src/buffer.c:1333
+#: src/buffer.c:1314
 msgid "At beginning of tape, quitting now"
 msgstr ""
 
-#: src/buffer.c:1339
+#: src/buffer.c:1320
 msgid "Too many errors, quitting"
 msgstr ""
 
-#: src/buffer.c:1450 src/extract.c:1240
+#: src/buffer.c:1431 src/extract.c:1592
 #, c-format
 msgid "Reading %s\n"
 msgstr ""
 
-#: src/buffer.c:1455
+#: src/buffer.c:1436
 msgid "WARNING: No volume header"
 msgstr ""
 
-#: src/buffer.c:1462
+#: src/buffer.c:1443
 #, c-format
 msgid "%s is not continued on this volume"
 msgstr ""
 
-#: src/buffer.c:1471
+#: src/buffer.c:1452
 #, c-format
 msgid "%s is the wrong size (%lu != %lu + %lu)"
 msgstr ""
 
-#: src/buffer.c:1482
+#: src/buffer.c:1463
 msgid "This volume is out of sequence"
 msgstr ""
 
-#: src/buffer.c:1510
+#: src/buffer.c:1491
 #, c-format
 msgid "Record size of archive appears to be %lu blocks (%lu expected)"
 msgstr ""
 
-#: src/buffer.c:1534
+#: src/buffer.c:1515
 #, c-format
 msgid "Archive %s end of file not on block boundary"
 msgstr ""
 
-#: src/buffer.c:1542
+#: src/buffer.c:1523
 #, c-format
 msgid "Only read %lu bytes from archive %s"
 msgstr ""
 
-#: src/buffer.c:1567 src/buffer.c:1787 src/buffer.c:1845 src/buffer.c:1921
+#: src/buffer.c:1548 src/buffer.c:1768 src/buffer.c:1826 src/buffer.c:1900
 #, c-format
 msgid "WARNING: Cannot close %s (%d, %d)"
 msgstr ""
 
 #. Lseek failed.  Try a different method.
-#: src/buffer.c:1623
+#: src/buffer.c:1604
 msgid "Could not backspace archive file; it may be unreadable without -i"
 msgstr ""
 
-#: src/buffer.c:1684 src/buffer.c:1823
+#: src/buffer.c:1665 src/buffer.c:1804 src/compare.c:663
 #, c-format
 msgid "Child returned status %d"
 msgstr ""
 
-#: src/buffer.c:1812
+#: src/buffer.c:1793 src/compare.c:633
 #, c-format
 msgid "Child died with signal %d%s"
 msgstr ""
 
-#: src/buffer.c:1814
+#: src/buffer.c:1795 src/compare.c:635 src/create.c:1038 src/extract.c:851
 msgid " (core dumped)"
 msgstr ""
 
-#: src/buffer.c:1835
+#: src/buffer.c:1816
 #, c-format
 msgid "Error while executing `%s'"
 msgstr ""
 
-#: src/buffer.c:1949
+#: src/buffer.c:1928
 msgid "The info script did not complete successfully"
 msgstr ""
 
-#: src/buffer.c:1958
+#: src/buffer.c:1939
 #, c-format
-msgid "Prepare volume #%d for %s and hit return: "
+msgid "Prepare volume #%d for %s and hit return: "
 msgstr ""
 
-#: src/buffer.c:1964
+#: src/buffer.c:1945
 msgid "End of file where user reply was expected"
 msgstr ""
 
-#: src/buffer.c:1969 src/buffer.c:1997
+#: src/buffer.c:1950 src/buffer.c:1978
 msgid "WARNING: Archive is incomplete"
 msgstr ""
 
-#: src/buffer.c:1982
+#: src/buffer.c:1963
 msgid ""
 " n [name]   Give a new file name for the next (and subsequent) volume(s)\n"
 " q          Abort tar\n"
@@ -297,245 +283,363 @@ msgid ""
 msgstr ""
 
 #. Quit.
-#: src/buffer.c:1992
+#: src/buffer.c:1973
 msgid "No new volume; exiting.\n"
 msgstr ""
 
-#: src/buffer.c:2039 src/buffer.c:2063
+#: src/buffer.c:2021
 #, c-format
 msgid "Cannot exec a shell %s"
 msgstr ""
 
-#: src/create.c:182
+#: src/create.c:187
 #, c-format
 msgid "Removing drive spec `%2.2s' from path names in the archive"
 msgstr ""
 
-#: src/create.c:197 src/extract.c:631
+#: src/create.c:202 src/extract.c:938
 msgid "Removing leading `/' from absolute path names in the archive"
 msgstr ""
 
 #. We blew it, maybe.
-#: src/create.c:523
+#: src/create.c:528
 #, c-format
 msgid "Wrote %lu of %lu bytes to file %s"
 msgstr ""
 
-#: src/create.c:553 src/create.c:581 src/create.c:1122
+#: src/create.c:558 src/create.c:586 src/create.c:1397
 #, c-format
 msgid "Read error at byte %lu, reading %lu bytes, in file %s"
 msgstr ""
 
-#: src/create.c:595
+#: src/create.c:600
 #, c-format
 msgid "File %s shrunk by %lu bytes, padding with zeros"
 msgstr ""
 
-#: src/create.c:614
+#: src/create.c:619
 #, c-format
 msgid "Amount actually written is (I hope) %d.\n"
 msgstr ""
 
 #. FIXME: `header' and `upperbound' might be used uninitialized in this
 #. function.  Reported by Bruno Haible.
-#: src/create.c:700 src/update.c:189
+#: src/create.c:705 src/update.c:192
 #, c-format
 msgid "add %s?"
 msgstr ""
 
-#: src/create.c:716 src/create.c:1000 src/create.c:1179
+#: src/create.c:721 src/create.c:1264 src/create.c:1465
 #, c-format
 msgid "Cannot add file %s"
 msgstr ""
 
-#: src/create.c:746
+#: src/create.c:751
 #, c-format
 msgid "%s: is unchanged; not dumped"
 msgstr ""
 
-#: src/create.c:755
+#: src/create.c:762
 #, c-format
 msgid "%s is the archive; not dumped"
 msgstr ""
 
-#: src/create.c:793 src/create.c:870 src/tar.c:941
+#: src/create.c:774
+#, c-format
+msgid "%s is the compression work file; not dumped"
+msgstr ""
+
+#: src/create.c:815 src/create.c:892 src/tar.c:1053
 msgid "Memory exhausted"
 msgstr ""
 
-#: src/create.c:818
+#: src/create.c:840
 msgid "Removing leading `/' from absolute links"
 msgstr ""
 
-#: src/create.c:848 src/create.c:1164 src/create.c:1203 src/create.c:1462
+#: src/create.c:871 src/create.c:1447 src/create.c:1489 src/create.c:1756
 #, c-format
 msgid "Cannot remove %s"
 msgstr ""
 
-#: src/create.c:1146
+#: src/create.c:939
+#, c-format
+msgid ""
+"Cannot ftruncate() work file during compression of %s - written uncompressed"
+msgstr ""
+
+#: src/create.c:947
+msgid "Cannot seek to beginning of work file"
+msgstr ""
+
+#: src/create.c:978
+msgid "Cannot seek to beginning of input file"
+msgstr ""
+
+#. An error was found attempting to fork.
+#: src/create.c:989
+#, c-format
+msgid "Error in fork() attempting to compress file %s - written uncompressed"
+msgstr ""
+
+#: src/create.c:1000
+msgid "input file to stdin for file compression"
+msgstr ""
+
+#: src/create.c:1004
+msgid "file compression temporary file to stdout"
+msgstr ""
+
+#. FIXME: two arguments and one format spec?
+#: src/create.c:1034
+#, c-format
+msgid "Child died with signal %d%s - written uncompressed"
+msgstr ""
+
+#: src/create.c:1051
+#, c-format
+msgid "Child returned status %d - written uncompressed"
+msgstr ""
+
+#: src/create.c:1095
+#, c-format
+msgid ""
+"Cannot fstat() work file during compression of %s - written uncompressed"
+msgstr ""
+
+#: src/create.c:1251
+msgid "Cannot properly duplicate file compression work file"
+msgstr ""
+
+#: src/create.c:1255
+msgid "Cannot seek to beginning of compression work file"
+msgstr ""
+
+#: src/create.c:1425
 #, c-format
 msgid "File %s shrunk by %ld bytes, padding with zeros"
 msgstr ""
 
-#: src/create.c:1228
+#: src/create.c:1516
 #, c-format
 msgid "Cannot add directory %s"
 msgstr ""
 
-#: src/create.c:1352
+#: src/create.c:1640
 #, c-format
 msgid "%s: is on a different filesystem; not dumped"
 msgstr ""
 
-#: src/create.c:1364 src/incremen.c:186
+#: src/create.c:1652 src/incremen.c:186
 #, c-format
 msgid "Cannot open directory %s"
 msgstr ""
 
-#: src/create.c:1388
+#: src/create.c:1678
 #, c-format
 msgid "File name %s%s too long"
 msgstr ""
 
-#: src/create.c:1411 src/create.c:1434
+#: src/create.c:1701 src/create.c:1726
 #, c-format
 msgid "%s: Unknown file type; file ignored"
 msgstr ""
 
-#: src/compare.c:50
+#: src/compare.c:51
 #, c-format
 msgid "Could not allocate memory for diff buffer of %lu bytes"
 msgstr ""
 
-#: src/compare.c:101 src/compare.c:322 src/compare.c:354 src/compare.c:467
-#: src/compare.c:472
+#: src/compare.c:102 src/compare.c:323 src/compare.c:355 src/compare.c:736
+#: src/compare.c:741
 #, c-format
 msgid "Cannot read %s"
 msgstr ""
 
-#: src/compare.c:106 src/compare.c:329 src/compare.c:361
+#: src/compare.c:107 src/compare.c:330 src/compare.c:362
 #, c-format
 msgid "Could only read %lu of %lu bytes"
 msgstr ""
 
-#: src/compare.c:115 src/compare.c:135 src/compare.c:399 src/compare.c:485
+#. Report difference.  (This sets the exit code.)
+#: src/compare.c:116 src/compare.c:136 src/compare.c:400 src/compare.c:656
+#: src/compare.c:754
 msgid "Data differs"
 msgstr ""
 
-#: src/compare.c:164 src/extract.c:475 src/extract.c:863 src/incremen.c:675
+#: src/compare.c:165 src/extract.c:475 src/extract.c:1210 src/incremen.c:673
 #: src/list.c:64
 msgid "Unexpected end of file in archive"
 msgstr ""
 
-#: src/compare.c:418
+#: src/compare.c:438 src/compare.c:440 src/extract.c:595 src/extract.c:597
+msgid "Cannot create pipe"
+msgstr ""
+
+#. An error was found attempting to fork.
+#: src/compare.c:447 src/compare.c:484 src/extract.c:604 src/extract.c:641
+#, c-format
+msgid "%s: Error in fork() attempting to decompress file - file skipped"
+msgstr ""
+
+#: src/compare.c:466 src/extract.c:623
+msgid "archive data pipe to stdin for file decompression"
+msgstr ""
+
+#: src/compare.c:469
+msgid "file compare pipe to stdout for file decompression"
+msgstr ""
+
+#. Should not return.
+#: src/compare.c:475 src/extract.c:632
+#, c-format
+msgid "Cannot exec %s -d"
+msgstr ""
+
+#. An error was detected.
+#: src/compare.c:522
+#, c-format
+msgid "%s: Could not read from pipe"
+msgstr ""
+
+#. An error was detected.
+#: src/compare.c:534
+#, c-format
+msgid "%s: Could not read from file"
+msgstr ""
+
+#. Incomplete read indicates disk file has different length.
+#. This is not expected, because we checked the length
+#. earlier.
+#: src/compare.c:544
+#, c-format
+msgid "%s: Could only read %d of %d bytes"
+msgstr ""
+
+#: src/compare.c:573 src/extract.c:789
+msgid "Unexpected EOF on archive file"
+msgstr ""
+
+#: src/compare.c:595 src/extract.c:811
+#, c-format
+msgid "%s: Could not write to pipe"
+msgstr ""
+
+#: src/compare.c:597 src/extract.c:727 src/extract.c:762 src/extract.c:813
+#, c-format
+msgid "%s: Could only write %d of %d bytes"
+msgstr ""
+
+#: src/compare.c:687
 msgid "File does not exist"
 msgstr ""
 
-#: src/compare.c:421 src/compare.c:704 src/compare.c:768 src/compare.c:780
+#: src/compare.c:690 src/compare.c:1013 src/compare.c:1077 src/compare.c:1089
 #, c-format
 msgid "Cannot stat file %s"
 msgstr ""
 
-#: src/compare.c:477
+#: src/compare.c:746
 #, c-format
 msgid "Could only read %d of %ld bytes"
 msgstr ""
 
-#: src/compare.c:579
+#: src/compare.c:849
 msgid "Verify "
 msgstr ""
 
-#: src/compare.c:587
+#: src/compare.c:857
 #, c-format
 msgid "Unknown file type `%c' for %s, diffed as normal file"
 msgstr ""
 
-#: src/compare.c:612 src/compare.c:908
+#: src/compare.c:885 src/compare.c:1217
 msgid "Not a regular file"
 msgstr ""
 
-#: src/compare.c:619 src/compare.c:889
+#: src/compare.c:892 src/compare.c:1198
 msgid "Mode differs"
 msgstr ""
 
-#: src/compare.c:622
+#: src/compare.c:895
 msgid "Uid differs"
 msgstr ""
 
-#: src/compare.c:624
+#: src/compare.c:897
 msgid "Gid differs"
 msgstr ""
 
-#: src/compare.c:627
+#: src/compare.c:900
 msgid "Mod time differs"
 msgstr ""
 
-#: src/compare.c:631 src/compare.c:917
+#: src/compare.c:914 src/compare.c:922 src/compare.c:1226
 msgid "Size differs"
 msgstr ""
 
-#: src/compare.c:678 src/compare.c:955
+#: src/compare.c:982 src/compare.c:1264
 #, c-format
 msgid "Error while closing %s"
 msgstr ""
 
-#: src/compare.c:698 src/compare.c:765
+#: src/compare.c:1007 src/compare.c:1074
 msgid "Target of link does not exist"
 msgstr ""
 
-#: src/compare.c:700
+#: src/compare.c:1009
 msgid "Does not exist"
 msgstr ""
 
-#: src/compare.c:721
+#: src/compare.c:1030
 #, c-format
 msgid "Not linked to %s"
 msgstr ""
 
-#: src/compare.c:746 src/compare.c:777
+#: src/compare.c:1055 src/compare.c:1086
 msgid "No such file or directory"
 msgstr ""
 
-#: src/compare.c:749
+#: src/compare.c:1058
 #, c-format
 msgid "Cannot read link %s"
 msgstr ""
 
-#: src/compare.c:757
+#: src/compare.c:1066
 msgid "Symlink differs"
 msgstr ""
 
-#: src/compare.c:824
+#: src/compare.c:1133
 msgid "Device numbers changed"
 msgstr ""
 
-#: src/compare.c:838
+#: src/compare.c:1147
 msgid "Mode or device-type changed"
 msgstr ""
 
-#: src/compare.c:883
+#: src/compare.c:1192
 msgid "No longer a directory"
 msgstr ""
 
-#: src/compare.c:926 src/names.c:99 src/update.c:56
+#: src/compare.c:1235 src/names.c:225 src/update.c:56
 #, c-format
 msgid "Cannot open file %s"
 msgstr ""
 
-#: src/compare.c:935
+#: src/compare.c:1244
 #, c-format
 msgid "Cannot seek to %ld in file %s"
 msgstr ""
 
-#: src/compare.c:1009
+#: src/compare.c:1318
 msgid "Could not rewind archive file for verify"
 msgstr ""
 
-#: src/compare.c:1037
+#: src/compare.c:1346
 #, c-format
 msgid "VERIFY FAILURE: %d invalid header detected"
 msgstr ""
 
-#: src/compare.c:1038
+#: src/compare.c:1347
 #, c-format
 msgid "VERIFY FAILURE: %d invalid headers detected"
 msgstr ""
@@ -544,11 +648,11 @@ msgstr ""
 msgid "Could not re-position archive file"
 msgstr ""
 
-#: src/delete.c:175 src/update.c:160
+#: src/delete.c:175 src/update.c:163
 msgid "This does not look like a tar archive"
 msgstr ""
 
-#: src/delete.c:180 src/update.c:165
+#: src/delete.c:180 src/update.c:168
 msgid "Skipping to next header"
 msgstr ""
 
@@ -556,124 +660,145 @@ msgstr ""
 msgid "Deleting non-header from archive"
 msgstr ""
 
-#: src/extract.c:100
+#: src/extract.c:101
 #, c-format
 msgid "%s: Cannot change mode to %0.4lo"
 msgstr ""
 
-#: src/extract.c:145
+#: src/extract.c:146
 #, c-format
 msgid "%s: Could not change access and modification times"
 msgstr ""
 
-#: src/extract.c:172
+#: src/extract.c:173
 #, c-format
 msgid "%s: Cannot lchown to uid %lu gid %lu"
 msgstr ""
 
-#: src/extract.c:180
+#: src/extract.c:181
 #, c-format
 msgid "%s: Cannot chown to uid %lu gid %lu"
 msgstr ""
 
-#: src/extract.c:191 src/extract.c:253
+#: src/extract.c:192 src/extract.c:253
 #, c-format
 msgid "%s: Cannot change owner to uid %lu, gid %lu"
 msgstr ""
 
-#: src/extract.c:438 src/extract.c:554 src/mangle.c:100
+#: src/extract.c:438 src/extract.c:556 src/mangle.c:100
 #, c-format
 msgid "Renamed %s to %s"
 msgstr ""
 
-#: src/extract.c:484 src/extract.c:494 src/extract.c:898
+#: src/extract.c:479 src/extract.c:714 src/extract.c:751 src/extract.c:1285
+#, c-format
+msgid "%s: Error seeking"
+msgstr ""
+
+#. An error was detected.
+#: src/extract.c:485 src/extract.c:495 src/extract.c:687 src/extract.c:733
+#: src/extract.c:768 src/extract.c:1246
 #, c-format
 msgid "%s: Could not write to file"
 msgstr ""
 
-#: src/extract.c:497 src/extract.c:901
+#: src/extract.c:498 src/extract.c:1249
 #, c-format
 msgid "%s: Could only write %lu of %lu bytes"
 msgstr ""
 
-#: src/extract.c:539 src/extract.c:817
+#: src/extract.c:541 src/extract.c:1141
 #, c-format
 msgid "%s: Could not create file"
 msgstr ""
 
-#: src/extract.c:593
+#: src/extract.c:626
+msgid "file write pipe to stdout for file decompression"
+msgstr ""
+
+#: src/extract.c:848
+#, c-format
+msgid "%s: Child died with signal %d%s"
+msgstr ""
+
+#: src/extract.c:861
+#, c-format
+msgid "%s Child returned status %d"
+msgstr ""
+
+#: src/extract.c:900
 #, c-format
 msgid "extract %s?"
 msgstr ""
 
-#: src/extract.c:653
+#: src/extract.c:960
 #, c-format
 msgid "%s: Was unable to backup this file"
 msgstr ""
 
-#: src/extract.c:805
+#: src/extract.c:1129
 msgid "Extracting contiguous files as regular files"
 msgstr ""
 
-#: src/extract.c:877
+#: src/extract.c:1225
 #, c-format
 msgid "%d at %d\n"
 msgstr ""
 
-#: src/extract.c:943
+#: src/extract.c:1295
 #, c-format
 msgid "%s: Error while closing"
 msgstr ""
 
-#: src/extract.c:975
+#: src/extract.c:1327
 #, c-format
 msgid "%s: Could not create symlink to `%s'"
 msgstr ""
 
-#: src/extract.c:989
+#: src/extract.c:1341
 msgid "Attempting extraction of symbolic links as hard links"
 msgstr ""
 
-#: src/extract.c:1035
+#: src/extract.c:1387
 #, c-format
 msgid "%s: Could not link to `%s'"
 msgstr ""
 
-#: src/extract.c:1068
+#: src/extract.c:1420
 #, c-format
 msgid "%s: Could not make node"
 msgstr ""
 
-#: src/extract.c:1094
+#: src/extract.c:1446
 #, c-format
 msgid "%s: Could not make fifo"
 msgstr ""
 
-#: src/extract.c:1196
+#: src/extract.c:1548
 #, c-format
 msgid "%s: Could not create directory"
 msgstr ""
 
-#: src/extract.c:1207
+#: src/extract.c:1559
 #, c-format
 msgid "Added write and execute permission to directory %s"
 msgstr ""
 
-#: src/extract.c:1249
+#: src/extract.c:1601
 #, c-format
 msgid "Cannot extract `%s' -- file is continued from another volume"
 msgstr ""
 
-#: src/extract.c:1259 src/list.c:265
+#: src/extract.c:1611 src/list.c:271
 msgid "Long name has no introducing header"
 msgstr ""
 
-#: src/extract.c:1267
+#: src/extract.c:1619
 #, c-format
 msgid "Unknown file type `%c' for %s, extracted as normal file"
 msgstr ""
 
-#: src/incremen.c:231 src/incremen.c:597 src/update.c:133
+#: src/incremen.c:231 src/incremen.c:595 src/update.c:136
 #, c-format
 msgid "Cannot stat %s"
 msgstr ""
@@ -688,26 +813,26 @@ msgstr ""
 msgid "Directory %s is new"
 msgstr ""
 
-#: src/incremen.c:440 src/names.c:291 src/tar.c:677
+#: src/incremen.c:440 src/names.c:285 src/tar.c:766
 msgid "Could not get current directory"
 msgstr ""
 
-#: src/incremen.c:585
+#: src/incremen.c:583
 #, c-format
 msgid "Cannot chdir to %s"
 msgstr ""
 
-#: src/incremen.c:698
+#: src/incremen.c:696
 #, c-format
 msgid "delete %s?"
 msgstr ""
 
-#: src/incremen.c:707
+#: src/incremen.c:705
 #, c-format
 msgid "%s: Deleting %s\n"
 msgstr ""
 
-#: src/incremen.c:710
+#: src/incremen.c:708
 #, c-format
 msgid "Error while deleting %s"
 msgstr ""
@@ -718,35 +843,35 @@ msgstr ""
 msgid "Only wrote %lu of %lu bytes to file %s"
 msgstr ""
 
-#: src/list.c:227 src/list.c:456
+#: src/list.c:227 src/list.c:464
 #, c-format
 msgid "block %10lu: "
 msgstr ""
 
-#: src/list.c:394 src/list.c:398
+#: src/list.c:402 src/list.c:406
 #, c-format
 msgid " link to %s\n"
 msgstr ""
 
-#: src/list.c:402
+#: src/list.c:410
 #, c-format
 msgid " unknown file type `%c'\n"
 msgstr ""
 
-#: src/list.c:419
+#: src/list.c:427
 msgid "--Volume Header--\n"
 msgstr ""
 
-#: src/list.c:423
+#: src/list.c:431
 #, c-format
 msgid "--Continued at byte %lu--\n"
 msgstr ""
 
-#: src/list.c:428
+#: src/list.c:436
 msgid "--Mangled file names--\n"
 msgstr ""
 
-#: src/list.c:462 src/list.c:467
+#: src/list.c:470 src/list.c:475
 msgid "Creating directory:"
 msgstr ""
 
@@ -774,17 +899,29 @@ msgstr ""
 msgid "Unknown demangling command %s"
 msgstr ""
 
-#: src/names.c:225 src/names.c:421 src/names.c:447 src/names.c:473
-#: src/names.c:638
+#: src/names.c:212 src/names.c:434 src/names.c:472 src/names.c:504
+#: src/names.c:553
 #, c-format
 msgid "Cannot change to directory %s"
 msgstr ""
 
-#: src/names.c:244 src/names.c:279 src/names.c:374
+#: src/names.c:220
+msgid "Cannot include file lists from files"
+msgstr ""
+
+#: src/names.c:235
+msgid "Missing file name after -C or -T"
+msgstr ""
+
+#: src/names.c:273 src/names.c:386
 msgid "Missing file name after -C"
 msgstr ""
 
-#: src/names.c:512 src/names.c:531
+#: src/names.c:329
+msgid "Wildcards may not be fully processed in `--quick' mode"
+msgstr ""
+
+#: src/names.c:595 src/names.c:614
 #, c-format
 msgid "%s: Not found in archive"
 msgstr ""
@@ -797,73 +934,93 @@ msgstr ""
 msgid "Cannot allocate buffer space"
 msgstr ""
 
-#: src/rmt.c:331
+#: src/rmt.c:336
 msgid "Premature end of file"
 msgstr ""
 
-#: src/rmt.c:421
+#: src/rmt.c:426
 #, c-format
 msgid "rmtd: Garbage command %c\n"
 msgstr ""
 
-#: src/rmt.c:422
+#: src/rmt.c:427
 msgid "Garbage command"
 msgstr ""
 
-#: src/rtapelib.c:247
+#: src/rtapelib.c:253
 msgid "exec/tcp: Service not available"
 msgstr ""
 
-#: src/rtapelib.c:262
+#: src/rtapelib.c:268
 msgid "stdin"
 msgstr ""
 
-#: src/rtapelib.c:265
+#: src/rtapelib.c:271
 msgid "stdout"
 msgstr ""
 
 #. Bad problems if we get here.
 #. In a previous version, _exit was used here instead of exit.
-#: src/rtapelib.c:430
+#: src/rtapelib.c:418
 msgid "Cannot execute remote shell"
 msgstr ""
 
-#: src/tar.c:63
+#: src/tar.c:71
 #, c-format
 msgid "Options `-%s' and `-%s' both want standard input"
 msgstr ""
 
-#: src/tar.c:81 src/tar.c:108
+#: src/tar.c:102 src/tar.c:137
 msgid "Cannot read confirmation from user"
 msgstr ""
 
-#: src/tar.c:292 tests/genfile.c:75
+#: src/tar.c:184
+msgid "Unable to get temporary file name"
+msgstr ""
+
+#: src/tar.c:189
+msgid "Unable to open temporary file"
+msgstr ""
+
+#: src/tar.c:191
+msgid "Unable to fstat() temporary file"
+msgstr ""
+
+#: src/tar.c:202
+msgid "Unable to close temporary file"
+msgstr ""
+
+#: src/tar.c:204
+msgid "Unable to delete temporary file"
+msgstr ""
+
+#: src/tar.c:366 tests/genfile.c:75
 #, c-format
 msgid "Try `%s --help' for more information.\n"
 msgstr ""
 
-#: src/tar.c:296
+#: src/tar.c:370
 msgid ""
 "The `tar' tool saves many files together into a single tape or disk "
 "archive,\n"
 "and is able to restore individual files from the archive.\n"
 msgstr ""
 
-#: src/tar.c:300
+#: src/tar.c:374
 #, c-format
 msgid ""
 "\n"
 "Usage: %s [OPTION]... [FILE]...\n"
 msgstr ""
 
-#: src/tar.c:303
+#: src/tar.c:377
 msgid ""
 "\n"
 "If a long option shows an argument as mandatory, then it is mandatory\n"
 "for the equivalent short option also.  Similarly for optional arguments.\n"
 msgstr ""
 
-#: src/tar.c:308
+#: src/tar.c:382
 msgid ""
 "\n"
 "Main operation mode:\n"
@@ -877,10 +1034,11 @@ msgid ""
 "      --delete            delete from the archive (not on mag tapes!)\n"
 msgstr ""
 
-#: src/tar.c:320
+#: src/tar.c:394
 msgid ""
 "\n"
 "Operation modifiers:\n"
+"  -q, --quick                assume the archive has no duplicate members\n"
 "  -W, --verify               attempt to verify the archive after writing it\n"
 "      --remove-files         remove files after adding them to the archive\n"
 "  -k, --keep-old-files       don't overwrite existing files when extracting\n"
@@ -896,7 +1054,7 @@ msgid ""
 "      --ignore-failed-read   do not exit with nonzero on unreadable files\n"
 msgstr ""
 
-#: src/tar.c:336
+#: src/tar.c:411
 msgid ""
 "\n"
 "Handling of file attributes:\n"
@@ -916,7 +1074,7 @@ msgid ""
 "      --preserve               same as both -p and -s\n"
 msgstr ""
 
-#: src/tar.c:353
+#: src/tar.c:428
 msgid ""
 "\n"
 "Device selection and switching:\n"
@@ -932,7 +1090,7 @@ msgid ""
 "      --volno-file=FILE          use/update the volume number in FILE\n"
 msgstr ""
 
-#: src/tar.c:366
+#: src/tar.c:441
 msgid ""
 "\n"
 "Device blocking:\n"
@@ -943,7 +1101,7 @@ msgid ""
 "  -B, --read-full-records        reblock as we read (for 4.2BSD pipes)\n"
 msgstr ""
 
-#: src/tar.c:374
+#: src/tar.c:449
 msgid ""
 "\n"
 "Archive format selection:\n"
@@ -952,19 +1110,24 @@ msgid ""
 "PATTERN\n"
 "  -o, --old-archive, --portability   write a V7 format archive\n"
 "      --posix                        write a POSIX conformant archive\n"
-"  -z, --gzip                         filter the archive through gzip\n"
-"  -Z, --compress                     filter the archive through compress\n"
-"      --use-compress-program=PROG    filter through PROG (must accept -d)\n"
+"  -z, --gzip                         filter the archive through `gzip'\n"
+"  -Z, --compress                     filter the archive through `compress'\n"
+"      --use-compress-program=PROG    filter through `PROG' (must accept -d)\n"
 msgstr ""
 
-#: src/tar.c:385
+#: src/tar.c:461
+msgid ""
+"  -y, --per-file-compress            compress archived files independently\n"
+msgstr ""
+
+#: src/tar.c:466
 msgid ""
 "\n"
 "Local file selection:\n"
 "  -C, --directory=DIR          change to directory DIR\n"
 "  -T, --files-from=NAME        get names to extract or create from file "
 "NAME\n"
-"      --null                   -T reads null-terminated names, disable -C\n"
+"      --null                   names from -T option are NUL terminated\n"
 "      --exclude=PATTERN        exclude files, given as a globbing PATTERN\n"
 "  -X, --exclude-from=FILE      exclude globbing patterns listed in FILE\n"
 "  -P, --absolute-names         don't strip leading `/'s from file names\n"
@@ -979,14 +1142,14 @@ msgid ""
 "      --after-date=DATE        same as -N\n"
 msgstr ""
 
-#: src/tar.c:403
+#: src/tar.c:484
 msgid ""
 "      --backup[=CONTROL]       backup before removal, choose version "
 "control\n"
 "      --suffix=SUFFIX          backup before removal, override usual suffix\n"
 msgstr ""
 
-#: src/tar.c:408
+#: src/tar.c:489
 msgid ""
 "\n"
 "Informative output:\n"
@@ -1002,7 +1165,7 @@ msgid ""
 "      --confirmation        same as -w\n"
 msgstr ""
 
-#: src/tar.c:421
+#: src/tar.c:502
 msgid ""
 "\n"
 "The backup suffix is `~', unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n"
@@ -1014,7 +1177,7 @@ msgid ""
 "  never, simple   always make simple backups\n"
 msgstr ""
 
-#: src/tar.c:430
+#: src/tar.c:511
 #, c-format
 msgid ""
 "\n"
@@ -1025,139 +1188,151 @@ msgid ""
 "or a device.  *This* `tar' defaults to `-f%s -b%d'.\n"
 msgstr ""
 
-#: src/tar.c:438
+#: src/tar.c:519
 msgid ""
 "\n"
 "Report bugs to <tar-bugs@iro.umontreal.ca>.\n"
 msgstr ""
 
-#: src/tar.c:464
+#: src/tar.c:549
 msgid "You may not specify more than one `-Acdtrux' option"
 msgstr ""
 
-#: src/tar.c:474
+#: src/tar.c:559
 msgid "Conflicting compression options"
 msgstr ""
 
-#: src/tar.c:516
+#: src/tar.c:601
 #, c-format
 msgid "Invalid numerical value for option `%s'"
 msgstr ""
 
-#: src/tar.c:579
+#: src/tar.c:668
 #, c-format
 msgid "Old option `%c' requires an argument."
 msgstr ""
 
-#: src/tar.c:620
+#: src/tar.c:709
 msgid "Obsolete option, now implied by --blocking-factor"
 msgstr ""
 
-#: src/tar.c:624
+#: src/tar.c:713
 msgid "Obsolete option name replaced by --blocking-factor"
 msgstr ""
 
-#: src/tar.c:634
+#: src/tar.c:723
 msgid "Obsolete option name replaced by --read-full-records"
 msgstr ""
 
-#: src/tar.c:756
+#: src/tar.c:839
 msgid "Obsolete option name replaced by --touch"
 msgstr ""
 
-#: src/tar.c:773
+#: src/tar.c:856
 msgid "More than one threshold date"
 msgstr ""
 
-#: src/tar.c:778
+#: src/tar.c:861
 #, c-format
 msgid "Invalid date format `%s'"
 msgstr ""
 
-#: src/tar.c:785 src/tar.c:989 src/tar.c:994
+#: src/tar.c:868 src/tar.c:1101 src/tar.c:1106
 msgid "Conflicting archive format options"
 msgstr ""
 
-#: src/tar.c:797
+#: src/tar.c:880
 msgid "Obsolete option name replaced by --absolute-names"
 msgstr ""
 
-#: src/tar.c:809
+#: src/tar.c:896
 msgid "Obsolete option name replaced by --block-number"
 msgstr ""
 
-#: src/tar.c:875
+#: src/tar.c:981
 msgid "Obsolete option name replaced by --gzip"
 msgstr ""
 
-#: src/tar.c:893
+#: src/tar.c:1002
 msgid "Obsolete option name replaced by --compress"
 msgstr ""
 
-#: src/tar.c:905
+#: src/tar.c:1017
 msgid "Obsolete option name replaced by --backup"
 msgstr ""
 
-#: src/tar.c:939
+#: src/tar.c:1051
 msgid "Invalid mode given on option"
 msgstr ""
 
-#: src/tar.c:1006
+#: src/tar.c:1118
 #, c-format
 msgid "Record size must be a multiple of %d."
 msgstr ""
 
-#: src/tar.c:1102
+#: src/tar.c:1214
 msgid "Options `-[0-7][lmh]' not supported by *this* tar"
 msgstr ""
 
-#: src/tar.c:1122
+#: src/tar.c:1225
+msgid "Wildcards may not be used with `--quick'"
+msgstr ""
+
+#: src/tar.c:1237
 msgid ""
 "\n"
 "Copyright (C) 1988, 92, 93, 94, 95, 96, 97 Free Software Foundation, Inc.\n"
 msgstr ""
 
-#: src/tar.c:1126 tests/genfile.c:176
+#: src/tar.c:1241 tests/genfile.c:176
 msgid ""
 "This is free software; see the source for copying conditions.  There is NO\n"
 "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
 msgstr ""
 
-#: src/tar.c:1130
+#: src/tar.c:1245
 msgid ""
 "\n"
 "Written by John Gilmore and Jay Fenlason.\n"
 msgstr ""
 
-#: src/tar.c:1158
+#: src/tar.c:1273
 msgid "Features wanted on incompatible archive format"
 msgstr ""
 
-#: src/tar.c:1175
+#: src/tar.c:1290
 msgid "Multiple archive files requires `-M' option"
 msgstr ""
 
-#: src/tar.c:1194
+#: src/tar.c:1309
 msgid "Option `-u' is only meaningful with one of `-cx'"
 msgstr ""
 
-#: src/tar.c:1209
+#: src/tar.c:1323
 msgid "Cravenly refusing to create an empty archive"
 msgstr ""
 
-#: src/tar.c:1230
+#: src/tar.c:1344
 msgid "Options `-Aru' are incompatible with `-f -'"
 msgstr ""
 
-#: src/tar.c:1244
+#: src/tar.c:1358
 msgid "Option --no-attributes conflicts with others"
 msgstr ""
 
-#: src/tar.c:1327
+#: src/tar.c:1378
+msgid "More than one compression option specified"
+msgstr ""
+
+#: src/tar.c:1380
+msgid "--file_compress incompatible with --multi-volume"
+msgstr ""
+
+#: src/tar.c:1458
 msgid "You must specify one of the `-Acdtrx' options"
 msgstr ""
 
-#: src/tar.c:1374
+#: src/tar.c:1521
 msgid "Processed all files possible, despite earlier errors"
 msgstr ""
 

@@ -1,7 +1,28 @@
+1999-05-04  François Pinard  <pinard@iro.umontreal.ca>
+
+	* sl.po: Updated.
+
+1999-04-17  François Pinard  <pinard@iro.umontreal.ca>
+
+	* ru.po: Updated.
+
+1999-04-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* cs.po: Updated.
+
+1998-12-30  François Pinard  <pinard@iro.umontreal.ca>
+
+	* nl.po: Updated.
+
+1998-12-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* de.po: Updated.
+	* it.po: Updated.
+
 1998-11-06  François Pinard  <pinard@iro.umontreal.ca>
 
 	* ru.po: New file.
-
+
 1998-10-10  Andreas Schwab  <schwab@issan.cs.uni-dortmund.de>
 
 	* Makefile.am (install-data-local): Use $(mkinstalldirs), not

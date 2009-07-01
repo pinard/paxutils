@@ -1,5 +1,5 @@
 /* Delete entries from a tar archive.
-   Copyright (C) 1988, 1992, 1994, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1994, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -150,7 +150,7 @@ delete_archive_members (void)
 	  abort ();
 
 	case HEADER_SUCCESS:
-	  if (name = name_scan (current.name), !name)
+	  if (name = find_matching_name (current.name, false), !name)
 	    {
 	      set_next_block_after (current.block);
 	      if (current.block->oldgnu_header.isextended)
@@ -196,7 +196,7 @@ delete_archive_members (void)
     {
       write_eot ();
       close_archive ();
-      names_notfound ();
+      report_unprocessed_names ();
       return;
     }
 
@@ -262,7 +262,7 @@ delete_archive_members (void)
 
       /* Found another header.  */
 
-      if (name = name_scan (current.name), name)
+      if (name = find_matching_name (current.name, false), name)
 	{
 	  name->match_found = true;
 	flush_file:
@@ -329,5 +329,5 @@ delete_archive_members (void)
 
   write_eot ();
   close_archive ();
-  names_notfound ();
+  report_unprocessed_names ();
 }

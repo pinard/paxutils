@@ -459,7 +459,12 @@ process_args (int argc, char *argv[])
 int
 main (int argc, char *argv[])
 {
+#if DOSWIN
+  program_name = get_program_base_name (argv[0]);
+#else
   program_name = argv[0];
+#endif
+
   umask (0);
 
   setlocale (LC_ALL, "");

@@ -1,5 +1,5 @@
 /* format.c - Deal with format names.
-   Copyright (C) 1990, 1991, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ static struct format_list the_list[] =
   {"bin", arf_binary},
   {"ustar", arf_ustar},
   {"tar", arf_tar},
-#ifdef CPIO_USE_GNU_TAR
-  {"gnutar", arf_gnutar},
-#endif /* CPIO_USE_GNU_TAR */
+#ifdef CPIO_USE_OLDGNU
+  {"oldgnu", arf_oldgnu},
+#endif /* CPIO_USE_OLDGNU */
   {"hpodc", arf_hpoldascii},
   {"hpbin", arf_hpbinary},
 
@@ -118,7 +118,7 @@ set_write_pointers_from_format (enum archive_format format)
 
     case arf_tar:
     case arf_ustar:
-    case arf_gnutar:
+    case arf_oldgnu:
       header_writer = write_out_tar_header;
       eof_writer = write_tar_eof;
       name_too_long = is_tar_filename_too_long;

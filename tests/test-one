@@ -11,7 +11,7 @@ else
   exit 1
 fi
 
-grep AT_INIT $at_srcdir/testsuite.m4 \
+grep AT_INIT $at_srcdir/suite.m4 \
 | m4 -I $at_srcdir atgeneral.m4 - $* | cat -s > one
 
 sh one

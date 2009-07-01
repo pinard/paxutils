@@ -1,10 +1,10 @@
 /* Special definitions for paxutils, processed by autoheader.
-   Copyright © 1994, 1997, 1998 Free Software Foundation, Inc.
+   Copyright © 1994, 1997, 1998, 1999 Free Software Foundation, Inc.
    François Pinard <pinard@iro.umontreal.ca>, 1993.
 */
 
 /* Define if tar format support should be included.  (It doesn't work) */
-#undef CPIO_USE_GNU_TAR
+#undef CPIO_USE_OLDGNU
 
 /* Define if internal debugging code should be enabled.  */
 #undef DEBUG_CPIO
@@ -25,6 +25,9 @@
 /* Define to 1 if you lack a 3-argument version of open, and want to
    emulate it with system calls you do have.  */
 #undef EMUL_OPEN3
+
+/* Define to 1 if --per-file-compress option should be compiled in.  */
+#undef ENABLE_DALE_CODE
 
 /* Define to 1 if NLS is requested.  */
 #undef ENABLE_NLS

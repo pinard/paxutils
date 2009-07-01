@@ -1,6 +1,6 @@
 /* rename.c - Rename files.
 
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -62,8 +62,6 @@ setup_interactive_renaming (void)
   /* NOTE: "rx" doesn't include definition for RE_SYNTAX_ED.  */
   re_set_syntax (RE_SYNTAX_POSIX_BASIC);
 
-  /* FIXME what is "CONSOLE" for?  */
-
   /* Open batch rename file for rename operation.  */
   if (rename_batch_file)
     {
@@ -71,7 +69,7 @@ setup_interactive_renaming (void)
       assert (!rename_flag);
       rename_in = fopen (rename_batch_file, "r");
       if (rename_in == NULL)
-	error (2, errno, CONSOLE);
+	error (2, errno, "%s", CONSOLE);
     }
 
   /* Open interactive file pair for rename operation.  */
@@ -79,10 +77,10 @@ setup_interactive_renaming (void)
     {
       tty_in = fopen (CONSOLE, "r");
       if (tty_in == NULL)
-	error (2, errno, CONSOLE);
+	error (2, errno, "%s", CONSOLE);
       tty_out = fopen (CONSOLE, "w");
       if (tty_out == NULL)
-	error (2, errno, CONSOLE);
+	error (2, errno, "%s", CONSOLE);
     }
 }
 

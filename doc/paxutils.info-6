@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4g.
+   This file documents `paxutils' 2.4h.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -28,6 +28,185 @@ permission notice identical to this one.
 manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: posix,  Next: Checksumming,  Prev: old-archive,  Up: Portability
+
+`tar' and POSIX `tar'
+---------------------
+
+   `tar' was based on an early draft of the POSIX 1003.1 `ustar'
+standard.  Extensions to this `tar', such as the support for file names
+longer than 100 characters, use portions of the `tar' header record
+which were specified in that POSIX draft as unused.  Subsequent changes
+in POSIX have allocated the same parts of the header record for other
+purposes.  As a result, `tar' is incompatible with the current POSIX
+spec, and with `tar' programs that follow it.
+
+   We plan to reimplement these extensions in a new way which is upward
+compatible with the latest POSIX `tar' format, but we don't know when
+this will be done.
+
+   In the mean time, there is simply no way of telling what might
+happen if you read a `tar' archive that uses the extensions using some
+other `tar' program.  So if you want to read the archive with another
+`tar' program, be sure to write it using the `--old-archive' (`-o')
+option (`-o').
+
+   Traditionally, old `tar's have a limit of 100 characters.  `tar'
+attempted two different approaches to overcoming this limit, using and
+extending a format specified by a draft of P1003.1.  The first way was
+not that successful, and involved `@MaNgLeD@' file names, or such;
+while a second approach used `././@LongLink' and other tricks, yielding
+better success.  In theory, `tar' should be able to handle file names
+of practically unlimited length.  So, if `tar' fails to dump and
+retrieve files having more than 100 characters, then there is a bug in
+`tar'.
+
+   But, for strict conformity to POSIX, the limit was still 100
+characters.  For various other purposes, `tar' used areas left
+unassigned in the POSIX draft.  POSIX later revised the P1003.1 `ustar'
+format by assigning previously unused header fields in such a way that
+the upper limit for file name length was raised to 256 characters.
+However, the actual POSIX limit oscillates between 100 and 256,
+depending on the precise location of slashes in full file name (this is
+rather ugly).  Since `tar' uses the same fields for quite other
+purposes, it became incompatible with the latest POSIX standards.
+
+   For longer or non-fitting file names, we plan to use yet another set
+of extensions, but this time, complying with the provisions POSIX
+offers for extending the format, rather than conflicting with it.
+Whenever an archive uses old `tar' extension format or POSIX
+extensions, whether for very long file names or for other special cases,
+this archive becomes non-portable to other `tar' implementations.  In
+fact, anything can happen.  The most forgiving `tar's will merely
+unpack the file using a wrong name, and maybe create another file named
+something like `@LongName', with the true file name in it.  `tar's not
+protecting themselves may segment violate!
+
+   Compatibility concerns make all of these things more difficult, as we
+will have to support *all* these things together, for a while.  `tar'
+should be able to produce and read true POSIX format files, while being
+able to detect old `tar' formats, including old V7 format, and process
+them conveniently.  It will take years before this whole area
+stabilizes ...
+
+   There are plans to raise this 100 limit to 256, and yet produce POSIX
+conformant archives.  Past 256, we do not know yet if `tar' will go
+non-POSIX again, or merely refuse to archive the file.
+
+   There are plans for `tar' to support the latest POSIX format more
+fully, while being able to read old V7 format, old GNU (semi-POSIX plus
+extensions), and full POSIX.  One may ask if there is part of the POSIX
+format that we still cannot support.  This simple question has a
+complex answer.  Maybe, on closer inspection, some strong limitations
+will pop up, but up to now, nothing looks too difficult (but see
+below).  We only have these few pages of POSIX telling about `Extended
+tar format' (P1003.1-1990-section 10.1.1), and there are references to
+other parts of the standard we do not have, which should normally
+enforce limitations on stored file names (we suspect things like fixing
+what `/' and `<NUL>' mean).  There are also some points which the
+standard does not make clear.  Existing practice will then drive what
+we should do.
+
+   POSIX mandates that when a file name cannot fit within 100 to 256
+characters (the variance comes from the fact a `/' is ideally needed as
+the 156th character) or a link name cannot fit within 100 characters, a
+warning should be issued and the file *not* be stored.  Unless the
+`--posix' option is given (or `POSIXLY_CORRECT' is set), we believe
+that `tar' should disobey this specification, and automatically switch
+to using extensions to overcome file name or link name length
+limitations.
+
+   There is a problem, however, which we have not intimately studied
+yet.  Given a truly POSIX archive with names having more than 100
+characters, we guess that `tar' up to 1.11.8 will process it as if it
+were an old V7 archive, and be fooled by some fields which are coded
+differently.  So, the question is to decide if the next generation of
+`tar' should produce POSIX format by default, whenever possible,
+producing archives that older versions of `tar' might not be able to
+read correctly.  We fear that we will have to suffer such a choice one
+of these days, if we want `tar' to go closer to POSIX.  We might choose
+to do that right away.  Another possibility is to produce the current
+`tar' format by default for a few years, but have `tar' versions from
+some 1.POSIX and up able to recognize all three formats, and let older
+`tar' fade out slowly.  Then, we could switch to producing POSIX format
+by default, with not much harm to those still having (very old at that
+time) `tar' versions prior to 1.POSIX.
+
+   POSIX format cannot represent very long names, volume headers,
+splitting of files in multi-volumes, sparse files, and incremental
+dumps; these would be all disallowed if `--posix' is given or
+`POSIXLY_CORRECT' is set.  Otherwise, if `tar' is given long names, or
+`-[VMSgG]', then it should automatically go non-POSIX.  We think this
+is easily granted without much discussion.
+
+   Another point is that only `mtime' is stored in POSIX archives,
+while `tar' currently also stores `atime' and `ctime'.  If we want
+`tar' to go closer to POSIX, my choice would be to drop `atime' and
+`ctime' support on average.  On the other hand, we perceive that full
+dumps or incremental dumps need `atime' and `ctime' support, so for
+those special applications, POSIX has to be avoided altogether.
+
+   A few users requested that `--sparse' (`-S') be always active by
+default.  We think that before replying to them, we have to decide if
+we want `tar' to go closer to POSIX on average, while producing files.
+My choice would be to go closer to POSIX in the long run.  Besides
+possible double reading, we do not see any point in not trying to save
+files as sparse when creating archives which are neither POSIX nor
+old-V7, so the actual `--sparse' (`-S') would become selected by
+default when producing such archives, whatever the reason is.  So,
+`--sparse' (`-S') alone might be redefined to force extended format
+archives, and recover its previous meaning from this fact.
+
+   Extended format as it exists now can easily fool other POSIX `tar's,
+as it uses fields which POSIX considers to be part of the file name
+prefix.  We wonder if it would not be a good idea, in the long run, to
+try changing extended format so that any added field (like `ctime',
+`atime', file offset in subsequent volumes, or sparse file
+descriptions) would be wholly and always pushed into an extension block,
+instead of using space in the POSIX header block.  We could manage to
+do that portably between future `tar's.  So other POSIX `tar's might at
+least be able to provide roughly correct listings for the archives
+produced by `tar', if not to process them otherwise.
+
+   Using these projected extensions might induce older `tar's to fail.
+We would use the same approach as for POSIX.  We'll put out a `tar'
+capable of reading POSIXier, yet extended archives, but will not produce
+this format by default, when not in POSIX mode.  In a few years, when
+newer `tar's will have flooded out `tar' 1.11.X and earlier, we could
+switch to producing POSIXier extended archives, with no real harm to
+users, as almost all existing `tar's will be ready to read POSIXier
+format.  In fact, we'll do both changes at the same time, in a few
+years, and just prepare `tar' for both changes, without effecting them,
+from 1.POSIX.  (Both changes: 1--using POSIX conventions for getting
+over 100 characters; 2--avoiding mangling POSIX headers for extensions,
+using only POSIX mandated extension techniques).
+
+   So, a future `tar' will have a `--posix' flag forcing the usage of
+truly POSIX headers, and so, producing archives that previous `tar's
+will not be able to read.  So, *once* pretest announces that feature,
+it would be particularly useful for users to test how exchangeable
+archives will be between `tar' with `--posix' and other POSIX `tar's.
+
+   In a few years, when `tar' will produce POSIX headers by default,
+`--posix' will have a strong meaning and will disallow extensions.  But
+in the meantime, for a long while, `--posix' in `tar' will not disallow
+extensions like `--label=ARCHIVE-LABEL' (`-V ARCHIVE-LABEL'),
+`--multi-volume' (`-M'), `--sparse' (`-S'), or very long file or link
+names.  However, `--posix' with extensions will use POSIX headers with
+reserved-for-users extensions to headers, and we will be curious to
+know how well or badly POSIX `tar's will react to these.
+
+   `tar' prior to 1.POSIX, and after 1.POSIX without `--posix',
+generates and checks `ustar  ', with two suffixed spaces.  This is
+sufficient for older `tar' not to recognize POSIX archives, and
+consequently, wrongly decide those archives are in old V7 format.  It
+is a useful bug for me, because `tar' has other POSIX
+incompatibilities, and we need to segregate `tar' semi-POSIX archives
+from truly POSIX archives, for `tar' should be somewhat compatible with
+itself, while migrating closer to latest POSIX standards.  So, we'll be
+very careful about how and when we will do the correction.
 
 
 File: paxutils.info,  Node: Checksumming,  Prev: posix,  Up: Portability
@@ -660,15 +839,15 @@ Tapes and other archive media
    Archives are usually written on removable media--tape cartridges, mag
 tapes, or floppy disks.
 
-   The amount of data a tape or disk holds depends not only on its size,
-but also on how it is formatted.  A 2400 foot long reel of mag tape
-holds 40 megabytes of data when formated at 1600 bits per inch.  The
-physically smaller EXABYTE tape cartridge holds 2.3 gigabytes.
+   The amount of data a tape or disk can hold depends not only on its
+size, but also on how it is formatted.  A 2400 foot long reel of mag
+tape holds 40 megabytes of data when formated at 1600 bits per inch.
+The physically smaller EXABYTE tape cartridge holds 2.3 gigabytes.
 
    Magnetic media are re-usable--once the archive on a tape is no longer
-needed, the archive can be erased and the tape or disk used over. Media
-quality does deteriorate with use, however.  Most tapes or disks should
-be disgarded when they begin to produce data errors.
+needed, the archive can be erased and the tape or disk used over.
+Media quality does deteriorate with use, however.  Most tapes or disks
+should be discarded when they begin to produce data errors.
 
    Magnetic media are written and erased using magnetic fields, and
 should be protected from such fields to avoid damage to stored data.
@@ -809,254 +988,4 @@ many characters into something meaningful to the application.  The term
 "unit record" describes a small set of characters which are transmitted
 whole to or by the application, and often refers to a line of text.
 Those two last terms are unrelated to what we call a "record" in `tar'.
-
-
-File: paxutils.info,  Node: blocking-factor,  Next: record-size,  Prev: Blocks and records,  Up: Blocking
-
-Setting the blocking factor
----------------------------
-
-   In a standard `tar' file (no options), the block size is 512 bytes
-and the record size is 10240 bytes, for a blocking factor of 20.  In
-fact, the default blocking factor is set when `tar' is compiled, and is
-typically 20.  The output of `tar --help', near the end, shows the
-default blocking factor which was compiled in the `tar' version you are
-using.  Archives with blocking factors larger than 20 cannot be read by
-very old versions of `tar', or by some newer versions of `tar' running
-on old machines with small address spaces.  With this `tar', the
-blocking factor of an archive is limited only by the maximum record
-size of the device containing the archive, or by the amount of available
-virtual memory.
-
-   What the `--blocking-factor=BLOCKS' (`-b BLOCKS') option does is to
-set the blocking factor, that is, to change the record size while
-leaving the block size at 512 bytes.  A blocking factor of 20 was fine
-for ancient 800 or 1600 bpi reel-to-reel tape drives; most tape drives
-these days prefer much bigger records in order to stream and not waste
-tape.  When writing tapes, some tend to use a factor of the order of
-2048, say, giving a record size of around one megabyte.  This is
-acceptable nowadays, as the tape technology is now much more dependable
-that it once was, and errors are much less likely to occur.
-
-   When reading an archive, `tar' can usually figure out the record
-size itself.  To get it to do this, you can use
-`--blocking-factor=BLOCKS' (`-b BLOCKS') to specify a blocking factor
-larger than real one, and `tar' will diagnose the observed record size
-as shorter than expected.  In this indirect way, you can use `tar' to
-learn about the actual record size of the first record on a tape!  The
-diagnostic is not produced when the observed record size matches the
-expected size.
-
-   Further complicating the problem is that some tape drives ignore the
-blocking entirely.  For these, `tar' cannot easily determine the real
-block size.  In such cases, specifying a larger record size in `tar'
-can still improve performance a tiny bit, yet most of the improvement
-has already been provided by the tape system itself.
-
-   If you use a non-default blocking factor when you create an archive,
-you must specify the same blocking factor when you modify that archive.
-Some archive devices will also require you to specify the blocking
-factor when reading that archive; however, this is not typically the
-case.  Usually, you can use `--list' (`-t') without specifying a
-blocking factor--`tar' reports a non-default record size and then lists
-the archive members as it would normally.  To extract files from an
-archive with a non-standard blocking factor (particularly if you're not
-sure what the blocking factor is), you can usually use the
-`--read-full-records' (`-B') option while specifying a blocking factor
-larger then the blocking factor of the archive (for example, `tar
---extract --read-full-records --blocking-factor=300').  *Note list::,
-for more information on the `--list' (`-t') subcommand.  *Note
-Reading::, for a more detailed explanation of that option.
-
-   If the archive is in a disk file or a pipe, some might sometimes
-want to specify a smaller blocking factor, since a large one will
-result in more `NUL' bytes at the end of the archive, but it might not
-be worth it.  Beware that for the `tar' blocking to be effective, `tar'
-should directly write to the device.  Blocking is effectively defeated
-or overridden when a pipe interposes another step between `tar' and the
-device (like a call to `dd', for instance).
-
-
-File: paxutils.info,  Node: record-size,  Next: Media types,  Prev: blocking-factor,  Up: Blocking
-
-Setting a record size
----------------------
-
-   The `--record-size=SIZE' option instructs `tar' to use SIZE bytes
-per record when accessing the archive.  The value of SIZE should be
-evenly divisible by 512.  This option is an alternative to using
-`--blocking-factor=BLOCKS' (`-b BLOCKS'), except that the unit for
-`--record-size=SIZE' is a single byte, while the unit for
-`--blocking-factor=BLOCKS' (`-b BLOCKS') is a whole `tar' block.  *Note
-blocking-factor::.
-
-
-File: paxutils.info,  Node: Media types,  Next: Reblocking,  Prev: record-size,  Up: Blocking
-
-Per-Media blocking considerations
----------------------------------
-
-   When handling various tapes or cartridges, you have to take care of
-selecting a proper blocking, that is, the number of disk blocks you put
-together as a single record on the tape, without intervening tape gaps.
-Strangely, on more than a few systems, the mere fact of not using an
-adequate blocking factor yields rather unexpected or cryptic
-diagnostics, like:
-
-     Cannot write to /dev/dlt: Invalid argument
-
-So, one might have to pay attention to the requirements of device
-drivers.  To make things a bit confusing, it also happens that the
-`tar' bundled by the system is aware of record size idiosyncrasies,
-while `tar' requires an explicit specification for the record size,
-which it cannot guess.  This yields some people to believe that `tar'
-is misbehaving, because by comparison, `the bundled `tar' works OK'.
-Merely using something like `-b 256', say, might resolve the problem.
-
-   `tar' uses a blocking factor of 20 by default for historical
-reasons, and it does not really matter when reading or writing to disk.
-Current tape technology would easily accomodate higher blockings.  Sun
-recommends a blocking of 126 for Exabytes and 96 for DATs.  Another
-source said that Exabyte drives have a physical block size of 8KB, and
-that using `-b 112' solved their problems.  We were told that for some
-DLT drives, the blocking should be a multiple of 4KB, preferably 64KB
-(`-b 128' or `256'), for decent performance.  Other manufacturers may
-use different recommendations for the same tapes.  This might also
-depend of the buffering techniques used by modern tape controllers.
-Some impose a minimum blocking, or a maximum blocking.  Others request
-blocking to be some power of two.
-
-   So there is no fixed rule for blocking.  But blocking at read time
-should ideally be the same as blocking used at write time.  At one
-place we know, with a wide variety of equipment, they found it best to
-use a blocking of 32 to guarantee that their tapes are fully
-interchangeable between all systems they have.
-
-   We were also told that, for recycled tapes, prior erasure (by the
-exact drive unit that will be used to create the archives) sometimes
-lowers the error rates observed at rewriting time.
-
-
-File: paxutils.info,  Node: Reblocking,  Prev: Media types,  Up: Blocking
-
-Automatic reblocking
---------------------
-
-   When handling compressed archives, `tar' automatically unblocks the
-archives before decompression occurs, or reblocks created archives just
-after compression, as needed.(1)
-
-   When older `gzip' programs are directly given such reblocked
-compressed archives, they may complain like this:
-
-     $ tar cfz - FILE | gzip -t
-     gzip: stdin: decompression OK, trailing garbage ignored
-
-Because of the reblocking, there may be extraneous zero blocks after the
-`gzip' output, which older versions of `gzip' diagnose as garbage.
-Jean-loup and I agreed, to handle this particular case, that newer
-versions of `gzip' would be more tolerant to strings of zeros, and just
-ignore them.  So, diagnostics like above will progressively disappear,
-as various older `gzip' binaries get replaced.  In any case, they are
-innocuous.
-
-   As a special case, if a compressed archive is directly created on a
-local disk, and not through stdout, and if the blocking factor is not
-explicitly specified by the user, then the produced file will not be
-reblocked, and so, might appear as if the last record has not been
-padded to full length.  In all other cases, reblocking occurs.
-
-   ---------- Footnotes ----------
-
-   (1) Prior to `tar' 1.12, unblocking or reblocking did not occur
-unless the `--compress-block' option (or even older:
-`--block-compress') was given.  Such options are now obsolete.
-
-
-File: paxutils.info,  Node: Many on one,  Next: One on many,  Prev: Blocking,  Up: Media
-
-Many archives on one tape
-=========================
-
-   Most tape devices have two entries in the `/dev' directory, or
-entries that come in pairs, which differ only in the minor number for
-this device.  Let's take for example `/dev/tape', which often points to
-the only or usual tape device of a given system.  There might be a
-corresponding `/dev/nrtape' or `/dev/ntape'.  The simpler name is the
-*rewinding* version of the device, while the name having `nr' in it is
-the *no rewinding* version of the same device.
-
-   A rewinding tape device will bring the tape back to its beginning
-point automatically when this device is opened or closed.  Since `tar'
-opens the archive file before using it and closes it afterwards, this
-means that a simple
-
-     $ tar cf /dev/tape DIRECTORY
-
-will reposition the tape to its beginning both before and after saving
-the DIRECTORY contents to it, thus erasing the prior tape contents and
-making it so that any subsequent write subcommand will destroy what has
-just been saved.
-
-   So, a rewinding device is normally meant to hold one and only one
-file.  If you want to put more than one `tar' archive on a given tape,
-you will need to avoid using the rewinding version of the tape device.
-You will also have to pay special attention to tape positioning.
-Errors in positioning may overwrite the valuable data already on your
-tape.  Many people, burned by past experiences, will only use rewinding
-devices and limit themselves to one file per tape, precisely to avoid
-the risk of such errors.  Be fully aware that writing at the wrong
-position on a tape loses all information past this point and most
-probably until the end of the tape, and this destroyed information
-*cannot* be easily recovered, if indeed it can ever be recovered at all.
-
-   To save DIRECTORY-1 as a first archive at the beginning of a tape,
-and leave that tape ready for a second archive, you should use the
-*non-rewinding* tape device:
-
-     $ mt -f /dev/nrtape rewind
-     $ tar cf /dev/nrtape DIRECTORY-1
-
-   "Tape marks" are special magnetic patterns written on the tape media,
-which are later recognizable by the reading hardware.  Tape marks
-consume a *lot* more space on the tape than a usual gap, and the tape
-drive hardware is often able to detect them even while winding the tape
-at higher speed.
-
-   These marks are used after each file, when there are many on a
-single tape.  An empty file (that is to say, two tape marks in a row)
-signals the logical end of the tape, after which no files exist.
-Clever non-rewinding tape device drivers react to the close request
-issued by `tar' by first writing two tape marks after your archive, and
-by backspacing over one of these.  So, if you remove the tape at that
-time from the tape drive, it is properly terminated.  But if you write
-another file at the current position, the second tape mark gets erased
-by the new information, leaving only one tape mark between files.
-
-   So, you may now save DIRECTORY-2 as a second archive after the first
-on the same non-rewinding tape by issuing the command:
-
-     $ tar cf /dev/nrtape DIRECTORY-2
-
-and so on for all the archives you want to put on the same tape.
-
-   Another usual case is that you do not write all the archives the same
-day, and you need to remove and store the tape between two archive
-sessions.  In general, you must remember how many files are already
-saved on your tape.  Suppose your tape already has 16 files on it, and
-you are ready to write the 17th.  You have to take care to skip the
-first 16 tape marks before saving DIRECTORY-17, say, by using these
-commands:
-
-     $ mt -f /dev/nrtape rewind
-     $ mt -f /dev/nrtape fsf 16
-     $ tar cf /dev/nrtape DIRECTORY-17
-
-   In all the previous examples, we put aside blocking considerations,
-but you should do the proper things for that as well.  *Note Blocking::.
-
-* Menu:
-
-* Tape positioning::            Tape positions and tape marks
-* mt invocation::               The `mt' utility
 

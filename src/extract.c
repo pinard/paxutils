@@ -1,5 +1,5 @@
 /* Extract files from a tar archive.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-11-19.
 
    This program is free software; you can redistribute it and/or modify it
@@ -20,6 +20,7 @@
 
 #include <time.h>
 time_t time ();
+#include <signal.h>
 
 #include "common.h"
 
@@ -199,10 +200,9 @@ set_stat (char *file_name, struct stat *stat_info, bool symlink_flag)
 
 	/* On a few systems, and in particular, those allowing to give files
 	   away, changing the owner or group destroys the suid or sgid bits.
-	   So, when root, let's attempt setting these bits once more.  */
+	   So let's attempt setting these bits once more.  */
 
-	if (we_are_root
-	    && (stat_info->st_mode & (S_ISUID | S_ISGID | S_ISVTX)))
+	if (stat_info->st_mode & (S_ISUID | S_ISGID | S_ISVTX))
 	  set_mode (file_name, stat_info);
     }
 }
@@ -450,9 +450,9 @@ maybe_recoverable (char *file_name)
     }
 }
 
-/*---.
-| ?  |
-`---*/
+/*----------------------------------------.
+| Extract a sparse file from an archive.  |
+`----------------------------------------*/
 
 static void
 extract_sparse_file (int fd, off_t *sizeleft, off_t totalsize, char *name)
@@ -475,7 +475,8 @@ extract_sparse_file (int fd, off_t *sizeleft, off_t totalsize, char *name)
 	  ERROR ((0, 0, _("Unexpected end of file in archive")));
 	  return;
 	}
-      lseek (fd, sparsearray[sparse_ind].offset, SEEK_SET);
+      if (lseek (fd, sparsearray[sparse_ind].offset, SEEK_SET) < 0)
+	  ERROR ((0, errno, _("%s: Error seeking"), name));
       size_to_write = sparsearray[sparse_ind++].numbytes;
       while (size_to_write > BLOCKSIZE)
 	{
@@ -497,6 +498,7 @@ extract_sparse_file (int fd, off_t *sizeleft, off_t totalsize, char *name)
 	  ERROR ((0, 0, _("%s: Could only write %lu of %lu bytes"),
 		  name, (unsigned long) size_written,
 		  (unsigned long) totalsize));
+	  /* Abort extracting the file.  */
 	  skip_file (*sizeleft);
 	}
 
@@ -537,9 +539,9 @@ rename_if_dos_device_name (char *file_name)
       if (++i > 2)
 	{
 	  ERROR ((0, EACCES, _("%s: Could not create file"), file_name));
-	  if (current_header->oldgnu_header.isextended)
+	  if (current.block->oldgnu_header.isextended)
 	    skip_extended_headers ();
-	  skip_file ((long) current_stat.st_size);
+	  skip_file ((long) current.stat.st_size);
 	  return file_name;
 	}
       /* Prepend a '_'.  */
@@ -562,6 +564,311 @@ rename_if_dos_device_name (char *file_name)
 
 #endif /* DOSWIN */
 
+#if ENABLE_DALE_CODE
+
+/*--------------------------------------------.
+| Extract a compressed file from an archive.  |
+`--------------------------------------------*/
+
+static void
+extract_compressed_file (int fd, long *sizeleft, long totalsize, char *name,
+			 char typeflag)
+{
+  union block *data_block;
+  int written, count, child, status;
+  int child_process_1 = 0, child_process_2 = 0;
+  WAIT_T wait_status;
+  /* For sending data from the parent to child process 1.  */
+  int pipe1[2];
+#define pipe1r	(pipe1[0])
+#define pipe1w	(pipe1[1])
+  /* For sending data from child process 1 to child process 2.  */
+  int pipe2[2];
+#define pipe2r	(pipe2[0])
+#define pipe2w	(pipe2[1])
+
+  /* Flush the listing file, so we don't double-write its data.  */
+  fflush (stdlis);
+
+  /* Create pipes.  */
+  if (pipe (pipe1) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot create pipe")));
+  if (pipe (pipe2) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot create pipe")));
+
+  /* Fork child 1, which will uncompress the data.  */
+  child_process_1 = fork ();
+  if (child_process_1 < 0)
+    {
+      /* An error was found attempting to fork.  */
+      ERROR ((0, errno, _("%s: Error in fork() attempting to decompress "
+			  "file - file skipped"), name));
+      /* Skip the file.  */
+      skip_file ((long) totalsize);
+      close (pipe1r);
+      close (pipe1w);
+      close (pipe2r);
+      close (pipe2w);
+      goto finish_children;
+    }
+  else if (child_process_1 == 0)
+    {
+      /* Child process 1.  */
+
+      /* Close pipes we will not use.  */
+      close (pipe1w);
+      close (pipe2r);
+      /* Close standard input.  Dup pipe 1 as standard input.  */
+      xdup2 (pipe1r, STDIN,
+	     _("archive data pipe to stdin for file decompression"));
+      /* Close standard output.  Dup pipe 2 as standard output.  */
+      xdup2 (pipe2w, STDOUT,
+	     _("file write pipe to stdout for file decompression"));
+
+      /* Execute the uncompression program.  */
+      execlp (use_compress_program_option, use_compress_program_option,
+	      "-d", (char *) 0);
+      /* Should not return.  */
+      FATAL_ERROR ((0, errno, _("Cannot exec %s -d"),
+		    use_compress_program_option));
+    }
+
+  /* Fork child 2, which will write the uncompressed data to the file.  */
+  child_process_2 = fork ();
+  if (child_process_2 < 0)
+    {
+      /* An error was found attempting to fork.  */
+      ERROR ((0, errno, _("%s: Error in fork() attempting to decompress "
+			  "file - file skipped"), name));
+      /* Skip the file.  */
+      skip_file ((long) totalsize);
+      /* Closing the pipes will cause the child processes to die.  */
+      close (pipe1r);
+      close (pipe1w);
+      close (pipe2r);
+      close (pipe2w);
+      goto finish_children;
+    }
+  else if (child_process_2 == 0)
+    {
+      char buffer[BLOCKSIZE];
+
+      /* Child process 2.  */
+      off_t effective_position = 0, last_position_written = 0;
+
+      /* Close pipes we will not use.  */
+      close (pipe1r);
+      close (pipe1w);
+      close (pipe2w);
+
+      /* Read data from pipe 2 in BLOCKSIZE chunks and write it out.  */
+      while (1)
+	{
+	  int bytes_read, i;
+
+	  /* Attempt to read BLOCKSIZE bytes.  */
+	  for (bytes_read = 0; bytes_read < BLOCKSIZE; )
+	    {
+	      /* Read however many bytes we can.  */
+	      status = read (pipe2r, buffer + bytes_read,
+			     BLOCKSIZE - bytes_read);
+	      if (status > 0)
+		{
+		  /* Some bytes read.  Count them and continue processing.  */
+		  bytes_read += status;
+		  continue;
+		}
+	      else if (status == 0)
+		/* Zero bytes read indicates EOF.  */
+		break;
+	      else
+		{
+		  /* An error was detected.  */
+		  ERROR ((0, errno, _("%s: Could not write to file"),
+			  name));
+		  exit (1);
+		}
+	    }
+	  /* If 0 bytes have been read, we are at EOF.  (And we previously
+	     wrote out any partial block at the end of the file.)  */
+	  if (bytes_read == 0)
+	    break;
+
+	  /* Some bytes have been read into the buffer.  Either it is
+	     BLOCKSIZE bytes, or the partial block at the end of the file.
+	     If this is a sparse compressed file, write it only if it
+	     contains non-zero bytes.  Otherwise, always write it.  */
+	  if (typeflag != OLDGNU_SPARSE_COMPRESSED)
+	    goto write_block;
+	  for (i = 0; i < bytes_read; i++)
+	    if (buffer[i] != 0)
+	      goto write_block;
+	  goto skip_block;
+
+	write_block:
+	  /* If we didn't write the previous block, we have to do a seek
+	     to be in the right position to write this one.  */
+	  if (last_position_written != effective_position)
+	    if (lseek (fd, effective_position, SEEK_SET) < 0)
+	      {
+		ERROR ((0, errno, _("%s: Error seeking"), name));
+		exit (1);
+	      }
+
+	  /* Write the data.  */
+	  status = write (fd, buffer, bytes_read);
+	  /* Check whether it worked.  */
+	  if (status == bytes_read)
+	    /* Update last_position_written.
+	       (Effective_position is updated later.)  */
+	    last_position_written = effective_position + bytes_read;
+	  else if (status >= 0)
+	    {
+	      ERROR ((0, 0, _("%s: Could only write %d of %d bytes"),
+		      name, status, bytes_read));
+	      exit (1);
+	    }
+	  else
+	    {
+	      ERROR ((0, errno, _("%s: Could not write to file"),
+		      name));
+	      exit (1);
+	    }
+
+	skip_block:
+	  /* Whether or not we wrote the block, update effective_position.  */
+	  effective_position += bytes_read;
+	}
+      /* At this point, we have processed all of the data for the file.
+	 The only remaining task is to write the final zero byte
+	 if the last (full or partial) block was not written to the file
+	 because it was all zeros.  */
+      if (last_position_written != effective_position)
+	{
+	  /* Position to the last byte but one.  */
+	  if (lseek (fd, effective_position - 1, SEEK_SET) < 0)
+	    {
+	      ERROR ((0, errno, _("%s: Error seeking"), name));
+	      exit (1);
+	    }
+	  /* Write the byte.  (First byte of buffer must be zero at this
+	     point.)  */
+	  status = write (fd, buffer, 1);
+	  /* Check whether it worked.  */
+	  if (status == 1)
+	    ;
+	  else if (status == 0)
+	    {
+	      ERROR ((0, 0, _("%s: Could only write %d of %d bytes"),
+		      name, status, 1));
+	      exit (1);
+	    }
+	  else
+	    {
+	      ERROR ((0, errno, _("%s: Could not write to file"),
+		      name));
+	      exit (1);
+	    }
+	}
+      /* Done with processing.  Exit.  */
+      exit (0);
+    }
+
+  /* Continue in the parent process to extract the data from the archive
+     and feed it to child process 1.  */
+  /* Close pipes we will not use.  */
+  close (pipe1r);
+  close (pipe2r);
+  close (pipe2w);
+
+  for (; *sizeleft > 0; *sizeleft -= written)
+    {
+      data_block = find_next_block ();
+      if (data_block == NULL)
+	{
+	  ERROR ((0, 0, _("Unexpected EOF on archive file")));
+	  /* Closing the pipes will cause the child processes to die.  */
+	  close (pipe1w);
+	  goto finish_children;
+	}
+
+      /* Determine the number of bytes available in this data block to
+	 send to the uncompress process.  */
+      written = available_space_after (data_block);
+      if (written > *sizeleft)
+	written = *sizeleft;
+
+      /* Write to child process 1.  */
+      status = write (pipe1w, data_block->buffer, (size_t) written);
+      set_next_block_after ((union block *)
+			    (data_block->buffer + written - 1));
+      if (status == written)
+	continue;
+
+      /* Error in writing pipe.  Print message, skip to next file in
+	 archive.  */
+      if (status < 0)
+	ERROR ((0, errno, _("%s: Could not write to pipe"), name));
+      else
+	ERROR ((0, 0, _("%s: Could only write %d of %d bytes"),
+		name, status, written));
+      skip_file ((long) (*sizeleft - written));
+      goto finish_children;
+    }
+
+  /* Close the pipe to child process 1, so it knows that we have reached
+     EOF.  */
+  close (pipe1w);
+
+  /* Wait for the child processes to finish so we can catch errors and
+     ensure the system isn't filled with zombie processes.  */
+ finish_children:
+  /* Wait for child processes to finish.  */
+  while (1)
+    {
+      /* Wait for a child to finish, or for no more children.  */
+      while (child = wait (&wait_status),
+             child != child_process_1 && child != child_process_2 &&
+	     child != -1)
+	continue;
+
+      /* If no more children, exit this loop.  */
+      if (child == -1)
+	break;
+
+      if (WIFSIGNALED (wait_status)
+#if 0
+	  && !WIFSTOPPED (wait_status)
+#endif
+	  )
+	{
+	  /* SIGPIPE is OK, everything else is a problem.  */
+
+	  if (WTERMSIG (wait_status) != SIGPIPE) {
+	    ERROR ((0, 0, _("%s: Child died with signal %d%s"),
+		    name,
+		    WTERMSIG (wait_status),
+		    WCOREDUMP (wait_status) ? _(" (core dumped)") : ""));
+	  }
+	}
+      else
+	{
+	  /* Child voluntarily terminated -- but why?  /bin/sh
+	     returns SIGPIPE + 128 if its child, then do nothing.  */
+
+	  if (WEXITSTATUS (wait_status) != (SIGPIPE + 128)
+	      && WEXITSTATUS (wait_status))
+	    ERROR ((0, 0, _("%s Child returned status %d"),
+		    name,
+		    WEXITSTATUS (wait_status)));
+	}
+    }
+
+  /* Return to caller to handle multi-volume issues, close the file, etc.  */
+}
+
+#endif /* ENABLE_DALE_CODE */
+
 /*----------------------------------.
 | Extract a file from the archive.  |
 `----------------------------------*/
@@ -576,7 +883,7 @@ extract_archive (void)
   size_t size_to_write;
   ssize_t size_written;
   int open_flags;
-  long size;
+  off_t size;
   int skipcrud;
   int counter;
 #if 0
@@ -610,7 +917,7 @@ extract_archive (void)
 #if DOSWIN
   msdosify_count = 0;
   if (!to_stdout_option)
-    current_file_name = rename_if_dos_device_name (current_file_name);
+    current.name = rename_if_dos_device_name (current.name);
 
   /* We could have a filename like "9:30:45", and we don't want to treat it as
      if it were an absolute file name with a drive letter.  */
@@ -740,6 +1047,9 @@ Removing leading `/' from absolute path names in the archive")));
     case AREGTYPE:
     case REGTYPE:
     case CONTTYPE:
+    case OLDGNU_REGULAR_COMPRESSED:
+    case OLDGNU_SPARSE_COMPRESSED:
+    case OLDGNU_CONTIG_COMPRESSED:
 
       /* Appears to be a file.  But BSD tar uses the convention that a slash
 	 suffix means a directory.  */
@@ -751,10 +1061,13 @@ Removing leading `/' from absolute path names in the archive")));
       /* FIXME: deal with protection issues.  */
 
     again_file:
-      open_flags = (keep_old_files_option ?
-		  O_BINARY | O_NDELAY | O_WRONLY | O_CREAT | O_EXCL :
-		  O_BINARY | O_NDELAY | O_WRONLY | O_CREAT | O_TRUNC)
-	| ((current.block->header.typeflag == OLDGNU_SPARSE) ? 0 : O_APPEND);
+      open_flags =
+	((keep_old_files_option ?
+	  O_BINARY | O_NDELAY | O_WRONLY | O_CREAT | O_EXCL :
+	  O_BINARY | O_NDELAY | O_WRONLY | O_CREAT | O_TRUNC)
+	 | ((current.block->header.typeflag == OLDGNU_SPARSE
+	     || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED)
+	    ? 0 : O_APPEND));
 
       /* JK - The last | is a kludge to solve the problem the O_APPEND
 	 flag causes with files we are trying to make sparse: when a file
@@ -788,14 +1101,25 @@ Removing leading `/' from absolute path names in the archive")));
       /* Contiguous files (on the Masscomp) have to specify the size in
 	 the open call that creates them.  */
 
-      if (current.block->header.typeflag == CONTTYPE)
+      if (current.block->header.typeflag == CONTTYPE
+	  || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
 	fd = open (CURRENT_FILE_NAME, open_flags | O_CTG,
-		   current.stat.st_mode, current.stat.st_size);
+		   current.stat.st_mode,
+# if ENABLE_DALE_CODE
+		   (current_header->header.typeflag == OLDGNU_CONTIG_COMPRESSED
+		    ? strtol (current.block->oldgnu_header.realsize, NULL, 8)
+		    : current_stat.st_size);
+# else
+		   current.stat.st_size
+# endif
+		   );
       else
 	fd = open (CURRENT_FILE_NAME, open_flags, current.stat.st_mode);
 
 #else /* not O_CTG */
-      if (current.block->header.typeflag == CONTTYPE)
+
+      if (current.block->header.typeflag == CONTTYPE
+	  || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
 	{
 	  static bool conttype_diagnosed = false;
 
@@ -840,6 +1164,29 @@ Removing leading `/' from absolute path names in the archive")));
 	  size = current.stat.st_size;
 	  extract_sparse_file (fd, &size, current.stat.st_size, name);
 	}
+#if ENABLE_DALE_CODE
+      else if (current.block->header.typeflag == OLDGNU_REGULAR_COMPRESSED
+	       || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED
+	       || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+	{
+	  char *name;
+	  int name_length_bis;
+
+	  /* Kludge alert.  NAME is assigned to header.name because during the
+	     extraction, the space that contains the header will get scribbled
+	     on, and the name will get munged, so any error messages that
+	     happen to contain the filename will look REAL interesting unless
+	     we do this.  */
+
+	  name_length_bis = strlen (CURRENT_FILE_NAME) + 1;
+	  name = (char *) xmalloc ((sizeof (char)) * name_length_bis);
+	  memcpy (name, CURRENT_FILE_NAME, (size_t) name_length_bis);
+	  /* FIXME: Shouldn't we free name, here?  */
+	  size = current.stat.st_size;
+	  extract_compressed_file (fd, &size, current.stat.st_size, name,
+				   current.block->header.typeflag);
+	}
+#endif /* ENABLE_DALE_CODE */
       else
 	for (size = current.stat.st_size; size > 0; size -= size_to_write)
 	  {
@@ -864,16 +1211,17 @@ Removing leading `/' from absolute path names in the archive")));
 		break;		/* FIXME: What happens, then?  */
 	      }
 
+#if 0
 	    /* If the file is sparse, use the sparsearray that we created
 	       before to lseek into the new file the proper amount, and to
 	       see how many bytes we want to write at that position.  */
 
-#if 0
 	    if (current.block->header.typeflag == OLDGNU_SPARSE)
 	      {
 		off_t pos;
 
-		pos = lseek (fd, (off_t) sparsearray[sparse_ind].offset, SEEK_SET);
+		pos = lseek (fd, (off_t) sparsearray[sparse_ind].offset,
+			     SEEK_SET);
 		fprintf (msg_file, _("%d at %d\n"), (int) pos, sparse_ind);
 		size_to_write = sparsearray[sparse_ind++].numbytes;
 	      }
@@ -906,6 +1254,10 @@ Removing leading `/' from absolute path names in the archive")));
 	    break;		/* still do the close, mod time, chmod, etc */
 	  }
 
+      /* At this point, processing flows together for the sparse, compressed,
+	 and ordinary cases.  Continue to handle multi-volume issues, close
+	 the file, etc.  */
+
       if (multi_volume_option)
 	assign_string (&save_name, NULL);
 
@@ -929,9 +1281,9 @@ Removing leading `/' from absolute path names in the archive")));
 		break;
 	      offset = get_extended_header_offset (exhdr, counter);
 	      size_to_write = get_extended_header_numbytes (exhdr, counter);
-	      lseek (fd, offset, SEEK_SET);
-	      size_written
-		= full_write (fd, data_block->buffer, size_to_write);
+	      if (lseek (fd, offset, SEEK_SET) < 0)
+		ERROR ((0, errno, _("%s: Error seeking"), current.name));
+	      size_written = full_write (fd, data_block->buffer, size_to_write);
 	      if (size_written == size_to_write)
 		continue;
 	    }
@@ -1006,8 +1358,8 @@ Attempting extraction of symbolic links as hard links")));
 	struct stat stat_info_1, stat_info_2;
 
 #if DOSWIN
-	/* Rename current_link_name if it might get us in trouble.  */
-	current_link_name = rename_if_dos_device_name (current_link_name);
+	/* Rename current link name if it might get us in trouble.  */
+	current.linkname = rename_if_dos_device_name (current.linkname);
 #endif
 
 	/* DOSWIN does not implement links.  However, link() actually copies
@@ -1222,8 +1574,8 @@ Attempting extraction of symbolic links as hard links")));
 
       else
 	{
-	  data = ((struct delayed_set_stat *)
-		      xmalloc (sizeof (struct delayed_set_stat)));
+	  data = (struct delayed_set_stat *)
+	    xmalloc (sizeof (struct delayed_set_stat));
 	  data->file_name = xstrdup (CURRENT_FILE_NAME);
 	  data->stat_info = current.stat;
 	  data->next = delayed_set_stat_head;

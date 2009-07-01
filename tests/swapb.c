@@ -1,3 +1,5 @@
+#include "system.h"
+
 /*---------------------------------------------------------------------------.
 | Prints a file with its bytes swapped if the file has an even number of     |
 | bytes.  If it does not have an even number of bytes, swapb prints the file |
@@ -14,18 +16,6 @@
    de
    $
 */
-
-#include <stdio.h>
-#if HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#ifndef SEEK_END
-# define SEEK_END 2
-#endif
-#ifndef SEEK_SET
-# define SEEK_SET 0
-#endif
 
 main (argc, argv)
      int argc;

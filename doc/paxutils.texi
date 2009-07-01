@@ -89,6 +89,7 @@
 @set one-file-system @w{@kbd{--one-file-system}} (@kbd{-l})
 @set owner @w{@kbd{--owner=@var{user}}}
 @set posix @w{@kbd{--posix}}
+@set quick @w{@kbd{--quick}}
 @set preserve @w{@kbd{--preserve}}
 @set read-full-records @w{@kbd{--read-full-records}} (@kbd{-B})
 @set record-size @w{@kbd{--record-size=@var{size}}}
@@ -1018,9 +1019,9 @@ the directory into which it will copy them is given as a non-option argument.
 The example shows copying the files of the present directory, and
 sub-directories to a new directory called new-dir.  Some new options are the
 @kbd{-print0} available with GNU @code{find}, combined with the @kbd{--null}
-option of cpio.  These two options act together to send file names between
-find and cpio, even if special characters are embedded in the file names.
-Another is @kbd{-p}, which tells cpio to pass the files it finds to the
+option of @code{cpio}.  These two options act together to send file names between
+find and @code{cpio}, even if special characters are embedded in the file names.
+Another is @kbd{-p}, which tells @code{cpio} to pass the files it finds to the
 directory @file{new-dir}.
 
 @node tar Tutorial, cpio invocation, cpio Tutorial, Top
@@ -1678,7 +1679,7 @@ $ @kbd{tar --list --verbose --file=genres.tar folk}
 @end smallexample
 
 @cindex File name arguments, using @value{list} with
-@cindex @value{list} with file name arguments
+@cindex --list with file name arguments
 You can specify one or more individual member names as arguments when
 using @kbd{list}.  In this case, @code{tar} will only list the
 names of members you identify.  For example, @w{@kbd{tar --list
@@ -2054,7 +2055,7 @@ cpio @{-i|--extract@} [-bcdfmnrtsuvBSV] [-C bytes] [-E file]
 @section Copy-pass mode
 
 In copy-pass mode, @code{cpio} copies files from one directory tree to
-another, combining the copy-out and copy-in steps without actually using
+another, combining the copy-out and copy-in steps without actually creating
 an archive.  It reads the list of files to copy from the standard input;
 the directory into which it will copy them is given as a non-option argument.
 @xref{cpio Options}.
@@ -2081,8 +2082,10 @@ This option may be used in copy-out and copy-pass modes.
 
 @item --reset-access-time
 @itemx -a
-Reset the access times of files after reading them, so that it does not
-look like they have just been read.
+Reset the access times of files after reading them, so that it does not look
+like they have just been read.  (This option has no effect on plain DOS,
+since DOS filesystem only stores a single time stamp per file.  It does
+work on Windows 9X.)
 
 @item --append
 @itemx -A
@@ -2131,6 +2134,8 @@ with @samp{@var{HOSTNAME}:}.  The hostname can be preceded by a username
 and an @samp{@@} to access the remote tape drive as that user, if you have
 permission to do so (typically an entry in that user's @file{~/.rhosts}
 file).
+
+Remote archives are not supported on MS-DOS and MS-Windows.
 
 @item --force-local
 With @kbd{-F}, @kbd{-I}, or @kbd{-O}, take the archive file name to be a
@@ -2186,6 +2191,8 @@ an @samp{@@} to access the remote tape drive as that user, if you have
 permission to do so (typically an entry in that user's @file{~/.rhosts}
 file).
 
+Remote archives are not supported on MS-DOS and MS-Windows.
+
 @item -k
 Ignored; for compatibility with other versions of @code{cpio}.
 
@@ -2236,6 +2243,8 @@ an @samp{@@} to access the remote tape drive as that user, if you have
 permission to do so (typically an entry in that user's @file{~/.rhosts}
 file).
 
+Remote archives are not supported on MS-DOS and MS-Windows.
+
 @item --only-verify-crc
 Verify the CRC's of each file in the archive, when reading a CRC format
 archive. Don't actually extract the files.
@@ -2250,15 +2259,26 @@ Do not print the number of blocks copied.
 
 @item --rename
 @itemx -r
-Interactively rename files.
+Interactively rename files.  For each file in the archive, @code{cpio} will
+print its name and wait for the user to type a new name.  An empty name
+(produced by pressing @kbd{RET}) means skip the file.
+
+@item --rename-batch-file=@var{rename-file}
+Non-interactively rename files.  For each file in the archive, @code{cpio}
+will read a replacement name from the named @var{rename-file}.  In that
+file, file names should be separated by newlines.  An empty line causes
+@code{cpio} to skip the file.
 
 @item --owner [@var{user}][:.][@var{group}]
 @itemx -R [@var{user}][:.][@var{group}]
 Set the ownership of all files created to the specified user and/or group
-in copy-out and copy-pass modes.  Either the user, the group, or both,
+in copy-in and copy-pass modes.  Either the user, the group, or both,
 must be present.  If the group is omitted but the @samp{:} or @samp{.}
 separator is given, use the given user's login group.  Only the super-user
 can change files' ownership.
+
+(On MS-DOS and MS-Windows, any user can use this option, since changing
+ownership is a no-op on these systems.)
 
 @item --swap-bytes
 @itemx -s
@@ -2296,7 +2316,7 @@ GID stored in the archive.
 Print a @kbd{.} for each file processed.
 
 @item --version
-Print the cpio program version number and exit.
+Print the @code{cpio} program version number and exit.
 
 @end table
 
@@ -3070,7 +3090,7 @@ $ @kbd{tar --list --verbose --file=collection.tar}
 @end smallexample
 
 @cindex File name arguments, using @value{list} with
-@cindex @value{list} with file name arguments
+@cindex --list with file name arguments
 You can specify one or more individual member names as arguments when
 using @kbd{list}.  In this case, @code{tar} will only list the
 names of members you identify.  For example, @w{@kbd{tar --list
@@ -3239,11 +3259,26 @@ encountered unreadable files or directories.
 
 When backing up a living file system, there is a time window between the
 phase when @code{tar} scans directories and the phase when it tries to
-open files to dump them.  It is possible, and even common,
-for the file to disappear during this window.  The @value{ignore-failed-read}
-option is a way to ask @code{tar} not to report such problems as an error set
-in the exit status once the dump is completed.  Diagnostics are still
-reported, as the option does not turn them off.
+open files to dump them.  It is possible, and even common, for the file to
+disappear during this window.  The @value{ignore-failed-read} option is a
+way to ask @code{tar} not to report such problems as an error set in the
+exit status once the dump is completed.  Diagnostics are still reported,
+as the option does not turn them off.
+
+A disappearing file is just a stronger case of the following problem.  When a
+file shrinks or grows while being backed up, @code{tar} makes some stunts
+to ensure the integrity of the archive, so the file length in the header
+already written does not lie about what is found in the archive.  This might
+imply padding the file with zeroes up to the proper length, or writing less
+than the actual file contents.  In such cases, @code{tar} protected the
+integrity of the archive, but surely not the integrity of the file, which
+just cannot be restored properly.  The @value{ignore-failed-read} more
+or less means to not return an error and continue processing even when file
+integrity is known to be lost, as long as the archive integrity is preserved.
+
+The @value{--ignore-failed-read} also inhibits an error exit also for
+failed opening of directories, files for which dumping type is not known,
+or with the @value{remove-files} option, failed removal of files after dump.
 
 @node compare, , Reading, list
 @subsection Comparing members with the file system
@@ -3981,12 +4016,24 @@ is there for full generality, it is probably not what you want.
 @node atime-preserve, remove-files, name-prefix, create
 @subsection Preserving last access time
 
-When @code{tar} reads files, their access times get
-updated.  To have @code{tar} attempt to set the access times back to
-what they were before they were read, use the @value{atime-preserve}
-option.  This doesn't work for files that you don't own, unless
-you're root, and it doesn't interact nicely with incremental dumps
-(@pxref{Backups}), but it is good enough for some purposes.
+When @code{tar} reads files, their access time gets updated.  To have
+@code{tar} attempt to set the access times back to what they were before
+they were read, use the @value{atime-preserve} option.  This doesn't work
+for files that you don't own, unless you're root, and it doesn't interact
+nicely with incremental dumps (@pxref{Backups}), but it is good enough
+for some purposes.
+
+This options also preserves the modification time field, which has no
+effect unless the file is being modified simultaneously by another program.
+As such, it also can eliminate evidence of reading or writing of the file
+by another program, if the access happens between the beginning and ending
+of @code{tar} reading the file.
+
+A drawback of the @value{atime-preserve} option is that it alters the
+@code{ctime} of the dumped files.  Some system administrators value
+@code{ctime} much more than @code{atime}.@footnote{This is at least the case
+of the current @code{paxutils} maintainer!}  They should ponder carefully
+the advantages and disadvantages before using this option in system backups.
 
 This option doesn't have any effect on MS-DOS, since @code{atime} is not
 supported by the DOS FAT file system.  (It @emph{does} work on MS-Windows
@@ -4910,6 +4957,7 @@ work for specifying the names of both files and archive members.
 * files-from::                  Reading names from a file
 * find with files-from::        Using @code{find} to generate a list of files
 * null::                        @code{NUL} terminated file names
+* quick::                       Trading speed versus duplicate entries
 @end menu
 
 @node files-from, find with files-from, Selecting Archive Members, Selecting Archive Members
@@ -4918,24 +4966,61 @@ work for specifying the names of both files and archive members.
 @cindex Lists of file names
 @cindex File Name arguments, alternatives
 
-Instead of giving the names of files or archive members on the command line,
-you can put the names into a file, and then use the @value{files-from}
-option to @code{tar}.  Give the name of the file which contains the list of
-files to include as the argument to @value{files-from}.  In the list,
+The @value{files-from} option gets names to extract or create from file
+@var{file name}.
+
+So, instead of giving the names of files or archive members on the command
+line, you can put the names into a file, and then use the @value{files-from}
+option to @code{tar}.  Give the name of the file which contains the list
+of files to include as the argument to @value{files-from}.  In the list,
 the file names should be separated by newlines.  You will frequently use
 this option when you have generated the list of files to archive with the
 @code{find} utility.
 
-The @value{files-from} option gets names to extract or create from file
-@var{file name}.
+One can intermix @value{files-from} within the names given on the command
+line, in which case the included list of file is logically inserted at the
+proper point in the file name sequence.@footnote{It was not possible to
+intermix @value{files-from} and names on a command line, with @code{tar}
+version 1.12 and earlier versions.} The @value{files-from} option may even
+be used more than once.  One consequence of the above is that, when this
+option is specified early in the command, the names given on the command
+line are collected after the list of files included by @value{files-from}.
 
-If you give a single dash as a file name for @value{files-from},
-(that is, if you specify either @w{@kbd{--files-from=-}} or @w{@kbd{-T -}}), then the
-file names are read from standard input.
+If you give a single dash as a file name for @value{files-from}, (that
+is, if you specify either @w{@kbd{--files-from=-}} or @w{@kbd{-T -}}),
+then the file names are read from standard input.  Unless you are running
+@code{tar} with @value{create}, you cannot use both @w{@kbd{--files-from=-}}
+and @w{@kbd{--file=-}} (@w{@kbd{-f -}}) in the same command.  In fact,
+the rule is that standard input may not be invoked more than once.
 
-Unless you are running @code{tar} with @value{create}, you cannot use
-both @w{@kbd{--files-from=-}} and @w{@kbd{--file=-}} (@w{@kbd{-f -}})
-in the same command.
+Unless @value{null} is set, file names in a @value{files-from} file
+should quote special characters, at least newlines and backslashes, using
+backslashed sequences.  Newlines may be represented by @samp{\n}, tabs
+by @samp{\t}, form feeds by @samp{\f}, backspaces by @samp{\b}, carriage
+returns by @samp{\r}, deletes by @samp{\?} and backslashes by @samp{\\}.
+Characters may also be given in octal notation as per @samp{\@var{N}},
+@samp{\@var{NN}} or @samp{\@var{NNN}}.  Other occurrences of backslashes
+are merely dropped.
+
+Using @value{files-from} and @value{directory} simultaneously on the command
+line is a bit delicate, and the user should pay attention to a few things.
+As the directory should usually be switched before interpreting file names
+from the list, @value{directory} normally appears before @value{files-from}.
+Yet, if the argument of @value{files-from} uses relative notation, it is
+interpreted relative to the last specified directory.  Some shell trickery
+might be needed, like this:
+
+@smallexample
+$ @kbd{tar --create --file=archive.tar --directory=where --files-from=`pwd`/list}
+$ @kbd{tar cfCT archive.tar where `pwd`/list}
+@end smallexample
+
+@noindent
+for reading the list of files from @file{list} in the current directory,
+while interpreting each file it contains relative to the @file{where}
+directory.  Another possibility is to to trigger a change of the directory
+from within the file list contents, so avoiding the @value{directory}
+option on the command line.  @xref{directory}.
 
 @node find with files-from, null, files-from, Selecting Archive Members
 @subsection Using @code{find} to generate a list of files
@@ -4994,7 +5079,7 @@ $ @kbd{find . -size +800 -print0 > long-files}
 $ @kbd{tar -c -v --null --files-from=long-files --file=big.tar}
 @end smallexample
 
-@node null, , find with files-from, Selecting Archive Members
+@node null, quick, find with files-from, Selecting Archive Members
 @subsection @code{NUL} terminated file names
 @cindex File names, terminated by @code{NUL}
 @cindex @code{NUL} terminated file names
@@ -5009,9 +5094,10 @@ terminate in a newline.
 
 The @value{null} option is just like the one in GNU @code{xargs} and
 @code{cpio}, and is useful with the @kbd{-print0} predicate of GNU
-@code{find}.  In @code{tar}, @value{null} also causes
-@value{directory} options to be treated as file names to archive, in
-case there are any files out there called @file{-C}.
+@code{find}.  In @code{tar}, @value{null} also causes @value{directory}
+options, when used from within a @value{files-from} inclusion, to be
+treated as file names to archive, in case there are any files out there
+called @file{-C}.
 
 This example shows how to use @code{find} to generate a list of files
 larger than 800K in length and put that list into a file called
@@ -5032,6 +5118,58 @@ $ @kbd{tar -c -v --null --files-from=long-files --file=big.tar}
 Again, you need the @kbd{! -type d} predicate to prevent @code{find}
 from printing the @file{.} directory name, which would have caused
 @code{tar} to include the entire directory in the archive.
+
+Additionally, if the @value{list} option is used non-verbosely with
+@value{null}, each listed file name will be terminated with @code{NUL}
+instead of a newline.  Also, the quoting of some special characters,
+which is usual in the produced output, gets inhibited.
+
+@node quick,  , null, Selecting Archive Members
+@subsection Trading speed versus duplicate entries
+@cindex Quick extraction
+@cindex Duplicate entries
+@cindex Speed versus duplicate entries
+
+Many users noticed that @code{tar} continues reading until the end of the
+tape after requested files have been extracted.  The reason behind this is
+that other tar options, like @value{append} or @value{update}, let users put
+additional versions of the same files on the end of an existing archive.
+However, in the practice of every day, it is very unusual that an archive
+has many copies of a single entry, and running archives until their end may
+be perceived as a waste of time.
+
+The @value{quick} option alters the usual behavior of @code{tar}
+at extraction time, so it considers itself satisfied when each given
+argument specifying an entry name, in the archive, yielded some extraction.
+Once this has been achieved, @code{tar} terminates its processing early.
+Oh the other hand, for those unusual archives having multiple copies of
+a single entry, using @value{quick} may not be a wise thing to do, as the
+extracted files may not always be the latest to appear in the archive.
+
+The speedup effect of @value{quick} is somewhat defeated by another feature
+of @code{tar}, by which it drains archive coming from a pipe, as part of its
+completion code.@footnote{This draining feature has been added, a while ago,
+to avoid spurious diagnostics about broken pipes.  From the number of bug
+reports received about such diagnostics, it is clear that they do annoy
+users.} Such a pipe may be explict from the shell construct from which
+@code{tar} is called, or sometimes, it might be implicit from @code{tar}
+internal operations.  One important case of such implicit draining is
+when the archive being read was compressed.  So currently, @value{quick}
+is most effective when reading an uncompressed archive directly from the
+disk or the tape holding it.
+
+Wildcards in entry arguments create another difficulty.  To fully expand
+wildcards from the archive contents, @code{tar} need to read the archive
+completely.  So, if the @value{quick} is given and wildcards are used in
+the same call, @code{tar} is receiving contradicting messages about what
+it should do.  In such cases, @code{tar} produces a usage error and does
+not process the archive.
+
+When @value{quick} is used, and if an argument specifies an entry which
+appears multiple times in the archive, this documentation does not specify
+which entries, among those possible, are selected for processing.  This is
+left unspecified on purpose, so @code{tar} behavior may later be changed
+more easily.  Consider that @value{verbose} is your friend, here!
 
 @node Exclusions, Time criteria, Selecting Archive Members, Choosing
 @section Excluding files by name
@@ -5462,9 +5600,12 @@ the original current working directory of @code{tar}, due to a previous
 @value{directory} option.
 
 When using @value{files-from} (@pxref{files-from}), you can put @kbd{-C}
-options in the file list.  Unfortunately, you cannot put
-@value{directory} options in the file list.  (This interpretation can
-be disabled by using the @value{null} option.)
+options in the file list, in which case the next line is interpreted as
+a directory for the following entries.@footnote{Do not try using @kbd{-C}
+and the directory on the same input line, separated with some white space.
+this will not work.  You have to put @kbd{-C} alone on its line, followed
+by the directory alone on its line.} This interpretation of @kbd{-C}
+from within inclusion files is disabled when using the @value{null} option.
 
 @node absolute-names, , directory, Relative
 @subsection Absolute file names
@@ -6429,15 +6570,15 @@ file in the @code{gzip} 0.8.1 distribution.
 Archives are usually written on removable media---tape cartridges, mag
 tapes, or floppy disks.
 
-The amount of data a tape or disk holds depends not only on its size,
+The amount of data a tape or disk can hold depends not only on its size,
 but also on how it is formatted.  A 2400 foot long reel of mag tape holds
 40 megabytes of data when formated at 1600 bits per inch.  The physically
 smaller EXABYTE tape cartridge holds 2.3 gigabytes.
 
 Magnetic media are re-usable---once the archive on a tape is no longer
-needed, the archive can be erased and the tape or disk used over. Media
-quality does deteriorate with use, however.  Most tapes or disks should
-be disgarded when they begin to produce data errors.
+needed, the archive can be erased and the tape or disk used over.
+Media quality does deteriorate with use, however.  Most tapes or disks
+should be discarded when they begin to produce data errors.
 
 Magnetic media are written and erased using magnetic fields, and should
 be protected from such fields to avoid damage to stored data.  Sticking a
@@ -8074,8 +8215,8 @@ since @var{date}.  @xref{after-date}.
 Appends files to the end of the archive.  @xref{append}.
 
 @item @value{atime-preserve}
-Tells @code{tar} to preserve the access time field in a file's inode when
-dumping it.  @xref{atime-preserve}.
+Tells @code{tar} to preserve the access (and modification) times field in
+a file's inode when dumping it.  @xref{atime-preserve}.
 
 @item @value{backup}
 Rather than deleting files from the file system, @code{tar} will back

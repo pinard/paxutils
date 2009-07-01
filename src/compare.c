@@ -1,5 +1,5 @@
 /* Diff files from a tar archive.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1987-04-30.
 
    This program is free software; you can redistribute it and/or modify it
@@ -18,6 +18,7 @@
 
 #include "system.h"
 
+#include <signal.h>
 #if HAVE_LINUX_FD_H
 # include <linux/fd.h>
 #endif
@@ -399,6 +400,274 @@ diff_sparse_files (off_t size_of_file)
     report_difference (_("Data differs"));
 }
 
+#if ENABLE_DALE_CODE
+
+/*---.
+| ?  |
+`---*/
+
+/* Diff'ing a compressed file with its counterpart on the tar file is a bit of
+   a different story than a normal file.  We need to spawn a process to
+   uncompress the data.  (We need to uncompress the data for comparison rather
+   than compressing the real file, because we don't necessarily know what
+   compression format the tar data is in, and many uncompress programs will
+   handle multiple formats.  */
+
+static void
+diff_compressed_file (size_t size_of_file, char *name)
+{
+  union block *data_block;
+  int written, count, child, status;
+  int child_process_1 = 0, child_process_2 = 0;
+  size_t sizeleft;
+  WAIT_T wait_status;
+  /* For sending data from the parent to child process 1.  */
+  int pipe1[2];
+# define pipe1r	(pipe1[0])
+# define pipe1w	(pipe1[1])
+  /* For sending data from child process 1 to child process 2.  */
+  int pipe2[2];
+# define pipe2r	(pipe2[0])
+# define pipe2w	(pipe2[1])
+
+  /* Flush the listing file, so we don't double-write its data.  */
+  fflush (stdlis);
+
+  /* Create pipes.  */
+  if (pipe (pipe1) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot create pipe")));
+  if (pipe (pipe2) < 0)
+    FATAL_ERROR ((0, errno, _("Cannot create pipe")));
+
+  /* Fork child 1, which will uncompress the data.  */
+  child_process_1 = fork ();
+  if (child_process_1 < 0)
+    {
+      /* An error was found attempting to fork.  */
+      ERROR ((0, errno, _("\
+%s: Error in fork() attempting to decompress file - file skipped"), name));
+      /* Skip the file.  */
+      skip_file ((long) size_of_file);
+      close (pipe1r);
+      close (pipe1w);
+      close (pipe2r);
+      close (pipe2w);
+      goto finish_children;
+    }
+  else if (child_process_1 == 0)
+    {
+      /* Child process 1.  */
+
+      /* Close pipes we will not use.  */
+      close (pipe1w);
+      close (pipe2r);
+      /* Close standard input.  Dup pipe 1 as standard input.  */
+      xdup2 (pipe1r, STDIN,
+	     _("archive data pipe to stdin for file decompression"));
+      /* Close standard output.  Dup pipe 2 as standard output.  */
+      xdup2 (pipe2w, STDOUT,
+	     _("file compare pipe to stdout for file decompression"));
+
+      /* Execute the uncompression program.  */
+      execlp (use_compress_program_option, use_compress_program_option,
+	      "-d", (char *) 0);
+      /* Should not return.  */
+      FATAL_ERROR ((0, errno, _("Cannot exec %s -d"),
+		    use_compress_program_option));
+    }
+
+  /* Fork child 2, which will compare the uncompressed data to the file.  */
+  child_process_2 = fork ();
+  if (child_process_2 < 0)
+    {
+      /* An error was found attempting to fork.  */
+      ERROR ((0, errno, _("\
+%s: Error in fork() attempting to decompress file - file skipped"), name));
+      /* Skip the file.  */
+      skip_file ((long) size_of_file);
+      /* Closing the pipes will cause the child processes to die.  */
+      close (pipe1r);
+      close (pipe1w);
+      close (pipe2r);
+      close (pipe2w);
+      goto finish_children;
+    }
+  else if (child_process_2 == 0)
+    {
+      int exit_status = TAREXIT_SUCCESS;
+      /* Child process 2.  */
+
+      /* Close pipes we will not use.  */
+      close (pipe1r);
+      close (pipe1w);
+      close (pipe2w);
+
+      /* Do the comparison. */
+      while (1)
+	{
+	  /* Read data from pipe 2 in chunks and compare them.  */
+	  int bytes_read, i;
+	  char pipe_buffer[sizeof (diff_buffer)];
+
+	  /* Read however many bytes we can.  */
+	  status = read (pipe2r, pipe_buffer, sizeof (pipe_buffer));
+	  if (status == 0)
+	    /* Zero bytes read indicates EOF.  */
+	    /* We do not have to check for EOF on the disk file, since
+	       we have previously verified that it has the right length.  */
+	    break;
+	  else if (status < 0)
+	    {
+	      /* An error was detected.  */
+	      ERROR ((0, errno, _("%s: Could not read from pipe"),
+		      name));
+	      /* Signal parent process that something was wrong.  */
+	      exit (TAREXIT_FAILURE);
+	    }
+	  bytes_read = status;
+
+	  /* Now read the same number of bytes from the disk file.  */
+	  status = read (diff_handle, diff_buffer, bytes_read);
+	  if (status < 0)
+	    {
+	      /* An error was detected.  */
+	      ERROR ((0, errno, _("%s: Could not read from file"),
+		      name));
+	      /* Signal parent process that something was wrong.  */
+	      exit (TAREXIT_FAILURE);
+	    }
+	  else if (status != bytes_read)
+	    {
+	      /* Incomplete read indicates disk file has different length.
+	         This is not expected, because we checked the length
+		 earlier.  */
+	      ERROR ((0, 0, _("%s: Could only read %d of %d bytes"),
+		      name, status, bytes_read));
+	      /* Signal parent process that something was wrong.  */
+	      exit (TAREXIT_FAILURE);
+	    }
+	  /* Compare the data.  */
+	  if (memcmp(diff_buffer, pipe_buffer, bytes_read) != 0)
+	    {
+	      /* Remember to signal parent process that data differs.  But
+		 don't exit now, so parent process does not get SIGPIPE trying
+		 to send the rest of the data to us.  */
+	      exit_status = TAREXIT_DIFFERS;
+	    }
+	}
+      /* Return the exit status to the parent.  */
+      exit (exit_status);
+    }
+
+  /* Continue in the parent process to extract the data from the archive and
+     feed it to child process 1.  Close pipes we will not use.  */
+  close (pipe1r);
+  close (pipe2r);
+  close (pipe2w);
+
+  for (sizeleft = size_of_file; sizeleft > 0; sizeleft -= written)
+    {
+      data_block = find_next_block ();
+      if (data_block == NULL)
+	{
+	  ERROR ((0, 0, _("Unexpected EOF on archive file")));
+	  /* Closing the pipes will cause the child processes to die.  */
+	  close (pipe1w);
+	  goto finish_children;
+	}
+
+      /* Determine the number of bytes available in this data block to send to
+	 the uncompress process.  */
+      written = available_space_after (data_block);
+      if (written > sizeleft)
+	written = sizeleft;
+
+      /* Write to child process 1.  */
+      status = write (pipe1w, data_block->buffer, (size_t) written);
+      set_next_block_after ((union block *)
+			    (data_block->buffer + written - 1));
+      if (status == written)
+	continue;
+
+      /* Error in writing pipe.  Print message, then skip to next file in
+	 archive.  */
+      if (status < 0)
+	ERROR ((0, errno, _("%s: Could not write to pipe"), name));
+      else
+	ERROR ((0, 0, _("%s: Could only write %d of %d bytes"),
+		name, status, written));
+      skip_file ((long) (sizeleft - written));
+      goto finish_children;
+    }
+
+  /* Close the pipe to child process 1, letting it knows that we have reached
+     EOF.  */
+  close (pipe1w);
+
+  /* Wait for the child processes to finish so we can catch errors and ensure
+     the system isn't filled with zombie processes.  */
+ finish_children:
+  /* Wait for child processes to finish.  */
+  while (1)
+    {
+      /* Wait for a child to finish, or for no more children.  */
+      while (child = wait (&wait_status),
+             (child != child_process_1
+	      && child != child_process_2
+	      && child != -1))
+	continue;
+
+      /* If no more children, exit this loop.  */
+      if (child == -1)
+	break;
+
+      if (WIFSIGNALED (wait_status)
+#if 0
+	  && !WIFSTOPPED (wait_status)
+#endif
+	  )
+	{
+	  /* SIGPIPE is OK, everything else is a problem.  */
+
+	  if (WTERMSIG (wait_status) != SIGPIPE) {
+	    ERROR ((0, 0, _("Child died with signal %d%s"),
+		    WTERMSIG (wait_status),
+		    WCOREDUMP (wait_status) ? _(" (core dumped)") : ""));
+	  }
+	}
+      else
+	{
+	  /* Child voluntarily terminated -- but why?  /bin/sh returns SIGPIPE
+	     + 128 if its child, then do nothing.  */
+
+	  if (WEXITSTATUS (wait_status) != (SIGPIPE + 128)
+	      && WEXITSTATUS (wait_status))
+	    /* We have to capture exit status 1 from child 2, which indicates
+	       a difference (or error) was discovered.  But child 2 will then
+	       have written an error message, so we shouldn't report one as
+	       well.  But we should set the exit status.  */
+	    if (child == child_process_2)
+	      switch (WEXITSTATUS (wait_status))
+		{
+		case TAREXIT_SUCCESS:
+		  break;
+		case TAREXIT_DIFFERS:
+		  /* Report difference.  (This sets the exit code.)  */
+		  report_difference (_("Data differs"));
+		  break;
+		default:
+		  exit_status = WEXITSTATUS (wait_status);
+		  break;
+		}
+	    else
+	      ERROR ((0, 0, _("Child returned status %d"),
+		      WEXITSTATUS (wait_status)));
+	}
+    }
+}
+
+#endif /* ENABLE_DALE_CODE */
+
 /*---------------------------------------------------------------------.
 | Call either stat or lstat over STAT_DATA, depending on --dereference |
 | (-h), for a file which should exist.  Diagnose any problem.  Return  |
@@ -561,6 +830,7 @@ diff_archive (void)
   struct stat stat_info;
   size_t name_length;
   int status;
+  struct utimbuf restore_times;
 
   errno = EPIPE;		/* FIXME: errno should be read-only */
 				/* FIXME: remove perrors */
@@ -592,6 +862,9 @@ diff_archive (void)
     case REGTYPE:
     case OLDGNU_SPARSE:
     case CONTTYPE:
+    case OLDGNU_REGULAR_COMPRESSED:
+    case OLDGNU_SPARSE_COMPRESSED:
+    case OLDGNU_CONTIG_COMPRESSED:
 
       /* Appears to be a file.  See if it's really a directory.  */
 
@@ -625,13 +898,32 @@ diff_archive (void)
 
       if (time_compare (stat_info.st_mtime, current.stat.st_mtime) != 0)
 	report_difference (_("Mod time differs"));
-      if (current.block->header.typeflag != OLDGNU_SPARSE &&
-	  stat_info.st_size != current.stat.st_size)
+#if ENABLE_DALE_CODE
+      /* Compare the recorded size of the file with the current size.  This is
+	 made difficult because several file formats store a compressed size
+	 in the header size field, so we have to then compare with a "real
+	 size" file in the Gnu extensions part of the header.  */
+      if (stat_info.st_size
+	  != ((current.block->header.typeflag == OLDGNU_SPARSE
+	       || current.block->header.typeflag == OLDGNU_REGULAR_COMPRESSED
+	       || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED
+	       || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+	      ? strtol (current.block->oldgnu_header.realsize, NULL, 8)
+	      : current.stat.st_size))
+ 	{
+	  report_difference (_("Size differs"));
+	  skip_file (current.stat.st_size);
+	  goto quit;
+	}
+#else /* not ENABLE_DALE_CODE */
+      if (current.block->header.typeflag != OLDGNU_SPARSE
+	  && stat_info.st_size != current.stat.st_size)
 	{
 	  report_difference (_("Size differs"));
 	  skip_file (current.stat.st_size);
 	  goto quit;
 	}
+#endif /* not ENABLE_DALE_CODE */
 
       diff_handle = open (current.name, O_NDELAY | O_RDONLY | O_BINARY);
 
@@ -654,10 +946,22 @@ diff_archive (void)
 	  goto quit;
 	}
 
-      /* Need to treat sparse files completely differently here.  */
+      /* Record the access and modification times.  They will be restored
+	 afterward, if --atime-preserve was specified. */
+      restore_times.actime = stat_info.st_atime;
+      restore_times.modtime = stat_info.st_mtime;
+
+      /* Need to treat sparse files completely differently here.  Similarly,
+	 compressed files need to be handle specially.  */
 
       if (current.block->header.typeflag == OLDGNU_SPARSE)
 	diff_sparse_files (current.stat.st_size);
+#if ENABLE_DALE_CODE
+      else if (current.block->header.typeflag == OLDGNU_REGULAR_COMPRESSED
+	       || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED
+	       || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+	diff_compressed_file (current.stat.st_size, current.name);
+#endif
       else
 	{
 	  if (multi_volume_option)
@@ -676,6 +980,11 @@ diff_archive (void)
       status = close (diff_handle);
       if (status < 0)
 	ERROR ((0, errno, _("Error while closing %s"), current.name));
+
+      /* Restore access and modification times if --atime-preserve was
+	 specified. */
+      if (atime_preserve_option)
+	utime (current.name, &restore_times);
 
     quit:
       break;

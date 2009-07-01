@@ -1,8 +1,264 @@
-1998-10-31 Alexandre Oliva  <oliva@dcc.unicamp.br>
+1999-06-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* buffer.c (open_archive):
+
+	* Makefile.am (EXTRA_PROGRAMS): Add cpio and pax.
+	(noinst_PROGRAMS): Deleted.
+	(libexec_PROGRAMS):
+
+	* extract.c (extract_sparse_file): Report lseek errors.
+	Reported by Dale Worley.
+
+1999-06-11  Dale Worley  <worley@ariadne.com>
+
+	Implement --per-file-compress.
+	* common.h: Declare per_file_compress_option, compress_whole_archive,
+	file_compress_temporary, MINIMUM_FILE_COMPRESS_SIZE and
+	MAXIMUM_FILE_COMPRESS_SIZE.
+	* tar.h: Add OLDGNU_REGULAR_COMPRESSED, OLDGNU_CONTIG_COMPRESSED
+	and OLDGNU_SPARSE_COMPRESSED.
+	* tar.c (long_options, usage, declare_options, decode_options):
+	Handle -y option.
+	(init_compress_work_file, delete_compress_work_file): New functions.
+	(main): Use them.
+	* extract.c (extract_compressed_file): New function.
+	(extract_archive): Handle compressed entries.
+	* create.c (dump_file): Handle compressed entries.
+	* compare.c (diff_compressed_file): New function.
+	(diff_archive): Handle compressed entries.
+	* misc (xclose, xdup2): New from buffer.c, not static anymore.
+	* buffer.c (xclose, xdup2): Deleted.
+	(open_archive): Rather test compress_whole_archive.
+	* common.h: Declare them.
+
+1999-05-28  François Pinard  <pinard@iro.umontreal.ca>
+
+	* tar.c (decode_options): Error if wildcards are used in quick mode.
+	* misc.c (is_pattern): New routine, moved out of names.c.
+	* common.h: Declare its prototype.
+	Reported by Eli Zaretskii and Göran Uddeborg.
+
+1999-05-23  François Pinard  <pinard@iro.umontreal.ca>
+
+	* common.h: Introduce quick_option, and name_list_unmatched_count.
+	* names.c: Maintain proper value for name_list_unmatched_count.
+	Diagnose wildcards whenever quick_option has been specified.
+	* tar.c (usage, decode_options, main): Introduce quick_option.
+	* reading.c (read_and): Enforce quick_option.
+	Reported by Alexandre Oliva, Doug Lenz, Ed DeRivas, Enno Busse,
+	Kurt, Randall Glass and Tom Karches.
+
+	* update.c (update_archive): Call commented out.
+	* common.h: Adjusted.
+
+	* incremen.c (compare_names): Tidied.
+
+1999-05-02  François Pinard  <pinard@iro.umontreal.ca>
+
+	* names.c (next_name_string): Unquote names coming from files, but
+	not anymore for names coming from command arguments, and not when
+	--null is set.  Consider the shell offers quoting services already.
+	Reported by Ed Avis.
+
+1999-04-26  François Pinard  <pinard@iro.umontreal.ca>
+
+	* rtapelib.c (rmt_open__): Do not allocate command_buffer
+	statically.  It was possible to get a buffer overflow.
+	Reported by Alan Cox.
+
+	* rtapelib.c (do_rexec): If user is empty, consider it NULL.
+	* rmt.cpio.c, rmt.cpio.h, rtapelib.cpio.c: Deleted.
+	* Makefile.am (EXTRA_DIST): Deleted.
+
+1999-04-17  François Pinard  <pinard@iro.umontreal.ca>
+
+	* copyin.c, copypass.c: Use dir_name instead of dirname.
+
+	* system.h: Remove the DOSWIN conditional and define CONSOLE to
+	/dev/tty in all cases.  Previously, it was con for the DOSWIN case.
+	Reported by Eli Zaretskii.
+
+1999-04-13  François Pinard  <pinard@iro.umontreal.ca>
+
+	* tar.c (get_reply): Attempt discarding any pending input before
+	writing the prompt.
+	Reported by Brendan O'Dea, Eli Zaretskii, Jim Meyering, Steven
+	Sargent and Ulrich Drepper.
+
+	* copyin.c (process_copy_in): If we cannot copy because -d wasn't
+	given, make the error message mention the directory part of name.
+	If we are not allowed to create intermediate directories, mention
+	the parent directory in message.  Say unsupported, not unknown.
+	* copypass.c (copy_pass_one_file): Idem.
+	Reported by Eli Zaretskii.
+
+	* system.h [DOSWIN]: Set EPERM to EACCES.  Set UMASKED_SYMLINK to link.
+	* copyin.c (long_format) [DOSWIN]: Use cpio_mode_string.
+	(process_copy_in) [DOSWIN]: Set binary mode on archive and
+	consider device as special if not directed from terminal.
+	Clean out drives from paths.  Say we cannot set times on a directory.
+	* copyout.c (process_copy_out) [DOSWIN]: Set binary mode on
+	archive and consider device as special if not directed to terminal.
+	(copy_out_one_file) [DOSWIN]: Adjust st_rdev to st_dev.
+	* copypass.c (copy_pass_one_file) [DOSWIN]:  Say we cannot set
+	times on a directory.
+	(copy_pass_maybe_recurse) [DOSWIN]: Remove drive from file name.
+	* cpio.c (main) [DOSWIN]: Set program name to base name.
+	* fmttar.c (read_in_tar_header) [DOSWIN]: Truncate time.
+	* util.c (readlink, maybe_rename_file) [DOSWIN]: New functions.
+	Reported by Eli Zaretskii.
+
+	* names.c (next_name_string): Recognize -C from the command line
+	even with --null, if still not from a file.  Previously, -C was
+	ignored everywhere if --null was given.
+	Reported by Karl Berry.
+
+1999-04-12  François Pinard  <pinard@iro.umontreal.ca>
+
+	Address the long lasting problem (back to version 1.10) that -C
+	and -T are incompatible.  Also, -T may now be used more than once.
+	* tar.c (decode_options): Process -T by saving it and its argument
+	in the list of names, instead of setting variable files_from_option.
+	Use files_from_option as a boolean flag, instead of a file name.
+	* names.c (next_name_string): Declare enum expecting and
+	expecting.  Use it to introduce -T processing similar to -C, yet
+	not from within files.  Do not open or close name_file elsewhere.
+	* common.c: Adjusted.
+	Reported by Angelo Fumagalli, Carsten Heyl, François Pinard, Igor
+	Schein, Karen Newcastle, Karl Berry, Kevin L. Smith, Larry
+	M. Augustin, Patrick Timmons and Steve Biederman.
+
+	* names.c (initialize_name_strings): Merge previous init_names and
+	name_init.
+	(terminate_name_strings): Merge previous name_term and name_close.
+	(add_name_string): New name for name_add.
+	(next_name_string): New name for name_next.
+	* common.c, create.c, names.c, tar.c: Adjusted.
+
+	* names.c (find_matching_name): Merge previous name_match and
+	name_scan, with a new commit argument to segregate cases.
+	* common.h, delete.c, reading.c, update.c: Adjusted.
+
+	* names.c (next_unprocessed_name): New name for name_from_list.
+	(prepare_to_reprocess_names): New name for blank_name_list.
+	(report_unprocessed_names): New name for names_notfound.
+	* common.h, create.c, delete.c, misc.c, reading.c, tar.c, update.c:
+	Adjusted.
+
+	* names.c (name_next): Inline previous read_name_from_file.
+	(read_name_from_file): Deleted.
+
+	* names.c (name_next): Rename change_dirs to recognize_minus_c and
+	chdir_flag to next_is_directory.
+
+1999-04-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* rtapelib.c (rmt_open__): Use execl if --rsh-command is
+	specified, even if rexec was compiled in.
+	* tar.c (decode_options) [REMOTE_SHELL]: Initialise
+	rsh_command_option with REMOTE_SHELL.
+	Reported by Stephen Costaras.
+
+1999-03-17  François Pinard  <pinard@iro.umontreal.ca>
+
+	* create.c (dump_file): Use hash_insert as per last hash.[ch].
+
+	* buffer.c (new_volume): Get the BEL out of the translated message.
+
+1999-03-16  Dale Worley  <worley@dworley.ne.mediaone.net>
+
+	* Fix compare.c so that --atime-preserve works with -d and with -c
+	--verify.
+
+1999-03-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* rename.c, util.c: Use %s in error calls.
+	Reported by Jim Meyering.
+
+1999-03-06  François Pinard  <pinard@iro.umontreal.ca>
+
+	* create.c (dump_file): For the purpose of --ignore-failed-read,
+	consider the following cases as failed read: unexpected shrinking
+	of files, failed opening of directories, files for which dumping
+	type is not known, or failed removal of files after dump.
+	Reported by Alexandre Oliva.
+
+1999-03-05  François Pinard  <pinard@iro.umontreal.ca>
+
+	* list.c (print_header): When listing files non-verbosely and
+	--null is given, use NUL instead of \n, and avoid any quoting.
+	Reported by Richard J. Kettlewell.
+
+	* common.h: Introduce null_option, get rid of filename_terminator.
+	* names.c (read_name_from_file, name_next): Idem.
+	* tar.c (decode_options, main): Idem.
+
+1998-12-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* buffer.c, signal.h [!HAVE_SIGNAL_H]: Rather include sys/signal.h.
+	Unixware 7 does have sys/signal.h, without having signal.h.
+	Reported by Allan M. Clark and Peter Waltenberg.
+
+	* rtapelib.c (rmt_program_array): Do not attempt /zorglub/rmt.
+	Reported by John David Anglin.
+
+1998-12-09  François Pinard  <pinard@iro.umontreal.ca>
+
+	* header.c (get_header_mode): Handle buggy Solaris archives.
+	Reported by Alexandre Oliva, Manabu Nakamura and William Kucharski.
+
+1998-11-30  Paul Eggert  <eggert@twinsun.com>
+
+	* extract.c (set_stat): chmod after chown even when not root,
+	if we are using --same-owner.  This is needed on Solaris 2.5.1.
+	Reported by Paul D. Smith.
+
+1998-11-21  François Pinard  <pinard@iro.umontreal.ca>
+
+	* cdf.c, copyin.c, copyout.c, extern.h, fmttar.c, format.c: Rename
+	 GNUTAR and gnutar to OLDGNU and oldgnu.
+
+1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* extract.c (extract_archive): Declare size as off_t.
+	Reported by Eli Zaretskii.
+
+	* misc.c (unixify_file_name): New function.
+	* common.h: Prototype it.
+	* names.c (name_next): Use it.
+	* tar.c (decode_options): Use it.
+	Reported by Eli Zaretskii.
+
+	* extract.c (extract_archive) [DOSWIN]: Rename variables as well.
+	(rename_if_dos_device_name) [DOSWIN]: Idem.
+	Reported by Eli Zaretskii.
+
+	* misc.c (get_programe_base_name) [DOSWIN]: New function.
+	* common.h [DOSWIN]: Declare it.
+	* tar.c (main) [DOSWIN]: Use it, so the test suite works.
+	* cpio.c (main) [DOSWIN]: Idem.
+	* mt.c (main) [DOSWIN]: Idem.
+	* pax.c (main) [DOSWIN]: Idem.
+	* rmt.c (main) [DOSWIN]: Idem.
+	Reported by Eli Zaretskii.
+
+	* buffer.c (new_volume): Unconditionalise a few tests handling
+	closes of stdin or stdout in multi-volume situations, and delete
+	the old alternative code.  Such tests were only done when DOSWIN,
+	while the problem is generic for all systems.
+	Reported by Eli Zaretskii and Germano Leichsenring.
+
+	* buffer.c (new_volume): Handle writing to stdout or reading from
+	stdin on multi-volume archives.  Do not create files named "-".
+	Reported by Eli Zaretskii.
+
+1998-10-31  François Pinard  <pinard@iro.umontreal.ca>
 
 	* rtapelib.c (rmt_read__, rmt_write__, rmt_lseek__): Return
 	type was different from declaration.
-	Reported by Nelson H. F. Beebe.
+	Reported by Alexandre Oliva, Eli Zaretskii and Nelson H. F. Beebe.
+
+1998-10-31 Alexandre Oliva  <oliva@dcc.unicamp.br>
 
 	* system.h: Include <locale.h> where available.
 
@@ -17,7 +273,7 @@
 	* util.c (create_all_directories): Adjusted.
 
 	* system.h: Don't declare stpcpy if it is a macro.
-
+
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* system.h: Declare stpcpy.
@@ -92,8 +348,8 @@
 	* create.c (dump_file): Do not call finish_sparse_file when
 	sending the archive to the sink.  This avoids `Bad file number'
 	messages.
-	Reported by Craig Wiegert, David Lamkin, Gerard Hickey and
-	Matthias Urlichs.
+	Reported by Alexandre Oliva, Craig Wiegert, David Lamkin, Gerard
+	Hickey and Matthias Urlichs.
 
 	* create.c (create_archive): Avoid producing the increment file
 	when sending the archive to the sink.
@@ -344,7 +600,7 @@
 	the empty string.
 	(new_volume) [MSDOS]: Save standard streams when spawning the
 	child shell, and restore them after it returns.  When the new
-	volume name is -, use stdin/stdout. Use system instead of spawnl.
+	volume name is -, use stdin/stdout.  Use system instead of spawnl.
 
 	* compare.c (get_stat_data) [MSDOS]: Set st_rdev to st_dev.
 	(diff_two_files) [MSDOS]: New function, used on MS-DOS to compare
@@ -369,7 +625,7 @@
 	(msdosify_file_name) [MSDOS]: New function.
 	(maybe_recoverable) [MSDOS]: Call it when extraction fails.  Print
 	a message about renamed files when verbose.
-	(rename_if_dos_device_name) [MSDOS]: New functions.
+	(rename_if_dos_device_name) [MSDOS]: New function.
 	(extract_archive) [MSDOS]: Call it.  Skip DOS drive letter in
 	absolute file names.  Write redirected stdout in binary mode.
 	Don't check inodes for simulated links.  Don't zap trailing slash
@@ -490,11 +746,13 @@
 	to newer_mtime_threshold, add newer_mtime_option as boolean.  It
 	was wrong using a zero value as a lower bound to imply the time
 	options were not set, as there are negative dates around, at least
-	on some Solaris CD-ROMs, or on systems using dates after year 2038.
+	on some Solaris CD-ROMs, SAMBA mounted files, or on systems using
+	dates after year 2038.
 	(FILE_IS_NEW_ENOUGH): New macro.
 	* buffer.c, create.c, incremen.c, tar.c: Adjusted.
-	Reported by David Coffin, Denis Excoffier, Mark Eichin, Robert
-	E. Brown and Stephen K Degler.
+	Reported by Ahmon Dancy, David Coffin, Denis Excoffier, Jon Lewis,
+	Mark Eichin, Richard Racz, Robert E. Brown, Stephan Engelke,
+	Stephen K Degler and Thomas Koschny.
 
 	* tar.c (check_decimal): Deleted.
 
@@ -519,7 +777,7 @@
 	variables or parameters as off_t, some int as size_t or ssize_t,
 	or else, dev_t, mode_t or pid_t.  Remove unneeded casts.  Use %lu
 	instead of %d in some formats, with appropriate casts.
-	Reported by Florian La Roche and Paul Eggert.
+	Reported by Florian La Roche, John Bley and Paul Eggert.
 
 	* rmt.c: Remove all gotos, and some cleanup.
 
@@ -543,9 +801,10 @@
 	given it some chance to be defined out of S_IFLNK, not before.
 	Otherwise links might sometimes be followed even without -h.
 
-	Reported by Bernhard Simon, Frank Roscher, Georg Schwarz, John
-	Klug, Hermann Lauer, Merlin J. Mathesius, Michael Pakovic, Norman
-	Kysler, Rex Dieter, Rob Urban and Tony Lill.
+	Reported by Bernhard Simon, Frank Roscher, Georg Schwarz, Helmut
+	Heller, James E. Quick, John Klug, Hermann Lauer, Merlin
+	J. Mathesius, Michael Pakovic, Norman Kysler, Rex Dieter, Rob
+	Urban and Tony Lill.
 
 1997-10-20  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -594,9 +853,9 @@
 
 	* misc.c (remove_any_file): In the recursive case, ensure the
 	deletion loop does not stop at . or .., but merely skips the entry.
-	Reported by Eli Zaretskii, Göran Uddeborg, Greg Herman, Hirofumi
-	Yamaki, Joh Dokler, Peter Bloom, Peter Kohler, Sebastian Unger and
-	Todd Rannow.
+	Reported by Ali Erkan, Eli Zaretskii, Göran Uddeborg, Gordon
+	H. Atwood, Greg Herman, Hirofumi Yamaki, Jeff DeFouw, Joh Dokler,
+	Peter Bloom, Peter Kohler, Sebastian Unger and Todd Rannow.
 
 1997-06-18  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -654,9 +913,11 @@
 
 	* list.c (read_header): If the header is properly POSIX, decode
 	file names the POSIX way.
-	Reported by Amos Gouaux, Andrew Dunstan, Eric Tomio, Erik
-	E. Rantapaa, Michael Helm, Robert Zawiasa, Scott Bertilson, Shimon
-	Facterman, Sriram Srinivasan and Tanya Ruttenberg.
+	Reported by Amos Gouaux, Andrew Dunstan, Bruno Haible, Carsten
+	Heyl, Eric Tomio, Erik E. Rantapaa, Igor Sobrado Delgado, Lorenzo
+	Di Gregorio, Manabu Nakamura, Michael Helm, Olivier Lefevre, Peter
+	Waltenberg, Robert Zawiasa, Scott Bertilson, Shimon Facterman,
+	Sriram Srinivasan and Tanya Ruttenberg.
 
 	* arith.h (TARLONG_FORMAT): Use %lu instead of %uld as a format
 	for unsigned long.
@@ -688,7 +949,8 @@
 	Deleted.
 	* common.h: Remove declarations for functions deleted in names.c.
 	Reported by Clive Stubbings, Dieter Nützel, Emmanuel Galanos,
-	Felix von Leitner, Hao He, James E. Carpenter, Tobias Ringstrom
+	Felix von Leitner, Hao He, Ilya Dorfman, James E. Carpenter,
+	Jürgen Christoffel, Michael Bickel, Paul Sheer, Tobias Ringstrom
 	and Ulrich Drepper.
 
 	* tar.c (decode_options): Let --owner and --group correctly accept
@@ -1562,8 +1824,8 @@
 
 	* copyout.c, copypass.c: Use result of readlink() as length
 	of link name instead of size from lstat().  On some OS's lstat()
-	doesn't return the true length in size.  Bug reported by
-	Robert Joop (rj@rainbow.IN-berlin.DE).
+	doesn't return the true length in size.
+	Reported by Robert Joop.
 
 1996-01-07  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -1934,8 +2196,8 @@
 
 1995-11-08  Tom Tromey  <tromey@cambric.colorado.edu>
 
-	* copyout.c (copy_out_one_file): Explicitly disallow negative
-	mtimes.  From johnh@jna.COM.AU (John Heller).
+	* copyout.c (copy_out_one_file): Explicitly disallow negative mtimes.
+	Reported by John Heller.
 
 1995-11-05  Tom Tromey  <tromey@cambric.colorado.edu>
 
@@ -1978,9 +2240,8 @@
 	(libdir): Use standard GNU value.
 	(.c.o): Put CFLAGS last.
 
-	Merged with 2.3.910 from John Oleynick
-	(juo@spiff.gnu.ai.mit.edu).  His ChangeLog entries have been
-	merged into this file, below.
+	Merged with 2.3.910 from John Oleynick.  His ChangeLog entries
+	have been merged into this file, below.
 	* util.c: Merge with 2.3.910 version.
 	* cpio.c: Merged with 2.3.910 version.
 	(OPTION_NOABSFILE): New define.
@@ -2560,27 +2821,26 @@
 	Cliff, Cameron Elliott, Charles Lopes, Charles M. Hannum, Chris
 	Metcalf, Christophe Colle, Christopher T. Johnson, Dale Wiles,
 	David Shaw, Dimitri Bougoulias, Daniel Hagerty, Dave Gregorich,
-	David Mansfield, David Nugent, David Shaw, David Steiner,
-	Douglas Scott, Dunstan Vavasour, Edgar Taube, Eduardo Kortright,
-	Elmer Fittery, Eric Benson, Eric M. Boehm, Gerd Knorr, Graham
-	Whitted, Harald Milz, Heiko Schlichting, James V. Di Toro III,
-	Jan Carlson, Janne Snabb, Jeff Sorensen, Jens Henrik Jensen,
-	Jim Clausing, John J. Szetela, John R. Vanderpool, Jurgen Botz,
-	Karl Berry, Karlos Z. Smith, Karsten Thygesen, Koji Kishi,
-	Luke Mewburn, Manuel Munier, Marc Ewing, Matthew J. D'Errico,
-	Martin Goik, Maxime Taksar, maximum entropy, Michael Hayes,
-	Michael Schwingen, Michael Smolsky, Michael Kaufman, Mike Walker,
-	Minh Tran-Le, Mitsuaki Masuhara, Nelson H. F. Beebe, Noel Cragg,
-	Olaf Wucknitz, Oliver Trepte, Olivier Roussel, Patrick Fulconis,
-	Paul Kanz, Paul Nordstrom, Pekka Janhunen, Peter Carah, Peter
-	Kutschera, Phil Hands, Randy Bias, Reuben J. Ravago, Ricardo
-	Marek, Robert Anthony Nader, Rod Buchanan, Roderich Schupp,
-	Russell Cattelan, Scott J. Kramer, Scott L. Burson, Simon
-	Wright, Sisira Jayasinghe, Steffen Stempel, Thomas M. Browder
-	Jr., Thomas Waas, Tim Bradshaw, Tim Lashua, Timothy J. Lee, Tom
-	Popovitch, Toshiaki Nishi, Victor J. Griswold, Wayne Christopher,
-	William J. Eaton, Wlodzimierz Jan Martin, Wolfgang Rupprecht
-	and Wolfram Wagner.
+	David Mansfield, David Nugent, David Shaw, David Steiner, Douglas
+	Scott, Dunstan Vavasour, Edgar Taube, Eduardo Kortright, Elmer
+	Fittery, Eric Benson, Eric M. Boehm, Gerd Knorr, Graham Whitted,
+	Harald Milz, Heiko Schlichting, James V. Di Toro III, Jan Carlson,
+	Janne Snabb, Jeff Sorensen, Jens Henrik Jensen, Jim Clausing, John
+	J. Szetela, John R. Vanderpool, Jurgen Botz, Karl Berry, Karlos
+	Z. Smith, Karsten Thygesen, Koji Kishi, Luke Mewburn, Manuel
+	Munier, Marc Ewing, Matthew J. D'Errico, Martin Goik, Maxime
+	Taksar, Michael Hayes, Michael Schwingen, Michael Smolsky, Michael
+	Kaufman, Mike Walker, Minh Tran-Le, Mitsuaki Masuhara, Nelson
+	H. F. Beebe, Noel Cragg, Olaf Wucknitz, Oliver Trepte, Olivier
+	Roussel, Patrick Fulconis, Paul Kanz, Paul Nordstrom, Pekka
+	Janhunen, Peter Carah, Peter Kutschera, Phil Hands, Randy Bias,
+	Reuben J. Ravago, Ricardo Marek, Robert Anthony Nader, Rod
+	Buchanan, Roderich Schupp, Russell Cattelan, Scott J. Kramer,
+	Scott L. Burson, Simon Wright, Sisira Jayasinghe, Steffen Stempel,
+	Thomas M. Browder Jr., Thomas Waas, Tim Bradshaw, Tim Lashua,
+	Timothy J. Lee, Tom Popovitch, Toshiaki Nishi, Victor J. Griswold,
+	Wayne Christopher, William J. Eaton, Wlodzimierz Jan Martin,
+	Wolfgang Rupprecht and Wolfram Wagner.
 
 	* tar.h: Remove external prototypes related to rtapelib.c, as
 	those are already declared in rmt.h.
@@ -2871,9 +3131,9 @@
 1994-12-14  John Oleynick  <juo@wombat.gnu.ai.mit.edu>
 
 	* copypass.h:  When given the -a option, set the access time of
-	the copy to be the access time of the original (instead of the
-	modification time of the original).  Reported by
-	karney@pppl.gov (Charles Karney).
+	the copy to be the access time of the original, instead of the
+	modification time of the original.
+	Reported by Charles Karney.
 
 	* cpio.texi:  Updated with changes for 2.4.
 
@@ -2934,8 +3194,8 @@
 
 	* cpio.1:  Updated man page with new features.
 
-	* cpio.texi, texinfo.tex, Makefile.in:  Added texi documentation
-	from Robert Carleton (rbc@gnu.ai.mit.edu).
+	* cpio.texi, texinfo.tex, Makefile.in:  Added texi documentation.
+	Reported by Robert Carleton.
 
 1994-11-01  François Pinard  <pinard@iro.umontreal.ca>
 
@@ -2981,8 +3241,8 @@
 
 	* makepath.c: Don't #define index if it is already #defined.
 
-	* mt.c:  Check for __hpux defined instead of __hpux__.  Reported
-	by ericb@lsid.hp.com (Eric Backus).
+	* mt.c:  Check for __hpux defined instead of __hpux__.
+	Reported by Eric Backus.
 
 1994-09-29  John Oleynick  <juo@wombat.gnu.ai.mit.edu>
 
@@ -3003,14 +3263,14 @@
 	its contents' CRCs.
 
 	* copyout.c:  Fixed problem with creating oldc format archives
-	on machines with 16 bit ints.  Reported by mpoole@cix.compulink.co.uk
-	(Martin Poole).
+	on machines with 16 bit ints.
+	Reported by Martin Poole.
 
 	* mt.c: Need to open tape WR_ONLY for erase command (and probably
-	others?).  Reported by robert@hst.e.technik.uni-kl.de (Robert
-	Vogelgesan).  Accept `eject' as a synonym for `offline'.  Accept
-	`-t' as a synonym for `-f' (to be compatible with HPUX mt, which
-	only accepts `-t').
+	others?).  Accept `eject' as a synonym for `offline'.  Accept `-t'
+	as a synonym for `-f', to be compatible with HPUX mt, which only
+	accepts `-t'.
+	Reported by Robert Vogelgesan.
 
 1994-09-28  John Oleynick  <juo@wombat.gnu.ai.mit.edu>
 
@@ -3039,7 +3299,7 @@
 
 1994-09-14  François Pinard  <pinard@iro.umontreal.ca>
 
-	* Makefile.in: Cleanup...
+	* Makefile.in: Cleanup:
 	(DISTFILES): Distribute TAGS.
 	(ansi2knr): Use $(LIBS).
 	(TAGS): Make TAGS in $(srcdir) only.
@@ -3768,8 +4028,8 @@
 	* makepath.c, copypass.c, copyin.c:  If cpio was creating a
 	directory that contained `.' in the pathname (e.g. `foo/./bar'),
 	it would complain that it could not create `.', since it already
-	exists.  From schwab@issan.informatik.uni-dortmund.de (Andreas
-	Schwab).
+	exists.
+	Reported by Andreas Schwab.
 
 	* mt.c:  Added "eject" as a synonym for "offline".
 
@@ -3782,9 +4042,8 @@
 
 1993-12-21  John Oleynick  <juo@goldman.gnu.ai.mit.edu>
 
-	* util.c:  Fix for copying new_media_message_after_number.  From
-	Christian.Kuehnke@arbi.informatik.uni-oldenburg.de (Christian
-	Kuehnke).
+	* util.c:  Fix for copying new_media_message_after_number.
+	Reported by Christian Kuehnke.
 
 1993-08-31  David J. MacKenzie  <djm@goldman.gnu.ai.mit.edu>
 
@@ -3943,8 +4202,8 @@
 	* makepath.c: split from standard makpath.c to add support
 	for HPUX CDF's.
 
-	* mt.c: added !defined(__osf__) (from Andrew Marquis
-	<amarquis@genome.wi.mit.edu>).
+	* mt.c: added !defined(__osf__).
+	Reported by Andrew Marquis.
 
 	* system.h: new macro UMASKED_SYMLINK
 
@@ -4054,7 +4313,8 @@
 1993-03-14  Jim Meyering  <meyering@comco.com>
 
 	* copypass.c (process_copy_pass): Use <=, not just <, when comparing
-	mtimes.  From Pieter Bowman <bowman@math.utah.edu>.
+	mtimes.
+	Reported by Pieter Bowman.
 
 1993-01-15  David J. MacKenzie  <djm@kropotkin.gnu.ai.mit.edu>
 
@@ -4092,7 +4352,7 @@
 
 	* copyin.c (read_in_binary): Copy the dev and ino that are
 	already in `file_hdr' into `short_hdr'.
-	From dao@abars.att.com (David A Oshinsky).
+	From David A. Oshinsky.
 
 	* system.h [!_POSIX_VERSION]: Declare lseek as off_t, not long.
 	From Karl Berry.
@@ -4480,12 +4740,12 @@
 	Print fancy messages.
 	Close the archive and reopen it.
 
-	Above primarily from John Oleynick <juo@klinzhai.rutgers.edu>.
+	Reported by John Oleynick.
 
 	* util.c (find_inode_file): Use modulus when computing initial
 	loop index.
 	(add_inode): Zero out new entry.
-	From scott@sctc.com (Scott Hammond).
+	Reported by Scott Hammond.
 
 	* cpio.h, copyin.c, copyout.c: Rename `struct cpio_header'
 	members from h_foo to c_foo.

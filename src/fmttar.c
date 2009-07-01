@@ -1,5 +1,5 @@
 /* fmttar.c - read and write tar headers for cpio
-   Copyright (C) 1992, 1995, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1995, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -140,13 +140,13 @@ write_out_tar_header (struct new_cpio_header *file_hdr, int out_des)
 #endif /* !__MSDOS__ */
     }
 
-  if (archive_format == arf_ustar || archive_format == arf_gnutar)
+  if (archive_format == arf_ustar || archive_format == arf_oldgnu)
     {
       char *name;
 
       strncpy (tar_hdr->magic, TMAGIC, TMAGLEN);
 
-      if (archive_format == arf_gnutar)
+      if (archive_format == arf_oldgnu)
 	{
 	  tar_hdr->magic[TMAGLEN] = ' ';
 	  tar_hdr->version[0] = '\0';
@@ -228,7 +228,7 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
 	 then this is the end of the archive.  If not, assume the
 	 previous block was all corruption and continue reading
 	 the archive.  */
-      /* Commented out because GNU tar sometimes creates archives with
+      /* Commented out because Free tar sometimes creates archives with
 	 only one block of 0's at the end.  This happened for the
 	 cpio 2.0 distribution!  */
       tape_buffered_read ((char *) &tar_rec, in_des, TARRECORDSIZE);
@@ -269,7 +269,7 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
 	  continue;
 	}
 
-      /* FIXME do GNU tar magic here.  */
+      /* FIXME do Free tar magic here.  */
       if (archive_format != arf_ustar)
 	file_hdr->c_name = stash_tar_filename (NULL, tar_hdr->name);
       else
@@ -278,14 +278,14 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
       otoa (tar_hdr->mode, &file_hdr->c_mode);
       file_hdr->c_mode = file_hdr->c_mode & 07777;
 #ifndef __MSDOS__
-      if ((archive_format == arf_ustar || archive_format == arf_gnutar)
+      if ((archive_format == arf_ustar || archive_format == arf_oldgnu)
 	  && (uidp = getuidbyname (tar_hdr->uname)))
 	file_hdr->c_uid = *uidp;
       else
 #endif
 	otoa (tar_hdr->uid, &file_hdr->c_uid);
 #ifndef __MSDOS__
-      if ((archive_format == arf_ustar || archive_format == arf_gnutar)
+      if ((archive_format == arf_ustar || archive_format == arf_oldgnu)
 	  && (gidp = getgidbyname (tar_hdr->gname)))
 	file_hdr->c_gid = *gidp;
       else
@@ -293,6 +293,12 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
 	otoa (tar_hdr->gid, &file_hdr->c_gid);
       otoa (tar_hdr->size, &file_hdr->c_filesize);
       otoa (tar_hdr->mtime, &file_hdr->c_mtime);
+#if defined(__MSDOS__) || defined(DOSWIN)
+      /* DOS truncates times down to the nearest even second.  Truncate
+	 the time of the file ahead of DOS, so -m option works correctly.  */
+      file_hdr->c_mtime += 1;
+      file_hdr->c_mtime &= 0xfffffff0LU;
+#endif
       otoa (tar_hdr->devmajor, (unsigned long *) &file_hdr->c_rdev_maj);
       otoa (tar_hdr->devminor, (unsigned long *) &file_hdr->c_rdev_min);
       file_hdr->c_tar_linkname = NULL;
@@ -404,12 +410,12 @@ stash_tar_filename (char *prefix, char *filename)
   return hold_tar_filename;
 }
 
-/*--------------------------------------------------------------------------.
-| Return arf_gnutar if BUF is a valid GNU tar header; arf_ustar if BUF is a |
-| valid POSIX tar header (the checksum is correct and it has the "ustar"    |
-| magic string); arf_tar if BUF is a valid old tar header (the checksum is  |
-| correct); arf_unknown otherwise.                                          |
-`--------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Return arf_oldgnu if BUF is a valid Free tar header; arf_ustar if BUF is a |
+| valid POSIX tar header (the checksum is correct and it has the "ustar"     |
+| magic string); arf_tar if BUF is a valid old tar header (the checksum is   |
+| correct); arf_unknown otherwise.                                           |
+`---------------------------------------------------------------------------*/
 
 enum archive_format
 is_tar_header (char *buf)
@@ -428,16 +434,16 @@ is_tar_header (char *buf)
      can recognize old GNU tar ustar archives.
 
      GNU tar 1.11.8 also uses the "ustar " magic string.  That is how we
-     recognize GNU tar archives.  */
+     recognize those tar archives.  */
 
   if (!strncmp (tar_hdr->magic, TMAGIC, TMAGLEN - 1))
     {
-#ifdef CPIO_USE_GNU_TAR
+#ifdef CPIO_USE_OLDGNU
       /* This is turned off by default.  We don't really handle all
 	 the cases yet.  */
       if (tar_hdr->magic[TMAGLEN] == ' ')
-	return arf_gnutar;
-#endif /* CPIO_USE_GNU_TAR */
+	return arf_oldgnu;
+#endif /* CPIO_USE_OLDGNU */
 
       /* If we have what looks like a real ustar archive, we must
 	 check the version number.  We only understand version 00.  */
@@ -475,8 +481,8 @@ is_tar_filename_too_long (char *name)
   int prefix_name_len;
   char *p;
 
-  /* GNU tar can handle any length.  */
-  if (archive_format == arf_gnutar)
+  /* Free tar can handle any length.  */
+  if (archive_format == arf_oldgnu)
     return false;
 
   whole_name_len = strlen (name);

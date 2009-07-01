@@ -1,13 +1,17 @@
 #!/bin/sh
 # Validation suite for Free `pax' utilities.		-*- shell-script -*-
-# Copyright © 1998 Progiciels Bourbeau-Pinard inc.
+# Copyright © 1998, 1999 Progiciels Bourbeau-Pinard inc.
 # François Pinard <pinard@iro.umontreal.ca>, 1998.
 
-AT_INIT(pax)
+# Check version with `tar' for the time being, as `pax' is not always built.
+# When `pax' will be declared stable, use `pax' instead here.  FIXME!
+AT_INIT(tar)
 
 echo
 echo 'cpio tests.'
 echo
+
+test -n "$check_cpio" || at_skip_mode=1
 
 AT_DEFINE(PREPARE,
 [cleanup=
@@ -127,6 +131,8 @@ if test -z "$at_stop_on_error" || test -z "$at_failed_list"; then
   rm -rf mix list-mix cpio-def cpio-oldc
 fi
 
+at_skip_mode=
+
 echo
 echo 'tar tests.'
 echo
@@ -140,7 +146,5 @@ AT_INCLUDE(t-delete.m4)
 AT_INCLUDE(t-incremen.m4)
 AT_INCLUDE(t-gzip.m4)
 AT_INCLUDE(t-volume.m4)
-
-echo
 
 # End of test suite.

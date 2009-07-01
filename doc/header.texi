@@ -194,6 +194,15 @@ struct oldgnu_header
 /* This file is a tape/volume header.  Ignore it on extraction.  */
 #define OLDGNU_VOLHDR 'V'
 
+/* This file is a compressed contiguous regular file. */
+#define OLDGNU_CONTIG_COMPRESSED 'X'
+
+/* This file is a compressed sparse regular file. */
+#define OLDGNU_SPARSE_COMPRESSED 'Y'
+
+/* This file is a compressed regular file. */
+#define OLDGNU_REGULAR_COMPRESSED 'Z'
+
 /*--------------------------------------.
 | tar header block, overall structure.  |
 `--------------------------------------*/

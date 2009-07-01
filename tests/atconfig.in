@@ -1,10 +1,11 @@
 # @configure_input@					-*- shell-script -*-
 # Configurable variable values for building test suites.
-# Copyright © 1998 Progiciels Bourbeau-Pinard inc.
+# Copyright © 1998, 1999 Progiciels Bourbeau-Pinard inc.
 # François Pinard <pinard@iro.umontreal.ca>, 1998.
 
 # Snippet (1
 # This debugging script has been automatically generated from `make check'.
+# Call it with `--help' to get a quick usage summary.
 
 at_package=@PACKAGE@
 at_version=@VERSION@

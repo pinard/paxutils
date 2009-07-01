@@ -1,5 +1,48 @@
+1999-06-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Implement --enable-cpio, --enable-pax and
+	--enable-dale-code, as an attempt for stabilizing our pretest
+	releases while beginning to aim a real release.
+	* acconfig.h: Document ENABLE_DALE_CODE.
+
+1999-04-17  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Replace tcflush if needed.
+	Reported by Brendan O'Dea, Eli Zaretskii, Jim Meyering, Steven
+	Sargent and Ulrich Drepper.
+
+1999-04-13  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Check for termio.h.
+
+1998-12-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Check for signal.h to cope with Unixware 7.
+	Reported by Allan M. Clark and Peter Waltenberg.
+
+1998-12-08  François Pinard  <pinard@iro.umontreal.ca>
+
+	* config.bat: New version.
+	Reported by Eli Zaretskii.
+
+1998-12-07  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in (ALL_LINGUAS): Add Russian.
+
+1998-11-21  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in, acconfig.h: Rename GNUTAR and gnutar to OLDGNU and
+	oldgnu.
+
+1998-11-20  François Pinard  <pinard@iro.umontreal.ca>
+
+	* configure.in: Substitute in contrib/win32/Makefile.
+	Reported by Paul E. Jones.
+
 1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
 
+	* configure.in: Version 2.4h.
+
 	* Makefile.am (EXTRA_DIST): Do not include PATCHES-AM anymore.
 
 1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
@@ -17,7 +60,7 @@
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* configure.in: Version 2.4g.
-
+
 1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
 
 	* configure.in: Use AT_CONFIG instead of fp_PROG_ECHO.  Create

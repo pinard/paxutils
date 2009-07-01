@@ -1,5 +1,5 @@
 /* Various processing of names.
-   Copyright (C) 1988, 92, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -23,167 +23,139 @@
 
 #include "common.h"
 
+/* Strings for file names.  */
+
 /* Names from the command call.  */
 
-static const char **name_array;	/* store an array of names */
-static int allocated_names;	/* how big is the array? */
-static int names;		/* how many entries does it have? */
-static int name_index = 0;	/* how many of the entries have we scanned? */
+static const char **name_string_array;	/* store an array of names */
+static int allocated_name_strings; /* how big is the array?  */
+static int name_strings;	/* how many entries does it have?  */
+static int name_index = 0;	/* how many of the entries have we scanned?  */
 
-/*------------------------.
-| Initialize structures.  |
-`------------------------*/
-
-void
-init_names (void)
-{
-  allocated_names = 10;
-  name_array = (const char **)
-    xmalloc (sizeof (const char *) * allocated_names);
-  names = 0;
-}
-
-/*--------------------------------------------------------------.
-| Add NAME at end of name_array, reallocating it as necessary.  |
-`--------------------------------------------------------------*/
-
-void
-name_add (const char *name)
-{
-  if (names == allocated_names)
-    {
-      allocated_names *= 2;
-      name_array = (const char **)
-	xrealloc (name_array, sizeof (const char *) * allocated_names);
-    }
-  name_array[names++] = name;
-}
-
-/* Names from external name file.  */
+/* To read names from external file.  */
 
 static FILE *name_file;		/* file to read names from */
 static char *name_buffer;	/* buffer to hold the current file name */
 static size_t name_buffer_length; /* allocated length of name_buffer */
 
-/*---.
-| ?  |
-`---*/
-
-/* FIXME: I should better check more closely.  It seems at first glance that
-   is_pattern is only used when reading a file, and ignored for all
-   command line arguments.  */
-
-static inline bool
-is_pattern (const char *string)
-{
-  return (strchr (string, '*') != 0
-	  || strchr (string, '[') != 0
-	  || strchr (string, '?') != 0);
-}
-
-/*-----------------------------------------------------------------------.
-| Set up to gather file names for tar.  They can either come from a file |
-| or were saved from decoding arguments.				 |
-`-----------------------------------------------------------------------*/
+/*---------------------------------------------------------.
+| Initialize and terminate structures for lists of names.  |
+`---------------------------------------------------------*/
 
 void
-name_init (int argc, char *const *argv)
+initialize_name_strings (void)
 {
+  allocated_name_strings = 10;
+  name_string_array = (const char **)
+    xmalloc (sizeof (const char *) * allocated_name_strings);
+  name_strings = 0;
+
+  name_file = NULL;
   name_buffer = xmalloc (NAME_FIELD_SIZE + 2);
   name_buffer_length = NAME_FIELD_SIZE;
-
-  if (files_from_option)
-    if (!strcmp (files_from_option, "-"))
-      name_file = stdin;
-    else if (name_file = fopen (files_from_option, "r"), !name_file)
-      FATAL_ERROR ((0, errno, _("Cannot open file %s"), files_from_option));
 }
-
-/*---.
-| ?  |
-`---*/
 
 void
-name_term (void)
+terminate_name_strings (void)
 {
   free (name_buffer);
-  free (name_array);
+  free (name_string_array);
 }
 
-/*-------------------------------------------------------------------------.
-| Read the next filename from name_file and terminate it with NUL.  Put it |
-| into name_buffer, reallocating and adjusting name_buffer_length if       |
-| necessary.  Return false at end of file, true otherwise.                 |
-`-------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------.
+| Add NAME at end of name_string_array, reallocating it as necessary.  |
+`---------------------------------------------------------------------*/
 
-static bool
-read_name_from_file (void)
+void
+add_name_string (const char *name)
 {
-  int character;
-  size_t counter = 0;
-
-  /* FIXME: getc may be called even if character was EOF the last time.  */
-
-  /* FIXME: This + 2 allocation might serve no purpose.  */
-
-  while (character = getc (name_file),
-	 character != EOF && character != filename_terminator)
+  if (name_strings == allocated_name_strings)
     {
-      if (counter == name_buffer_length)
-	{
-	  name_buffer_length += NAME_FIELD_SIZE;
-	  name_buffer = xrealloc (name_buffer, name_buffer_length + 2);
-	}
-      name_buffer[counter++] = character;
+      allocated_name_strings *= 2;
+      name_string_array = (const char **)
+	xrealloc (name_string_array, sizeof (const char *) * allocated_name_strings);
     }
-
-  if (counter == 0 && character == EOF)
-    return false;
-
-  if (counter == name_buffer_length)
-    {
-      name_buffer_length += NAME_FIELD_SIZE;
-      name_buffer = xrealloc (name_buffer, name_buffer_length + 2);
-    }
-  name_buffer[counter] = '\0';
-
-  return true;
+  name_string_array[name_strings++] = name;
 }
 
-/*------------------------------------------------------------------------.
-| Get the next name from ARGV or the file of names.  Result is in static  |
-| storage and can't be relied upon across two calls.			  |
-| 									  |
-| If CHANGE_DIRS is true, treat a filename of the form "-C" as meaning	  |
-| that the next filename is the name of a directory to change to.  If	  |
-| `filename_terminator' is NUL, CHANGE_DIRS is effectively always false.  |
-`------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Get the next name from ARGV or the file of names.  Result is in static     |
+| storage and can't be relied upon across two calls.                         |
+|                                                                            |
+| If RECOGNIZE_OPTIONS is true, treat a filename of the form "-C" as meaning |
+| that the next filename is the name of a directory to change to, and "-T"   |
+| as the name of a file holding a list of file names.  But options are never |
+| recognized, while reading names from a file, if `--null' was specified.    |
+`---------------------------------------------------------------------------*/
 
 char *
-name_next (bool change_dirs)
+next_name_string (bool recognize_options)
 {
+  enum expecting
+  {
+    EXPECTING_FILE_NAME,	/* file name or, maybe, option */
+    EXPECTING_DIRECTORY,	/* "-C" has been read */
+    EXPECTING_INCLUDE,		/* "-T" has been read */
+  };
+  enum expecting expecting = EXPECTING_FILE_NAME;
   const char *source;
   char *cursor;
-  bool chdir_flag = false;
-
-  if (filename_terminator == '\0')
-    change_dirs = false;
 
   while (true)
     {
-      /* Get a name, either from file or from saved arguments.  */
+      /* Get a file name into name_buffer, with a NUL terminator.  Reallocate
+	 and adjust name_buffer_length whenever necessary.  */
 
       if (name_file)
 	{
-	  if (!read_name_from_file ())
-	    break;
+	  char filename_terminator = null_option ? '\0' : '\n';
+	  int character;
+	  size_t counter = 0;
+
+	  /* Read the name from name_file.  */
+
+	  /* FIXME: getc may be called even if character was EOF the last
+	     time.  */
+
+	  while (character = getc (name_file),
+		 character != EOF && character != filename_terminator)
+	    {
+	      if (counter == name_buffer_length)
+		{
+		  name_buffer_length += NAME_FIELD_SIZE;
+		  /* FIXME: This + 2 allocation might serve no purpose.  */
+		  name_buffer = xrealloc (name_buffer, name_buffer_length + 2);
+		}
+	      name_buffer[counter++] = character;
+	    }
+
+	  if (counter == 0 && character == EOF)
+	    {
+	      if (name_file != stdin)
+		if (fclose (name_file) == EOF)
+		  ERROR ((0, errno, "%s", name_buffer));
+	      name_file = NULL;
+	      continue;
+	    }
+
+	  if (counter == name_buffer_length)
+	    {
+	      name_buffer_length += NAME_FIELD_SIZE;
+	      name_buffer = xrealloc (name_buffer, name_buffer_length + 2);
+	    }
+	  name_buffer[counter] = '\0';
+
+	  if (!null_option)
+	    unquote_string (name_buffer);
 	}
       else
 	{
-	  if (name_index == names)
+	  /* Get the name from saved arguments.  */
+
+	  if (name_index == name_strings)
 	    break;
 
-	  source = name_array[name_index++];
+	  source = name_string_array[name_index++];
 	  if (strlen (source) > name_buffer_length)
 	    {
 	      free (name_buffer);
@@ -193,17 +165,28 @@ name_next (bool change_dirs)
 	  strcpy (name_buffer, source);
 	}
 
+      if (recognize_options && expecting == EXPECTING_FILE_NAME
+	  && !(name_file && null_option))
+	{
+	  if (!strcmp (name_buffer, "-C"))
+	    {
+	      expecting = EXPECTING_DIRECTORY;
+	      continue;
+	    }
+	  if (!strcmp (name_buffer, "-T"))
+	    {
+	      expecting = EXPECTING_INCLUDE;
+	      continue;
+	    }
+	}
+
 #if DOSWIN
       /* The rest of code depends on getting Unix-style forward slashes and
 	 will break otherwise.  All recursions into subdirectories append
 	 forward slashes, so we only need to make sure the original
 	 file/directory gets its DOS-style backslashes mirrored.  It seems
 	 that here's the right place to do that.  Use DJGPP v2 or later.  */
-
-      for (cursor = strchr (name_buffer, '\\');
-	   cursor;
-	   cursor = strchr (cursor + 1, '\\'))
-	*cursor = '/';
+      unixify_file_name (name_buffer);
 #endif
 
       /* Zap trailing slashes.  */
@@ -219,44 +202,55 @@ name_next (bool change_dirs)
 	while (cursor > name_buffer && *cursor == '/')
 	  *cursor-- = '\0';
 
-      if (chdir_flag)
+      switch (expecting)
 	{
+	case EXPECTING_FILE_NAME:
+	  return name_buffer;
+
+	case EXPECTING_DIRECTORY:
 	  if (chdir (name_buffer) < 0)
 	    FATAL_ERROR ((0, errno, _("Cannot change to directory %s"),
 			  name_buffer));
-	  chdir_flag = false;
+
+	  expecting = EXPECTING_FILE_NAME;
+	  break;
+
+	case EXPECTING_INCLUDE:
+	  if (name_file)
+	    FATAL_ERROR ((0, 0, _("Cannot include file lists from files")));
+
+	  if (!strcmp (name_buffer, "-"))
+	    name_file = stdin;
+	  else if (name_file = fopen (name_buffer, "r"), !name_file)
+	    FATAL_ERROR ((0, errno, _("Cannot open file %s"), name_buffer));
+
+	  expecting = EXPECTING_FILE_NAME;
+	  break;
 	}
-      else if (change_dirs && strcmp (name_buffer, "-C") == 0)
-	chdir_flag = true;
-      else
-#if 0
-	if (!exclude_option || !check_exclude (name_buffer))
-#endif
-	  {
-	    unquote_string (name_buffer);
-	    return name_buffer;
-	  }
     }
 
   /* No more names in file.  */
 
-  if (name_file && chdir_flag)
-    FATAL_ERROR ((0, 0, _("Missing file name after -C")));
+  if (name_file && expecting != EXPECTING_FILE_NAME)
+    FATAL_ERROR ((0, 0, _("Missing file name after -C or -T")));
 
   return NULL;
 }
+
+/* Structures for file names.  */
 
-/*------------------------------.
-| Close the name file, if any.  |
-`------------------------------*/
+/* Head for the list of names.  */
+struct name *name_list_head;
 
-void
-name_close (void)
-{
-  if (name_file != NULL && name_file != stdin)
-    if (fclose (name_file) == EOF)
-      ERROR ((0, errno, "%s", name_buffer));
-}
+/* Cursor in the list of names, corresponding to the name last returned by
+   `next_unprocessed_name'.  */
+struct name *name_list_current = NULL;
+
+/* Count of names in list not having match_found set.  */
+unsigned name_list_unmatched_count;
+
+/* Last name in the list of names.  */
+static struct name *name_list_tail;
 
 /*----------------------------------.
 | Add a name to the list of names.  |
@@ -273,8 +267,8 @@ add_name (const char *string)
 
   if (strcmp (string, "-C") == 0)
     {
-      chdir_name = xstrdup (name_next (false));
-      string = name_next (false);
+      chdir_name = xstrdup (next_name_string (false));
+      string = next_name_string (false);
       if (!chdir_name)
 	FATAL_ERROR ((0, 0, _("Missing file name after -C")));
 
@@ -320,6 +314,21 @@ add_name (const char *string)
 
   if (string && is_pattern (string))
     {
+      static bool warned_once = false;
+
+      if (!warned_once && quick_option)
+	{
+	  /* In fact, this code should never get executed.  Mixing --quick and
+	     wildcards should have triggered a usage error right from option
+	     decoding.  Pretesters told that wildcards, used to mean something
+	     else that what users intuitively expect, would be too misleading.
+	     I leave the code here, for a while, to catch strange interactions
+	     out of --files-from, if any.  I vaguely fear that such exist.  */
+
+	  warned_once = true;
+	  WARN ((0, 0, _("\
+Wildcards may not be fully processed in `--quick' mode")));
+	}
       name->is_wildcard = true;
       if (string[0] == '*' || string[0] == '[' || string[0] == '?')
 	name->first_is_literal = false;
@@ -330,19 +339,22 @@ add_name (const char *string)
   name_list_tail = name;
   if (!name_list_head)
     name_list_head = name;
+
+  name_list_unmatched_count++;
 }
 
-/*-------------------------------------------------------------------------.
-| Gather names in a list for scanning.  Could hash them later if we really |
-| care.									   |
-| 									   |
-| If the names are already sorted to match the archive, we just read them  |
-| one by one.  name_gather reads the first one, and it is called by	   |
-| name_match as appropriate to read the next ones.  At EOF, the last name  |
-| read is just left in the buffer.  This option lets users of small	   |
-| machines extract an arbitrary number of files by doing "tar t" and	   |
-| editing down the list of files.					   |
-`-------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Gather names in a list for scanning.                                       |
+|                                                                            |
+| If the names are already sorted to match the archive, we just read them    |
+| one by one.  name_gather reads the first one, and it is called by          |
+| find_matching_name as appropriate to read the next ones.  At EOF, the last |
+| name read is just left in the buffer.  This option lets users of small     |
+| machines extract an arbitrary number of files by doing "tar t" and editing |
+| down the list of files.                                                    |
+`---------------------------------------------------------------------------*/
+
+/* FIXME: Could hash names later, if we really care.  */
 
 void
 name_gather (void)
@@ -362,14 +374,14 @@ name_gather (void)
 	  /* FIXME: This memset is overkill, and ugly...  */
 	  memset (buffer, 0, allocated_length);
 	}
-      name = name_next (false);
+      name = next_name_string (false);
       if (name)
 	{
 	  if (strcmp (name, "-C") == 0)
 	    {
-	      char *copy = xstrdup (name_next (false));
+	      char *copy = xstrdup (next_name_string (false));
 
-	      name = name_next (false);
+	      name = next_name_string (false);
 	      if (!name)
 		FATAL_ERROR ((0, 0, _("Missing file name after -C")));
 	      buffer->change_dir = copy;
@@ -392,19 +404,20 @@ name_gather (void)
       return;
     }
 
-  /* Non sorted names -- read them all in.  */
+  /* Names are not presorted.  Read them all in.  */
 
-  while (name = name_next (false), name)
+  while (name = next_name_string (false), name)
     add_name (name);
 }
 
-/*------------------------------------------------------------------------.
-| Return true if and only if name PATH (from an archive) matches any name |
-| from the list of names.                                                 |
-`------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------.
+| Find any name structure matching PATH (from an archive) and return it.  If |
+| COMMIT is true, then set MATCH_FOUND in structure, change directories as   |
+| needed, and also, reclaim string memory if --starting-file was used.       |
+`---------------------------------------------------------------------------*/
 
-bool
-name_match (const char *path)
+struct name *
+find_matching_name (const char *path, bool commit)
 {
   size_t length = strlen (path);
 
@@ -413,15 +426,18 @@ name_match (const char *path)
       struct name *cursor = name_list_head;
 
       if (!cursor)
-	return true;
+	return NULL;
 
-      if (cursor->is_chdir)
+      if (commit && cursor->is_chdir)
 	{
 	  if (cursor->change_dir && chdir (cursor->change_dir))
 	    FATAL_ERROR ((0, errno, _("Cannot change to directory %s"),
 			  cursor->change_dir));
 	  name_list_head = NULL;
-	  return true;
+	  /* FIXME: The only place where this function is called with commit
+	     set is from `read_and'.  I should study the logic of returning
+	     now instead of staying in this loop.  Pretty strange code.  */
+	  return (struct name *) 1;
 	}
 
       for (; cursor; cursor = cursor->next)
@@ -431,13 +447,54 @@ name_match (const char *path)
 	  if (cursor->first_is_literal && cursor->name[0] != path[0])
 	    continue;
 
-	  /* Wildcarding..  */
+	  /* Wildcards.  */
 
 	  if (cursor->is_wildcard)
 	    {
 	      if (fnmatch (cursor->name, path, FNM_LEADING_DIR) == 0)
 		{
-		  cursor->match_found = true;
+		  /* We got a match.  */
+
+		  if (commit)
+		    {
+		      if (!cursor->match_found)
+			{
+			  cursor->match_found = true;
+			  name_list_unmatched_count--;
+			}
+		      if (starting_file_option)
+			{
+			  free (name_list_head);
+			  name_list_head = NULL;
+			}
+		      if (cursor->change_dir && chdir (cursor->change_dir))
+			FATAL_ERROR ((0, errno,
+				      _("Cannot change to directory %s"),
+				      cursor->change_dir));
+		    }
+		  return cursor;
+		}
+	      continue;
+	    }
+
+	  /* Plain old strings.  */
+
+	  if (cursor->length <= length
+				/* archive length >= specified */
+	      && (path[cursor->length] == '\0' || path[cursor->length] == '/')
+				/* full match on file/dirname */
+	      && strncmp (path, cursor->name, cursor->length) == 0)
+				/* name compare */
+	    {
+	      /* We got a match.  */
+
+	      if (commit)
+		{
+		  if (!cursor->match_found)
+		    {
+		      cursor->match_found = true;
+		      name_list_unmatched_count--;
+		    }
 		  if (starting_file_option)
 		    {
 		      free (name_list_head);
@@ -446,41 +503,14 @@ name_match (const char *path)
 		  if (cursor->change_dir && chdir (cursor->change_dir))
 		    FATAL_ERROR ((0, errno, _("Cannot change to directory %s"),
 				  cursor->change_dir));
-
-		  /* We got a match.  */
-		  return true;
 		}
-	      continue;
-	    }
-
-	  /* Plain old Strings.  */
-
-	  if (cursor->length <= length
-				/* archive length >= specified */
-	      && (path[cursor->length] == '\0'
-		  || path[cursor->length] == '/')
-				/* full match on file/dirname */
-	      && strncmp (path, cursor->name, cursor->length) == 0)
-				/* name compare */
-	    {
-	      cursor->match_found = true;
-	      if (starting_file_option)
-		{
-		  free ((void *) name_list_head);
-		  name_list_head = NULL;
-		}
-	      if (cursor->change_dir && chdir (cursor->change_dir))
-		FATAL_ERROR ((0, errno, _("Cannot change to directory %s"),
-			      cursor->change_dir));
-
-	      /* We got a match.  */
-	      return true;
+	      return cursor;
 	    }
 	}
 
-      /* Filename from archive not found in the list of names.  If we have the
-	 whole list of names here, just return false.  Otherwise, read the
-	 next name in and compare it.  If this was the last name,
+      /* The file name from archive was not found in the list of names.  If we
+	 have the whole list of names here, just return NULL.  Otherwise, read
+	 the next name in and compare it.  If this was the last name,
 	 name_list_head->match_found will remain true.  If not, we loop to
 	 compare the newly read name.  */
 
@@ -488,11 +518,64 @@ name_match (const char *path)
 	{
 	  name_gather ();	/* read one more */
 	  if (name_list_head->match_found)
-	    return false;
+	    return NULL;
 	}
       else
-	return false;
+	return NULL;
     }
+}
+
+/* Processing all names in turn.  */
+
+/*--------------------------------------------------------------------------.
+| This returns a name from the list of names which doesn't have MATCH_FOUND |
+| set.  It sets MATCH_FOUND before returning, so successive calls will find |
+| and return all the non-found names in the list of names.                  |
+`--------------------------------------------------------------------------*/
+
+/* This is only used by `update', or twice by `create' in incremental mode.  */
+
+char *
+next_unprocessed_name (void)
+{
+  if (!name_list_current)
+    name_list_current = name_list_head;
+
+  while (name_list_current && name_list_current->match_found)
+    name_list_current = name_list_current->next;
+
+  if (name_list_current)
+    {
+      name_list_current->match_found = true;
+      name_list_unmatched_count--;
+      if (name_list_current->change_dir)
+	if (chdir (name_list_current->change_dir) < 0)
+	  FATAL_ERROR ((0, errno, _("Cannot change to directory %s"),
+			name_list_current->change_dir));
+      return name_list_current->name;
+    }
+
+  return NULL;
+}
+
+/*-------------------------------------------------------------------------.
+| Clear MATCH_FOUND on all names in the list of names, so they will all be |
+| returned again by successive calls to `next_unprocessed_name'.           |
+`-------------------------------------------------------------------------*/
+
+/* This is only used by `create' in incremental mode.  Also see above.  */
+
+void
+prepare_to_reprocess_names (void)
+{
+  struct name *name;
+
+  for (name = name_list_head; name; name = name->next)
+    {
+      name->match_found = false;
+      name_list_unmatched_count++;
+    }
+  name_list_current = NULL;
 }
 
 /*-----------------------------------------------------------------------.
@@ -500,7 +583,7 @@ name_match (const char *path)
 `-----------------------------------------------------------------------*/
 
 void
-names_notfound (void)
+report_unprocessed_names (void)
 {
   struct name *cursor;
   struct name *next;
@@ -527,135 +610,11 @@ names_notfound (void)
     {
       char *name;
 
-      while (name = name_next (true), name)
+      while (name = next_name_string (true), name)
 	ERROR ((0, 0, _("%s: Not found in archive"), name));
     }
 }
 
-/*---.
-| ?  |
-`---*/
-
-void
-name_expand (void)
-{
-}
-
-/*-------------------------------------------------------------------------.
-| This is like name_match, except that it returns a pointer to the name it |
-| matched, and doesn't set MATCH_FOUND in structure.  The caller will have |
-| to do that if it wants to.  Oh, and if the list of names is empty, it    |
-| returns NULL, unlike name_match, which returns true.                     |
-`-------------------------------------------------------------------------*/
-
-struct name *
-name_scan (const char *path)
-{
-  size_t length = strlen (path);
-
-  while (true)
-    {
-      struct name *cursor = name_list_head;
-
-      if (!cursor)
-	return NULL;
-
-      for (; cursor; cursor = cursor->next)
-	{
-	  /* If first chars don't match, quick skip.  */
-
-	  if (cursor->first_is_literal && cursor->name[0] != path[0])
-	    continue;
-
-	  /* Wildcards.  */
-
-	  if (cursor->is_wildcard)
-	    {
-	      if (fnmatch (cursor->name, path, FNM_LEADING_DIR) == 0)
-		return cursor;	/* we got a match */
-	      continue;
-	    }
-
-	  /* Plain Old Strings.  */
-
-	  if (cursor->length <= length
-				/* archive length >= specified */
-	      && (path[cursor->length] == '\0'
-		  || path[cursor->length] == '/')
-				/* full match on file/dirname */
-	      && strncmp (path, cursor->name, cursor->length) == 0)
-				/* name compare */
-	    return cursor;	/* we got a match */
-	}
-
-      /* Filename from archive not found in the list of names.  If we have the
-	 whole list of names here, just return NULL.  Otherwise, read the next
-	 name in and compare it.  If this was the last name,
-	 name_list_head->match_found will remain on.  If not, we loop to
-	 compare the newly read name.  */
-
-      if (same_order_option && name_list_head->match_found)
-	{
-	  name_gather ();	/* read one more */
-	  if (name_list_head->match_found)
-	    return NULL;
-	}
-      else
-	return NULL;
-    }
-}
-
-/* Accumulated list of names.  */
-
-/* Head for the list of names.  */
-struct name *name_list_head;
-
-/* Last name in the list of names.  */
-struct name *name_list_tail;
-
-/* Cursor in the list of names, corresponding to the name last returned by
-   `name_from_list'.  */
-struct name *name_list_current = NULL;
-
-/*--------------------------------------------------------------------------.
-| This returns a name from the list of names which doesn't have MATCH_FOUND |
-| set.  It sets MATCH_FOUND before returning, so successive calls will find |
-| and return all the non-found names in the list of names.                  |
-`--------------------------------------------------------------------------*/
-
-char *
-name_from_list (void)
-{
-  if (!name_list_current)
-    name_list_current = name_list_head;
-  while (name_list_current && name_list_current->match_found)
-    name_list_current = name_list_current->next;
-  if (name_list_current)
-    {
-      name_list_current->match_found = true;
-      if (name_list_current->change_dir)
-	if (chdir (name_list_current->change_dir) < 0)
-	  FATAL_ERROR ((0, errno, _("Cannot change to directory %s"),
-			name_list_current->change_dir));
-      return name_list_current->name;
-    }
-  return NULL;
-}
-
-/*-------------------------------------------------------------------------.
-| Clear MATCH_FOUND on all names in the list of names, so they will all be |
-| returned again by successive calls to `name_from_list'.                  |
-`-------------------------------------------------------------------------*/
-
-void
-blank_name_list (void)
-{
-  struct name *name;
-
-  for (name = name_list_head; name; name = name->next)
-    name->match_found = false;
-  name_list_current = NULL;
-}
 
 /* Exclusions.  */
 

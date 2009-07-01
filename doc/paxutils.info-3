@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4g.
+   This file documents `paxutils' 2.4h.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -28,6 +28,38 @@ permission notice identical to this one.
 manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: Styles,  Next: Documentation and help,  Prev: Using options,  Up: tar invocation
+
+The three option styles
+=======================
+
+   There are three styles for writing subcommands and options to the
+command line invoking `tar'.  The different styles were developed at
+different times during the history of `tar'.  These styles will be
+presented below, from the most recent to the oldest.
+
+   Some options must take an argument.  (For example,
+`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') takes the name of an archive
+file as an argument.  If you do not supply an archive file name, `tar'
+will use a default which may vary from site to site; thus, we recommend
+that you always supply a specific archive file name in your portable
+scripts.)  Where you *place* the arguments generally depends on which
+style of options you choose.  We will detail specific information
+relevant to each option style in the sections on the different option
+styles, below.  The differences are subtle, yet can often be very
+important; incorrect option placement can cause you to overwrite a
+number of important files.  We urge you to note these differences, and
+only use the option style(s) which make(s) the most sense to you until
+you feel comfortable with the others.
+
+* Menu:
+
+* Long options::                Long option style
+* Short options::               Short option style
+* Old style::                   Old option style
+* Mixing::                      Mixing option styles
 
 
 File: paxutils.info,  Node: Long options,  Next: Short options,  Prev: Styles,  Up: Styles
@@ -277,7 +309,7 @@ number to the standard output, then immediately exits successfully,
 without doing anything else, ignoring all other options.  For example,
 `tar --version' might return:
 
-     tar (Free paxutils) 2.4g
+     tar (Free paxutils) 2.4h
 
 The first occurrence of `tar' in the result above is the program name
 in the package (for example, `rmt' is another program), while the
@@ -342,7 +374,7 @@ menu (with `m tar <RET>').
 provided.  Currently, it doesn't tell much more than `tar --help' does.
 Other `man' pages exist for `tar', written at the time `tar' did not
 install any `man' pages on its own.  The string `tar (Free paxutils)
-2.4g' appears in the title of the *normal* `man' page.
+2.4h' appears in the title of the *normal* `man' page.
 
 
 File: paxutils.info,  Node: verbose,  Next: checkpoint,  Prev: help,  Up: Documentation and help
@@ -755,10 +787,27 @@ encountered unreadable files or directories.
    When backing up a living file system, there is a time window between
 the phase when `tar' scans directories and the phase when it tries to
 open files to dump them.  It is possible, and even common, for the file
-to disappear during this window.  The `--ignore-failed-read' option is
-a way to ask `tar' not to report such problems as an error set in the
-exit status once the dump is completed.  Diagnostics are still
-reported, as the option does not turn them off.
+to disappear during this window.  The `--ignore-failed-read' option is a
+way to ask `tar' not to report such problems as an error set in the
+exit status once the dump is completed.  Diagnostics are still reported,
+as the option does not turn them off.
+
+   A disappearing file is just a stronger case of the following
+problem.  When a file shrinks or grows while being backed up, `tar'
+makes some stunts to ensure the integrity of the archive, so the file
+length in the header already written does not lie about what is found
+in the archive.  This might imply padding the file with zeroes up to
+the proper length, or writing less than the actual file contents.  In
+such cases, `tar' protected the integrity of the archive, but surely
+not the integrity of the file, which just cannot be restored properly.
+The `--ignore-failed-read' more or less means to not return an error
+and continue processing even when file integrity is known to be lost,
+as long as the archive integrity is preserved.
+
+   The {No Value For "-ignore-failed-read"} also inhibits an error exit
+also for failed opening of directories, files for which dumping type is
+not known, or with the `--remove-files' option, failed removal of files
+after dump.
 
 
 File: paxutils.info,  Node: compare,  Prev: Reading,  Up: list
@@ -1026,98 +1075,4 @@ system.  `tar' writes the contents of the files extracted to its
 standard output.  This may be useful if you are only extracting the
 files in order to send them through a pipe.  This option is only
 meaningful with `--extract' (`--get', `-x').
-
-
-File: paxutils.info,  Node: backup,  Next: suffix,  Prev: to-stdout,  Up: Preventing overwrite
-
-Backup options
-..............
-
-   `tar' offers options for making backups of files before writing new
-versions.  These options control the details of these backups.  They may
-apply to the archive itself before it is created or rewritten, as well
-as to individual extracted members.  Other free programs (GNU `cp',
-`install', `ln', and `mv', for example) offer similar options.
-
-   Backup options may prove unexpectedly useful when extracting archives
-containing many members having identical names, or when extracting
-archives on systems having file name limitations, making different
-members appear as having similar names through the side-effect of name
-truncation.  (This is true only if we have a good scheme for truncated
-backup names, of which we are not sure at all: we suspect work is
-needed in this area.  The MS-DOS/MS-Windows version works with numbered
-backups even when file names are truncated.)  When any existing file is
-backed up before being overwritten by extraction, clashing files are
-automatically renamed to be unique, and the true name is kept for only
-the last file of a series of clashing files.  By using verbose mode,
-users may track exactly what happens.  We recommend that you *always*
-use numbered backups when unpacking archives on MS-DOS and on other
-systems that have file name limitations.
-
-   When `tar' is given the `--backup'[=METHOD] option, it makes backups
-of files that are about to be overwritten or removed.  Without this
-option, the original versions are destroyed.  However, *Note
-keep-old-files::.
-
-   At the detail level, some decisions are still experimental, and may
-change in the future.  We are awaiting comments from our users.  So
-please do not get in the habit of depending blindly on the details of
-the backup features.  For example, currently, directories themselves
-are never renamed through using these options, so extracting a file
-over a directory still has good chances to fail.  Also, backup options
-apply to created archives, not only to extracted members.  For created
-archives, backups will not be attempted when the archive is a block or
-character device, or when it refers to a remote file.
-
-   For the sake of simplicity and efficiency, backups are made by
-renaming old files prior to creation or extraction, and not by copying.
-The original name is restored if the file creation fails.  If a
-failure occurs after a partial extraction of a file, both the backup
-and the partially extracted file are kept.
-
-   Some people express the desire to *always* use the
-`--backup'[=METHOD] option by defining some kind of alias or script.
-This is not as easy as one may think, due to the fact that old-style
-options should appear first and consume arguments a bit unpredictably
-for an alias or script.  But if you are ready to give up using
-old-style options, you may resort to using something like a (Bourne
-shell) function here:
-
-     $ tar () { /usr/local/bin/tar --backup $*; }
-
-   The `--backup'[=METHOD] option also accepts an optional value,
-METHOD, which determines the type of backups that will be made.  If
-this value is not given, the value of the `VERSION_CONTROL' environment
-variable is used.  And if `VERSION_CONTROL' is not set, the default
-backup method is `existing'.
-
-   This value corresponds to the Emacs variable `version-control'; the
-same values for METHOD are accepted as in Emacs.  The values also have
-more descriptive names.  Here are the valid METHODs (unique
-abbreviations are accepted):
-
-`t'
-`numbered'
-     Always make numbered backups.
-
-`nil'
-`existing'
-     Make numbered backups of files that already have them, simple
-     backups of the others.
-
-`never'
-`simple'
-     Always make simple backups.
-
-
-File: paxutils.info,  Node: suffix,  Prev: backup,  Up: Preventing overwrite
-
-Deciding the backup file suffixes
-.................................
-
-   The `--suffix=SUFFIX' option informs `tar' about the SUFFIX which
-should be appended to each backup file made when `--backup'[=METHOD] is
-used.  If the `--suffix=SUFFIX' option is not specified, the value of
-the `SIMPLE_BACKUP_SUFFIX' environment variable is used.  And if
-`SIMPLE_BACKUP_SUFFIX' is not set, the default is `~', just as in Emacs.
 

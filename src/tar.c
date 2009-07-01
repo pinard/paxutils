@@ -1,5 +1,5 @@
 /* A tar (tape archiver) program.
-   Copyright (C) 1988, 92, 93, 94, 95, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988,92,93,94,95,96,97,98,99 Free Software Foundation, Inc.
    Written by John Gilmore, starting 1985-08-25.
 
    This program is free software; you can redistribute it and/or modify it
@@ -31,6 +31,14 @@ time_t get_date ();
 
 const char *parse_user_spec PARAMS((const char *, uid_t *, gid_t *,
 				    char **, char **));
+
+#if ENABLE_DALE_CODE
+# if !MSDOS
+/* Test to see if we are trying to dump the compression work file.  */
+dev_t fct_dev;
+ino_t fct_ino;
+# endif
+#endif
 
 /* Local declarations.  */
 
@@ -71,9 +79,22 @@ request_stdin (const char *option)
 | SIZE, from the user, using fgets.                                      |
 `-----------------------------------------------------------------------*/
 
+#if HAVE_TERMIO_H
+# include <termio.h>
+#endif
+
+#ifndef TCIFLUSH
+# define TCIFLUSH 0
+#endif
+
 char *
 get_reply (const char *message, char *reply, size_t length)
 {
+
+  FILE *file;
+
+  /* Select a file to read user replies.  */
+
   if (!confirm_file && (stdin_used_by || archive == STDIN))
     {
       confirm_file = fopen (CONSOLE, "r");
@@ -81,12 +102,20 @@ get_reply (const char *message, char *reply, size_t length)
 	FATAL_ERROR ((0, 0, _("Cannot read confirmation from user")));
     }
 
+  file = confirm_file ? confirm_file : stdin;
+  tcflush (fileno (file), TCIFLUSH);
+
+  /* Write out the prompt.  */
+
   if (checkpoint_option)
     flush_checkpoint_line ();
 
   fputs (message, stdlis);
   fflush (stdlis);
-  return fgets (reply, length, confirm_file ? confirm_file : stdin);
+
+  /* Get the reply.  */
+
+  return fgets (reply, length, file);
 }
 
 /*------------------------------------------------------------------------.
@@ -134,6 +163,47 @@ flush_checkpoint_print_progname (void)
   flush_checkpoint_line ();
   fprintf (stderr, "%s: ", program_name);
 }
+
+#if ENABLE_DALE_CODE
+/*-------------------------------------------------------------.
+| Create and destroy the temporary file for file compression.  |
+`-------------------------------------------------------------*/
+
+/* The name of the temporary file.  */
+static char *compress_work_file_name;
+
+/* Create the temporary file.  */
+static void
+init_compress_work_file (void)
+{
+  struct stat statbuf;
+
+  /* Get the name.  */
+  compress_work_file_name = tempnam (NULL, "tfc");
+  if (compress_work_file_name == NULL)
+    FATAL_ERROR ((0, 0, _("Unable to get temporary file name")));
+  /* Open the file.  */
+  compress_work_file = open (compress_work_file_name,
+			     O_RDWR | O_CREAT | O_BINARY, 0600);
+  if (compress_work_file < 0)
+    FATAL_ERROR ((0, errno, _("Unable to open temporary file")));
+  if (fstat (compress_work_file, &statbuf) < 0)
+    FATAL_ERROR ((0, errno, _("Unable to fstat() temporary file")));
+  /* Record the device and inode numbers of the temporary file so we do not
+     put them into the archive.  */
+  fct_dev = statbuf.st_dev;
+  fct_ino = statbuf.st_ino;
+}
+
+static void
+delete_compress_work_file (void)
+{
+  if (close (compress_work_file) < 0)
+    FATAL_ERROR ((0, errno, _("Unable to close temporary file")));
+  if (unlink (compress_work_file_name) < 0)
+    FATAL_ERROR ((0, errno, _("Unable to delete temporary file")));
+}
+#endif /* ENABLE_DALE_CODE */
 
 /* Options.  */
 
@@ -246,9 +316,13 @@ struct option long_options[] =
   {"owner", required_argument, NULL, OWNER_OPTION},
   {"portability", no_argument, NULL, 'o'},
   {"posix", no_argument, NULL, POSIX_OPTION},
+#if ENABLE_DALE_CODE
+  {"per-file-compress", no_argument, NULL, 'y'},
+#endif
   {"preserve", no_argument, NULL, PRESERVE_OPTION},
   {"preserve-order", no_argument, NULL, 's'},
   {"preserve-permissions", no_argument, NULL, 'p'},
+  {"quick", no_argument, NULL, 'q'},
   {"read-full-blocks", no_argument, NULL, OBSOLETE_READ_FULL_RECORDS},
   {"read-full-records", no_argument, NULL, 'B'},
   {"record-number", no_argument, NULL, OBSOLETE_BLOCK_NUMBER},
@@ -320,6 +394,7 @@ Main operation mode:\n\
       fputs (_("\
 \n\
 Operation modifiers:\n\
+  -q, --quick                assume the archive has no duplicate members\n\
   -W, --verify               attempt to verify the archive after writing it\n\
       --remove-files         remove files after adding them to the archive\n\
   -k, --keep-old-files       don't overwrite existing files when extracting\n\
@@ -378,16 +453,22 @@ Archive format selection:\n\
               PATTERN                at list/extract time, a globbing PATTERN\n\
   -o, --old-archive, --portability   write a V7 format archive\n\
       --posix                        write a POSIX conformant archive\n\
-  -z, --gzip                         filter the archive through gzip\n\
-  -Z, --compress                     filter the archive through compress\n\
-      --use-compress-program=PROG    filter through PROG (must accept -d)\n"),
+  -z, --gzip                         filter the archive through `gzip'\n\
+  -Z, --compress                     filter the archive through `compress'\n\
+      --use-compress-program=PROG    filter through `PROG' (must accept -d)\n"),
 	     stdout);
+#if ENABLE_DALE_CODE
+      fputs (_("\
+  -y, --per-file-compress            compress archived files independently\n"),
+	       stdout);
+
+#endif
       fputs (_("\
 \n\
 Local file selection:\n\
   -C, --directory=DIR          change to directory DIR\n\
   -T, --files-from=NAME        get names to extract or create from file NAME\n\
-      --null                   -T reads null-terminated names, disable -C\n\
+      --null                   names from -T option are NUL terminated\n\
       --exclude=PATTERN        exclude files, given as a globbing PATTERN\n\
   -X, --exclude-from=FILE      exclude globbing patterns listed in FILE\n\
   -P, --absolute-names         don't strip leading `/'s from file names\n\
@@ -447,13 +528,17 @@ Report bugs to <tar-bugs@iro.umontreal.ca>.\n"),
 | Parse the options for tar.  |
 `----------------------------*/
 
-/* Available option letters are DEHIJQY and aejnqy.  Some are reserved:
+/* Available option letters are DEHIJQY and aejn.  Some are reserved:
 
-   y  per-file gzip compression
    Y  per-block gzip compression */
 
-#define OPTION_STRING \
-  "-01234567ABC:F:GK:L:MN:OPRST:UV:WX:Zb:cdf:g:hiklmoprstuvwxz"
+#if ENABLE_DALE_CODE
+# define OPTION_STRING \
+   "-01234567ABC:F:GK:L:MN:OPRST:UV:WX:Zb:cdf:g:hiklmopqrstuvwxyz"
+#else
+# define OPTION_STRING \
+   "-01234567ABC:F:GK:L:MN:OPRST:UV:WX:Zb:cdf:g:hiklmopqrstuvwxz"
+#endif
 
 static void
 set_subcommand_option (enum subcommand subcommand)
@@ -538,6 +623,10 @@ decode_options (int argc, char *const *argv)
   backup_suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
   version_control_string = getenv ("VERSION_CONTROL");
 
+#ifdef REMOTE_SHELL
+  rsh_command_option = REMOTE_SHELL;
+#endif
+
   /* Convert old-style tar call by exploding option element and rearranging
      options accordingly.  */
 
@@ -608,7 +697,7 @@ decode_options (int argc, char *const *argv)
       case 1:
 	/* File name or non-parsed option, because of RETURN_IN_ORDER
 	   ordering triggerred by the leading dash in OPTION_STRING.  */
-	name_add (optarg);
+	add_name_string (optarg);
 	input_files++;
 	break;
 
@@ -647,7 +736,7 @@ decode_options (int argc, char *const *argv)
 	break;
 
       case 'C':
-	name_add ("-C");
+	add_name_string ("-C");
 #if DOSWIN
 	{
 	  char new_arg[PATH_MAX];
@@ -659,7 +748,7 @@ decode_options (int argc, char *const *argv)
 	     that it is independent of cwd.  */
 
 	  _fixpath (optarg, new_arg);
-	  name_add (new_arg);
+	  add_name_string (new_arg);
 	}
 
 	/* We are going to chdir, and cwd is a global notion on DOSWIN.
@@ -679,7 +768,7 @@ decode_options (int argc, char *const *argv)
 	    atexit (restore_original_directory);
 	  }
 #else
-	name_add (optarg);
+	add_name_string (optarg);
 #endif
 	break;
 
@@ -696,15 +785,9 @@ decode_options (int argc, char *const *argv)
 			sizeof (const char *) * allocated_archive_names);
 	  }
 #if DOSWIN
-	/* Need to mirror the backslashes, some of the rest of
-	   the code cannot cope with DOS-style file names.  */
-	{
-	  char *cursor;
-
-	  for (cursor = optarg; *cursor; cursor++)
-	    if (*cursor == '\\')
-	      *cursor = '/';
-	}
+	/* Need to mirror the backslashes, some of the rest of the code cannot
+	   cope with DOS-style file names.  */
+	unixify_file_name (optarg);
 #endif
 	archive_name_array[archive_names++] = optarg;
 	break;
@@ -801,6 +884,10 @@ decode_options (int argc, char *const *argv)
 	absolute_names_option = true;
 	break;
 
+      case 'q':
+	quick_option = true;
+	break;
+
       case 'r':
 	set_subcommand_option (APPEND_SUBCOMMAND);
 	break;
@@ -831,9 +918,22 @@ decode_options (int argc, char *const *argv)
 	break;
 
       case 'T':
-	files_from_option = optarg;
-	if (!strcmp (files_from_option, "-"))
+	files_from_option = true;
+
+	add_name_string ("-T");
+	if (!strcmp (optarg, "-"))
 	  request_stdin ("-T");
+#if DOSWIN
+	{
+	  char new_arg[PATH_MAX];
+
+	  /* See comment for case 'C' above.  */
+	  _fixpath (optarg, new_arg);
+	  add_name_string (new_arg);
+	}
+#else
+	add_name_string (optarg);
+#endif
  	break;
 
       case 'u':
@@ -871,11 +971,20 @@ decode_options (int argc, char *const *argv)
 	add_exclude_file (optarg);
 	break;
 
+#if ENABLE_DALE_CODE
+      case 'y':
+	per_file_compress_option = true;
+	break;
+#endif
+
       case OBSOLETE_UNGZIP:
 	WARN ((0, 0, _("Obsolete option name replaced by --gzip")));
 	/* Fall through.  */
 
       case 'z':
+#if ENABLE_DALE_CODE
+	compress_whole_archive = true;
+#endif
 #if DOSWIN
 	/* Use explicit .EXE suffix.  First, if the shell is COMMAND.COM, it
 	   will *not* be called if gzip is not installed, and thus they get
@@ -894,6 +1003,9 @@ decode_options (int argc, char *const *argv)
 	/* Fall through.  */
 
       case 'Z':
+#if ENABLE_DALE_CODE
+	compress_whole_archive = true;
+#endif
 #if DOSWIN
 	set_use_compress_program_option ("compress.exe");
 #else
@@ -944,7 +1056,7 @@ decode_options (int argc, char *const *argv)
       case NAME_PREFIX_OPTION:
 #if DOSWIN
 	/* Make sure we have only forward slashes.  */
-	dos_to_unix_fname (optarg);
+	unixify_file_name (optarg);
 #endif
 	name_prefix_option = optarg;
 	name_prefix_length = strlen (optarg);
@@ -960,7 +1072,7 @@ decode_options (int argc, char *const *argv)
 	break;
 
       case NULL_OPTION:
-	filename_terminator = '\0';
+	null_option = true;
 	break;
 
       case OWNER_OPTION:
@@ -1109,7 +1221,10 @@ decode_options (int argc, char *const *argv)
 
   while (optind < argc)
     {
-      name_add (argv[optind]);
+      if (quick_option && is_pattern (argv[optind]))
+	USAGE_ERROR ((0, 0, _("Wildcards may not be used with `--quick'")));
+
+      add_name_string (argv[optind]);
       input_files++;
       optind++;
     }
@@ -1205,8 +1320,7 @@ Written by John Gilmore and Jay Fenlason.\n"),
     {
     case CREATE_SUBCOMMAND:
       if (input_files == 0 && !files_from_option)
-	USAGE_ERROR ((0, 0,
-		      _("Cravenly refusing to create an empty archive")));
+	USAGE_ERROR ((0, 0, _("Cravenly refusing to create an empty archive")));
       break;
 
     case EXTRACT_SUBCOMMAND:
@@ -1255,6 +1369,21 @@ Written by John Gilmore and Jay Fenlason.\n"),
 	backup_option = false;
     }
 
+#if ENABLE_DALE_CODE
+  /* Set up compression options.  */
+
+  if (use_compress_program_option && !per_file_compress_option)
+    compress_whole_archive = 1;
+  if (compress_whole_archive && per_file_compress_option)
+    USAGE_ERROR ((0, 0, _("More than one compression option specified")));
+  if (per_file_compress_option && multi_volume_option)
+    USAGE_ERROR ((0, 0, _("--file_compress incompatible with --multi-volume")));
+  if (use_compress_program_option == NULL)
+    /* When there are compressed entries to compare or extract, short of
+       knowing better, we assume that `gzip' is the decompressor to use.  */
+    set_use_compress_program_option ("gzip");
+#endif
+
   /* Setup chekpoint dots processing.  */
 
   if (checkpoint_option)
@@ -1270,13 +1399,16 @@ Written by John Gilmore and Jay Fenlason.\n"),
 int
 main (int argc, char *const *argv)
 {
+#if DOSWIN
+  program_name = get_program_base_name (argv[0]);
+#else
   program_name = argv[0];
+#endif
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
 
   exit_status = TAREXIT_SUCCESS;
-  filename_terminator = '\n';
 
 #if DOSWIN
   /* The test suite needs the program_name to be just "tar".  (FIXME: What is
@@ -1308,12 +1440,11 @@ main (int argc, char *const *argv)
     xmalloc (sizeof (const char *) * allocated_archive_names);
   archive_names = 0;
 
-  init_names ();
+  initialize_name_strings ();
 
   /* Decode options.  */
 
   decode_options (argc, argv);
-  name_init (argc, argv);
 
   /* Main command execution.  */
 
@@ -1329,7 +1460,17 @@ main (int argc, char *const *argv)
     case CAT_SUBCOMMAND:
     case UPDATE_SUBCOMMAND:
     case APPEND_SUBCOMMAND:
+#if ENABLE_DALE_CODE
+      if (per_file_compress_option)
+	init_compress_work_file();
+#endif
+
       update_archive ();
+
+#if ENABLE_DALE_CODE
+      if (per_file_compress_option)
+	delete_compress_work_file();
+#endif
       break;
 
     case DELETE_SUBCOMMAND:
@@ -1339,10 +1480,16 @@ main (int argc, char *const *argv)
     case CREATE_SUBCOMMAND:
       if (totals_option)
 	init_total_written ();
-
+#if ENABLE_DALE_CODE
+      if (per_file_compress_option)
+	init_compress_work_file();
+#endif
       create_archive ();
-      name_close ();
 
+#if ENABLE_DALE_CODE
+      if (per_file_compress_option)
+	delete_compress_work_file();
+#endif
       if (totals_option)
 	print_total_written ();
       break;
@@ -1368,7 +1515,7 @@ main (int argc, char *const *argv)
   /* Dispose of allocated memory, and return.  */
 
   free (archive_name_array);
-  name_term ();
+  terminate_name_strings ();
 
   if (exit_status == TAREXIT_FAILURE)
     error (0, 0, _("Processed all files possible, despite earlier errors"));

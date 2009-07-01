@@ -471,22 +471,6 @@ _nl_normalize_codeset (codeset, name_len)
   return (const char *) retval;
 }
 
-/* We don't want libintl.a to depend on any other library.  So we
-   avoid the non-standard function stpcpy.  In GNU C Library this
-   function is available, though.  Also allow the symbol HAVE_STPCPY
-   to be defined.  */
-#if !_LIBC && !HAVE_STPCPY
-static char *
-stpcpy (dest, src)
-     char *dest;
-     const char *src;
-{
-  while ((*dest++ = *src++) != '\0')
-    /* Do nothing. */ ;
-  return dest - 1;
-}
-#endif
-
 /* End of l10nflist.c */
 
 /* Begin of explodename.c */

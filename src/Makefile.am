@@ -1,5 +1,5 @@
 # Makefile for tar sources.
-# Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+# Copyright (C) 1994, 95, 96, 97, 98, 99 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,11 +17,9 @@
 # 02111-1307, USA.
 
 AUTOMAKE_OPTIONS = gnits ansi2knr
-EXTRA_PROGRAMS = mt rmt
-bin_PROGRAMS = cpio tar $(extra_bin_progs)
-libexec_PROGRAMS = $(extra_libexec_progs)
-## Note: we don't install pax for now; it hasn't been tested at all.
-noinst_PROGRAMS = pax
+EXTRA_PROGRAMS = cpio mt pax rmt
+bin_PROGRAMS = tar @extra_bin_progs@
+libexec_PROGRAMS = @extra_libexec_progs@
 
 noinst_HEADERS = arith.h common.h cpio.h cpiohdr.h defer.h extern.h \
 rmt.h system.h tar.h tarhdr.h ustar.h
@@ -35,8 +33,6 @@ rmt_SOURCES = rmt.c
 tar_SOURCES = arith.c buffer.c compare.c create.c delete.c extract.c \
 header.c incremen.c list.c mangle.c misc.c names.c open3.c reading.c \
 rtapelib.c tar.c update.c
-
-EXTRA_DIST = rmt.cpio.c rmt.cpio.h rtapelib.cpio.c
 
 ## INCLUDES = -I../intl -I$(top_srcdir)/intl -I$(top_srcdir)/lib
 ## LDADD = ../lib/libpu.a @INTLLIBS@

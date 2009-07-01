@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4g.
+   This file documents `paxutils' 2.4h.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -49,7 +49,7 @@ other tools.  We expect that such things might tend to reequilibrate
 themselves, as time and maintenance goes, as the tools in `pax'
 utilities will influence each other.
 
-   This manual documents the release 2.4g of `pax' utilities.
+   This manual documents the release 2.4h of `pax' utilities.
 
 * Menu:
 
@@ -750,8 +750,8 @@ tell you which version you have.  The canonical distribution points for
 the version documented in this manual, and the main GNU copy of this
 distribution, are:
 
-     ftp://ftp.iro.umontreal.ca/pub/tar/tar-2.4g.tar.gz
-     ftp://ftp.gnu.org/pub/gnu/tar-2.4g.tar.gz
+     ftp://ftp.iro.umontreal.ca/pub/tar/tar-2.4h.tar.gz
+     ftp://ftp.gnu.org/pub/gnu/tar-2.4h.tar.gz
 
 You can also get `tar' from the numerous GNU mirrors around the world.
 At the canonical distribution point, you might sometimes stumble on
@@ -842,9 +842,9 @@ argument.  *Note Copy-pass mode::.
    The example shows copying the files of the present directory, and
 sub-directories to a new directory called new-dir.  Some new options
 are the `-print0' available with GNU `find', combined with the `--null'
-option of cpio.  These two options act together to send file names
-between find and cpio, even if special characters are embedded in the
-file names.  Another is `-p', which tells cpio to pass the files it
+option of `cpio'.  These two options act together to send file names
+between find and `cpio', even if special characters are embedded in the
+file names.  Another is `-p', which tells `cpio' to pass the files it
 finds to the directory `new-dir'.
 
 

@@ -1,3 +1,19 @@
+1999-04-17  François Pinard  <pinard@iro.umontreal.ca>
+
+	* tcflush.c: New file.
+	Reported by Brendan O'Dea, Eli Zaretskii, Jim Meyering, Steven
+	Sargent and Ulrich Drepper.
+
+1999-03-15  François Pinard  <pinard@iro.umontreal.ca>
+
+	* hash.c, hash.h: New versions.
+	Reported by Jim Meyering.
+
+1998-12-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* gettext.c: Remove duplicate definition of stpcpy.
+	Reported by Hirofumi Yamaki, Lorenzo Di Gregorio and Igor Schein.
+
 1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
 
 	* getversion.c: Deleted.
@@ -12,7 +28,7 @@
 
 	* Makefile.am (libpu_a_SOURCES): Add full-read.c and
 	full-write.c.
-
+
 1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
 
 	* getopt.c, regex.c, xmalloc.c: Include <gettext.h>, not <libintl.h>.

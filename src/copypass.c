@@ -1,5 +1,5 @@
 /* copypass.c - cpio copy pass sub-function.
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -104,8 +104,13 @@ copy_pass_maybe_recurse (int top_level, dynamic_string *input_name,
 	return;
 
       /* Make the name of the new file.  */
-      for (slash = new_file; *slash == '/'; ++slash)
-	;
+      slash = new_file;
+#if defined(__MSDOS__) || defined(DOSWIN)
+      if (*slash >= 'A' && *slash <= 'z' && slash[1] == ':')
+	slash += 2;
+#endif
+      while (*slash == '/')
+	slash++;
 
 #ifdef HPUX_CDF
       /* For CDF's we add a 2nd `/' after all "hidden" directories.
@@ -295,7 +300,19 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	    }
 	  if (out_file_des < 0)
 	    {
-	      error (0, errno, "%s", output_name->string);
+	      /* If we aren't allowed to create intermediate directories, make
+		 the error message mention the parent directory.  */
+	      if (!create_dir_flag)
+		{
+		  char *dirpart = dir_name (output_name->string);
+		  struct stat dirpart_stat;
+
+		  if (stat (dirpart, &dirpart_stat) < 0)
+		    error (0, errno, "%s", dirpart);
+		  free (dirpart);
+		}
+	      else
+		error (0, errno, "%s", output_name->string);
 	      close (in_file_des);
 	      return;
 	    }
@@ -370,11 +387,24 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	}
       if (res < 0)
 	{
-	  /* In some odd cases where the output_name includes `.',
-	     the directory may have actually been created by
-	     create_all_directories(), so the mkdir will fail
-	     because the directory exists.  If that's the case,
-	     don't complain about it.  */
+	  /* If we aren't allowed to create intermediate directories, make the
+	     error message mention the parent directory.  */
+	  if (!create_dir_flag)
+	    {
+	      char *dirpart = dir_name (output_name->string);
+	      struct stat dirpart_stat;
+
+	      if (stat (dirpart, &dirpart_stat) < 0)
+		error (0, errno, "%s", dirpart);
+	      free (dirpart);
+	      return;
+	    }
+
+	  /* In some odd cases where the output_name includes `.', the
+	     directory may have actually been created by
+	     create_all_directories(), so the mkdir will fail because the
+	     directory exists.  If that's the case, don't complain about it.
+	     */
 	  if ( (errno != EEXIST) ||
 	       (lstat (output_name->string, &out_file_stat) != 0) ||
 	       !(S_ISDIR (out_file_stat.st_mode) ) )
@@ -402,7 +432,15 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	{
 	  times.actime = times.modtime = stat_info->st_mtime;
 	  if (utime (output_name->string, &times) < 0)
-	    error (0, errno, "%s", output_name->string);
+#if defined(__MSDOS__) || defined(DOSWIN)
+	    /* MS-DOS/Windows won't let us to set mod times of a directory.
+	       Make the error message explicit.  */
+	    if (errno == EACCES)
+	      error (0, 0, "%s: Cannot set access time of a directory",
+		     output_name.string);
+	    else
+#endif
+	      error (0, errno, "%s", output_name->string);
 	}
     }
 #ifndef __MSDOS__
@@ -440,7 +478,19 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	    }
 	  if (res < 0)
 	    {
-	      error (0, errno, "%s", output_name->string);
+	      /* If we aren't allowed to create intermediate directories, make
+		 the error message mention the parent directory.  */
+	      if (!create_dir_flag)
+		{
+		  char *dirpart = dir_name (output_name->string);
+		  struct stat dirpart_stat;
+
+		  if (stat (dirpart, &dirpart_stat) < 0)
+		    error (0, errno, "%s", dirpart);
+		  free (dirpart);
+		}
+	      else
+		error (0, errno, "%s", output_name->string);
 	      return;
 	    }
 	  if (!no_chown_flag)
@@ -489,7 +539,19 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	}
       if (res < 0)
 	{
-	  error (0, errno, "%s", output_name->string);
+	  /* If we aren't allowed to create intermediate directories, make the
+	     error message mention the parent directory.  */
+	  if (!create_dir_flag)
+	    {
+	      char *dirpart = dir_name (output_name->string);
+	      struct stat dirpart_stat;
+
+	      if (stat (dirpart, &dirpart_stat) < 0)
+		error (0, errno, "%s", dirpart);
+	      free (dirpart);
+	    }
+	  else
+	    error (0, errno, "%s", output_name->string);
 	  free (link_name);
 	  return;
 	}

@@ -1,5 +1,5 @@
 /* Common declarations for the tar program.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -128,9 +128,6 @@ GLOBAL enum subcommand subcommand_option;
 /* Selected format for output archive.  */
 GLOBAL enum archive_format archive_format;
 
-/* Either NL or NUL, as decided by the --null option.  */
-GLOBAL char filename_terminator;
-
 /* Size of each record, once in blocks, once in bytes.  Those two variables
    are always related, the second being BLOCKSIZE times the first.  They do
    not have _option in their name, even if their values is derived from
@@ -164,8 +161,8 @@ GLOBAL bool dereference_option;
 /* There were exclude options, so trigger exclude processing.  */
 GLOBAL bool exclude_option;
 
-/* Specified file containing names to work on.  */
-GLOBAL const char *files_from_option;
+/* If files may be obtained in files rather than as command arguments.  */
+GLOBAL bool files_from_option;
 
 /* Do not consider remote file syntax.  */
 GLOBAL bool force_local_option;
@@ -220,6 +217,9 @@ GLOBAL bool no_attributes_option;
 /* Do not dump directories contents recursively.  */
 GLOBAL bool no_recurse_option;
 
+/* Use NUL instead of NL, when reading or producing file lists.  */
+GLOBAL bool null_option;
+
 /* Use numeric ids directly, do not translate symbolic ids to numbers.  */
 GLOBAL bool numeric_owner_option;
 
@@ -229,6 +229,14 @@ GLOBAL bool one_file_system_option;
 /* Specified value to be put into tar file in place of stat () results, or
    just -1 if such an override should not take place.  */
 GLOBAL uid_t owner_option;
+
+#if ENABLE_DALE_CODE
+/* If file compression (-y) has been selected.  */
+GLOBAL bool per_file_compress_option;
+#endif
+
+/* Assume the archive has no duplicate members.  */
+GLOBAL bool quick_option;
 
 /* When deleting directories in the way, recursively delete their contents.  */
 GLOBAL bool recursive_unlink_option;
@@ -302,6 +310,14 @@ GLOBAL const char *volume_label_option;
 
 /* File descriptor for archive file.  */
 GLOBAL int archive;
+
+#if ENABLE_DALE_CODE
+/* If archive compression (-z or -Z) has been selected.  */
+GLOBAL bool compress_whole_archive;
+
+/* File descriptor for per file compression temporary file.  */
+GLOBAL int compress_work_file;
+#endif
 
 /* True when outputting to /dev/null.  */
 GLOBAL bool dev_null_output;
@@ -381,6 +397,12 @@ GLOBAL time_t time_option_threshold;
     || time_compare ((Stat)->st_mtime, time_option_threshold) >= 0)	\
    && (!newer_ctime_option						\
        || time_compare ((Stat)->st_ctime, time_option_threshold) >= 0))
+
+#if ENABLE_DALE_CODE
+/* Shortest and longest files that will be file-compressed.  */
+#define MINIMUM_FILE_COMPRESS_SIZE (BLOCKSIZE + 1)
+#define MAXIMUM_FILE_COMPRESS_SIZE 100000000
+#endif
 
 /* Declarations for each module.  */
 
@@ -508,6 +530,11 @@ int time_compare (time_t, time_t);
    ((Arg1) - (Arg2))
 #endif
 
+bool is_pattern PARAMS ((const char *));
+#if DOSWIN
+const char *get_program_base_name PARAMS ((const char *));
+void unixify_file_name PARAMS ((char *));
+#endif
 void assign_string PARAMS ((char **, const char *));
 char *quote_copy_string PARAMS ((const char *));
 bool unquote_string PARAMS ((char *));
@@ -517,6 +544,8 @@ char *concat_with_slash PARAMS ((const char *, const char *));
 char *merge_sort PARAMS ((char *, int, int, int (*) (char *, char *)));
 
 bool is_dot_or_dotdot PARAMS ((const char *));
+void xclose PARAMS ((int));
+void xdup2 PARAMS ((int, int, const char *));
 bool remove_any_file PARAMS ((const char *, bool));
 bool maybe_backup_file PARAMS ((const char *, bool));
 void undo_last_backup PARAMS ((void));
@@ -524,23 +553,20 @@ void undo_last_backup PARAMS ((void));
 /* Module names.c.  */
 
 extern struct name *name_list_head;
-extern struct name *name_list_tail;
 extern struct name *name_list_current;
+extern unsigned name_list_unmatched_count;
 
-void init_names PARAMS ((void));
-void name_add PARAMS ((const char *));
-void name_init PARAMS ((int, char *const *));
-void name_term PARAMS ((void));
-char *name_next PARAMS ((bool));
-void name_close PARAMS ((void));
-void name_gather PARAMS ((void));
+void add_name_string PARAMS ((const char *));
+void initialize_name_strings PARAMS (());
+char *next_name_string PARAMS ((bool));
+void terminate_name_strings PARAMS ((void));
+
 void add_name PARAMS ((const char *));
-bool name_match PARAMS ((const char *));
-void names_notfound PARAMS ((void));
-void name_expand PARAMS ((void));
-struct name *name_scan PARAMS ((const char *));
-char *name_from_list PARAMS ((void));
-void blank_name_list PARAMS ((void));
+void name_gather PARAMS ((void));
+struct name *find_matching_name PARAMS ((const char *, bool));
+char *next_unprocessed_name PARAMS ((void));
+void prepare_to_reprocess_names PARAMS ((void));
+void report_unprocessed_names PARAMS ((void));
 
 void add_exclude PARAMS ((char *));
 void add_exclude_file PARAMS ((const char *));

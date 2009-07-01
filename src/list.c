@@ -1,5 +1,5 @@
 /* List a tar archive.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-26.
 
    This program is free software; you can redistribute it and/or modify it
@@ -228,19 +228,25 @@ print_header (struct tar_entry *entry)
 	     (unsigned long) current_block_ordinal ());
 
   if (verbose_option <= 1)
-    {
-      /* Just the fax, mam.  */
+    if (null_option)
+      {
+	fputs (entry->name, stdlis);
+	putc ('\0', stdlis);
+      }
+    else
+      {
+	char *quoted_name = quote_copy_string (entry->name);
 
-      char *quoted_name = quote_copy_string (entry->name);
+	if (quoted_name)
+	  {
+	    fputs (quoted_name, stdlis);
+	    free (quoted_name);
+	  }
+	else
+	  fputs (entry->name, stdlis);
 
-      if (quoted_name)
-	{
-	  fprintf (stdlis, "%s\n", quoted_name);
-	  free (quoted_name);
-	}
-      else
-	fprintf (stdlis, "%s\n", entry->name);
-    }
+	putc ('\n', stdlis);
+      }
   else
     {
       /* File type and modes.  */
@@ -317,7 +323,8 @@ print_header (struct tar_entry *entry)
       else
 	{
 	  user = uform;
-	  sprintf (uform, "%lu", (unsigned long) get_header_uid (entry->block));
+	  sprintf (uform, "%lu",
+		   (unsigned long) get_header_uid (entry->block));
 	}
 
       if (*entry->block->header.gname && entry->format != V7_FORMAT)
@@ -325,7 +332,8 @@ print_header (struct tar_entry *entry)
       else
 	{
 	  group = gform;
-	  sprintf (gform, "%ld", (unsigned long) get_header_gid (entry->block));
+	  sprintf (gform, "%ld",
+		   (unsigned long) get_header_gid (entry->block));
 	}
 
       /* Format the file size or major/minor device numbers.  */

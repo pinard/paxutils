@@ -37,7 +37,7 @@ possibly_munge_cdf_directory_name (char *name, struct new_cpio_header *file_hdr)
 
 #ifdef HPUX_CDF
   if ((archive_format != arf_tar) && (archive_format != arf_ustar)
-      && (archive_format != arf_gnutar))
+      && (archive_format != arf_oldgnu))
     {
       /* We mark CDF's in cpio files by adding a 2nd `/' after the
 	 "hidden" directory name.  We need to do this so we can

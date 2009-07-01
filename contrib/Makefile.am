@@ -1,4 +1,4 @@
-# Makefile for `tar' related contributions.
+# Makefile for distributing `paxutils' related contributions.
 # Copyright © 1998 Free Software Foundation, Inc.
 # François Pinard <pinard@iro.umontreal.ca>
 
@@ -20,3 +20,5 @@ AUTOMAKE_OPTIONS = gnits
 
 EXTRA_DIST = cpio.1 mt.1 tar.1 src-makefile.go3 lib-makefile.go3 \
 config.sta config.go3
+
+SUBDIRS = win32

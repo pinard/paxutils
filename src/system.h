@@ -1,5 +1,5 @@
 /* System dependent definitions for paxutils.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1994, 95, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -123,6 +123,12 @@ extern int errno;
 # define ENXIO EIO
 #endif
 
+/* FIXME: This patch was for `cpio'.  Does it apply for `tar' as well?  */
+#if DOSWIN
+# undef  EPERM
+# define EPERM EACCES
+#endif
+
 /* Declare open parameters.  */
 
 #if HAVE_FCNTL_H
@@ -171,11 +177,7 @@ extern int errno;
 
 /* File name for interacting with user, whenever stdin is unavailable.  */
 
-#if DOSWIN
-# define CONSOLE "con"
-#else
-# define CONSOLE "/dev/tty"
-#endif
+#define CONSOLE "/dev/tty"
 
 /* Declare file status routines and bits.  */
 
@@ -269,8 +271,13 @@ extern int errno;
 # define UMASKED_SYMLINK(Name1, Name2, Mode) \
    umasked_symlink(Name1, Name2, Mode)
 #else
-# define UMASKED_SYMLINK(Name1, Name2, Mode) \
-   symlink(Name1, Name2)
+# if DOSWIN
+#  define UMASKED_SYMLINK(Name1, Name2, Mode) \
+    link (Name1, Name2)
+# else
+#  define UMASKED_SYMLINK(Name1, Name2, Mode) \
+    symlink (Name1, Name2)
+# endif
 #endif
 
 /* Include <unistd.h> before any preprocessor test of _POSIX_VERSION.  */
@@ -580,6 +587,8 @@ voidstar xmalloc PARAMS ((size_t));
 voidstar xrealloc PARAMS ((voidstar, size_t));
 char *xgetcwd PARAMS ((void));
 char *xstrdup PARAMS ((const char *));
+
+char *dir_name PARAMS ((const char *));
 
 /* When interrupted system calls are automatically restarted, we have little
    to worry about incomplete reads or writes.  A few users report that POSIX

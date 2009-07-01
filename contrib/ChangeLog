@@ -1,9 +1,14 @@
+1998-11-23  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am (SUBDIRS): Include win32.
+	Reported by Paul E. Jones.
+
 1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
 	* tar.1: New name for gtar.1.
 	* cpio.1, mt.1: New files.
 	* Makefile.am (EXTRA_DIST): Adjusted.
-
+
 1998-02-19  François Pinard  <pinard@iro.umontreal.ca>
 
 	* README, Makefile.am, gtar.1: New files.

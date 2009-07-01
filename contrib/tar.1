@@ -1,25 +1,25 @@
-.TH GTAR 1 "31 December 1997"
+.TH TAR 1 "31 December 1997"
 .SH NAME
-gtar \- GNU file archiver utility
+tar \- Free file archiver utility
 .SH SYNOPSIS
-.B gtar
+.B tar
 .RI [ options ]
 .RI [ arguments ]
 .SH DESCRIPTION
 The
-.I gtar
-utility is the GNU equivalent to the standard UNIX utility
+.I tar
+utility is the Free equivalent to the standard UNIX utility
 .IR tar (1).
 It attempts to correct some of the functional flaws in the original
 version of
 .IR tar (1),
 which is still generally supplied as part of UNIX.
-Several examples: 
+Several examples:
 the original version of
 .IR tar (1)
 would overwrite files if the tar archive contained files with
 absolute file paths, something
-.IR gtar (1)
+.IR tar (1)
 refuses to do in the absence of a specific option;
 the original
 .IR tar (1)
@@ -27,12 +27,12 @@ would get caught in an infinite loop
 if the user specified the creation of an archive file
 in the same directory from which files were being saved
 (whereas
-.I gtar(1)
+.I tar(1)
 automatically excludes the recursive inclusion of the archive
 file within itself);
 finally,
 many new options enable the use of
-.I gtar
+.I tar
 to create system backup tapes,
 instead of utilities more traditonally used for thsi purpose,
 such as
@@ -63,7 +63,7 @@ This manual page is the distillation of a large and complex
 document set,
 and must be considered provisional until reviewed and revised by the
 authors of
-.IR gtar (1).
+.IR tar (1).
 .SH OPTIONS
 Options are supplied in three different forms:
 traditional (single-letter options from the original version of
@@ -196,7 +196,7 @@ or if they do not already exist in the archive.
 .RE
 .SS "ORDINARY OPTIONS"
 Ordinary options allow tighter control over the operations taken by
-.IR gtar .
+.IR tar .
 The most frequently used is
 .B \-f
 (archive file name specification):
@@ -364,7 +364,7 @@ option.
 Read or write archives through
 .IR gzip (1),
 allowing
-.I gtar
+.I tar
 to operate on several kinds of compressed archives transparently.
 .TP
 .B \-\|\-gunzip
@@ -596,7 +596,7 @@ option.
 .TP
 .B \-P
 Disable the default behavior in which
-.I gtar
+.I tar
 strips an initial `/' from archive components
 (the default behavior prevents files from being overwritten by archive
 components that were saved using absolute path names).
@@ -710,7 +710,7 @@ Mention directories that are skipped when operating on an archive.
 .B \-v
 Employ verbose mode:
 describe the actions being taken by
-.IR gtar (1).
+.IR tar (1).
 For some operations,
 this option can be specified twice
 to increase the amount of information presented.
@@ -734,7 +734,7 @@ option.
 .TP
 .B \-\|\-ignore-failed-read
 Exit if
-.I gtar
+.I tar
 encounters an unreadable file.
 .TP
 .B \-\|\-null
@@ -743,11 +743,11 @@ When the
 option is in effect,
 expect filenames terminated with `NUL',
 allowing
-.I gtar
+.I tar
 to work correctly with file names that contain newlines.
 .TP
 .B \-S
-Invoke a GNU extension when adding files to an archive that
+Invoke a Free extension when adding files to an archive that
 handles sparse files efficiently.
 .TP
 .B \-\|\-sparse
@@ -855,20 +855,20 @@ option.
 Print a message containing the program version,
 a copyright message, and credits.
 .RE
-.SH "DOING DUMPS WITH gtar"
+.SH "DOING DUMPS WITH tar"
 The
-.I gtar
+.I tar
 program can be used to do file system backups.
 A set of scripts to assist with backups and restorations accompanies the
-.I gtar
+.I tar
 distribution,
 and must be built and installed separately from
-.I gtar
+.I tar
 itself.
 Refer to the
 .IR texinfo (1)-based
 documentation supplied with
-.I gtar
+.I tar
 for help with these scripts.
 .SH "EXIT STATUS"
 If the
@@ -910,11 +910,11 @@ and the following command can be used to extract its contents:
 \fCtar -xvf afiles.tar\fP
 .LP
 Despite its complexity,
-.I gtar
+.I tar
 is often used in very simple ways:
 the above commands for archive creation, content listing, and extraction,
 are perhaps the most common way in which
-.I gtar
+.I tar
 is invoked.
 .LP
 Short-form options require correct ordering;
@@ -922,7 +922,7 @@ with long-form options, order is not important.
 In this example:
 .IP
 \fCtar \-cfv collection.tar blues folk jazz\fP
-.I gtar
+.I tar
 .LP
 will create an archive file named
 .IR v ,
@@ -956,7 +956,7 @@ In the absence of the
 or
 .B \-\|\-file=
 options,
-.I gtar
+.I tar
 will assume a default file/device,
 generally a physical tape drive attached to the computer;
 if this device is nonexistent,
@@ -969,11 +969,11 @@ you may see an error message of the form:
 .TP
 POSIXLY_CORRECT
 When this variable is set,
-.I gtar
+.I tar
 requires adherence to POSIX standards.
 .SH FILES
 .TP 2.2i
-.I /depot/bin/gtar
+.I /depot/bin/tar
 executable
 .SH "SEE ALSO"
 .IR ar (1),
@@ -1010,8 +1010,8 @@ Original version by John Gilmore, with modifications by many others,
 most prominently: Jay Fenlason, Joy Kendall, Thomas Bushnell, n/BSG,
 and Francois Pinard.
 A partial list of other contributors can be found in the THANKS file
-that accompanies the GNU
-.I tar
+that accompanies the Free
+.I paxutils
 distribution.
 .LP
 UNIX manual page by R. P. C. Rodgers,

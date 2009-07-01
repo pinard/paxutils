@@ -1,5 +1,5 @@
 /* Header management for tar.
-   Copyright (C) 1997 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-25.
 
    This program is free software; you can redistribute it and/or modify it
@@ -106,7 +106,23 @@ ulong_to_octal (char *buffer, int width, unsigned long value)
 mode_t
 get_header_mode (union block *block)
 {
-  unsigned long value = FROM_OCTAL (block->header.mode);
+  unsigned long value;
+
+  if (block->header.mode[0] == '\0'
+      && block->header.name[NAME_FIELD_SIZE - 1] != '\0'
+      && block->header.prefix[0] == '\0')
+
+    /* The mode field starts with a NUL, and the file name seems like having
+       exactly 100 characters.  It looks like a buggy archive created by
+       Solaris tar, where the NUL terminating the name field overflowed into
+       the mode field, shifting the mode after it.  Properly get the mode.  */
+    value = octal_to_ulong (block->header.mode + 1,
+			    sizeof (block->header.mode) - 1);
+
+  else
+
+    /* This is the normal case.  */
+    value = FROM_OCTAL (block->header.mode);
 
   return value;
 }

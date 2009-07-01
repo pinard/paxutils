@@ -1,3 +1,49 @@
+1999-06-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atlocal.in: Define check_cpio and check_pax.
+	* suite.m4: Validate version with tar instead of pax, as pax is
+	not always built.  Skip validating cpio if cpio is not built.
+	* atgeneral.m4: Implement at_skip_mode.
+
+	* atgeneral.m4: Implement --help and --version options.
+	* atconfig.in: Add a comment saying that --help is available.
+
+1999-04-12  François Pinard  <pinard@iro.umontreal.ca>
+
+	* t-create.m4: Add test for -C and -T compatibility.
+
+1999-01-04  François Pinard  <pinard@iro.umontreal.ca>
+
+	* Makefile.am (clean-local): Delete debug-*.sh, not FAIL-*.sh.
+
+1998-11-30  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Use debug-NN.sh instead of FAIL-NN.sh.
+	Echo a few white lines for readability.
+
+1998-11-23  François Pinard  <pinard@iro.umontreal.ca>
+
+	* verify.c: Protoize, staticize, constify, boolify, etc.
+	(decode_int): New name for atoi, to avoid conflict with system one.
+
+1998-11-11  François Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Implement -n and -x options to scripts.
+
+1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+
+	* echotime.c: Include system.h.
+	* swapb.c, swaphw.c, wrsparse.c: Idem, also simplify declarations.
+	* verify.c: Idem, also replace bcmp by memcmp.
+	Reported by Nelson H. F. Beebe and Sakai Kiyotaka.
+
+	* atgeneral.m4 (AT_LINE): New macro.  Delete directory from __file__
+	as the latest m4 includes it.  Replace AT_group_line or __line__.
+
+	* t-create.m4 (status): Remove a possible parenthetical
+	explanation after Permission denied, as found under DOSWIN.
+	Reported by Eli Zaretskii.
+
 1998-11-09  François Pinard  <pinard@iro.umontreal.ca>
 
 	* README, TODO, rediff.c: Deleted.
@@ -55,7 +101,7 @@
 	* atconfig.in: Prefer diff -u to cmp -s when -v.  Add -q.
 
 	* c-pass.m4: Prepare for real life.
-
+
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* testsuite.m4: Activate some mix of tests for prerelease.

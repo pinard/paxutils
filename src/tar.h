@@ -1,5 +1,5 @@
 /* Format of tar archives.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -210,6 +210,15 @@ struct oldgnu_header
 
 /* This file is a tape/volume header.  Ignore it on extraction.  */
 #define OLDGNU_VOLHDR 'V'
+
+/* This file is a compressed contiguous regular file. */
+#define OLDGNU_CONTIG_COMPRESSED 'X'
+
+/* This file is a compressed sparse regular file. */
+#define OLDGNU_SPARSE_COMPRESSED 'Y'
+
+/* This file is a compressed regular file. */
+#define OLDGNU_REGULAR_COMPRESSED 'Z'
 
 /*--------------------------------------.
 | tar header block, overall structure.  |

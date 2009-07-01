@@ -1,5 +1,5 @@
 /* Create a tar archive.
-   Copyright (C) 1985, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1985, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-25.
 
    This program is free software; you can redistribute it and/or modify it
@@ -20,6 +20,7 @@
 
 #include <pwd.h>
 #include <grp.h>
+#include <signal.h>
 
 #include "common.h"
 
@@ -29,6 +30,10 @@
 
 extern dev_t ar_dev;
 extern ino_t ar_ino;
+#if ENABLE_DALE_CODE
+extern dev_t fct_dev;
+extern ino_t fct_ino;
+#endif
 
 extern struct name *name_list_current;
 
@@ -638,11 +643,11 @@ create_archive (void)
 
       collect_and_sort_names ();
 
-      while (p = name_from_list (), p)
+      while (p = next_unprocessed_name (), p)
 	dump_file (p, (dev_t) -1, true);
 
-      blank_name_list ();
-      while (p = name_from_list (), p)
+      prepare_to_reprocess_names ();
+      while (p = next_unprocessed_name (), p)
 	{
 	  strcpy (buffer, p);
 	  if (p[strlen (p) - 1] != '/')
@@ -663,7 +668,7 @@ create_archive (void)
     }
   else
     {
-      while (p = name_next (true), p)
+      while (p = next_name_string (true), p)
 	dump_file (p, (dev_t) -1, true);
     }
 
@@ -750,11 +755,27 @@ dump_file (char *p, dev_t parent_device, bool top_level)
 
   /* See if we are trying to dump the archive.  */
 
-  if (ar_dev && current.stat.st_dev == ar_dev && current.stat.st_ino == ar_ino)
+  if (ar_dev
+      && current.stat.st_dev == ar_dev
+      && current.stat.st_ino == ar_ino)
     {
       WARN ((0, 0, _("%s is the archive; not dumped"), p));
       return;
     }
+
+#if ENABLE_DALE_CODE
+
+  /* See if we are trying to dump the compression temporary file.  */
+
+  if (per_file_compress_option
+      && current.stat.st_dev == fct_dev
+      && current.stat.st_ino == fct_ino)
+    {
+      WARN ((0, 0, _("%s is the compression work file; not dumped"), p));
+      return;
+    }
+
+#endif
 
   /* Check for multiple links.
 
@@ -788,7 +809,8 @@ dump_file (char *p, dev_t parent_device, bool top_level)
 #else
       if (!link_table)
 	{
-	  link_table = hash_initialize (0, NULL, link_hash, link_compare, NULL);
+	  link_table = hash_initialize (0, NULL,
+					link_hash, link_compare, NULL);
 	  if (!link_table)
 	    FATAL_ERROR ((0, 0, _("Memory exhausted")));
 	}
@@ -845,7 +867,11 @@ Removing leading `/' from absolute links")));
 
 	  if (remove_files_option)
 	    if (unlink (p) == -1)
-	      ERROR ((0, errno, _("Cannot remove %s"), p));
+	      {
+		WARN ((0, errno, _("Cannot remove %s"), p));
+		if (!ignore_failed_read_option)
+		  exit_status = TAREXIT_FAILURE;
+	      }
 
 	  /* We dumped it.  */
 	  return;
@@ -862,13 +888,8 @@ Removing leading `/' from absolute links")));
       lp->next = link_list;
       link_list = lp;
 #else
-      {
-	bool done;
-
-	hash_insert (link_table, lp, &done);
-	if (!done)
-	  FATAL_ERROR ((0, 0, _("Memory exhausted")));
-      }
+      if (!hash_insert (link_table, lp))
+	FATAL_ERROR ((0, 0, _("Memory exhausted")));
 #endif
     }
 
@@ -890,6 +911,224 @@ Removing leading `/' from absolute links")));
       int upperbound;
       long padding_count = 0L;
       bool complain = false;
+
+#if ENABLE_DALE_CODE
+
+      /* Check to see if this file should be written compressed.  It must be
+	 an ordinary file, it must be long enough (BLOCKSIZE+1) that there is
+	 some possible gain from compression, and it must be short enough that
+	 temporary space won't be a problem.  */
+
+      if (per_file_compress_option
+	  && S_ISREG (current.stat.st_mode)
+	  && current.stat.st_size >= MINIMUM_FILE_COMPRESS_SIZE
+	  && current.stat.st_size <= MAXIMUM_FILE_COMPRESS_SIZE)
+	{
+	  /* Compress the file in order to discover its compressed size.  This
+	     is done by spawning a subprocess to compress the file into a
+	     temporary file.  */
+
+	  int child_process_no, ret, input_file, child, child_pid, new_typeflag;
+	  struct stat statbuf;
+	  WAIT_T wait_status;
+	  unsigned char input_buffer[4];
+
+	  /* Truncate the temporary file.  */
+	  if (ftruncate (compress_work_file, 0) < 0)
+	    {
+	      ERROR ((0, errno, _("\
+Cannot ftruncate() work file during compression of %s - written uncompressed"),
+		      p));
+	      goto skip_file_compress;
+	    }
+	  /* Now position the file to the beginning.  */
+	  if (lseek (compress_work_file, 0, SEEK_SET) < 0)
+	    FATAL_ERROR ((0, errno,
+			  _("Cannot seek to beginning of work file")));
+	  /* Open the input file now, so we do reasonable error recovery.  */
+	  input_file = open(p, O_RDONLY | O_BINARY);
+	  if (input_file < 0)
+	    {
+	      /* Continue without compression.  This later produces the
+		 correct error message and exit code.  (tar should not return
+		 an error if --ignore-failed-read is set.)  */
+	      goto skip_file_compress;
+	    }
+
+	  /* Check to see if the file bears the magic number for some of the
+	     common compression schemes.  The ones that we test for are:
+	     	compress	\037\235
+		gzip		\037\213
+		bzip		BZ
+	  */
+	  ret = read (input_file, input_buffer, sizeof (input_buffer));
+	  /* Ignore all errors.  */
+	  if (ret >= 2 &&
+	      ((input_buffer[0] == 037 && input_buffer[1] == 0235) ||
+	       (input_buffer[0] == 037 && input_buffer[1] == 0213) ||
+	       (input_buffer[0] == 'B' && input_buffer[1] == 'Z')))
+	    {
+	      close (input_file);
+	      goto skip_file_compress;
+	    }
+	  /* Reposition the file.  */
+	  if (lseek (input_file, 0, SEEK_SET) < 0)
+	    {
+	      FATAL_ERROR ((0, errno,
+			    _("Cannot seek to beginning of input file")));
+	    }
+
+	  /* Flush the listing file, so we don't double-write its data.  */
+	  fflush (stdlis);
+
+	  /* Fork the compression process.   */
+	  child_process_no = fork ();
+	  if (child_process_no < 0)
+	    {
+	      /* An error was found attempting to fork.  */
+	      ERROR ((0, errno, _("Error in fork() attempting to compress "
+				  "file %s - written uncompressed"), p));
+	      /* Continue without compression.  */
+	      close (input_file);
+	      goto skip_file_compress;
+	    }
+	  else if (child_process_no == 0)
+	    {
+	      /* Child process.  Close standard input.  Dup the input file as
+		 standard input.  */
+	      xdup2 (input_file, STDIN,
+		     _("input file to stdin for file compression"));
+	      /* Close standard output.  Dup the temporary file as standard
+		 output.  */
+	      xdup2 (compress_work_file, STDOUT,
+		     _("file compression temporary file to stdout"));
+	      /* Execute the compression program.  */
+	      execlp (use_compress_program_option, use_compress_program_option,
+		      (char *) 0);
+	      /* Should not return.  */
+	      FATAL_ERROR ((0, errno, _("Cannot exec %s"),
+			    use_compress_program_option));
+	    }
+	  else
+	    {
+	      /* Parent process.  Close the input file descriptor, since we do
+		 not need it.  */
+	      close (input_file);
+	      /* Wait for child process to finish.  Loop waiting for the right
+		 child to die, or for no more kids.  */
+	      while ((child = wait (&wait_status), child != child_pid)
+		     && child != -1)
+		continue;
+
+	      if (child != -1)
+		if (WIFSIGNALED (wait_status)
+# if 0
+		    && !WIFSTOPPED (wait_status)
+# endif
+		    )
+		  {
+		    /* SIGPIPE is OK, everything else is a problem.  */
+
+		    if (WTERMSIG (wait_status) != SIGPIPE) {
+		      /* FIXME: two arguments and one format spec?  */
+		      ERROR ((0, 0, _("\
+Child died with signal %d%s - written uncompressed"),
+			      WTERMSIG (wait_status),
+			      (WCOREDUMP (wait_status)
+			       ? _(" (core dumped)")
+			       : "")));
+		      /* Continue without compression.  */
+		      goto skip_file_compress;
+		    }
+		  }
+		else
+		  {
+		    /* Child voluntarily terminated -- but why?  /bin/sh
+		       returns SIGPIPE + 128 if its child, then do nothing.  */
+
+		    if (WEXITSTATUS (wait_status) != (SIGPIPE + 128)
+			&& WEXITSTATUS (wait_status))
+		      ERROR ((0, 0, _("\
+Child returned status %d - written uncompressed"),
+			      WEXITSTATUS (wait_status)));
+		    /* Continue without compression.  */
+		    goto skip_file_compress;
+		  }
+	    }
+
+	  /* Start building the header.  */
+	  header = start_header (p, &current.stat);
+	  if (header == NULL)
+	    {
+	      /* FIXME: Do we always have a prior diagnostic?  */
+	      exit_status = TAREXIT_FAILURE;
+	      return;
+	    }
+	  header_moved = 1;
+
+	  /* We store the "real" file size so we can show that in case someone
+	     wants to list the archive, i.e., tar tvf <file>.  It might be
+	     kind of disconcerting if the shrunken file size was the one that
+	     showed up.  */
+
+	  /* FIXME: But, would it allow proper skipping of entries?  */
+
+	  to_oct ((long) current.stat.st_size, 1 + 12,
+		  header->oldgnu_header.realsize);
+
+	  /* Determine the new typeflage here, but don't install it until
+	     later, since certain errors may cause the handling of this file
+	     as a compressed file to be aborted.  But we are about to alter
+	     the stat information, so this determination must be done here
+	     rather than when we know we want to alter the typeflag.  Have to
+	     mark sparse files specially.  */
+	  new_typeflag =
+	    (sparse_option
+	     && (current.stat.st_size > ST_NBLOCKS (current.stat) * BLOCKSIZE
+		 ? OLDGNU_SPARSE_COMPRESSED : OLDGNU_REGULAR_COMPRESSED));
+
+	  /* This will be the new "size" of the file, i.e., the size of the
+	     file minus the blocks of holes that we're skipping over.  */
+
+	  if (fstat (compress_work_file, &statbuf) < 0)
+	    {
+	      ERROR ((0, errno, _("\
+Cannot fstat() work file during compression of %s - written uncompressed"),
+		      p));
+	      goto skip_file_compress;
+	    }
+
+	  /* Check to see that the compressed file is shorter than the
+	     original file.  */
+	  if ((current.stat.st_size + BLOCKSIZE - 1) / BLOCKSIZE <=
+	      (statbuf.st_size + BLOCKSIZE - 1) / BLOCKSIZE)
+	    goto skip_file_compress;
+
+	  /* At this point we have committed to write the file compressed.  */
+	  current.stat.st_size = statbuf.st_size;
+	  to_oct ((long) statbuf.st_size, 1 + 12, header->header.size);
+	  /* Adjust the typeflag.  */
+	  header->header.typeflag = new_typeflag;
+
+	  /* Having now set up the compressed file, we continue processing in
+	     the regular manner.  We skip over the test for sparse files
+	     because there is little benefit in removing zero blocks before
+	     compressing a file (gzip compresses zeros about 1000-to-1), and
+	     it would introduce the additional case of "compressed sparse
+	     file".  However, we still have to mark sparse and contiguous
+	     files specially in order to ensure that they are restored
+	     correctly.
+
+	     This variable may need to be set here to simulate the sparse == 0
+	     case.  The handling of this variable may need fixing.  */
+	  upperbound = SPARSES_IN_OLDGNU_HEADER - 1;
+	  goto skip_sparse_test;
+	}
+
+      /* Processing continues here if the file compression fails.  */
+ skip_file_compress:
+
+#endif /* ENABLE_DALE_CODE */
 
       if (sparse_option)
 	{
@@ -984,6 +1223,12 @@ Removing leading `/' from absolute links")));
       else
 	upperbound = SPARSES_IN_OLDGNU_HEADER - 1;
 
+#if ENABLE_DALE_CODE
+      /* Processing resumes here after a file has been successfully
+	 compressed.  */
+ skip_sparse_test:
+#endif
+
       sizeleft = current.stat.st_size;
 
       /* Don't bother opening empty, world readable files.  Also do not open
@@ -992,6 +1237,25 @@ Removing leading `/' from absolute links")));
       if (dev_null_output
 	  || (sizeleft == 0 && 0444 == (0444 & current.stat.st_mode)))
 	handle = -1;
+#if ENABLE_DALE_CODE
+      /* Test if this is a file to be compressed.  */
+      else if (header_moved
+	       && (header->header.typeflag == OLDGNU_REGULAR_COMPRESSED
+		   || header->header.typeflag == OLDGNU_SPARSE_COMPRESSED
+		   || header->header.typeflag == OLDGNU_CONTIG_COMPRESSED))
+	{
+	  /* If so, dup() the descriptor of the temporary file.  (The dup() is
+	     necessary, since the new descriptor will be closed later.)  */
+	  handle = dup (compress_work_file);
+	  if (handle < 0)
+	    FATAL_ERROR ((0, errno, _("\
+Cannot properly duplicate file compression work file")));
+	  /* Now position the file to the beginning.  */
+	  if (lseek(handle, 0, SEEK_SET) < 0)
+	      FATAL_ERROR ((0, errno, _("\
+Cannot seek to beginning of compression work file")));
+	}
+#endif
       else
 	{
 	  handle = open (p, O_RDONLY | O_BINARY);
@@ -1022,7 +1286,17 @@ Removing leading `/' from absolute links")));
       /* Mark contiguous files, if we support them.  */
 
       if (archive_format != V7_FORMAT && S_ISCTG (current.stat.st_mode))
+	{
+# if ENABLE_DALE_CODE
+	  /* If we are going to compress the file, use
+	     OLDGNU_CONTIG_COMPRESSED, otherwise use CONTTYPE.  */
+	  header->header.typeflag =
+	    (header->header.typeflag == OLDGNU_REGULAR_COMPRESSED
+	     ? GNUTYPE_FILE_COMPARESSED_CONTIG : CONTTYPE);
+# else
 	header->header.typeflag = CONTTYPE;
+# endif
+	}
 #endif
       is_extended = header->oldgnu_header.isextended != 0;
       save_typeflag = header->header.typeflag;
@@ -1119,12 +1393,16 @@ Removing leading `/' from absolute links")));
 	    if (size_read < 0)
 	      {
 		if (!complain)
-		  ERROR ((0, errno, _("\
+		  {
+		    WARN ((0, errno, _("\
 Read error at byte %lu, reading %lu bytes, in file %s"),
-			  (unsigned long) (current.stat.st_size - sizeleft),
-			  (unsigned long) bufsize,
-			  p));
-		complain = true;
+			   (unsigned long) (current.stat.st_size - sizeleft),
+			   (unsigned long) bufsize,
+			   p));
+		    if (!ignore_failed_read_option)
+		      exit_status = TAREXIT_FAILURE;
+		    complain = true;
+		  }
 		size_read = 0;
 	      }
 	    sizeleft -= size_read;
@@ -1143,8 +1421,12 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 	  }
 
       if (padding_count && !complain)
-	ERROR ((0, 0, _("File %s shrunk by %ld bytes, padding with zeros"),
-		p, padding_count));
+	{
+	  WARN ((0, 0, _("File %s shrunk by %ld bytes, padding with zeros"),
+		 p, padding_count));
+	  if (!ignore_failed_read_option)
+	    exit_status = TAREXIT_FAILURE;
+	}
 
       if (multi_volume_option)
 	assign_string (&save_name, NULL);
@@ -1161,7 +1443,11 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 	  /* FIXME: If an error occurred (for example, if a file shrunk), it
 	     might be removed nevertheless.  Is that really OK?  */
 	  if (unlink (p) == -1)
-	    ERROR ((0, errno, _("Cannot remove %s"), p));
+	    {
+	      WARN ((0, errno, _("Cannot remove %s"), p));
+	      if (!ignore_failed_read_option)
+		exit_status = TAREXIT_FAILURE;
+	    }
 	}
 
       return;
@@ -1198,10 +1484,12 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
       header->header.typeflag = SYMTYPE;
       finish_header (header);
       if (remove_files_option)
-	{
-	  if (unlink (p) == -1)
-	    ERROR ((0, errno, _("Cannot remove %s"), p));
-	}
+	if (unlink (p) == -1)
+	  {
+	    WARN ((0, errno, _("Cannot remove %s"), p));
+	    if (!ignore_failed_read_option)
+	      exit_status = TAREXIT_FAILURE;
+	  }
 
       return;
     }
@@ -1361,7 +1649,9 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
       directory = opendir (p);
       if (!directory)
 	{
-	  ERROR ((0, errno, _("Cannot open directory %s"), p));
+	  WARN ((0, errno, _("Cannot open directory %s"), p));
+	  if (!ignore_failed_read_option)
+	    exit_status = TAREXIT_FAILURE;
 	  return;
 	}
 
@@ -1408,7 +1698,9 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 
   if (archive_format == V7_FORMAT)
     {
-      ERROR ((0, 0, _("%s: Unknown file type; file ignored"), p));
+      WARN ((0, 0, _("%s: Unknown file type; file ignored"), p));
+      if (!ignore_failed_read_option)
+	exit_status = TAREXIT_FAILURE;
       return;
     }
 
@@ -1431,7 +1723,9 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 #endif
   else
     {
-      ERROR ((0, 0, _("%s: Unknown file type; file ignored"), p));
+      WARN ((0, 0, _("%s: Unknown file type; file ignored"), p));
+      if (!ignore_failed_read_option)
+	exit_status = TAREXIT_FAILURE;
       return;
     }
 
@@ -1457,8 +1751,10 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 
   finish_header (header);
   if (remove_files_option)
-    {
-      if (unlink (p) == -1)
-	ERROR ((0, errno, _("Cannot remove %s"), p));
-    }
+    if (unlink (p) == -1)
+      {
+	WARN ((0, errno, _("Cannot remove %s"), p));
+	if (!ignore_failed_read_option)
+	  exit_status = TAREXIT_FAILURE;
+      }
 }

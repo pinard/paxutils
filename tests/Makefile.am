@@ -1,5 +1,5 @@
-# Makefile for tar regression tests.
-# Copyright © 1996, 1997, 1998 Free Software Foundation, Inc.
+# Makefile for Free paxutils regression tests.
+# Copyright © 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
 # François Pinard <pinard@iro.umontreal.ca>, 1988.
 
 # This program is free software; you can redistribute it and/or modify
@@ -44,4 +44,4 @@ $(srcdir)/testsuite: atgeneral.m4 $(SUITE)
 	chmod +x $@
 
 clean-local:
-	rm -f FAIL-*.sh
+	rm -f debug-*.sh

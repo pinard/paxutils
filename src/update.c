@@ -1,5 +1,5 @@
 /* Update a tar archive.
-   Copyright (C) 1988, 92, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -106,8 +106,11 @@ update_archive (void)
   bool found_end = false;
 
   name_gather ();
+#if 0
+  /* FIXME: This was never implemented.  Should it be?  */
   if (subcommand_option == UPDATE_SUBCOMMAND)
     name_expand ();
+#endif
   open_archive (ACCESS_UPDATE);
 
   while (!found_end)
@@ -124,7 +127,7 @@ update_archive (void)
 	    struct name *name;
 
 	    if (subcommand_option == UPDATE_SUBCOMMAND
-		&& (name = name_scan (current.name), name))
+		&& (name = find_matching_name (current.name, false), name))
 	      {
 		struct stat stat_info;
 
@@ -184,7 +187,7 @@ update_archive (void)
   {
     char *path;
 
-    while (path = name_from_list (), path)
+    while (path = next_unprocessed_name (), path)
       {
 	if (interactive_option && !confirm (_("add %s?"), path))
 	  continue;
@@ -197,5 +200,5 @@ update_archive (void)
 
   write_eot ();
   close_archive ();
-  names_notfound ();
+  report_unprocessed_names ();
 }

@@ -1,5 +1,5 @@
 /* util.c - Several utility routines for cpio.
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -529,7 +529,8 @@ copy_files_disk_to_tape (int in_des, int out_des, long num_bytes,
 		     _("File %s shrunk by %ld bytes, padding with zeros"),
 		     filename, num_bytes);
 	    else
-	      error (0, 0, _("Read error at byte %ld in file %s, padding with zeros"),
+	      error (0, 0,
+		     _("Read error at byte %ld in file %s, padding with zeros"),
 		     original_num_bytes - num_bytes, filename);
 	    write_nuls_to_file (num_bytes, out_des);
 	    break;
@@ -576,7 +577,8 @@ copy_files_disk_to_disk (int in_des, int out_des, long num_bytes,
 		     _("File %s shrunk by %ld bytes, padding with zeros"),
 		     filename, num_bytes);
 	    else
-	      error (0, 0, _("Read error at byte %ld in file %s, padding with zeros"),
+	      error (0, 0,
+		     _("Read error at byte %ld in file %s, padding with zeros"),
 		     original_num_bytes - num_bytes, filename);
 	    write_nuls_to_file (num_bytes, out_des);
 	    break;
@@ -902,10 +904,10 @@ get_next_reel (int tape_des)
   /* Open files for interactive communication.  */
   tty_in = fopen (CONSOLE, "r");
   if (tty_in == NULL)
-    error (2, errno, CONSOLE);
+    error (2, errno, "%s", CONSOLE);
   tty_out = fopen (CONSOLE, "w");
   if (tty_out == NULL)
-    error (2, errno, CONSOLE);
+    error (2, errno, "%s", CONSOLE);
 
   old_tape_des = tape_des;
   tape_offline (tape_des);
@@ -1238,8 +1240,172 @@ write_nuls_to_file (num_bytes, out_des)
 	error (1, errno, "error writing NUL's");
     }
 }
-
 
+#if DOSWIN
+
+# include <errno.h>
+# include <limits.h>
+# include <sys/stat.h>
+
+/*-------------------------------------------------.
+| A dummy version of `readlink' which just fails.  |
+`-------------------------------------------------*/
+
+/* FIXME: it might be nice to support `symlinks' to executable programs.  */
+
+int
+readlink (const char *path, char *linkname, int name_buf_size)
+{
+  errno = ENOSYS;
+  return -1;
+}
+
+/*--------------------------------------------------------------------------.
+| If the original file name includes characters illegal for MS-DOS and      |
+| MS-Windows, massage it to make it suitable and return a pointer to static |
+| storage with a new name.  If the original name is legit, return it        |
+| instead.  Return NULL if the rename failed (shouldn't happen).            |
+`--------------------------------------------------------------------------*/
+
+/* The file name changes are: (1) any name that is reserved by a DOS device
+   driver (such as `prn.txt' or `aux.c') is prepended with a `_'; and (2)
+   illegal characters are replaced with `_' or `-' (well, almost; look at the
+   code below for details).  */
+
+char *
+maybe_rename_file (char *original_name)
+{
+  static char dosified_name[PATH_MAX];
+  static char illegal_chars_dos[] = ".+, ;=[]|<>\\\":?*";
+  static char *illegal_chars_w95 = &illegal_chars_dos[8];
+  int idx, dot_idx;
+  char *s = original_name, *d = dosified_name;
+  char *illegal_aliens = illegal_chars_dos;
+  size_t len = sizeof (illegal_chars_dos) - 1;
+  int windows9x = _use_lfn (original_name);
+
+  /* Support for Windows 9X VFAT systems, when available.  */
+  if (windows9x)
+    {
+      illegal_aliens = illegal_chars_w95;
+      len -= (illegal_chars_w95 - illegal_chars_dos);
+    }
+
+  /* Get past the drive letter, if any. */
+  if (s[0] >= 'A' && s[0] <= 'z' && s[1] == ':')
+    {
+      *d++ = *s++;
+      *d++ = *s++;
+    }
+
+  for (idx = 0, dot_idx = -1; *s; s++, d++)
+    {
+      if (memchr (illegal_aliens, *s, len))
+	{
+	  /* Dots are special on DOS: it doesn't allow them as the leading
+	     character, and a file name cannot have more than a single dot.
+	     We leave the first non-leading dot alone, unless it comes too
+	     close to the beginning of the name: we want sh.lex.c to become
+	     sh_lex.c, not sh.lex-c.  */
+	  if (*s == '.')
+	    {
+	      if (idx == 0
+		  && (s[1] == '/' || s[1] == '\0'
+		      || (s[1] == '.' && (s[2] == '/' || s[2] == '\0'))))
+		{
+		  /* Copy "./" and "../" verbatim.  */
+		  *d++ = *s++;
+		  if (*s == '.')
+		    *d++ = *s++;
+		  *d = *s;
+		}
+	      else if (idx == 0)
+		*d = '_';
+	      else if (dot_idx >= 0)
+		{
+		  if (dot_idx < 5) /* 5 is merely a heuristic ad-hoc'ery */
+		    {
+		      d[dot_idx - idx] = '_'; /* replace previous dot */
+		      *d = '.';
+		    }
+		  else
+		    *d = '-';
+		}
+	      else
+		*d = '.';
+
+	      if (*s == '.')
+		dot_idx = idx;
+	    }
+	  else if (*s == '+' && s[1] == '+')
+	    {
+	      if (idx - 2 == dot_idx) /* .c++, .h++ etc. */
+		{
+		  *d++ = 'x';
+		  *d   = 'x';
+		}
+	      else
+		{
+		  /* libg++ etc.  */
+		  memcpy (d, "plus", 4);
+		  d += 3;
+		}
+	      s++;
+	      idx++;
+	    }
+	  else
+	    *d = '_';
+	}
+      else
+	*d = *s;
+      if (*s == '/')
+	{
+	  idx = 0;
+	  dot_idx = -1;
+	}
+      else
+	idx++;
+    }
+
+  *d = '\0';
+
+  /* We could have a file in an archive whose name is reserved
+     on MS-DOS by a device driver.  Trying to extract such a
+     file would fail at best and wedge us at worst.  We need to
+     rename such files.  */
+
+  if (idx > 0)
+    {
+      struct stat st_buf;
+      char *base = d - idx;
+      int i = 0;
+
+      /* The list of character devices is not constant: it depends on
+	 what device drivers did they install in their CONFIG.SYS.
+	 `stat' will tell us if the basename of the file name is a
+	 characer device.  */
+      while (stat (base, &st_buf) == 0 && S_ISCHR (st_buf.st_mode))
+	{
+	  size_t blen = strlen (base);
+
+	  /* I don't believe any DOS character device names begin with a
+	     `_'.  But in case they invent such a device, let us try twice.  */
+	  if (++i > 2)
+	    return (char *)0;
+
+	  /* Prepend a '_'.  */
+	  memmove (base + 1, base, blen + 1);
+	  base[0] = '_';
+	}
+    }
+
+  if (strcmp (original_name, dosified_name))
+    return dosified_name;
+  return original_name;
+}
+
+#endif /* DOSWIN */
+
 /*-------------------------------------------------------------------------.
 | Returns non-zero if p is `.' or `..'.  This could be a macro for speed.  |
 `-------------------------------------------------------------------------*/
@@ -1254,3 +1420,4 @@ is_dot_or_dotdot (char *p)
 	  || (p[0] == '.' && (p[1] == '\0'
 			      || (p[1] == '.' && p[2] == '\0'))));
 }
+

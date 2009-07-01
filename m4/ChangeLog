@@ -1,7 +1,8 @@
 1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
 
 	* gettext.m4: Use our own included gettext by default.
-
+	Reported by Jörg Schilling.
+
 1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Include atconfig.m4, delete echo.m4.

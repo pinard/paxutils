@@ -1,5 +1,5 @@
 /* Buffer management for tar.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-25.
 
    This program is free software; you can redistribute it and/or modify it
@@ -24,7 +24,12 @@
 # endif
 #endif
 
-#include <signal.h>
+#if HAVE_SIGNAL_H
+# include <signal.h>
+#else
+# include <sys/signal.h>
+#endif
+
 #include <time.h>
 time_t time ();
 
@@ -308,38 +313,6 @@ size_t
 available_space_after (union block *pointer)
 {
   return record_end->buffer - pointer->buffer;
-}
-
-/*------------------------------------------------------------------.
-| Close file having descriptor FD, and abort if close unsucessful.  |
-`------------------------------------------------------------------*/
-
-static void
-xclose (int fd)
-{
-  if (close (fd) < 0)
-    FATAL_ERROR ((0, errno, _("Cannot close file #%d"), fd));
-}
-
-/*-----------------------------------------------------------------------.
-| Duplicate file descriptor FROM into becoming INTO, or else, issue	 |
-| MESSAGE.  INTO is closed first and has to be the next available slot.	 |
-`-----------------------------------------------------------------------*/
-
-static void
-xdup2 (int from, int into, const char *message)
-{
-  if (from != into)
-    {
-      int status = close (into);
-
-      if (status < 0 && errno != EBADF)
-	FATAL_ERROR ((0, errno, _("Cannot close descriptor %d"), into));
-      status = dup (from);
-      if (status != into)
-	FATAL_ERROR ((0, errno, _("Cannot properly duplicate %s"), message));
-      xclose (from);
-    }
 }
 
 /*-----------------------------------------------------------------------.
@@ -944,7 +917,13 @@ open_archive (enum access_mode wanted_access)
   checkpoint = 0;
   checkpoint_dots = false;
 
-  if (use_compress_program_option)
+  if (
+#if ENABLE_DALE_CODE
+      compress_whole_archive
+#else
+      use_compress_program_option
+#endif
+      )
     {
       if (multi_volume_option)
 	FATAL_ERROR ((0, 0, _("Cannot use multi-volume compressed archives")));
@@ -1115,6 +1094,7 @@ open_archive (enum access_mode wanted_access)
 	{
 	  memset ((void *) record_start, 0, BLOCKSIZE);
 	  if (multi_volume_option)
+	    /* FIXME: Any overflowing danger?  */
 	    sprintf (record_start->header.name, "%s Volume 1",
 		     volume_label_option);
 	  else
@@ -1223,6 +1203,7 @@ flush_write (void)
   if (volume_label_option)
     {
       memset ((void *) record_start, 0, BLOCKSIZE);
+      /* FIXME: Any overflowing danger?  */
       sprintf (record_start->header.name, "%s Volume %d",
 	       volume_label_option, volno);
       set_header_mtime (record_start, time (0));
@@ -1913,10 +1894,8 @@ new_volume (enum access_mode wanted_access)
   if (verify_option)
     verify_volume ();
 
-#if DOSWIN
   /* Closing stdout or stdin is a bad idea.  */
   if (archive != STDIN && archive != STDOUT)
-#endif
     if (status = rmtclose (archive), status < 0)
       WARN ((0, errno, _("WARNING: Cannot close %s (%d, %d)"),
 	     *archive_name_cursor, archive, status));
@@ -1951,11 +1930,13 @@ tryagain:
       else
 	while (true)
 	  {
+	    /* FIXME: Any overflowing danger?  */
 	    char message[80];
 	    char input_buffer[80];
 
-	    sprintf (message,
-		     _("\007Prepare volume #%d for %s and hit return: "),
+	    *message = '\007';
+	    sprintf (message + 1,
+		     _("Prepare volume #%d for %s and hit return: "),
 		     global_volno, *archive_name_cursor);
 
 	    if (!get_reply (message, input_buffer, sizeof (input_buffer)))
@@ -2017,12 +1998,13 @@ tryagain:
 		break;
 
 	      case '!':
-#if DOSWIN
 		{
 		  int save_stdout = -1, save_stdin = -1;
 
-		  /* Exec'ing a child shell with standard steams
-		     not connected to the terminal is a VERY bad idea.  */
+		  /* Creating a child shell with standard streams not
+		     connected to the terminal is a VERY bad idea.  So, save
+		     and restore standard streams around the fork.  */
+
 		  if (!isatty (STDIN))
 		    {
 		      save_stdin = dup (STDIN);
@@ -2044,41 +2026,8 @@ tryagain:
 		  if (save_stdout >= 0)
 		    dup2 (save_stdout, STDOUT);
 		}
-
-#else /* not DOSWIN */
-
-		switch (fork ())
-		  {
-		  case -1:
-		    WARN ((0, errno, _("Cannot fork process")));
-		    break;
-
-		  case 0:
-		    {
-		      const char *shell = getenv ("SHELL");
-
-		      if (shell == NULL)
-			shell = "/bin/sh";
-		      execlp (shell, "-sh", "-i", 0);
-		      FATAL_ERROR ((0, errno, _("Cannot exec a shell %s"),
-				    shell));
-		    }
-
-		  default:
-		    {
-		      WAIT_T wait_status;
-
-		      wait (&wait_status);
-		    }
-		    break;
-		  }
-
-		/* FIXME: I'm not sure if that's all that has to be done
-		   here.  (jk)  */
-
-#endif /* not DOSWIN */
-
 		break;
+
 	      }
 	  }
     }
@@ -2086,6 +2035,31 @@ tryagain:
   if (verify_option)
     archive = rmtopen (*archive_name_cursor, O_RDWR | O_CREAT, (mode_t) 0666,
 		       rsh_command_option);
+  else if (strcmp (*archive_name_cursor, "-") == 0)
+
+    /* If the user does not change the archive name with the `n' response,
+       `tar' continues the next volume on a file called `-', because
+       `new_volume' calls `rmtopen' or `rmtcreat' directly, and those
+       functions don't know about `-' being special.  So, avoid the call to
+       `rmtopen' and `rmtcreat' when `archive_name_cursor' points to `-'.  */
+
+    switch (wanted_access)
+      {
+      case ACCESS_READ:
+	archive = STDIN;
+	break;
+
+      case ACCESS_WRITE:
+	archive = STDOUT;
+	stdlis = stderr;
+	break;
+
+      case ACCESS_UPDATE:
+	archive = STDIN;
+	stdlis = stderr;
+	write_archive_to_stdout = true;
+	break;
+      }
   else
     switch (wanted_access)
       {

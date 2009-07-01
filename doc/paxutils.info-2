@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4g.
+   This file documents `paxutils' 2.4h.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -721,10 +721,10 @@ Copy-pass mode
 ==============
 
    In copy-pass mode, `cpio' copies files from one directory tree to
-another, combining the copy-out and copy-in steps without actually using
-an archive.  It reads the list of files to copy from the standard input;
-the directory into which it will copy them is given as a non-option
-argument.  *Note cpio Options::.
+another, combining the copy-out and copy-in steps without actually
+creating an archive.  It reads the list of files to copy from the
+standard input; the directory into which it will copy them is given as
+a non-option argument.  *Note cpio Options::.
 
      cpio {-p|--pass-through} [-0adlmuvLV] [-R [user][:.][group]]
      [--null] [--reset-access-time] [--make-directories] [--link]
@@ -750,7 +750,9 @@ Options for `cpio'
 `--reset-access-time'
 `-a'
      Reset the access times of files after reading them, so that it
-     does not look like they have just been read.
+     does not look like they have just been read.  (This option has no
+     effect on plain DOS, since DOS filesystem only stores a single
+     time stamp per file.  It does work on Windows 9X.)
 
 `--append'
 `-A'
@@ -802,6 +804,8 @@ Options for `cpio'
      username and an `@' to access the remote tape drive as that user,
      if you have permission to do so (typically an entry in that user's
      `~/.rhosts' file).
+
+     Remote archives are not supported on MS-DOS and MS-Windows.
 
 `--force-local'
      With `-F', `-I', or `-O', take the archive file name to be a local
@@ -856,6 +860,8 @@ Options for `cpio'
      if you have permission to do so (typically an entry in that user's
      `~/.rhosts' file).
 
+     Remote archives are not supported on MS-DOS and MS-Windows.
+
 `-k'
      Ignored; for compatibility with other versions of `cpio'.
 
@@ -906,6 +912,8 @@ Options for `cpio'
      if you have permission to do so (typically an entry in that user's
      `~/.rhosts' file).
 
+     Remote archives are not supported on MS-DOS and MS-Windows.
+
 `--only-verify-crc'
      Verify the CRC's of each file in the archive, when reading a CRC
      format archive. Don't actually extract the files.
@@ -920,15 +928,26 @@ Options for `cpio'
 
 `--rename'
 `-r'
-     Interactively rename files.
+     Interactively rename files.  For each file in the archive, `cpio'
+     will print its name and wait for the user to type a new name.  An
+     empty name (produced by pressing `RET') means skip the file.
+
+`--rename-batch-file=RENAME-FILE'
+     Non-interactively rename files.  For each file in the archive,
+     `cpio' will read a replacement name from the named RENAME-FILE.
+     In that file, file names should be separated by newlines.  An
+     empty line causes `cpio' to skip the file.
 
 `--owner [USER][:.][GROUP]'
 `-R [USER][:.][GROUP]'
      Set the ownership of all files created to the specified user
-     and/or group in copy-out and copy-pass modes.  Either the user,
-     the group, or both, must be present.  If the group is omitted but
-     the `:' or `.'  separator is given, use the given user's login
-     group.  Only the super-user can change files' ownership.
+     and/or group in copy-in and copy-pass modes.  Either the user, the
+     group, or both, must be present.  If the group is omitted but the
+     `:' or `.'  separator is given, use the given user's login group.
+     Only the super-user can change files' ownership.
+
+     (On MS-DOS and MS-Windows, any user can use this option, since
+     changing ownership is a no-op on these systems.)
 
 `--swap-bytes'
 `-s'
@@ -966,7 +985,7 @@ Options for `cpio'
      Print a `.' for each file processed.
 
 `--version'
-     Print the cpio program version number and exit.
+     Print the `cpio' program version number and exit.
 
 
 File: paxutils.info,  Node: pax invocation,  Next: tar invocation,  Prev: cpio invocation,  Up: Top
@@ -1177,36 +1196,4 @@ does not require an argument and is another way to write `--list'
 form, short form, and old style.  These styles are discussed below.
 Both the options and the subcommands can be written in any of these
 three styles.
-
-
-File: paxutils.info,  Node: Styles,  Next: Documentation and help,  Prev: Using options,  Up: tar invocation
-
-The three option styles
-=======================
-
-   There are three styles for writing subcommands and options to the
-command line invoking `tar'.  The different styles were developed at
-different times during the history of `tar'.  These styles will be
-presented below, from the most recent to the oldest.
-
-   Some options must take an argument.  (For example,
-`--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') takes the name of an archive
-file as an argument.  If you do not supply an archive file name, `tar'
-will use a default which may vary from site to site; thus, we recommend
-that you always supply a specific archive file name in your portable
-scripts.)  Where you *place* the arguments generally depends on which
-style of options you choose.  We will detail specific information
-relevant to each option style in the sections on the different option
-styles, below.  The differences are subtle, yet can often be very
-important; incorrect option placement can cause you to overwrite a
-number of important files.  We urge you to note these differences, and
-only use the option style(s) which make(s) the most sense to you until
-you feel comfortable with the others.
-
-* Menu:
-
-* Long options::                Long option style
-* Short options::               Short option style
-* Old style::                   Old option style
-* Mixing::                      Mixing option styles
 

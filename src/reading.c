@@ -1,5 +1,5 @@
 /* Support routines for reading a tar archive.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-26.
 
    This program is free software; you can redistribute it and/or modify it
@@ -375,7 +375,7 @@ read_and (void (*do_something) ())
   name_gather ();
   open_archive (ACCESS_READ);
 
-  while (true)
+  while (!quick_option || name_list_unmatched_count)
     {
       previous_status = status;
       status = read_header (&current);
@@ -388,7 +388,7 @@ read_and (void (*do_something) ())
 	  /* Valid header.  We should decode mode first.  Ensure incoming
 	     names are null terminated.  */
 
-	  if (!name_match (current.name)
+	  if ((name_list_head && !find_matching_name (current.name, true))
 	      || (newer_mtime_option
 		  /* FIXME: This is kludgey to get mtime now, and again
 		     later.  Is that fully normal to ignore ctime, here?  */
@@ -482,5 +482,5 @@ read_and (void (*do_something) ())
 
   apply_delayed_set_stat ();
   close_archive ();
-  names_notfound ();		/* print names not found */
+  report_unprocessed_names ();		/* print names not found */
 }

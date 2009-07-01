@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4g.
+   This file documents `paxutils' 2.4h.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -28,6 +28,256 @@ permission notice identical to this one.
 manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
 translation approved by the Foundation.
+
+
+File: paxutils.info,  Node: blocking-factor,  Next: record-size,  Prev: Blocks and records,  Up: Blocking
+
+Setting the blocking factor
+---------------------------
+
+   In a standard `tar' file (no options), the block size is 512 bytes
+and the record size is 10240 bytes, for a blocking factor of 20.  In
+fact, the default blocking factor is set when `tar' is compiled, and is
+typically 20.  The output of `tar --help', near the end, shows the
+default blocking factor which was compiled in the `tar' version you are
+using.  Archives with blocking factors larger than 20 cannot be read by
+very old versions of `tar', or by some newer versions of `tar' running
+on old machines with small address spaces.  With this `tar', the
+blocking factor of an archive is limited only by the maximum record
+size of the device containing the archive, or by the amount of available
+virtual memory.
+
+   What the `--blocking-factor=BLOCKS' (`-b BLOCKS') option does is to
+set the blocking factor, that is, to change the record size while
+leaving the block size at 512 bytes.  A blocking factor of 20 was fine
+for ancient 800 or 1600 bpi reel-to-reel tape drives; most tape drives
+these days prefer much bigger records in order to stream and not waste
+tape.  When writing tapes, some tend to use a factor of the order of
+2048, say, giving a record size of around one megabyte.  This is
+acceptable nowadays, as the tape technology is now much more dependable
+that it once was, and errors are much less likely to occur.
+
+   When reading an archive, `tar' can usually figure out the record
+size itself.  To get it to do this, you can use
+`--blocking-factor=BLOCKS' (`-b BLOCKS') to specify a blocking factor
+larger than real one, and `tar' will diagnose the observed record size
+as shorter than expected.  In this indirect way, you can use `tar' to
+learn about the actual record size of the first record on a tape!  The
+diagnostic is not produced when the observed record size matches the
+expected size.
+
+   Further complicating the problem is that some tape drives ignore the
+blocking entirely.  For these, `tar' cannot easily determine the real
+block size.  In such cases, specifying a larger record size in `tar'
+can still improve performance a tiny bit, yet most of the improvement
+has already been provided by the tape system itself.
+
+   If you use a non-default blocking factor when you create an archive,
+you must specify the same blocking factor when you modify that archive.
+Some archive devices will also require you to specify the blocking
+factor when reading that archive; however, this is not typically the
+case.  Usually, you can use `--list' (`-t') without specifying a
+blocking factor--`tar' reports a non-default record size and then lists
+the archive members as it would normally.  To extract files from an
+archive with a non-standard blocking factor (particularly if you're not
+sure what the blocking factor is), you can usually use the
+`--read-full-records' (`-B') option while specifying a blocking factor
+larger then the blocking factor of the archive (for example, `tar
+--extract --read-full-records --blocking-factor=300').  *Note list::,
+for more information on the `--list' (`-t') subcommand.  *Note
+Reading::, for a more detailed explanation of that option.
+
+   If the archive is in a disk file or a pipe, some might sometimes
+want to specify a smaller blocking factor, since a large one will
+result in more `NUL' bytes at the end of the archive, but it might not
+be worth it.  Beware that for the `tar' blocking to be effective, `tar'
+should directly write to the device.  Blocking is effectively defeated
+or overridden when a pipe interposes another step between `tar' and the
+device (like a call to `dd', for instance).
+
+
+File: paxutils.info,  Node: record-size,  Next: Media types,  Prev: blocking-factor,  Up: Blocking
+
+Setting a record size
+---------------------
+
+   The `--record-size=SIZE' option instructs `tar' to use SIZE bytes
+per record when accessing the archive.  The value of SIZE should be
+evenly divisible by 512.  This option is an alternative to using
+`--blocking-factor=BLOCKS' (`-b BLOCKS'), except that the unit for
+`--record-size=SIZE' is a single byte, while the unit for
+`--blocking-factor=BLOCKS' (`-b BLOCKS') is a whole `tar' block.  *Note
+blocking-factor::.
+
+
+File: paxutils.info,  Node: Media types,  Next: Reblocking,  Prev: record-size,  Up: Blocking
+
+Per-Media blocking considerations
+---------------------------------
+
+   When handling various tapes or cartridges, you have to take care of
+selecting a proper blocking, that is, the number of disk blocks you put
+together as a single record on the tape, without intervening tape gaps.
+Strangely, on more than a few systems, the mere fact of not using an
+adequate blocking factor yields rather unexpected or cryptic
+diagnostics, like:
+
+     Cannot write to /dev/dlt: Invalid argument
+
+So, one might have to pay attention to the requirements of device
+drivers.  To make things a bit confusing, it also happens that the
+`tar' bundled by the system is aware of record size idiosyncrasies,
+while `tar' requires an explicit specification for the record size,
+which it cannot guess.  This yields some people to believe that `tar'
+is misbehaving, because by comparison, `the bundled `tar' works OK'.
+Merely using something like `-b 256', say, might resolve the problem.
+
+   `tar' uses a blocking factor of 20 by default for historical
+reasons, and it does not really matter when reading or writing to disk.
+Current tape technology would easily accomodate higher blockings.  Sun
+recommends a blocking of 126 for Exabytes and 96 for DATs.  Another
+source said that Exabyte drives have a physical block size of 8KB, and
+that using `-b 112' solved their problems.  We were told that for some
+DLT drives, the blocking should be a multiple of 4KB, preferably 64KB
+(`-b 128' or `256'), for decent performance.  Other manufacturers may
+use different recommendations for the same tapes.  This might also
+depend of the buffering techniques used by modern tape controllers.
+Some impose a minimum blocking, or a maximum blocking.  Others request
+blocking to be some power of two.
+
+   So there is no fixed rule for blocking.  But blocking at read time
+should ideally be the same as blocking used at write time.  At one
+place we know, with a wide variety of equipment, they found it best to
+use a blocking of 32 to guarantee that their tapes are fully
+interchangeable between all systems they have.
+
+   We were also told that, for recycled tapes, prior erasure (by the
+exact drive unit that will be used to create the archives) sometimes
+lowers the error rates observed at rewriting time.
+
+
+File: paxutils.info,  Node: Reblocking,  Prev: Media types,  Up: Blocking
+
+Automatic reblocking
+--------------------
+
+   When handling compressed archives, `tar' automatically unblocks the
+archives before decompression occurs, or reblocks created archives just
+after compression, as needed.(1)
+
+   When older `gzip' programs are directly given such reblocked
+compressed archives, they may complain like this:
+
+     $ tar cfz - FILE | gzip -t
+     gzip: stdin: decompression OK, trailing garbage ignored
+
+Because of the reblocking, there may be extraneous zero blocks after the
+`gzip' output, which older versions of `gzip' diagnose as garbage.
+Jean-loup and I agreed, to handle this particular case, that newer
+versions of `gzip' would be more tolerant to strings of zeros, and just
+ignore them.  So, diagnostics like above will progressively disappear,
+as various older `gzip' binaries get replaced.  In any case, they are
+innocuous.
+
+   As a special case, if a compressed archive is directly created on a
+local disk, and not through stdout, and if the blocking factor is not
+explicitly specified by the user, then the produced file will not be
+reblocked, and so, might appear as if the last record has not been
+padded to full length.  In all other cases, reblocking occurs.
+
+   ---------- Footnotes ----------
+
+   (1) Prior to `tar' 1.12, unblocking or reblocking did not occur
+unless the `--compress-block' option (or even older:
+`--block-compress') was given.  Such options are now obsolete.
+
+
+File: paxutils.info,  Node: Many on one,  Next: One on many,  Prev: Blocking,  Up: Media
+
+Many archives on one tape
+=========================
+
+   Most tape devices have two entries in the `/dev' directory, or
+entries that come in pairs, which differ only in the minor number for
+this device.  Let's take for example `/dev/tape', which often points to
+the only or usual tape device of a given system.  There might be a
+corresponding `/dev/nrtape' or `/dev/ntape'.  The simpler name is the
+*rewinding* version of the device, while the name having `nr' in it is
+the *no rewinding* version of the same device.
+
+   A rewinding tape device will bring the tape back to its beginning
+point automatically when this device is opened or closed.  Since `tar'
+opens the archive file before using it and closes it afterwards, this
+means that a simple
+
+     $ tar cf /dev/tape DIRECTORY
+
+will reposition the tape to its beginning both before and after saving
+the DIRECTORY contents to it, thus erasing the prior tape contents and
+making it so that any subsequent write subcommand will destroy what has
+just been saved.
+
+   So, a rewinding device is normally meant to hold one and only one
+file.  If you want to put more than one `tar' archive on a given tape,
+you will need to avoid using the rewinding version of the tape device.
+You will also have to pay special attention to tape positioning.
+Errors in positioning may overwrite the valuable data already on your
+tape.  Many people, burned by past experiences, will only use rewinding
+devices and limit themselves to one file per tape, precisely to avoid
+the risk of such errors.  Be fully aware that writing at the wrong
+position on a tape loses all information past this point and most
+probably until the end of the tape, and this destroyed information
+*cannot* be easily recovered, if indeed it can ever be recovered at all.
+
+   To save DIRECTORY-1 as a first archive at the beginning of a tape,
+and leave that tape ready for a second archive, you should use the
+*non-rewinding* tape device:
+
+     $ mt -f /dev/nrtape rewind
+     $ tar cf /dev/nrtape DIRECTORY-1
+
+   "Tape marks" are special magnetic patterns written on the tape media,
+which are later recognizable by the reading hardware.  Tape marks
+consume a *lot* more space on the tape than a usual gap, and the tape
+drive hardware is often able to detect them even while winding the tape
+at higher speed.
+
+   These marks are used after each file, when there are many on a
+single tape.  An empty file (that is to say, two tape marks in a row)
+signals the logical end of the tape, after which no files exist.
+Clever non-rewinding tape device drivers react to the close request
+issued by `tar' by first writing two tape marks after your archive, and
+by backspacing over one of these.  So, if you remove the tape at that
+time from the tape drive, it is properly terminated.  But if you write
+another file at the current position, the second tape mark gets erased
+by the new information, leaving only one tape mark between files.
+
+   So, you may now save DIRECTORY-2 as a second archive after the first
+on the same non-rewinding tape by issuing the command:
+
+     $ tar cf /dev/nrtape DIRECTORY-2
+
+and so on for all the archives you want to put on the same tape.
+
+   Another usual case is that you do not write all the archives the same
+day, and you need to remove and store the tape between two archive
+sessions.  In general, you must remember how many files are already
+saved on your tape.  Suppose your tape already has 16 files on it, and
+you are ready to write the 17th.  You have to take care to skip the
+first 16 tape marks before saving DIRECTORY-17, say, by using these
+commands:
+
+     $ mt -f /dev/nrtape rewind
+     $ mt -f /dev/nrtape fsf 16
+     $ tar cf /dev/nrtape DIRECTORY-17
+
+   In all the previous examples, we put aside blocking considerations,
+but you should do the proper things for that as well.  *Note Blocking::.
+
+* Menu:
+
+* Tape positioning::            Tape positions and tape marks
+* mt invocation::               The `mt' utility
 
 
 File: paxutils.info,  Node: Tape positioning,  Next: mt invocation,  Prev: Many on one,  Up: Many on one
@@ -835,319 +1085,4 @@ and *Note listed-incremental::, before making such an attempt.
 
 * Full dumps::                  Using `tar' to perform full dumps
 * Incremental dumps::           Using `tar' to perform incremental dumps
-
-
-File: paxutils.info,  Node: Full dumps,  Next: Incremental dumps,  Prev: Backup levels,  Up: Backup levels
-
-Using `tar' to perform full dumps
----------------------------------
-
-   Full dumps should only be made when no other people or programs are
-modifying files in the filesystem.  If files are modified while `tar'
-is making the backup, they may not be stored properly in the archive,
-in which case you won't be able to restore them if you have to.  (Files
-being modified are written with no trouble, and do not corrupt the
-entire archive.)
-
-   You will want to use the `--label=ARCHIVE-LABEL' (`-V
-ARCHIVE-LABEL') option to give the archive a volume label, so you can
-tell what this archive is even if the label falls off the tape, or
-anything like that.
-
-   Unless the filesystem you are dumping is guaranteed to fit on one
-volume, you will need to use the `--multi-volume' (`-M') option.  Make
-sure you have enough tapes on hand to complete the backup.
-
-   If you want to dump each filesystem separately you will need to use
-the `--one-file-system' (`-l') option to prevent `tar' from crossing
-filesystem boundaries when storing (sub)directories.
-
-   The `--incremental' (`-G') option is not needed, since this is a
-complete copy of everything in the filesystem, and a full restore from
-this backup would only be done onto a completely empty disk.
-
-   Unless you are in a hurry, and trust the `tar' program (and your
-tapes), it is a good idea to use the `--verify' (`-W') option, to make
-sure your files really made it into the dump properly.  This will also
-detect cases where the file was modified while (or just after) it was
-being archived.  Not all media (notably cartridge tapes) are capable of
-being verified, unfortunately.
-
-   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') always
-takes a file name argument.  If the file doesn't exist, `tar' runs a
-level zero dump, creating the file.  If the file exists, `tar' uses
-that file to see what has changed.
-
-   `--incremental' (`-G') handles old extended format incremental
-backup.
-
-   The `--incremental' (`-G') option means the archive is an incremental
-backup.  Its meaning depends on the command that it modifies.
-
-   When this option is used for creating an incremental backup of a
-filesystem, `tar' writes, at the beginning of the archive, an entry for
-each of the directories that will be operated on.  The entry for a
-directory includes a list of all the files in the directory at the time
-the dump was done, and a flag for each file indicating whether the file
-is going to be put in the archive.  This information is used when doing
-a complete incremental restore.
-
-   Note that this option causes `tar' to create a non-standard archive
-that may not be readable by other versions of the `tar' program.
-
-   If the `--incremental' (`-G') option is used with `--list' (`-t'),
-`tar' will list, for each directory in the archive, the list of files in
-that directory at the time the archive was created.  This information
-is put out in a format that is not easy for humans to read, but which
-is unambiguous for a program: each file name is preceded by either a
-`Y' if the file is present in the archive, an `N' if the file is not
-included in the archive, or a `D' if the file is a directory (and is
-included in the archive).  Each file name is terminated by a null
-character.  The last file is followed by an additional null and a
-newline to indicate the end of the data.
-
-   If the `--incremental' (`-G') option is used with `--extract'
-(`--get', `-x'), then when the entry for a directory is found, all
-files that currently exist in that directory but are not listed in the
-archive *are deleted from the directory*.
-
-   This behavior is convenient when you are restoring a damaged file
-system from a succession of incremental backups: it restores the entire
-state of the file system to that which obtained when the backup was
-made.  If you don't use `--incremental' (`-G'), the file system will
-probably fill up with files that shouldn't exist any more.
-
-   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') handles
-new extended format incremental backup.
-
-   `--listed-incremental=SNAPSHOT-FILE' (`-g SNAPSHOT-FILE') acts like
-`--incremental' (`-G'), but when used in conjunction with `--create'
-(`-c') will also cause `tar' to use the file FILE, which contains
-information about the state of the filesystem at the time of the last
-backup, to decide which files to include in the archive being created.
-That file will then be updated by `tar'.  If the file FILE does not
-exist when this option is specified, `tar' will create it, and include
-all appropriate files in the archive.
-
-   The file, which is archive independent, contains the date it was last
-modified and a list of devices, inode numbers and directory names.
-`tar' will archive files with newer mod dates or inode change times,
-and directories with an unchanged inode number and device but a changed
-directory name.  The file is updated after the files to be archived are
-determined, but before the new archive is actually created.
-
-   When restoring, only files newer than the saved time are restored,
-and the directory list is used to speed up subcommands.
-
-   `tar' actually writes the file twice: once before the data is
-written, and once after.
-
-
-File: paxutils.info,  Node: Incremental dumps,  Prev: Full dumps,  Up: Backup levels
-
-Using `tar' to perform incremental dumps
-----------------------------------------
-
-   Performing incremental dumps is similar to performing full dumps,
-although a few more options will usually be needed.
-
-   You will need to use the `-N DATE' option to tell `tar' to only
-store files that have been modified since DATE.  DATE should be the
-date and time of the last full/incremental dump.  *Note after-date::.
-
-   A standard scheme is to do a *monthly* (full) dump once a month, a
-*weekly* dump once a week of everything since the last monthly, and a
-*daily* dump every day of everything since the last (weekly or monthly)
-dump.
-
-   Here is a copy of the script used to dump the filesystems of the
-machines here at the Free Software Foundation.  This script is run via
-`cron' late at night when people are least likely to be using the
-machines.  This script dumps several filesystems from several machines
-at once (via NFS).  The operator is responsible for ensuring that all
-the machines will be up at the time the dump happens.  If a machine is
-not running, its files will not be dumped, and the next day's
-incremental dump will *not* store files that would have gone onto that
-dump.
-
-     #!/bin/csh
-     # Dump thingie
-     set now = `date`
-     set then = `cat date.nfs.dump`
-     /u/hack/bin/tar -c -G -v\
-      -f /dev/rtu20\
-      -b 126\
-      -N "$then"\
-      -V "Dump from $then to $now"\
-      /alpha-bits/gp\
-      /gnu/hack\
-      /hobbes/u\
-      /spiff/u\
-      /sugar-bombs/u
-     echo $now > date.nfs.dump
-     mt -f /dev/rtu20 rew
-
-   Output from this script is stored in a file, for the operator to
-read later.
-
-   This script uses the file `date.nfs.dump' to store the date and time
-of the last dump.
-
-   Since this is a streaming tape drive, no attempt to verify the
-archive is made.  This is also why the high blocking factor (126) is
-used.  The tape drive must also be rewound by the `mt' command after
-the dump is made.
-
-
-File: paxutils.info,  Node: Backup parameters,  Next: Scripted backups,  Prev: Backup levels,  Up: Backups
-
-Setting parameters for backups and restoration
-==============================================
-
-   The file `backup-specs' specifies backup parameters for the backup
-and restoration scripts provided with `tar'.  You must edit
-`backup-specs' to fit your system configuration and schedule before
-using these scripts.
-
-   *Note Script syntax::, for an explanation of this syntax.
-
-   `backup-specs' specifies the following parameters:
-
-`ADMINISTRATOR'
-     The user name of the backup administrator.
-
-`BACKUP_HOUR'
-     The hour at which the backups are done.  This can be a number from
-     0 to 23, or the string `now'.
-
-`TAPE_FILE'
-     The device `tar' writes the archive to.  This device should be
-     attached to the host on which the dump scripts are run.
-
-`TAPE_STATUS'
-     The command to use to obtain the status of the archive device,
-     including error count.  On some tape drives there may not be such a
-     command; in that case, simply use `TAPE_STATUS=false'.
-
-`BLOCKING'
-     The blocking factor `tar' will use when writing the dump archive.
-     *Note blocking-factor::.
-
-`BACKUP_DIRS'
-     A list of file systems to be dumped.  You can include any directory
-     name in the list--subdirectories on that file system will be
-     included, regardless of how they may look to other networked
-     machines.  Subdirectories on other file systems will be ignored.
-
-`HOST_NAME'
-     The host name specifies which host to run `tar' on, and should
-     normally be the host that actually contains the file system.
-     However, the host machine must have `tar' installed, and must be
-     able to access the directory containing the backup scripts and
-     their support files using the same file name that is used on the
-     machine where the scripts are run (that is, what `pwd' will print
-     when in that directory on that machine).  If the host that
-     contains the file system does not have this capability, you can
-     specify another host as long as it can access the file system
-     through NFS.
-
-`BACKUP_FILES'
-     A list of individual files to be dumped.  These should be
-     accessible from the machine on which the backup script is run.
-
-* Menu:
-
-* backup-specs example::        An example text of `backup-specs'
-* Script syntax::               Syntax for `backup-specs'
-
-
-File: paxutils.info,  Node: backup-specs example,  Next: Script syntax,  Prev: Backup parameters,  Up: Backup parameters
-
-An example text of `backup-specs'
----------------------------------
-
-   The following is the text of `backup-specs' as it appears at FSF:
-
-     # site-specific parameters for file system backup.
-     
-     ADMINISTRATOR=friedman
-     BACKUP_HOUR=1
-     TAPE_FILE=/dev/nrsmt0
-     TAPE_STATUS="mts -t $TAPE_FILE"
-     BLOCKING=124
-     BACKUP_DIRS="
-     	albert:/fs/fsf
-     	apple-gunkies:/gd
-     	albert:/fs/gd2
-     	albert:/fs/gp
-     	geech:/usr/jla
-     	churchy:/usr/roland
-     	albert:/
-     	albert:/usr
-     	apple-gunkies:/
-     	apple-gunkies:/usr
-     	gnu:/hack
-     	gnu:/u
-     	apple-gunkies:/com/mailer/gnu
-     	apple-gunkies:/com/archive/gnu"
-     
-     BACKUP_FILES="/com/mailer/aliases /com/mailer/league*[a-z]"
-
-
-File: paxutils.info,  Node: Script syntax,  Prev: backup-specs example,  Up: Backup parameters
-
-Syntax for `backup-specs'
--------------------------
-
-   `backup-specs' is in shell script syntax.  The following conventions
-should be considered when editing the script:
-
-   A quoted string is considered to be contiguous, even if it is on more
-than one line.  Therefore, you cannot include commented-out lines
-within a multi-line quoted string.  BACKUP_FILES and BACKUP_DIRS are
-the two parameters most likely to be multi-line.
-
-   A quoted string typically cannot contain wildcards.  In
-`backup-specs', however, the parameters BACKUP_DIRS and BACKUP_FILES
-can contain wildcards.
-
-
-File: paxutils.info,  Node: Scripted backups,  Next: Scripted restoration,  Prev: Backup parameters,  Up: Backups
-
-Using the backup scripts
-========================
-
-   The syntax for running a backup script named SCRIPT-NAME is:
-
-     $ SCRIPT-NAME [TIME-TO-BE-RUN]
-
-   where TIME-TO-BE-RUN can be a specific system time, or can be `now'.
-If you do not specify a time, the script runs at the time specified in
-`backup-specs' (*note Script syntax::.).
-
-   You should start a script with a tape or disk mounted.  Once you
-start a script, it prompts you for new tapes or disks as it needs them.
-Media volumes don't have to correspond to archive files--a
-multi-volume archive can be started in the middle of a tape that
-already contains the end of another multi-volume archive.  The
-`restore' script prompts for media by its archive volume, so to avoid
-an error message you should keep track of which tape (or disk) contains
-which volume of the archive.    *Note Scripted restoration::.
-
-   The backup scripts write two files on the file system.  The first is
-a record file in `/etc/tar-backup/', which is used by the scripts to
-store and retrieve information about which files were dumped.  This
-file is not meant to be read by humans, and should not be deleted by
-them.  *Note incremental listed-incremental::, for a more detailed
-explanation of this file.
-
-   The second file is a log file containing the names of the file
-systems and files dumped, the time when the backup was made, and any
-error messages that were generated, as well as how much space was left
-in the media volume after the last volume of the archive was written.
-You should check this log file after every backup.  The file name is
-`log-MMM-DDD-YYYY-level-1' or `log-MMM-DDD-YYYY-full'.
-
-   The script also prints the name of each system being dumped to the
-standard output.
 

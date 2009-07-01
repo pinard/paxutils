@@ -1,5 +1,5 @@
 # Configure template for paxutils.
-# Copyright (C) 1998 Free Software Foundation, Inc.
+# Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 AC_INIT(src/pax.c)
 AC_PREREQ(2.12)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(paxutils, 2.4g)
+AM_INIT_AUTOMAKE(paxutils, 2.4h)
 AT_CONFIG(../src)
-ALL_LINGUAS="cs de es fr it ko nl no pl pt sl sv"
+ALL_LINGUAS="cs de es fr it ko nl no pl pt ru sl sv"
 
 # LC_MESSAGES is always shadowed by LC_ALL.  Here are the only cases:
 # - GNU:       LANGUAGE -> LC_ALL -> LC_MESSAGES -> LANG
@@ -57,10 +57,10 @@ if test $ac_cv_sizeof_unsigned_long_long -ne 0; then
 fi
 
 AC_CHECK_HEADERS(fcntl.h limits.h linux/fd.h memory.h net/errno.h poll.h \
-stdbool.h sgtty.h string.h stropts.h \
+stdbool.h sgtty.h signal.h string.h stropts.h \
 sys/buf.h sys/device.h sys/gentape.h sys/inet.h sys/io/trioctl.h sys/ioccom.h \
 sys/mtio.h sys/param.h sys/tprintf.h sys/tape.h sys/time.h sys/timeb.h \
-sys/wait.h unistd.h)
+sys/wait.h termio.h unistd.h)
 
 # It seems that that many machines where <utime.h> seems to be
 # broken just require something like -D_XXX_SOURCE, where XXX might
@@ -161,7 +161,8 @@ if test $ac_cv_func_getservbyname = no; then
   AC_CHECK_LIB(socket, getservbyname)
 fi
 
-AC_REPLACE_FUNCS(execlp ftruncate memset mkdir rename rmdir stpcpy stpncpy)
+AC_REPLACE_FUNCS(execlp ftruncate memset mkdir rename rmdir stpcpy stpncpy \
+tcflush)
 
 test "$ac_cv_func_pipe$ac_cv_func_popen" = nono && LIBOBJS="$LIBOBJS popen.o"
 test "$ac_cv_func_strstr" = yes || LIBOBJS="$LIBOBJS strstr.o"
@@ -269,15 +270,26 @@ AC_MSG_RESULT($DEFAULT_BLOCKING)
 # ======================================================================
 # CPIO specialities.
 
+AC_MSG_CHECKING(whether cpio should be compiled and installed)
+AC_ARG_ENABLE(cpio,
+[  --enable-cpio           install cpio even if not fully ready yet],
+[test "$enableval" = yes || enableval=no],
+[enableval=no])
+AC_MSG_RESULT($enableval)
+if test "$enableval" = yes; then
+  extra_bin_progs="$extra_bin_progs cpio"
+  test_progs="$test_progs cpio"
+fi
+
 dnl AC_REPLACE_FUNCS(strdup strcasecmp)
 dnl AM_WITH_REGEX
 
-# Enable GNU tar format.  (Unfinished)
-AC_MSG_CHECKING(whether GNU tar format should be enabled)
-AC_ARG_ENABLE(gnutar,
-[  --enable-gnutar         enable GNU tar format (unfinished)],
+# Enable Free tar format.  (Unfinished)
+AC_MSG_CHECKING(whether Free tar format should be enabled)
+AC_ARG_ENABLE(oldgnu,
+[  --enable-oldgnu         enable old GNU tar format (unfinished)],
 AC_MSG_RESULT(yes)
-AC_DEFINE(CPIO_USE_GNU_TAR),
+AC_DEFINE(CPIO_USE_OLDGNU),
 AC_MSG_RESULT(no))
 
 # Enable debugging.
@@ -303,13 +315,13 @@ EMPTY=
 AC_PATH_PROG(TEST_CPIO, cpio,,/bin:/usr/bin$EMPTY)
 AC_PATH_PROG(TEST_TAR, tar)
 AC_PATH_PROG(TEST_MKFIFO, mkfifo)
-AC_PATH_PROGS(TEST_GNUTAR, gtar tar)
-# Ensure we really have GNU tar.
-if test -z "$TEST_GNUTAR" \
-   || test -z "`$TEST_GNUTAR --version 2> /dev/null`"; then
-   # No.
-   TEST_GNUTAR=
-fi
+dnl AC_PATH_PROGS(TEST_FREETAR, gtar tar)
+dnl # Ensure we really have Free tar.
+dnl if test -z "$TEST_FREETAR" \
+dnl    || test -z "`$TEST_FREETAR --version 2> /dev/null`"; then
+dnl    # No.
+dnl    TEST_FREETAR=
+dnl fi
 
 # Maybe systems exist without 'id'.  How does one get uid and gid
 # information on such machines?
@@ -352,7 +364,37 @@ AC_SUBST(TEST_DEVFLAG)
 
 # End of test suite section.
 # ======================================================================
+# PAX specialities.
 
-AC_OUTPUT(Makefile contrib/Makefile doc/Makefile i18n/Makefile lib/Makefile
-m4/Makefile scripts/Makefile src/Makefile tests/Makefile tests/atconfig
-tests/atlocal)
+AC_MSG_CHECKING(whether pax should be compiled and installed)
+AC_ARG_ENABLE(pax,
+[  --enable-pax            install pax even if not fully ready yet],
+[test "$enableval" = yes || enableval=no],
+[enableval=no])
+AC_MSG_RESULT($enableval)
+if test "$enableval" = yes; then
+  extra_bin_progs="$extra_bin_progs pax"
+  test_progs="$test_progs pax"
+fi
+
+# End of PAX specialities.
+# ======================================================================
+# TAR specialities.
+
+AC_MSG_CHECKING(whether --per-file-compress should be compiled in)
+AC_ARG_ENABLE(dale-code,
+[  --enable-dale-code      enable still undisclaimed --per-file-compress],
+[if test "$enableval" = yes; then
+  AC_DEFINE(ENABLE_DALE_CODE)
+else
+  enableval=no
+fi],
+[enableval=no])
+AC_MSG_RESULT($enableval)
+
+# End of TAR specialities.
+# ======================================================================
+
+AC_OUTPUT(Makefile contrib/Makefile contrib/win32/Makefile
+doc/Makefile i18n/Makefile lib/Makefile m4/Makefile scripts/Makefile
+src/Makefile tests/Makefile tests/atconfig tests/atlocal)
