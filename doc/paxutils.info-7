@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -185,7 +185,7 @@ explicitly specified by the user, then the produced file will not be
 reblocked, and so, might appear as if the last record has not been
 padded to full length.  In all other cases, reblocking occurs.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Prior to `tar' 1.12, unblocking or reblocking did not occur
 unless the `--compress-block' option (or even older:
@@ -202,8 +202,8 @@ entries that come in pairs, which differ only in the minor number for
 this device.  Let's take for example `/dev/tape', which often points to
 the only or usual tape device of a given system.  There might be a
 corresponding `/dev/nrtape' or `/dev/ntape'.  The simpler name is the
-*rewinding* version of the device, while the name having `nr' in it is
-the *no rewinding* version of the same device.
+_rewinding_ version of the device, while the name having `nr' in it is
+the _no rewinding_ version of the same device.
 
    A rewinding tape device will bring the tape back to its beginning
 point automatically when this device is opened or closed.  Since `tar'
@@ -227,18 +227,18 @@ devices and limit themselves to one file per tape, precisely to avoid
 the risk of such errors.  Be fully aware that writing at the wrong
 position on a tape loses all information past this point and most
 probably until the end of the tape, and this destroyed information
-*cannot* be easily recovered, if indeed it can ever be recovered at all.
+_cannot_ be easily recovered, if indeed it can ever be recovered at all.
 
    To save DIRECTORY-1 as a first archive at the beginning of a tape,
 and leave that tape ready for a second archive, you should use the
-*non-rewinding* tape device:
+_non-rewinding_ tape device:
 
      $ mt -f /dev/nrtape rewind
      $ tar cf /dev/nrtape DIRECTORY-1
 
    "Tape marks" are special magnetic patterns written on the tape media,
 which are later recognizable by the reading hardware.  Tape marks
-consume a *lot* more space on the tape than a usual gap, and the tape
+consume a _lot_ more space on the tape than a usual gap, and the tape
 drive hardware is often able to detect them even while winding the tape
 at higher speed.
 
@@ -552,7 +552,7 @@ creates, lists, or extracts a multi-volume archive.
 may be larger than will fit on the medium used to hold it.  *Note
 Multi-volume archives::.
 
-   Beware that there is *no* real standard about the proper way for a
+   Beware that there is _no_ real standard about the proper way for a
 `tar' archive to span volume boundaries.  If you have a multi-volume
 created by some vendor's `tar', there is almost no chance you could
 read all the volumes with `tar'.  The converse is also true: you should
@@ -608,7 +608,7 @@ already containing a decimal number.  That number will be used as the
 volume number of the first volume written.  When `tar' is finished, it
 will rewrite the file with the now-current volume number.  (This does
 not change the volume number written on a tape label, as per *Note
-label::; it *only* affects the number used in the prompt.)
+label::; it _only_ affects the number used in the prompt.)
 
 
 File: paxutils.info,  Node: Being careful,  Next: Other tape considerations,  Prev: One on many,  Up: Media
@@ -724,7 +724,7 @@ that the next tape is ready.  Comparing date labels gives an idea of
 tape throughput only if the delays for rewinding tapes and the operator
 switching them were negligible, which is usually not the case.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Previous versions of `tar' used full regular expression
 matching, or before that, only exact string matching, instead of
@@ -975,7 +975,7 @@ that may not be readable by other versions of the `tar' program.
 
    `--incremental' (`-G') in conjunction with `--extract' (`--get',
 `-x') causes `tar' to read the lists of directory contents previously
-stored in the archive, *delete* files in the file system that did *not*
+stored in the archive, _delete_ files in the file system that did _not_
 exist in their directories when the archive was created, and then
 extract the files in the archive.
 

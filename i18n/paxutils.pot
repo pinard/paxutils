@@ -1387,5 +1387,5 @@ msgstr ""
 #: tests/genfile.c:180
 msgid ""
 "\n"
-"Written by François Pinard <pinard@iro.umontreal.ca>.\n"
+"Written by FranÃ§ois Pinard <pinard@iro.umontreal.ca>.\n"
 msgstr ""

@@ -1,0 +1,14 @@
+      1	-list -ignore-dir-atime -atime-lt $TIME < struct-list
+      7	-list -match-dir dst2swap -size-match -contents-match -mtime-gt $TIME < 2.find
+      3	-list -match-dir src2 -size-match -contents-match < 2.find
+      1	-list -match-dir src3 -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME < 3.find
+      1	-list -match-dir src3 -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match -ignore-dot-mtime < 3.find
+      1	-list -match-dir src4 -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match -ignore-dot-mtime < 4.find
+      3	-list -match-dir structure -mode-match -uid-match -gid $GID2 -size-match -contents-match -mtime-match -ignore-dot-mtime < struct-list | \
+      3	-list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-gt $TIME | fgrep -v -x -f missing2
+      1	-list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match -ino-match -ignore-dir-ino -ignore-link-ino -ignore-link-mtime -ignore-dir-mtime < struct-list
+      1	-list -match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match < struct-list
+      1	-list -match-dir unpacked -mode-match -uid-match -gid-match -size-match -contents-match -mtime-lt $TIME | fgrep -v -x -f $MISSING2
+      1	-list -match-dir unpacked -mode-match -uid-match -gid-match -size-match -contents-match -mtime-lt $TIME | fgrep -v -x -f missing2
+      2	-match-dir structure -mode-match -uid-match -gid-match -size-match -contents-match -mtime-match foo
+      2	-non-exist foo

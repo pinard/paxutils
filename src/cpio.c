@@ -1,5 +1,5 @@
 /* Main program and argument processing for cpio.
-   Copyright (C) 1990, 1991, 1992, 1995, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 95, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,65 +20,65 @@
    and John Oleynick <juo@klinzhai.rutgers.edu>.  */
 
 #include "system.h"
+#include "common.h"
 
 #include <getopt.h>
 #include "filetypes.h"
-#include "cpiohdr.h"
-#include "extern.h"
 #include "rmt.h"
 
-#define OPTION_BLOCK_SIZE    130
-#define OPTION_VERSION       131
-#define OPTION_HELP          132
-#define OPTION_NOPRESERVE    134
-#define OPTION_NOABSFILE     135
-#define OPTION_CRCVERIFY     136
-#define OPTION_BATCHRENAME   137
-#define OPTION_QUIET         138
-#define OPTION_SPARSE        139
+#define BLOCK_SIZE_OPTION    130
+#define VERSION_OPTION       131
+#define HELP_OPTION          132
+#define NO_PRESERVE_OWNER_OPTION    134
+#define NO_ABSOLUTE_FILENAMES_OPTION     135
+#define ONLY_VERIFY_CRC_OPTION     136
+#define RENAME_BATCH_FILE_OPTION   137
+#define QUIET_OPTION         138
+#define SPARSE_OPTION        139
 
 static struct option long_opts[] =
 {
-  {"null", 0, 0, '0'},
   {"append", 0, 0, 'A'},
-  {"block-size", 1, 0, OPTION_BLOCK_SIZE},
+  {"block-size", 1, 0, BLOCK_SIZE_OPTION},
   {"create", 0, 0, 'o'},
+#ifdef DEBUG_CPIO
+  {"debug", 0, (int *) &debug_option, true},
+#endif
   {"dereference", 0, 0, 'L'},
   {"dot", 0, 0, 'V'},
   {"extract", 0, 0, 'i'},
   {"file", 1, 0, 'F'},
-  {"force-local", 0, &f_force_local, 1},
+  {"force-local", 0, (int *) &force_local_option, true},
   {"format", 1, 0, 'H'},
-  {"help", 0, 0, OPTION_HELP},
+  {"help", 0, 0, HELP_OPTION},
   {"io-size", 1, 0, 'C'},
-  {"link", 0, &link_flag, true},
-  {"list", 0, &table_flag, true},
-  {"make-directories", 0, &create_dir_flag, true},
+  {"link", 0, (int *) &link_option, true},
+  {"list", 0, (int *) &list_option, true},
+  {"make-directories", 0, (int *) &make_directories_option, true},
   {"message", 1, 0, 'M'},
-  {"no-absolute-filenames", 0, 0, OPTION_NOABSFILE},
-  {"no-preserve-owner", 0, 0, OPTION_NOPRESERVE},
-  {"nonmatching", 0, &copy_matching_files, false},
-  {"numeric-uid-gid", 0, &numeric_uid, true},
-  {"only-verify-crc", 0, 0, OPTION_CRCVERIFY},
+  {"no-absolute-filenames", 0, 0, NO_ABSOLUTE_FILENAMES_OPTION},
+  {"no-preserve-owner", 0, 0, NO_PRESERVE_OWNER_OPTION},
+  {"nonmatching", 0, (int *) &copy_matching_files, false},
+  {"null", 0, 0, '0'},
+  {"numeric-uid-gid", 0, (int *) &numeric_uid_gid_option, true},
+  {"only-verify-crc", 0, 0, ONLY_VERIFY_CRC_OPTION},
   {"owner", 1, 0, 'R'},
   {"pass-through", 0, 0, 'p'},
   {"pattern-file", 1, 0, 'E'},
-  {"preserve-modification-time", 0, &retain_time_flag, true},
-  {"rename", 0, &rename_flag, true},
-  {"rename-batch-file", 1, 0, OPTION_BATCHRENAME},
-  {"quiet", 0, 0, OPTION_QUIET},
-  {"silent", 0, 0, OPTION_QUIET},
-  {"sparse", 0, 0, OPTION_SPARSE},
+  {"preserve-modification-time", 0,
+   (int *) &preserve_modification_time_option, true},
+  {"quiet", 0, 0, QUIET_OPTION},
+  {"rename", 0, (int *) &rename_option, true},
+  {"rename-batch-file", 1, 0, RENAME_BATCH_FILE_OPTION},
+  {"reset-access-time", 0, (int *) &reset_access_time_option, true},
+  {"silent", 0, 0, QUIET_OPTION},
+  {"sparse", 0, 0, SPARSE_OPTION},
   {"swap", 0, 0, 'b'},
   {"swap-bytes", 0, 0, 's'},
   {"swap-halfwords", 0, 0, 'S'},
-  {"reset-access-time", 0, &reset_time_flag, true},
-  {"unconditional", 0, &unconditional_flag, true},
-  {"verbose", 0, &verbose_flag, true},
-  {"version", 0, 0, OPTION_VERSION},
-#ifdef DEBUG_CPIO
-  {"debug", 0, &debug_flag, true},
-#endif
+  {"unconditional", 0, (int *) &unconditional_option, true},
+  {"verbose", 0, (int *) &verbose_option, true},
+  {"version", 0, 0, VERSION_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -231,36 +231,36 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'a':		/* Reset access times.  */
-	  reset_time_flag = true;
+	  reset_access_time_option = true;
 	  break;
 
 	case 'A':		/* Append to the archive.  */
-	  append_flag = true;
+	  append_option = true;
 	  break;
 
 	case 'b':		/* Swap bytes and halfwords.  */
-	  swap_bytes_flag = true;
-	  swap_halfwords_flag = true;
+	  swap_bytes_option = true;
+	  swap_halfwords_option = true;
 	  break;
 
 	case 'B':		/* Set block size to 5120.  */
-	  io_block_size = 5120;
+	  io_block_size = 10 * BLOCKSIZE;
 	  break;
 
-	case OPTION_BLOCK_SIZE:	/* --block-size */
+	case BLOCK_SIZE_OPTION:
 	  io_block_size = atoi (optarg);
 	  if (io_block_size < 1)
 	    error (2, 0, _("invalid block size"));
-	  io_block_size *= 512;
+	  io_block_size *= BLOCKSIZE;
 	  break;
 
 	case 'c':		/* Use the old portable ASCII format.  */
-	  if (archive_format != arf_unknown)
+	  if (archive_format != UNKNOWN_FORMAT)
 	    error (2, 0, _("archive format specified twice"));
 #ifdef SVR4_COMPAT
-	  archive_format = arf_newascii; /* -H newc.  */
+	  archive_format = NEW_ASCII_FORMAT; /* -H newc.  */
 #else
-	  archive_format = arf_oldascii; /* -H odc.  */
+	  archive_format = OLD_ASCII_FORMAT; /* -H odc.  */
 #endif
 	  break;
 
@@ -271,7 +271,7 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'd':		/* Create directories where needed.  */
-	  create_dir_flag = true;
+	  make_directories_option = true;
 	  break;
 
 	case 'f':		/* Only copy files not matching patterns.  */
@@ -287,11 +287,11 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'H':		/* Header format name.  */
-	  if (archive_format != arf_unknown)
+	  if (archive_format != UNKNOWN_FORMAT)
 	    error (2, 0, _("archive format specified twice"));
 
 	  archive_format = find_format (optarg);
-	  if (archive_format == arf_unknown)
+	  if (archive_format == UNKNOWN_FORMAT)
 	    format_error (optarg);
 	  break;
 
@@ -311,7 +311,7 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'l':		/* Link files when possible.  */
-	  link_flag = true;
+	  link_option = true;
 	  break;
 
 	case 'L':		/* Dereference symbolic links.  */
@@ -319,7 +319,7 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'm':		/* Retain previous file modify times.  */
-	  retain_time_flag = true;
+	  preserve_modification_time_option = true;
 	  break;
 
 	case 'M':		/* New media message.  */
@@ -327,17 +327,17 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'n':		/* Long list owner and group as numbers.  */
-	  numeric_uid = true;
+	  numeric_uid_gid_option = true;
 	  break;
 
-	case OPTION_NOABSFILE:	/* --no-absolute-filenames */
-	  no_abs_paths_flag = true;
+	case NO_ABSOLUTE_FILENAMES_OPTION: /* --no-absolute-filenames */
+	  no_absolute_filenames_option = true;
 	  break;
 
-	case OPTION_NOPRESERVE:	/* --no-preserve-owner */
+	case NO_PRESERVE_OWNER_OPTION:	/* --no-preserve-owner */
 	  if (set_owner_flag || set_group_flag)
 	    error (2, 0, _("only one of --no-preserve-owner and -R allowed"));
-	  no_chown_flag = true;
+	  no_preserve_owner_option = true;
 	  break;
 
 	case 'o':		/* Copy-out mode.  */
@@ -350,8 +350,8 @@ process_args (int argc, char *argv[])
 	  output_archive_name = optarg;
 	  break;
 
-	case OPTION_CRCVERIFY:
-	  only_verify_crc_flag = true;
+	case ONLY_VERIFY_CRC_OPTION:
+	  only_verify_crc_option = true;
 	  break;
 
 	case 'p':		/* Copy-pass mode.  */
@@ -361,23 +361,25 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'r':		/* Interactively rename.  */
-	  rename_flag = true;
+	  rename_option = true;
 	  break;
 
-	case OPTION_BATCHRENAME:
+	case RENAME_BATCH_FILE_OPTION:
 	  rename_batch_file = optarg;
 	  break;
 
-	case OPTION_QUIET:
-	  no_block_message_flag = true;
+	case QUIET_OPTION:
+	  quiet_option = true;
 	  break;
 
 	case 'R':		/* Set the owner.  */
-	  if (no_chown_flag)
+	  if (no_preserve_owner_option)
 	    error (2, 0, _("only one of --no-preserve-owner and -R allowed"));
 #ifndef __MSDOS__
 	  {
-	    char *e, *u, *g;
+	    const char *e;
+	    char *u;
+	    char *g;
 
 	    e = parse_user_spec (optarg, &set_owner, &set_group, &u, &g);
 	    if (e)
@@ -397,39 +399,39 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 's':		/* Swap bytes.  */
-	  swap_bytes_flag = true;
+	  swap_bytes_option = true;
 	  break;
 
 	case 'S':		/* Swap halfwords.  */
-	  swap_halfwords_flag = true;
+	  swap_halfwords_option = true;
 	  break;
 
 	case 't':		/* Only print a list.  */
-	  table_flag = true;
+	  list_option = true;
 	  break;
 
 	case 'u':		/* Replace all!  Unconditionally!  */
-	  unconditional_flag = true;
+	  unconditional_option = true;
 	  break;
 
 	case 'v':		/* Verbose!  */
-	  verbose_flag = true;
+	  verbose_option = true;
 	  break;
 
 	case 'V':		/* Print `.' for each file.  */
-	  dot_flag = true;
+	  dot_option = true;
 	  break;
 
-	case OPTION_VERSION:
+	case VERSION_OPTION:
 	  printf (_("cpio (Free %s) %s\n"), PACKAGE, VERSION);
 	  exit (0);
 	  break;
 
-	case OPTION_SPARSE:
-	  sparse_flag = true;
+	case SPARSE_OPTION:
+	  sparse_option = true;
 	  break;
 
-	case OPTION_HELP:	/* --help */
+	case HELP_OPTION:	/* --help */
 	  usage (stdout, 0);
 	  break;
 
@@ -445,13 +447,13 @@ process_args (int argc, char *argv[])
 
   if (copy_function == 0)
     {
-      if (table_flag)
+      if (list_option)
 	copy_function = process_copy_in;
       else
 	error (2, 0, _("one of -o, -i, -p must be specified"));
     }
 
-  if ((!table_flag || !verbose_flag) && numeric_uid)
+  if (!(list_option && verbose_option) && numeric_uid_gid_option)
     error (2, 0, _("-n only makes sense with -t and -v"));
 
   /* Work around for pcc bug.  */
@@ -462,11 +464,11 @@ process_args (int argc, char *argv[])
     {
       archive_des = 0;
       /* FIXME should indicate particular error.  */
-      if (link_flag || reset_time_flag || xstat != lstat || append_flag
+      if (link_option || reset_access_time_option || xstat != lstat || append_option
 	  || output_archive_name
 	  || (archive_name && input_archive_name))
 	error (2, 0, _("option conflicts with -i"));
-      if (archive_format == arf_crcascii)
+      if (archive_format == CRC_ASCII_FORMAT)
 	crc_i_flag = true;
       num_patterns = argc - optind;
       save_patterns = &argv[optind];
@@ -477,16 +479,16 @@ process_args (int argc, char *argv[])
     {
       archive_des = 1;
       /* FIXME should indicate particular error.  */
-      if (argc != optind || create_dir_flag || rename_flag
-	  || sparse_flag || table_flag || unconditional_flag || link_flag
-	  || retain_time_flag || no_chown_flag || set_owner_flag
-	  || set_group_flag || swap_bytes_flag || swap_halfwords_flag
-	  || (append_flag && !(archive_name || output_archive_name))
-	  || rename_batch_file || no_abs_paths_flag
+      if (argc != optind || make_directories_option || rename_option
+	  || sparse_option || list_option || unconditional_option || link_option
+	  || preserve_modification_time_option || no_preserve_owner_option || set_owner_flag
+	  || set_group_flag || swap_bytes_option || swap_halfwords_option
+	  || (append_option && !(archive_name || output_archive_name))
+	  || rename_batch_file || no_absolute_filenames_option
 	  || input_archive_name || (archive_name && output_archive_name))
 	error (2, 0, _("option conflicts with -o"));
-      if (archive_format == arf_unknown)
-	archive_format = arf_binary;
+      if (archive_format == UNKNOWN_FORMAT)
+	archive_format = BINARY_FORMAT;
       set_write_pointers_from_format (archive_format);
       if (output_archive_name)
 	archive_name = output_archive_name;
@@ -496,10 +498,10 @@ process_args (int argc, char *argv[])
       /* Copy pass.  */
       archive_des = -1;
       /* FIXME should indicate particular error.  */
-      if (argc - 1 != optind || archive_format != arf_unknown
-	  || swap_bytes_flag || swap_halfwords_flag
-	  || table_flag || rename_flag || append_flag
-	  || rename_batch_file || no_abs_paths_flag)
+      if (argc - 1 != optind || archive_format != UNKNOWN_FORMAT
+	  || swap_bytes_option || swap_halfwords_option
+	  || list_option || rename_option || append_option
+	  || rename_batch_file || no_absolute_filenames_option)
 	error (2, 0, _("option conflicts with -p"));
       directory_name = argv[optind];
     }
@@ -517,13 +519,14 @@ process_args (int argc, char *argv[])
   /* Prevent SysV non-root users from giving away files inadvertantly.  This
      happens automatically on BSD, where only root can give away files.  */
   if (set_owner_flag == false && set_group_flag == false && geteuid ())
-    no_chown_flag = true;
+    no_preserve_owner_option = true;
 #endif
 }
 
 int
 main (int argc, char *argv[])
 {
+  reset_global_variables ();
 #if DOSWIN
 # if 0
   program_name = get_program_base_name (argv[0]);
@@ -538,7 +541,7 @@ main (int argc, char *argv[])
     else
       p += 3;
 
-    for ( ; p > program_name; p--)
+    for (; p > program_name; p--)
       if (*p == '/' || *p == '\\' || *p == ':')
 	{
 	  program_name = p + 1;

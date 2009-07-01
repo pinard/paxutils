@@ -112,22 +112,20 @@ EXTRA_PROGRAMS = cpio mt pax rmt
 bin_PROGRAMS = tar @extra_bin_progs@
 libexec_PROGRAMS = @extra_libexec_progs@
 
-noinst_HEADERS = arith.h common.h cpio.h cpiohdr.h defer.h extern.h rmt.h system.h tar.h tarhdr.h ustar.h
+noinst_HEADERS = arith.h common.h cpio.h defer.h global.h rmt.h	system.h tar.h ustar.h
 
-shared_SOURCES = cdf.c copyin.c copyout.c copypass.c defer.c fmtcpio.c fmttar.c format.c getfile.c global.c rename.c util.c
+shared_SOURCES = cdf.c copyin.c copyout.c copypass.c defer.c fmtcpio.c fmttar.c format.c getfile.c global.c misc.c rename.c util.c
 
 
 cpio_SOURCES = cpio.c $(shared_SOURCES) rtapelib.c
 mt_SOURCES = mt.c rtapelib.c
 pax_SOURCES = pax.c $(shared_SOURCES) rtapelib.c
 rmt_SOURCES = rmt.c
-tar_SOURCES = arith.c buffer.c compare.c create.c delete.c extract.c header.c incremen.c list.c mangle.c misc.c names.c open3.c reading.c rtapelib.c tar.c update.c
+tar_SOURCES = arith.c buffer.c compare.c create.c delete.c extract.c global.c header.c incremen.c list.c mangle.c misc.c names.c open3.c reading.c rtapelib.c tar.c update.c
 
 
 INCLUDES = -I$(top_srcdir)/lib
 LDADD = ../lib/libpu.a
-
-localedir = $(prefix)/share/locale
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -141,7 +139,7 @@ LIBS = @LIBS@
 ANSI2KNR = @ANSI2KNR@
 cpio_OBJECTS =  cpio$U.o cdf$U.o copyin$U.o copyout$U.o copypass$U.o \
 defer$U.o fmtcpio$U.o fmttar$U.o format$U.o getfile$U.o global$U.o \
-rename$U.o util$U.o rtapelib$U.o
+misc$U.o rename$U.o util$U.o rtapelib$U.o
 cpio_LDADD = $(LDADD)
 cpio_DEPENDENCIES =  ../lib/libpu.a
 cpio_LDFLAGS = 
@@ -151,7 +149,7 @@ mt_DEPENDENCIES =  ../lib/libpu.a
 mt_LDFLAGS = 
 pax_OBJECTS =  pax$U.o cdf$U.o copyin$U.o copyout$U.o copypass$U.o \
 defer$U.o fmtcpio$U.o fmttar$U.o format$U.o getfile$U.o global$U.o \
-rename$U.o util$U.o rtapelib$U.o
+misc$U.o rename$U.o util$U.o rtapelib$U.o
 pax_LDADD = $(LDADD)
 pax_DEPENDENCIES =  ../lib/libpu.a
 pax_LDFLAGS = 
@@ -160,8 +158,9 @@ rmt_LDADD = $(LDADD)
 rmt_DEPENDENCIES =  ../lib/libpu.a
 rmt_LDFLAGS = 
 tar_OBJECTS =  arith$U.o buffer$U.o compare$U.o create$U.o delete$U.o \
-extract$U.o header$U.o incremen$U.o list$U.o mangle$U.o misc$U.o \
-names$U.o open3$U.o reading$U.o rtapelib$U.o tar$U.o update$U.o
+extract$U.o global$U.o header$U.o incremen$U.o list$U.o mangle$U.o \
+misc$U.o names$U.o open3$U.o reading$U.o rtapelib$U.o tar$U.o \
+update$U.o
 tar_LDADD = $(LDADD)
 tar_DEPENDENCIES =  ../lib/libpu.a
 tar_LDFLAGS = 
@@ -178,6 +177,14 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
+DEP_FILES =  .deps/arith.P .deps/buffer.P .deps/cdf.P .deps/compare.P \
+.deps/copyin.P .deps/copyout.P .deps/copypass.P .deps/cpio.P \
+.deps/create.P .deps/defer.P .deps/delete.P .deps/extract.P \
+.deps/fmtcpio.P .deps/fmttar.P .deps/format.P .deps/getfile.P \
+.deps/global.P .deps/header.P .deps/incremen.P .deps/list.P \
+.deps/mangle.P .deps/misc.P .deps/mt.P .deps/names.P .deps/open3.P \
+.deps/pax.P .deps/reading.P .deps/rename.P .deps/rmt.P .deps/rtapelib.P \
+.deps/tar.P .deps/update.P .deps/util.P
 SOURCES = $(cpio_SOURCES) $(mt_SOURCES) $(pax_SOURCES) $(rmt_SOURCES) $(tar_SOURCES)
 OBJECTS = $(cpio_OBJECTS) $(mt_OBJECTS) $(pax_OBJECTS) $(rmt_OBJECTS) $(tar_OBJECTS)
 
@@ -185,9 +192,9 @@ all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnits --include-deps src/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnits src/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -241,9 +248,6 @@ uninstall-libexecPROGRAMS:
 	list='$(libexec_PROGRAMS)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
-
-.c.o:
-	$(COMPILE) -c $<
 
 .s.o:
 	$(COMPILE) -c $<
@@ -408,6 +412,11 @@ distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 subdir = src
 
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnits src/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -418,90 +427,38 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
-arith.o: arith.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h common.h tar.h arith.h ../lib/backupfile.h \
-	../lib/modechange.h
-buffer.o: buffer.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h ../lib/fnmatch.h common.h tar.h \
-	arith.h ../lib/backupfile.h ../lib/modechange.h rmt.h
-cdf.o: cdf.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h extern.h ../lib/dstring.h cpiohdr.h cpio.h
-compare.o: compare.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h rmt.h
-copyin.o: copyin.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
-	cpio.h extern.h ../lib/dstring.h defer.h rmt.h ../lib/fnmatch.h
-copyout.o: copyout.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
-	cpio.h extern.h ../lib/dstring.h defer.h rmt.h
-copypass.o: copypass.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
-	cpio.h extern.h ../lib/dstring.h
-create.o: create.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h ../lib/hash.h
-defer.o: defer.c ../config.h system.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h cpiohdr.h cpio.h extern.h ../lib/dstring.h \
-	defer.h
-delete.o: delete.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h rmt.h
-extract.o: extract.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-fmtcpio.o: fmtcpio.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h \
-	cpiohdr.h cpio.h ../lib/filetypes.h
-fmttar.o: fmttar.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h ../lib/filetypes.h cpiohdr.h \
-	cpio.h extern.h ../lib/dstring.h rmt.h tarhdr.h ustar.h
-format.o: format.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h
-getfile.o: getfile.c ../config.h system.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h extern.h ../lib/dstring.h
-global.o: global.c ../config.h cpiohdr.h cpio.h system.h \
-	../lib/pathmax.h ../lib/gettext.h ../lib/error.h extern.h \
-	../lib/dstring.h
-header.o: header.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-incremen.o: incremen.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-list.o: list.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h common.h tar.h arith.h ../lib/backupfile.h \
-	../lib/modechange.h
-main.o: ../dist/src/main.c ../config.h ../dist/lib/getopt.h \
-	../dist/lib/filetypes.h ../dist/src/system.h \
-	../dist/lib/pathmax.h ../dist/lib/gettext.h ../dist/lib/error.h \
-	../dist/src/cpiohdr.h ../dist/src/cpio.h ../dist/lib/dstring.h \
-	../dist/src/extern.h ../dist/src/rmt.h
-mangle.o: mangle.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-misc.o: misc.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h rmt.h common.h tar.h arith.h ../lib/backupfile.h \
-	../lib/modechange.h
-names.o: names.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h ../lib/fnmatch.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-open3.o: open3.c system.h ../config.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h
-reading.o: reading.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-rename.o: rename.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h ../lib/regex.h extern.h \
-	../lib/dstring.h
-rtapelib.o: rtapelib.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h rmt.h
-update.o: update.c system.h ../config.h ../lib/pathmax.h \
-	../lib/gettext.h ../lib/error.h common.h tar.h arith.h \
-	../lib/backupfile.h ../lib/modechange.h
-util.o: util.c ../config.h system.h ../lib/pathmax.h ../lib/gettext.h \
-	../lib/error.h cpiohdr.h cpio.h extern.h ../lib/dstring.h rmt.h
 
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-am
 dvi-am:
@@ -540,19 +497,20 @@ distclean-generic:
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-libexecPROGRAMS \
 		mostlyclean-compile mostlyclean-krextra mostlyclean-kr \
-		mostlyclean-tags mostlyclean-generic
+		mostlyclean-tags mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-binPROGRAMS clean-libexecPROGRAMS clean-compile \
-		clean-krextra clean-kr clean-tags clean-generic \
-		mostlyclean-am
+		clean-krextra clean-kr clean-tags clean-depend \
+		clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-binPROGRAMS distclean-libexecPROGRAMS \
 		distclean-compile distclean-krextra distclean-kr \
-		distclean-tags distclean-generic clean-am
+		distclean-tags distclean-depend distclean-generic \
+		clean-am
 
 distclean: distclean-am
 
@@ -560,7 +518,8 @@ maintainer-clean-am:  maintainer-clean-binPROGRAMS \
 		maintainer-clean-libexecPROGRAMS \
 		maintainer-clean-compile maintainer-clean-krextra \
 		maintainer-clean-kr maintainer-clean-tags \
-		maintainer-clean-generic distclean-am
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -575,63 +534,14 @@ distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-krextra distclean-krextra clean-krextra \
 maintainer-clean-krextra mostlyclean-kr distclean-kr clean-kr \
 maintainer-clean-kr tags mostlyclean-tags distclean-tags clean-tags \
-maintainer-clean-tags distdir info-am info dvi-am dvi check check-am \
-installcheck-am installcheck install-exec-am install-exec \
+maintainer-clean-tags distdir mostlyclean-depend distclean-depend \
+clean-depend maintainer-clean-depend info-am info dvi-am dvi check \
+check-am installcheck-am installcheck install-exec-am install-exec \
 install-data-am install-data install-am install uninstall-am uninstall \
 all-redirect all-am all installdirs mostlyclean-generic \
 distclean-generic clean-generic maintainer-clean-generic clean \
 mostlyclean distclean maintainer-clean
 
-
-cpio.o: cpio.c ../config.status
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/cpio.c
-
-cpio._o: cpio._c ../config.status
-	@rm -f _cpio.c
-	@ln cpio._c _cpio.c
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _cpio.c
-	@mv _cpio.o $@
-	@rm _cpio.c
-
-mt.o: mt.c ../config.status
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/mt.c
-
-mt._o: mt._c ../config.status
-	@rm -f _mt.c
-	@ln mt._c _mt.c
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _mt.c
-	@mv _mt.o $@
-	@rm _mt.c
-
-pax.o: pax.c ../config.status
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/pax.c
-
-pax._o: pax._c ../config.status
-	@rm -f _pax.c
-	@ln pax._c _pax.c
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _pax.c
-	@mv _pax.o $@
-	@rm _pax.c
-
-tar.o: tar.c ../config.status
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/tar.c
-
-tar._o: tar._c ../config.status
-	@rm -f _tar.c
-	@ln tar._c _tar.c
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _tar.c
-	@mv _tar.o $@
-	@rm _tar.c
-
-rmt.o: rmt.c ../config.status
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c $(srcdir)/rmt.c
-
-rmt._o: rmt._c ../config.status
-	@rm -f _rmt.c
-	@ln rmt._c _rmt.c
-	$(COMPILE) -DLOCALEDIR=\"$(localedir)\" -c _rmt.c
-	@mv _rmt.o $@
-	@rm _rmt.c
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

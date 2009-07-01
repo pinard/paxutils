@@ -1,5 +1,5 @@
 /* getfile.c - Code to return next filename.
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #include <config.h>
 #include <sys/types.h>
 #include "system.h"
-#include "extern.h"
+#include "common.h"
 
 /*-----------------------------------------------------------------------.
 | Return next file name to process.  If pax_file_names is not NULL, then |
@@ -28,23 +28,21 @@
 | stdin.  This function returns 0 when there are no more files.          |
 `-----------------------------------------------------------------------*/
 
-int
+bool
 get_next_file_name (dynamic_string *result)
 {
   if (pax_file_names != NULL)
     {
       if (num_pax_file_names <= 0)
-	return (0);
+	return false;
 
       ds_resize (result, strlen (pax_file_names[0]) + 1);
       strcpy (result->string, pax_file_names[0]);
 
-      ++pax_file_names;
-      --num_pax_file_names;
-      return (1);
+      pax_file_names++;
+      num_pax_file_names--;
+      return true;
     }
   else
-    {
-      return (ds_fgetstr (stdin, result, name_end) != NULL);
-    }
+    return ds_fgetstr (stdin, result, name_end) != NULL;
 }

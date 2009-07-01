@@ -1,5 +1,5 @@
 /* fmtcpio.c - read and write cpio format.
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -18,10 +18,8 @@
 #include "system.h"
 
 #include <assert.h>
-#include "extern.h"
-#include "cpiohdr.h"
-#include "cpio.h"
 #include "filetypes.h"
+#include "common.h"
 
 /*==============================================\
 | First half of file is reading cpio archives.  |
@@ -44,9 +42,9 @@ swab_array (char *ptr, int count)
     {
       tmp = *ptr;
       *ptr = *(ptr + 1);
-      ++ptr;
+      ptr++;
       *ptr = tmp;
-      ++ptr;
+      ptr++;
     }
 }
 
@@ -249,9 +247,9 @@ write_out_cpioascii_header (struct new_cpio_header *file_hdr, int out_des)
   char ascii_header[112];
   char *magic_string;
 
-  assert (archive_format == arf_newascii || archive_format == arf_crcascii);
+  assert (archive_format == NEW_ASCII_FORMAT || archive_format == CRC_ASCII_FORMAT);
 
-  if (archive_format == arf_crcascii)
+  if (archive_format == CRC_ASCII_FORMAT)
     magic_string = "070702";
   else
     magic_string = "070701";
@@ -284,15 +282,15 @@ write_out_oldascii_header (struct new_cpio_header *file_hdr, int out_des)
   dev_t rdev;
 #endif /* __MSDOS__ */
 
-  assert (archive_format == arf_oldascii || archive_format == arf_hpoldascii);
+  assert (archive_format == OLD_ASCII_FORMAT || archive_format == HPUX_OLD_ASCII_FORMAT);
 
 #ifndef __MSDOS__
-  if (archive_format == arf_oldascii)
+  if (archive_format == OLD_ASCII_FORMAT)
     {
       dev = makedev (file_hdr->c_dev_maj, file_hdr->c_dev_min);
       rdev = makedev (file_hdr->c_rdev_maj, file_hdr->c_rdev_min);
     }
-  else /* arf_hpoldascii */
+  else /* HPUX_OLD_ASCII_FORMAT */
     {
       /* HP/UX cpio creates archives that look just like ordinary archives,
 	 but for devices it sets major = 0, minor = 1, and puts the actual
@@ -347,7 +345,7 @@ write_out_oldcpio_header (struct new_cpio_header *file_hdr, int out_des)
 {
   struct old_cpio_header short_hdr;
 
-  assert (archive_format == arf_binary || archive_format == arf_hpbinary);
+  assert (archive_format == BINARY_FORMAT || archive_format == HPUX_BINARY_FORMAT);
 
   short_hdr.c_magic = 070707;
   short_hdr.c_dev = makedev (file_hdr->c_dev_maj, file_hdr->c_dev_min);
@@ -360,7 +358,7 @@ write_out_oldcpio_header (struct new_cpio_header *file_hdr, int out_des)
   short_hdr.c_uid = file_hdr->c_uid & 0xFFFF;
   short_hdr.c_gid = file_hdr->c_gid & 0xFFFF;
   short_hdr.c_nlink = file_hdr->c_nlink & 0xFFFF;
-  if (archive_format != arf_hpbinary)
+  if (archive_format != HPUX_BINARY_FORMAT)
     short_hdr.c_rdev = makedev (file_hdr->c_rdev_maj, file_hdr->c_rdev_min);
   else
     {
@@ -436,9 +434,9 @@ write_cpio_eof (int out_file_des)
 | Return `true' if FILENAME is too long for cpio format.  |
 `--------------------------------------------------------*/
 
-int
+bool
 is_cpio_filename_too_long (char *filename)
 {
   /* cpio can handle any length of name.  */
-  return (0);
+  return false;
 }

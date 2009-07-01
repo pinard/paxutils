@@ -1,0 +1,42 @@
+#!/bin/sh
+# This script should be run by tar with --info-script (-F), to inform
+# interested parties that a tape for the next volume of the backup needs to
+# be put in the tape drive. 
+
+# Get definition of TAPE_FILE, VOLNO_FILE, and so on. 
+. ./backup-specs
+
+mt -f ${TAPE_FILE} rewind
+mt -f ${TAPE_FILE} offline
+
+volno=`cat ${VOLNO_FILE}`
+
+
+# Customized behavior for FSF machines, to bring attention to the fact that
+# the tape needs to be changed (who looks at the terminal?)
+/usr/lib/sendmail -t << __EOF__
+From: `basename $0` (backup tape-changing reminder)
+To: fsf-ne43
+Subject: Backup needs new tape for volume ${volno}
+Reply-To: ${ADMINISTRATOR}
+
+This is an automated report from the backup script running on 
+`hostname`. 
+
+Volume ${volno} of the backup needs to be put in the tape drive.  Usually
+whoever prepared the backup leaves labeled tapes on top of the drive
+itself.  If there aren't any more, information about where to find tapes
+and how to label them are posted on the wall by apple-gunkies.  An online
+copy (which is probably more up-to-date) can also be found in
+~friedman/etc/fsf/backup.how.
+
+__EOF__
+
+
+echo "Please put volume ${volno} in tape drive and press RETURN"
+read input
+echo "Writing volume ${volno}..."
+
+exit 0
+
+# eof

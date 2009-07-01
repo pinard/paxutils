@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -117,7 +117,7 @@ automatic device detection at installation time.  This was failing in
 so many cases that it was hopeless to repair.  It is now completely
 left to the installer to override standard input and standard output in
 favor of some default device, if this seems preferable to him/her.
-Further, we think *most* actual uses of `tar' are with pipes or disks,
+Further, we think _most_ actual uses of `tar' are with pipes or disks,
 not tapes, cartridges, or diskettes.
 
    Some users think that using standard input and output is asking for
@@ -128,7 +128,7 @@ of output.  We had so many bug reports in that area of configuring
 default tapes automatically, and so many contradicting requests, that
 we finally considered the problem to be intractable, at least if
 portability is demanded.  We could of course use something like
-`/dev/tape' as a default, but this is *also* asking for various kind of
+`/dev/tape' as a default, but this is _also_ asking for various kind of
 trouble, ranging from hung processes to accidental destruction of real
 tapes.  After having seen all this mess, using standard input and
 output as a default really sounds like the only clean choice left, and
@@ -226,7 +226,7 @@ use something other than the standard `rsh' (for example, a Kerberized
 program was installed is used instead.  This is the first found of
 `/usr/ucb/rsh', `/usr/bin/remsh', `/usr/bin/rsh', `/usr/bsd/rsh' or
 `/usr/bin/nsh'.  The installer may have overridden this by defining the
-environment variable `RSH' *at installation time*.
+environment variable `RSH' _at installation time_.
 
    The option `rsh-command=COMMAND' causes `tar' to use remote COMMAND
 instead of `rsh'.  This option exists so that people who use something
@@ -237,7 +237,7 @@ access a remote device.
 program was installed is used instead.  This is the first found of
 `/usr/ucb/rsh', `/usr/bin/remsh', `/usr/bin/rsh', `/usr/bsd/rsh' or
 `/usr/bin/nsh'.  The installer may have overridden this by defining the
-environment variable `RSH' *at installation time*.
+environment variable `RSH' _at installation time_.
 
 
 File: paxutils.info,  Node: rmt invocation,  Prev: rsh-command,  Up: file
@@ -275,7 +275,7 @@ archive.  If you specify any subcommand other than one of these three,
    By default, `tar' takes file names from the command line.  However,
 there are other ways to specify file or member names, or to modify the
 manner in which `tar' selects the files or members upon which to
-operate.  *Note files-from::; see *Note exclude::.  In general, these
+operate.  *Note files-from::.  *Note exclude::.  In general, these
 methods work for specifying the names of both files and archive members.
 
 * Menu:
@@ -349,7 +349,7 @@ directory from within the file list contents, so avoiding the
 `--directory=DIRECTORY' (`-C DIRECTORY') option on the command line.
 *Note directory::.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) It was not possible to intermix `--files-from=FILE-OF-NAMES'
 (`-T FILE-OF-NAMES') and names on a command line, with `tar' version
@@ -494,7 +494,7 @@ processing.  This is left unspecified on purpose, so `tar' behavior may
 later be changed more easily.  Consider that `--verbose' (`-v') is your
 friend, here!
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) This draining feature has been added, a while ago, to avoid
 spurious diagnostics about broken pipes.  From the number of bug
@@ -548,7 +548,7 @@ causes `tar' to ignore files that match the patterns listed in FILE.
    Use the `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS')
 option to read a list of shell wildcards, one per line, from FILE;
 `tar' will ignore files matching those wildcards.  Thus if `tar' is
-called as `tar -c -X foo .'  and the file `foo' contains a single line
+called as `tar -c -X foo .' and the file `foo' contains a single line
 `*.o', no files whose names end in `.o' will be added to the archive.
 
 
@@ -572,7 +572,7 @@ match only `a', and not `A'.  The character `?' in the pattern matches
 any single character in the matched string.  The character `*' in the
 pattern matches zero, one, or more single characters in the matched
 string.  The character `\' says to take the following character of the
-pattern *literally*; it is useful when one needs to match the `?', `*',
+pattern _literally_; it is useful when one needs to match the `?', `*',
 `[', or `\' characters themselves.
 
    The character `[', up to the matching `]', introduces a "character
@@ -585,11 +585,11 @@ would match any of the characters `-', `\', `[', `*', `?', or `]'.  In
 a character class, the special construction `[A-E]', using an hyphen
 between two letters, is meant to represent all characters between A and
 E, inclusive.  (Due to parsing constraints, the characters `-' and `]'
-must come either *first* or *last* in a character class.)
+must come either _first_ or _last_ in a character class.)
 
    If the first character of the class after the opening `[' is `!' or
 `^', then the meaning of the class is reversed.  Rather than listing
-the characters to match, it lists those characters that are *forbidden*
+the characters to match, it lists those characters that are _forbidden_
 as the next single character of the matched string.
 
    Other characters of the class stand for themselves.  The special
@@ -609,11 +609,11 @@ modifications in the way `tar' accomplishes wildcard matches.  We
 perceive any change of semantics in this area as a delicate thing to
 impose on `tar' users.  On the other hand, we should be progressive
 enough to correct any ill-design: compatibility at any price is not
-always a good attitude.  In conclusion, it is *possible* that slight
+always a good attitude.  In conclusion, it is _possible_ that slight
 amendments be later brought to the previous description.  Your opinions
 on the matter are welcome.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) For the literate programmer, suffice to say that wildcarding is
 achieved through the `fnmatch' library routine, used without flags for
@@ -633,7 +633,7 @@ pitfalls:
      would otherwise affect them.  In the example above, if you create
      an archive and exclude files that end with `*.o', but explicitly
      name the file `catc.o' after all the options have been listed,
-     `catc.o' *will* be included in the archive.
+     `catc.o' _will_ be included in the archive.
 
    * You can sometimes confuse the meanings of `--exclude=PATTERN' and
      `--exclude-from=FILE-OF-PATTERNS' (`-X FILE-OF-PATTERNS').  Be
@@ -670,6 +670,7 @@ pitfalls:
      `--exclude-from=FILE-OF-PATTERNS' applies to patterns listed in a
      file.
 
+
 
 File: paxutils.info,  Node: Time criteria,  Next: Walking,  Prev: Exclusions,  Up: Choosing
 
@@ -690,7 +691,7 @@ owner, permissions, etc) fields, while `--newer-mtime=DATE' tests only
 `mtime' field.
 
    To be precise, `--after-date=DATE' (`--newer=DATE', `-N DATE')
-checks *both* `mtime' and `ctime' and processes the file if either one
+checks _both_ `mtime' and `ctime' and processes the file if either one
 is more recent than DATE, while `--newer-mtime=DATE' only checks
 `mtime' and disregards `ctime'.  Neither uses `atime' (the last time the
 contents of the file were looked at).
@@ -736,8 +737,8 @@ an archive, `tar' will only extract files newer than the DATE you
 specify.
 
    To select files newer than the modification time of a file that
-already exists, you can use the {No Value For "reference"} option of
-GNU `date', available in GNU shell utilities 1.13 or later.  For
+already exists, you can use the {Aucune Valeur Pour «reference»} option
+of GNU `date', available in GNU shell utilities 1.13 or later.  For
 example, you could say:
 
      $ tar -cf ARCHIVE.TAR --newer="`date -r FILE`" /home
@@ -812,7 +813,7 @@ descending directories.
    When you use `--no-recursion', `tar' grabs directory entries
 themselves, but does not descend into them recursively.  Many people use
 `find' for locating files they want to back up, and since `tar'
-*usually* recursively descends on directories, they have to use the
+_usually_ recursively descends on directories, they have to use the
 `! -d' option to `find'  as they usually do not want all the files in a
 directory.  They then use the `--files-from=FILE-OF-NAMES' (`-T
 FILE-OF-NAMES') option to archive the files located via `find'.
@@ -895,7 +896,7 @@ several widely separated files that you want to store as if they were
 in the same directory.
 
    Note that the file `cherry' is recorded in the archive under the
-precise name `cherry', *not* `food/cherry'.  Thus, the archive will
+precise name `cherry', _not_ `food/cherry'.  Thus, the archive will
 contain three files that all appear to have come from the same
 directory; if the archive is extracted with plain `tar --extract', all
 three files will be written in the current directory.
@@ -935,7 +936,7 @@ case the next line is interpreted as a directory for the following
 entries.(1) This interpretation of `-C' from within inclusion files is
 disabled when using the `--null' option.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Do not try using `-C' and the directory on the same input line,
 separated with some white space.  this will not work.  You have to put
@@ -1053,9 +1054,9 @@ File: paxutils.info,  Node: Portable names,  Next: dereference,  Prev: Portabili
 Portable names
 --------------
 
-   Use *straight* file and directory names, made up of printable ASCII
+   Use _straight_ file and directory names, made up of printable ASCII
 characters, avoiding colons, slashes, backslashes, spaces, and other
-*dangerous* characters.  Avoid deep directory nesting.  Accounting for
+_dangerous_ characters.  Avoid deep directory nesting.  Accounting for
 oldish System V machines, limit your file and directory names to 14
 characters or less.
 
@@ -1063,7 +1064,7 @@ characters or less.
 should not rely on case-sensitivity for file names, and you might use
 the GNU `doschk' program for helping you further diagnosing illegal
 MS-DOS names, which are even more limited than System V's.  `tar'
-compiled for MS-DOS *does* try to cope with filenames which are illegal
+compiled for MS-DOS _does_ try to cope with filenames which are illegal
 on MS-DOS file systems (), but the best portability strategy is to
 avoid such problems in the first place.  Even newer versions of
 MS-Windows, such as Windows 9X and Windows NT, still have some
@@ -1095,7 +1096,7 @@ name that no longer exists in the file system.
 
    If a linked-to file is encountered again by `tar' while creating the
 same archive, an entire second copy of it will be stored.  (This
-*might* be considered a bug.)
+_might_ be considered a bug.)
 
    So, for portable archives, do not archive symbolic links as such, and
 use `--dereference' (`-h'): many systems do not support symbolic links,
@@ -1119,7 +1120,7 @@ ownership by group and user IDs instead of group and user names.
    When updating an archive, do not use `--old-archive' (`-o') unless
 the archive was created using this option.
 
-   In most cases, a *new* format archive can be read by an *old* `tar'
+   In most cases, a _new_ format archive can be read by an _old_ `tar'
 program without serious trouble, so this option should seldom be
 needed.  On the other hand, most modern `tar's are able to read old
 format archives, so it might be safer for you to always use

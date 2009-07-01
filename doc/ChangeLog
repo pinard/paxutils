@@ -1,21 +1,34 @@
-1999-05-28  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-06-30  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
+
+	* convtexi.pl: Add GPL comment.
+	Reported by Paul Eggert.
+
+1999-06-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi (Top): Use @ifnottex instead of @ifinfo.
+
+1999-06-16  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
+
+	* paxutils.texi: Replace OLDGNU by GNUTAR in symbols.
+
+1999-05-28  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* paxutils.texi (quick): Quick and wildcards are a usage error.
 
-1999-05-27  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-05-27  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* paxutils.texi (directory, files-from): How to use these together.
 	Reported by Angelo Fumagalli.
 
-1999-05-23  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-05-23  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* paxutils.texi (quick): New node.
 
-1999-05-04  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-05-04  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* paxutils.texi (files-from): Document backslashed sequences.
 
-1999-04-13  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-04-13  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* paxutils.texi (files-from): This options may be used many times
 	and intermixed with names on the command.
@@ -24,7 +37,7 @@
 	* paxutils.texi: Many editorial and various corrections for cpio.
 	Explanation of a few MS-DOS and Windows specificities.
 	Reported by Eli Zaretskii.
-
+
 1999-03-16  Dale R. Worley <worley@ariadne.com>
 
 	* paxutils.texi: Add notes to the documentation to describe how
@@ -32,7 +45,7 @@
 	modification time and that it may interact badly with simultaneous
 	access by other programs.
 
-1998-11-09  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-09  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* help2man: New, from Brendan's version 1.5c.
 	* helptoman.pl: Deleted.
@@ -41,13 +54,13 @@
 	(cpio.1, mt.1, pax.1): New rules.
 	(man_MANS): Add pax.1.
 
-1998-06-24  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-06-24  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* tar.h: Many corrections to comments.
 	* Makefile.am (header.texi): Adjusted.
 	Reported by Doug Edwards.
 
-1998-05-23  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-05-23  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* cpio.1, mt.1: New files.
 	* paxutils.texi: New name for tar.texi, with cpio.texi integrated.
@@ -56,11 +69,11 @@
 	(EXTRA_DIST): Add ChangeLog.cpio.
 	* ChangeLog: Integrate entries from cpio.
 
-1998-03-19  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-03-19  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* convtexi.pl: Adjust for the needs of the current manual merge.
 
-1998-02-19  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-19  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* help2man: New version.  To be studied later.
 	* Makefile.am (EXTRA_DIST): Adjusted.
@@ -71,95 +84,95 @@
 	* tar.texi: Fix missing cross-references.  Add DOS-specific info.
 	Fix typos.
 
-1997-08-04  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-08-04  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* helptoman.pl: New file.
 	* Makefile.am: Prepare, install and distribute the man page.
 	Reported by Brendan O'Dea.
 
-1997-05-11  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-05-11  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (tar.info): Remove goal if makeinfo fails.
 
-1997-04-23  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-23  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release tar 1.12.
 
 	* Makefile.am (EXTRA_DIST): Remove tar-mew.texi for the release.
 	(tar.dvi) [!PUBLISH]: Delete @smallbook.  Call sed in all cases.
 
-1997-04-11  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-11  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (tar.info): Comment about needed makeinfo version.
 	Reported by Sherwood Botsford.
 
-1997-04-10  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-10  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Add tar-mew.texi.
 
-1997-03-16  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-03-16  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (tar.dvi): Merely use tar.texi and rely on -I to
 	resolve it in $(srcdir).  Remove tmp-tar.info* files right away.
 	(CLEANFILES): Define to tmp-*.
 
-1997-03-14  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-03-14  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Rename RENDERING, QUALITY, DRAFT and DEBUG to
 	RENDITION, PUBLISH, DISTRIB and PROOF respectively.  Ensure that
 	`@set DISTRIB' gets replaced after macro-expansion and before TeX.
 
-1996-11-06  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-11-06  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* getdate.texi: New file, from elsewhere.
 	* tar.texi: Replace a lot of text by an include of getdate.texi.
 	* Makefile.am: Adjusted.
 
-1996-08-24  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-08-24  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Remove texinfo.tex, now that Automake
 	handles it automatically.
 
-1996-07-18  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-07-18  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (tar.info): Remove -I$(srcdir), which was useless.
 
-1996-07-17  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-07-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Include texinfo.tex, until Automake
 	does it automatically.
 
-1996-07-16  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-07-16  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Distribute convtexi.pl, for now.
 
-1996-04-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-04-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Implement rendering levels (QUALITY, DRAFT or DEBUG).
 
-1996-04-17  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-04-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): New name for DIST_OTHER.
 
-1996-03-03  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-03-03  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (tar.dvi): Comment about needed makeinfo version.
 	Reported by Jonathan Thornburg.
 
-1996-02-12  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-02-12  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Replace TEXINFO by info_TEXINFOS for Automake 0.29.
 
-1996-01-14  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-01-14  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (AUTOMAKE_OPTIONS): Select gnits.
 
-1996-01-08  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-01-08  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: New file.
 	* tar.texi: New name for tar.texinfo.
 
-1995-12-30  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-12-30  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (check): New goal, doing nothing.
 	Reported by Cesar Romani, Joachim Seelig, Mark Bynum and Ulrich
@@ -169,11 +182,11 @@
 
 	* cpio.texi: INFO-DIR-ENTRY.
 
-1995-11-29  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-11-29  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (clean): Remove tmp-* files.
 
-1995-11-27  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-11-27  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Use -I$(srcdir) with makeinfo, and -otmp-tar.info
 	so tar.info in build directory does not shadow the real one.
@@ -185,7 +198,7 @@
 
 	* Makefile.am: Let automake handle version.texi stuff.
 
-1995-11-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-11-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Distribute ChangeLog.
 	* ChangeLog: New file, extracted from top-level ChangeLog.
@@ -203,73 +216,73 @@
 
 	* Makefile.in: New file.
 
-1995-06-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-06-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Get rid of docwarn.texi, now replaced by
 	the @UNREVISED macro, right into tar.texinfo.
 
-1995-06-18  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-06-18  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (tar.dvi): First macro-expand tar.texinfo.
 
-1995-06-07  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-06-07  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Use subdir and distdir.
 
-1995-06-03  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-06-03  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* tar.texinfo: Use header.texi.
 	* Makefile.in: Prepare header.texi from src/tar.h.
 	Distribute it.
 
-1995-05-28  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-05-28  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Add tar.info-3.
 	Reported by Bruno Haible.
 
-1995-02-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-02-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Replace `date' by `echo timestamp'.
 
-1995-02-13  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-02-13  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Use top_srcdir.
 
-1995-02-05  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1995-02-05  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (maintainer-clean): New name for realclean.
 
-1994-12-03  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-12-03  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Include docwarn.texi.
 
-1994-11-07  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-11-07  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (stamp-vti): Use new -r option to date.
 
-1994-11-05  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-11-05  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (realclean): Also remove stamp-vti.
 
-1994-09-14  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-09-14  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Cleanup...
 	(texclean): Deleted, merged into mostlyclean.
 	(Makefile): Have ./config.status create this Makefile only.
 
-1994-08-30  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-08-30  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (tar.info): Make the documentation in the source
 	directory only.
 
-1994-08-21  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-08-21  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Correct for when a different build directory.
 
 	* docwarn.texi: New file.
 	* Makefile.in: Distribute it.
 
-1994-08-17  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1994-08-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: New file.
 	* tar.texinfo: New file.

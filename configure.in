@@ -19,7 +19,7 @@
 AC_INIT(src/pax.c)
 AC_PREREQ(2.12)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(paxutils, 2.4h)
+AM_INIT_AUTOMAKE(paxutils, 2.4i)
 AT_CONFIG(../src)
 ALL_LINGUAS="cs de es fr it ko nl no pl pt ru sl sv"
 
@@ -284,12 +284,12 @@ fi
 dnl AC_REPLACE_FUNCS(strdup strcasecmp)
 dnl AM_WITH_REGEX
 
-# Enable Free tar format.  (Unfinished)
-AC_MSG_CHECKING(whether Free tar format should be enabled)
-AC_ARG_ENABLE(oldgnu,
-[  --enable-oldgnu         enable old GNU tar format (unfinished)],
+# Enable GNU tar format in `cpio'.  (Unfinished)
+AC_MSG_CHECKING(whether cpio should support old GNU tar format)
+AC_ARG_ENABLE(gnutar,
+[  --enable-gnutar         enable old GNU tar format in cpio (unfinished)],
 AC_MSG_RESULT(yes)
-AC_DEFINE(CPIO_USE_OLDGNU),
+AC_DEFINE(CPIO_USE_GNUTAR),
 AC_MSG_RESULT(no))
 
 # Enable debugging.

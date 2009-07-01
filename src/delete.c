@@ -1,5 +1,5 @@
 /* Delete entries from a tar archive.
-   Copyright (C) 1988, 1992, 1994, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -77,8 +77,6 @@ move_archive (int count)
 
     if (rmtlseek (archive, position, SEEK_SET) != position)
       FATAL_ERROR ((0, 0, _("Could not re-position archive file")));
-
-    return;
   }
 }
 
@@ -138,7 +136,7 @@ delete_archive_members (void)
   int kept_blocks_in_record;
 
   name_gather ();
-  open_archive (ACCESS_UPDATE);
+  open_tar_archive (ACCESS_UPDATE);
 
   while (logical_status == HEADER_STILL_UNREAD)
     {
@@ -153,7 +151,7 @@ delete_archive_members (void)
 	  if (name = find_matching_name (current.name, false), !name)
 	    {
 	      set_next_block_after (current.block);
-	      if (current.block->oldgnu_header.isextended)
+	      if (current.block->gnutar_header.isextended)
 		skip_extended_headers ();
 	      skip_file (current.stat.st_size);
 	      break;
@@ -195,7 +193,7 @@ delete_archive_members (void)
   if (logical_status != HEADER_SUCCESS)
     {
       write_eot ();
-      close_archive ();
+      close_tar_archive ();
       report_unprocessed_names ();
       return;
     }
@@ -214,7 +212,7 @@ delete_archive_members (void)
 #if 0
   /* FIXME: Old code, before the goto was inserted.  To be redesigned.  */
   set_next_block_after (current.block);
-  if (current.block->oldgnu_header.isextended)
+  if (current.block->gnutar_header.isextended)
     skip_extended_headers ();
   skip_file (current.stat.st_size);
 #endif
@@ -328,6 +326,6 @@ delete_archive_members (void)
     }
 
   write_eot ();
-  close_archive ();
+  close_tar_archive ();
   report_unprocessed_names ();
 }

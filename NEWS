@@ -1,7 +1,7 @@
 Free paxutils NEWS - User visible changes.	-*- outline -*- (allout)
-Copyright © 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
+Copyright Â© 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
 
-* Version 2.4h - François Pinard, 1999-06.
+* Version 2.4i - FranÃ§ois Pinard, 1999-06.
 
 .* Specification changes
 . + An info script should return success for `tar' to continue processing.
@@ -20,7 +20,7 @@ Copyright © 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
 .* Started pax front end.
 .* Test suite now in distribution.
 
-* Version (tar) 1.12b - François Pinard, 1998-02.
+* Version (tar) 1.12b - FranÃ§ois Pinard, 1998-02.
 
 .* New features
 . + Option --name-prefix for all members of created archive.
@@ -37,7 +37,7 @@ Copyright © 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
 . + Option --checkpoint writes dots instead of long messages.
 . + Various cleanups, speedups, and bug corrections, as usual.
 
-* Version (tar) 1.12 - François Pinard, 1997-04.
+* Version (tar) 1.12 - FranÃ§ois Pinard, 1997-04.
 
 .* Sensitive matters
 . + Use shell globbing patterns for --label, instead of regular expressions.
@@ -106,7 +106,7 @@ Copyright © 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
 .* read System V.4 POSIX tar archives and HPUX POSIX tar archives.
 .* use rmdir, instead of unlink, to delete existing directories.
 
-* Version (tar) 1.11.8 - François Pinard, 1995-06.
+* Version (tar) 1.11.8 - FranÃ§ois Pinard, 1995-06.
 
 . + Messages available in French, German, Portuguese and Swedish.
 . + The distribution provides a rudimentary Texinfo manual.

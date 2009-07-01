@@ -1,7 +1,22 @@
 #!/bin/sh
 # Validation suite for Free `pax' utilities.		-*- shell-script -*-
-# Copyright © 1998, 1999 Progiciels Bourbeau-Pinard inc.
-# François Pinard <pinard@iro.umontreal.ca>, 1998.
+# Copyright Â© 1998, 1999 Progiciels Bourbeau-Pinard inc.
+# FranÃ§ois Pinard <pinard@iro.umontreal.ca>, 1998.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
 
 # Check version with `tar' for the time being, as `pax' is not always built.
 # When `pax' will be declared stable, use `pax' instead here.  FIXME!
@@ -11,7 +26,15 @@ echo
 echo 'cpio tests.'
 echo
 
-test -n "$check_cpio" || at_skip_mode=1
+if test -n "$check_cpio"; then
+  echo "For now, until we believe that \`cpio' has been made stable enough,"
+  echo "it is not really useful to merely report failures in the \`cpio' part"
+  echo 'of the validation suite, as we are already aware that some of the tests'
+  echo 'are failing.  However, please contribute your analysis of problems.'
+  echo
+else
+  at_skip_mode=1
+fi
 
 AT_DEFINE(PREPARE,
 [cleanup=
@@ -82,7 +105,6 @@ PREPARE_SUB(AT_SHIFT($@))])])
 
 # We may get many "truncating inode number" diagnostics in case the
 # build directory has high-numbered inodes, CPIO_FILTER gets rid of them.
-# One might prefer testing on a less used filesystem?  I'm not sure.
 AT_DEFINE(CPIO_FILTER,
 [grep -v ': truncating inode number' stderr \
 | sed 's/^[[1-9][0-9]*] blocks*/NN blocks/' > stderr2

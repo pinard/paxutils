@@ -1,0 +1,21 @@
+# Copy a Texinfo file, replacing @value's, @FIXME's and other gooddies.
+# Copyright © 1996 Free Software Foundation, Inc.
+# François Pinard <pinard@iro.umontreal.ca>, 1996.
+
+# Set RENDERING to QUALITY, DRAFT or DEBUG.
+RENDERING = DRAFT
+
+tar.dvi: tar.texi
+	makeinfo -Etmp-tar.texi -o/dev/null -D$(RENDERING) tar.texi
+	$(TEXI2DVI) tmp-tar.texi
+	mv tmp-tar.dvi $@
+
+tar-iro.dvi: tar-iro.texi
+	texi2dvi tar.texi
+
+tar-iro.texi: tar-mew.texi convtexi.pl
+	perl convtexi.pl tar-mew.texi > tmp-tar.texi
+	mv tmp-tar.texi tar.texi
+
+clean:
+	rm -f tmp-tar.* *.dvi *.info *.info-*

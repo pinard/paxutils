@@ -1,5 +1,5 @@
-/* Miscellaneous functions, not really specific to tar.
-   Copyright (C) 1988, 92, 94, 95, 96, 97, 98, 99 Free Software Foundation, Inc.
+/* Miscellaneous functions for paxutils.
+   Copyright (C) 1988,92,94,95,96,97,98,99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -13,13 +13,10 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
-
 #include "rmt.h"
-
-/* The following inclusion for crosschecking prototypes, only.  */
 #include "common.h"
 
 /* Various integer arithmetic.  */
@@ -52,9 +49,8 @@ time_compare (time_t mt1, time_t mt2)
 }
 
 #endif /* DOSWIN */
-
 
-/* Handling strings.  */
+/* Handling strings, when NOT in context of files names.  */
 
 #define ISPRINT(Char) (ISASCII (Char) && isprint (Char))
 
@@ -73,69 +69,6 @@ is_pattern (const char *string)
 	  || strchr (string, '[') != 0
 	  || strchr (string, '?') != 0);
 }
-
-#if DOSWIN
-
-/*------------------------------------------------------------------------.
-| Return the program base name from the program name, excluding directory |
-| and suffix information.  The test suite wants it simple.                |
-`------------------------------------------------------------------------*/
-
-/* On DOS and Windows, the parent program have no real control on argv[0] of
-   its children.  It is the OS that computes it and puts it in the special
-   place where the startup code gets at it.  And DOS and Windows always place
-   there a full pathname, unless the system call which invokes the subsidiary
-   program already mentions a fully-qualified pathname.  The DJGPP startup
-   code does perform some massaging on argv[0] it gets, like mirroring the
-   slashes to the Unix forward style, but it cannot go further in adopting the
-   Unix behavior by dropping the leading directories because many DOS/Windows
-   programs and programmers are used to depend on that (for example, it makes
-   looking for files in the same directory as the executable a snap).  */
-
-const char *
-get_programe_base_name (const char *name)
-{
-  /* The test suite needs the program_name to be rather bare.  We need to find
-     the basename and drop the .exe suffix, if any; any other solution could
-     fail, since there are too many different shells on MS-DOS.  (Does this
-     really work with every Unix shell?)  */
-
-  const char *cursor = name;
-  const char *base = name;
-  const char *extension = name;
-
-  for (; *cursor; cursor++)
-    if (*cursor == '/' || *cursor == '\\' || *cursor == ':')
-      base = cursor + 1;
-    else if (*cursor == '.')
-      extension = cursor + 1;
-
-  if (extension > base
-      && tolower (extension[0]) == 'e' && tolower (extension[1]) == 'x'
-      && tolower (extension[2]) == 'e' && tolower (extension[3]) == '\0')
-    {
-      char *copy = xmalloc (extension - base + 1);
-
-      memcpy (copy, base, extension - base);
-      copy[extension - base] = '\0';
-      return copy;
-    }
-
-  return base;
-}
-
-void
-unixify_file_name (char *file_name)
-{
-  if (file_name == NULL)
-    return;
-
-  for (; *file_name; file_name++)
-    if (*file_name == '\\')
-      *file_name = '/';
-}
-
-#endif /* DOSWIN */
 
 /*-------------------------------------------------------------------------.
 | Assign STRING to a copy of VALUE if not NULL, or to NULL.  If STRING was |
@@ -346,6 +279,24 @@ unquote_string (char *string)
     *destination = '\0';
   return result;
 }
+
+/* Handling strings, when in context of file names.  */
+
+/*---------------------------------------------------------------------.
+| Returns true if p is `.' or `..'.  This could be a macro for speed.  |
+`---------------------------------------------------------------------*/
+
+/* Early Solaris 2.4 readdir may return d->d_name as `' in NFS-mounted
+   directories.  The workaround here skips `' just like `.'.  Without it, tar
+   would then treat `' much like `.' and loop endlessly.  */
+
+bool
+is_dot_or_dotdot (const char *p)
+{
+  return (p[0] == '\0'
+	  || (p[0] == '.' && (p[1] == '\0'
+			      || (p[1] == '.' && p[2] == '\0'))));
+}
 
 /*-------------------------------------------------------------------------.
 | Allocate a new string, made up of concatenating PATH and NAME.  Abort if |
@@ -387,6 +338,73 @@ concat_with_slash (const char *path, const char *name)
   strcpy (cursor, name);
   return buffer;
 }
+
+#if DOSWIN
+
+/*----------------------------------------.
+| Turn backslashes into forward slashes.  |
+`----------------------------------------*/
+
+void
+unixify_file_name (char *file_name)
+{
+  if (file_name == NULL)
+    return;
+
+  for (; *file_name; file_name++)
+    if (*file_name == '\\')
+      *file_name = '/';
+}
+
+/*------------------------------------------------------------------------.
+| Return the program base name from the program name, excluding directory |
+| and suffix information.  The test suite wants it simple.                |
+`------------------------------------------------------------------------*/
+
+/* On DOS and Windows, the parent program have no real control on argv[0] of
+   its children.  It is the OS that computes it and puts it in the special
+   place where the startup code gets at it.  And DOS and Windows always place
+   there a full pathname, unless the system call which invokes the subsidiary
+   program already mentions a fully-qualified pathname.  The DJGPP startup
+   code does perform some massaging on argv[0] it gets, like mirroring the
+   slashes to the Unix forward style, but it cannot go further in adopting the
+   Unix behavior by dropping the leading directories because many DOS/Windows
+   programs and programmers are used to depend on that (for example, it makes
+   looking for files in the same directory as the executable a snap).  */
+
+const char *
+get_programe_base_name (const char *name)
+{
+  /* The test suite needs the program_name to be rather bare.  We need to find
+     the basename and drop the .exe suffix, if any; any other solution could
+     fail, since there are too many different shells on MS-DOS.  (Does this
+     really work with every Unix shell?)  */
+
+  const char *cursor = name;
+  const char *base = name;
+  const char *extension = name;
+
+  for (; *cursor; cursor++)
+    if (*cursor == '/' || *cursor == '\\' || *cursor == ':')
+      base = cursor + 1;
+    else if (*cursor == '.')
+      extension = cursor + 1;
+
+  if (extension > base
+      && tolower (extension[0]) == 'e' && tolower (extension[1]) == 'x'
+      && tolower (extension[2]) == 'e' && tolower (extension[3]) == '\0')
+    {
+      char *copy = xmalloc (extension - base + 1);
+
+      memcpy (copy, base, extension - base);
+      copy[extension - base] = '\0';
+      return copy;
+    }
+
+  return base;
+}
+
+#endif /* DOSWIN */
 
 /* Sorting lists.  */
 
@@ -463,28 +481,77 @@ merge_sort (char *list, int length, int offset, int (*compare) (char *, char *))
 #undef SUCCESSOR
 }
 
+/* Printing progress dots.  */
+
+/* Checkpointing counter; flag to know if an incomplete line is pending.  */
+static bool checkpoint_dots = false;
+static unsigned checkpoint = 0;
+static unsigned checkpoint_frequency;
+
+/*------------------------.
+| Checkpoint processing.  |
+`------------------------*/
+
+void
+init_progress_dots (unsigned frequency)
+{
+  checkpoint_dots = false;
+  checkpoint_frequency = 10;
+  checkpoint = 0;
+}
+
+void
+flush_progress_dots (void)
+{
+  if (checkpoint_dots)
+    {
+#if 0
+      /* FIXME: Also see the comment in output_dot, below.  It does not mean
+	 much to print dot counts unless each dot represents something
+	 precise, which experimentation does not grant yet.  */
+      fprintf (stderr, " [%d]\n", checkpoint);
+#else
+      fputc ('\n', stderr);
+#endif
+      checkpoint_dots = false;
+    }
+}
+
+void
+output_progress_dot (void)
+{
+  if (++checkpoint % checkpoint_frequency == 0)
+    {
+      if (!checkpoint_dots)
+	{
+#if 0
+	  /* FIXME: Each dot stands for 10 records, yet apparently not when
+	     using -z, even with -B forces reblocking.  Some exploration is
+	     needed before it really makes sense to print the record size.  */
+	  fprintf (stderr, "[%d] x ", record_size);
+#endif
+	  checkpoint_dots = true;
+	}
+
+      fputc ('.', stderr);
+      if (checkpoint % 100 == 0)
+	{
+	  if (checkpoint % 500 == 0)
+	    flush_progress_dots ();
+	  else
+	    fputc (' ', stderr);
+	}
+
+      fflush (stderr);
+    }
+}
+
 /* File handling.  */
 
 /* Saved names in case backup needs to be undone.  */
 enum backup_type backup_type;
 static char *before_backup_name = NULL;
 static char *after_backup_name = NULL;
-
-/*---------------------------------------------------------------------.
-| Returns true if p is `.' or `..'.  This could be a macro for speed.  |
-`---------------------------------------------------------------------*/
-
-/* Early Solaris 2.4 readdir may return d->d_name as `' in NFS-mounted
-   directories.  The workaround here skips `' just like `.'.  Without it, tar
-   would then treat `' much like `.' and loop endlessly.  */
-
-bool
-is_dot_or_dotdot (const char *p)
-{
-  return (p[0] == '\0'
-	  || (p[0] == '.' && (p[1] == '\0'
-			      || (p[1] == '.' && p[2] == '\0'))));
-}
 
 /*------------------------------------------------------------------.
 | Close file having descriptor FD, and abort if close unsucessful.  |
@@ -513,7 +580,7 @@ xdup2 (int from, int into, const char *message)
 	FATAL_ERROR ((0, errno, _("Cannot close descriptor %d"), into));
       status = dup (from);
       if (status != into)
-	FATAL_ERROR ((0, errno, _("Cannot properly duplicate %s"), message));
+	FATAL_ERROR ((0, errno, "%s", message));
       xclose (from);
     }
 }
@@ -642,7 +709,7 @@ maybe_backup_file (const char *path, bool is_archive)
       if (verbose_option)
 	{
 	  if (checkpoint_option)
-	    flush_checkpoint_line ();
+	    flush_progress_dots ();
 	  fprintf (stdlis, _("Renaming previous `%s' to `%s'\n"),
 		   before_backup_name, after_backup_name);
 	}
@@ -672,7 +739,7 @@ undo_last_backup (void)
       if (verbose_option)
 	{
 	  if (checkpoint_option)
-	    flush_checkpoint_line ();
+	    flush_progress_dots ();
 	  fprintf (stdlis, _("Renaming `%s' back to `%s'\n"),
 		   after_backup_name, before_backup_name);
 	}

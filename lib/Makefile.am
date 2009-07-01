@@ -34,7 +34,6 @@ getdate.y getopt.c getopt1.c hash.c idcache.c makepath.c modechange.c \
 msleep.c octal.c regex.c save-cwd.c stripslash.c userspec.c xgetcwd.c \
 xmalloc.c xstrdup.c
 
-## INCLUDES = -I.. -I$(srcdir) -I../intl
 INCLUDES = -I.. -I$(srcdir)
 libpu_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libpu_a_DEPENDENCIES = $(libpu_a_LIBADD)

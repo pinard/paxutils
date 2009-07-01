@@ -126,11 +126,12 @@ fi
 AC_SUBST($1)])
 
 
-# Single argument says where are built sources to test, relative to the
-# built test directory.  Maybe omitted if the same (flat distribution).
+# The argument (often `../src') says where are the built sources to test,
+# relative to the built test directory.  Empty for a flat distribution, as
+# `.' gets always added in front of the search path by the `atconfig' script.
 
 AC_DEFUN(AT_CONFIG,
-[AT_TESTPATH=ifelse($1, , ., $1)
+[AT_TESTPATH=$1
 AC_SUBST(AT_TESTPATH)
 fp_PROG_ECHO
 ])
@@ -447,8 +448,8 @@ AC_DEFUN(jm_FUNC_REALLOC,
   fi
 ])
 
-# Select gettext and choose translations to install.
-# François Pinard <pinard@iro.umontreal.ca>, 1998.
+# Select gettext and choose translations to install.	-*- shell-script -*-
+# FranÃ§ois Pinard <pinard@iro.umontreal.ca>, 1998.
 
 AC_DEFUN(fp_WITH_GETTEXT, [
 
@@ -529,6 +530,11 @@ AC_DEFUN(fp_WITH_GETTEXT, [
       AC_MSG_RESULT($ac_print)
     fi
 
+    if test "x$prefix" = xNONE; then
+      AC_DEFINE_UNQUOTED(LOCALEDIR, "$ac_default_prefix/share/locale")
+    else
+      AC_DEFINE_UNQUOTED(LOCALEDIR, "$prefix/share/locale")
+    fi
   fi])
 
 # Define a conditional.

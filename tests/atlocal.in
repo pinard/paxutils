@@ -1,16 +1,7 @@
 # Configuration definitions for testing `cpio'.		-*- shell-script -*-
 
-case "@extra_bin_progs@" in
-  *cpio*)
-    check_cpio=yes
-    ;;
-esac
-
-case "@extra_bin_progs@" in
-  *pax*)
-    check_pax=yes
-    ;;
-esac
+case "@extra_bin_progs@" in *cpio*) check_cpio=yes ;; esac
+case "@extra_bin_progs@" in *pax*) check_pax=yes ;; esac
 
 # Set to `yes' if your system has BSD style symbolic links.  If you don't
 # have symbolic links, set SYMLINKS to `no' so the test suite will not

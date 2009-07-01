@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -77,7 +77,7 @@ The original name is restored if the file creation fails.  If a
 failure occurs after a partial extraction of a file, both the backup
 and the partially extracted file are kept.
 
-   Some people express the desire to *always* use the
+   Some people express the desire to _always_ use the
 `--backup'[=METHOD] option by defining some kind of alias or script.
 This is not as easy as one may think, due to the fact that old-style
 options should appear first and consume arguments a bit unpredictably
@@ -139,7 +139,7 @@ site removed the link and renamed the whole hierarchy from `/usr/local2'
 to `/usr/local'.  Such things happen all the time.  We guess it would
 not be welcome at all, in the typical case, for `tar' to remove the
 whole hierarchy just to make room for the link to be reinstated, unless
-it *also* simultaneously restores the full `/usr/local2', of course!
+it _also_ simultaneously restores the full `/usr/local2', of course!
 
    By default, `tar' errs on the side of caution.  Some options allow
 users to change its behavior.  When no special options are given for
@@ -171,7 +171,7 @@ remove files and directory hierarchies before extracting over them.
 *This is a dangerous option!*
 
    So, `tar' is indeed able to remove a whole hierarchy to reestablish a
-symbolic link, for example, but *only if* `--recursive-unlink' is
+symbolic link, for example, but _only if_ `--recursive-unlink' is
 specified to allow this behavior.
 
 
@@ -256,10 +256,10 @@ recorded for those files in the archive, use `--same-permissions'
 (`--preserve-permissions', `-p') in conjunction with the `--extract'
 (`--get', `-x') subcommand.
 
-   The {No Value For "same-permission"} option asks that the modes of
-extracted archive members be those recorded in the archive, ignoring
-current umask settings.  Use in conjunction with `--extract' (`--get',
-`-x').
+   The {Aucune Valeur Pour «same-permission»} option asks that the
+modes of extracted archive members be those recorded in the archive,
+ignoring current umask settings.  Use in conjunction with `--extract'
+(`--get', `-x').
 
    This option is meaningless with `--list' (`-t').
 
@@ -355,7 +355,7 @@ find it useful to have an archive available to practice on.
 
    To make this easier, in this section you will first create a
 directory containing three files.  Then we will show you how to create
-an *archive* inside the new directory.  Both the directory and the
+an _archive_ inside the new directory.  Both the directory and the
 archive are specifically for you to practice on.  The rest of this
 chapter and the next chapter will show many examples using this
 directory and the files you will create: some of those files may be
@@ -419,7 +419,7 @@ most common errors are:
 errors, `tar' now distances itself from elegance, and cravenly refuses
 to create an archive when `--create' (`-c') option is given, there are
 no arguments besides options, and `--files-from=FILE-OF-NAMES' (`-T
-FILE-OF-NAMES') option is *not* used.  Observe:
+FILE-OF-NAMES') option is _not_ used.  Observe:
 
      $ tar c
      tar: Cravenly refusing to create an empty archive
@@ -444,7 +444,7 @@ no names in it, as shown in the following commands:
 * append::                      How to add files to existing archives
 * update::                      Updating an archive
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) This is well described in `The Unix-Hater's Handbook' by Simson
 Garfinkel, Daniel Weise, and Steven Strassmann, IDG Books, ISBN
@@ -523,10 +523,10 @@ much more than `atime'.(1)  They should ponder carefully the advantages
 and disadvantages before using this option in system backups.
 
    This option doesn't have any effect on MS-DOS, since `atime' is not
-supported by the DOS FAT file system.  (It *does* work on MS-Windows
+supported by the DOS FAT file system.  (It _does_ work on MS-Windows
 9X.)
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) This is at least the case of the current `paxutils' maintainer!
 
@@ -555,7 +555,7 @@ this with `--update' (`-u'), refer to *Note update::.)
    If you use `--append' (`-r') to add a file to an archive which
 already contains a member with the same name, then the old member is
 not deleted.  What does happen, however, is somewhat complex.  `tar'
-*allows* you to have infinite numbers of archive members with the same
+_allows_ you to have infinite numbers of archive members with the same
 name.  Some subcommands treat these same-named members no differently
 than any other set of archive members: for example, if you view an
 archive with `--list' (`-t'), you will see all of those members listed,
@@ -568,7 +568,7 @@ name as other members would end up in the working directory.  This is
 because `--extract' (`--get', `-x') extracts an archive in the order
 the members appeared in the archive; the most recently archived members
 will be extracted last.  Additionally, an extracted member will
-*overwrite* a file of the same name which existed in the directory
+_overwrite_ a file of the same name which existed in the directory
 already, and `tar' will not prompt you about this.  Thus, only the most
 recently archived member will end up being extracted, as it will
 overwrite the one extracted before it, and so on.  (One way of
@@ -601,7 +601,7 @@ Appending files to an archive
    The simplest way to add a file to an already existing archive is the
 `--append' (`-r') subcommand, which writes specified files into the
 archive whether or not they are already among the archived files.  When
-you use `--append' (`-r'), you *must* specify file name arguments, as
+you use `--append' (`-r'), you _must_ specify file name arguments, as
 there is no default.  If you specify a file that already exists in the
 archive, another copy of the file will be added to the end of the
 archive.  As with other subcommands, the member names of the newly added
@@ -681,7 +681,7 @@ the different creation dates and file sizes).  If you extract the
 archive, the older version of the file `blues' will be overwritten by
 the newer version.  You can confirm this by extracting the archive and
 running `ls' on the directory.  *Note Writing::, for more information.
-(*Please note:* This is the case unless you employ the
+(_Please note:_ This is the case unless you employ the
 `--backup'[=METHOD] option; .)
 
 
@@ -745,7 +745,7 @@ end will be newer and larger, since you added text before updating it.
 is because writing to the middle of a section of tape is a difficult
 process.  Tapes are not designed to get data inserted in their middle;
 doing so would destroy any data after the place you write.  *Note
-Media:: for more information about tapes.)
+Media::, for more information about tapes.)
 
    `--update' (`-u') is not suitable for performing backups for two
 reasons: it does not change directory content entries, and it lengthens
@@ -1099,7 +1099,7 @@ used with `tar', has an initial sizing pass which uses this feature.
 
 * Menu:
 
-* Using file::                  Using the `--file' option
+* Using file::                  Using the --file option
 * Standard archive::            Archive on standard input or output
 * lmh::                         Abbreviating drive and density
 * Remote::                      Accessing a remote drive

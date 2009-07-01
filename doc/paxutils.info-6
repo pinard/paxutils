@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -85,7 +85,7 @@ something like `@LongName', with the true file name in it.  `tar's not
 protecting themselves may segment violate!
 
    Compatibility concerns make all of these things more difficult, as we
-will have to support *all* these things together, for a while.  `tar'
+will have to support _all_ these things together, for a while.  `tar'
 should be able to produce and read true POSIX format files, while being
 able to detect old `tar' formats, including old V7 format, and process
 them conveniently.  It will take years before this whole area
@@ -112,7 +112,7 @@ we should do.
    POSIX mandates that when a file name cannot fit within 100 to 256
 characters (the variance comes from the fact a `/' is ideally needed as
 the 156th character) or a link name cannot fit within 100 characters, a
-warning should be issued and the file *not* be stored.  Unless the
+warning should be issued and the file _not_ be stored.  Unless the
 `--posix' option is given (or `POSIXLY_CORRECT' is set), we believe
 that `tar' should disobey this specification, and automatically switch
 to using extensions to overcome file name or link name length
@@ -185,7 +185,7 @@ using only POSIX mandated extension techniques).
 
    So, a future `tar' will have a `--posix' flag forcing the usage of
 truly POSIX headers, and so, producing archives that previous `tar's
-will not be able to read.  So, *once* pretest announces that feature,
+will not be able to read.  So, _once_ pretest announces that feature,
 it would be particularly useful for users to test how exchangeable
 archives will be between `tar' with `--posix' and other POSIX `tar's.
 
@@ -227,7 +227,7 @@ missing files with an incompatible file extractor, or vice versa.
    `tar' computes checksums both ways, and accepts either on read, so
 `tar' can read Sun tapes even with their wrong checksums.  `tar'
 produces the standard checksum, however, raising incompatibilities with
-Sun.  That is to say, `tar' has not been modified to *produce*
+Sun.  That is to say, `tar' has not been modified to _produce_
 incorrect archives to be read by buggy `tar's.  We've been told that
 more recent Sun `tar' now reads standard archives, so maybe Sun did a
 similar patch, after all?
@@ -294,7 +294,7 @@ distributions for the owner of files, because the `root' user is
 anonymous anyway, so that might as well be the owner of anonymous
 archives.
 
-   `tar' on MS-DOS/MS-Windows allows USER to be *any* string.  These
+   `tar' on MS-DOS/MS-Windows allows USER to be _any_ string.  These
 systems don't support file ownership, so `tar' allows them to give away
 files to anybody.  If USER includes only digits, it is treated as a
 numeric UID; otherwise, it is treated as a user name.
@@ -309,7 +309,7 @@ Forcing a given group
 will have a group ID of GROUP, rather than the group from the source
 file.  GROUP is first decoded as a group symbolic name, but if this
 interpretation fails, it has to be a decimal numeric group ID.  `tar'
-on MS-DOS/MS-Windows allows GROUP to be *any* string.  These systems
+on MS-DOS/MS-Windows allows GROUP to be _any_ string.  These systems
 don't support group IDs, so `tar' allows them to give away files to
 anybody.  If GROUP consists only of digits, it is treated as a numeric
 GID; otherwise it is treated as a group name.
@@ -335,7 +335,7 @@ example, if you are restoring your files after a major crash and had
 booted from an emergency floppy with no password file or put your disk
 into another machine to do the restore.
 
-   The numeric IDs are *always* saved into `tar' archives.  The
+   The numeric IDs are _always_ saved into `tar' archives.  The
 identifying names are added at create time when provided by the system,
 unless `--old-archive' (`-o') is used.  Numeric IDs could be used when
 moving archives between a collection of machines using a centralized
@@ -437,7 +437,7 @@ archive.tar.gz', you need to decompress the full archive to see its
 contents.  However, this may be done without needing disk space, by
 using pipes internally.  (`tar' on MS-DOS and MS-Windows also supports
 this on-the-fly compression with `gzip', but since pipes are simulated
-with disk files on MS-DOS, you *do* need disk space to store the
+with disk files on MS-DOS, you _do_ need disk space to store the
 uncompressed copy while `tar' runs.  In particular, make sure the disk
 with the directory which is the value of the environment variable
 `TMPDIR' has enough free space.  Many DOS users tend to point it to a
@@ -465,7 +465,7 @@ compression.  `gzip' is not able to detect the end of tape and inform
 header.  Even then, `tar' would not be able to withdraw already
 produced bytes up to the exact point where the tape would be full after
 compression (further, `gzip' itself produces write-ahead bytes in its
-own buffers).  On the other hand, `tar' often forks itself *after* gzip
+own buffers).  On the other hand, `tar' often forks itself _after_ gzip
 to reprocess its output, so `gzip' is sort of transparently sandwiched
 between two copies of `tar'.  Maybe some later `tar' version will
 execute the multi-volume spanning code right in the post-processing
@@ -568,7 +568,7 @@ and possibly recovers lost data while removing the redundancy
 information, piping the result into the appropriate decompression
 program.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) It is so sad that `ecc' had to be withdrawn because of a
 serious, unrepairable algorithmic flaw.
@@ -646,7 +646,7 @@ Zwicky wrote(1) to `comp.unix.internals':
      What I did say is that you cannot tell the difference between a
      hole and an equivalent number of `NUL's without reading raw blocks.
      `st_blocks' at best tells you how many holes there are; it doesn't
-     tell you *where*.  Just as programs may, conceivably, care what
+     tell you _where_.  Just as programs may, conceivably, care what
      `st_blocks' is (care to name one that does?), they may also care
      where the holes are (I have no examples of this one either, but
      it's equally imaginable).
@@ -670,13 +670,13 @@ is not used.(2)
 
    In some later `tar' version, the `--sparse' (`-S') option might be
 removed as such, and the testing and treatment of sparse files may be
-done automatically with any special option calling for *any* extension.
+done automatically with any special option calling for _any_ extension.
 The matter is not fully decided yet.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) This quote comes from a reply from Elizabeth, after someone
-*falsely* attributed to her the sentence: `One has to be pretty
+_falsely_ attributed to her the sentence: `One has to be pretty
 intimate with the disk, to know where the holes are ...'
 
    (2) Well!  When `--sparse' (`-S') is selected while creating an
@@ -741,7 +741,7 @@ links between them.
 
    `tar''s way of handling multiple hard links to a file places only
 one copy of the link on the tape, but the name attached to that copy is
-the *only* one you can use to retrieve the file; `cpio''s way puts one
+the _only_ one you can use to retrieve the file; `cpio''s way puts one
 copy for every link, but you can retrieve it using any of the names.
 
      What type of checksum (if any) is used, and how is this calculated?
@@ -755,7 +755,7 @@ for a file; `cpio' uses no checksum.
 
    It wasn't.  `cpio' first showed up in PWB/Unix 1.0; no
 generally-available version of Unix had `tar' at the time.  We don't
-know whether any version that was generally available *within AT&T* had
+know whether any version that was generally available _within AT&T_ had
 `tar', or, if so, whether the people within AT&T who did `cpio' knew
 about it.
 
@@ -825,6 +825,7 @@ Here are the points of his letter.
      another, restore special file attributes (for VMS and OS/2), and so
      forth ...  `gzip' is only a data compression program, which should
      be kept simple.
+
 
    Jean-loup adds that he is thinking of adding an optional block size
 parameter to `gzip' to improve error recovery, and refers to the `TODO'
@@ -930,7 +931,7 @@ Blocks and records
    The term "physical block" means the basic transfer chunk from or to a
 device, after which reading or writing may stop without anything being
 lost.  In this manual, the term "block" usually refers to a physical
-disk block, *assuming* that each disk block is 512 bytes in length.  It
+disk block, _assuming_ that each disk block is 512 bytes in length.  It
 is true that some disk devices have different physical blocks, but `tar'
 ignores these differences in its own format, which is meant to be
 portable, so a `tar' block is always 512 bytes in length, and "block"
@@ -976,7 +977,7 @@ for historical reasons, and it does not really matter when reading or
 writing to disk.  Current tape technology would easily accomodate
 higher blockings.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) The term "logical block" often represents the basic chunk of
 allocation of many disk blocks as a single entity, which the operating

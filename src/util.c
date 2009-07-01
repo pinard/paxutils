@@ -15,22 +15,21 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-#include <config.h>
+#include "system.h"
+
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef HPUX_CDF
 #include <sys/stat.h>
 #endif
-#include "system.h"
-#include "cpiohdr.h"
-#include "extern.h"
-#include "rmt.h"
-
 #ifndef __MSDOS__
 #include <sys/ioctl.h>
 #else
 #include <io.h>
 #endif
+
+#include "common.h"
+#include "rmt.h"
 
 static void tape_fill_input_buffer PARAMS ((int in_des, int num_bytes));
 static int disk_fill_input_buffer PARAMS ((int in_des, int num_bytes));
@@ -55,7 +54,7 @@ initialize_buffers (void)
 	 is not aligned on a block boundary.  The extra buffer space
 	 is needed by process_copyin and peek_in_buf to automatically
 	 figure out what kind of archive it is reading.  */
-      if (io_block_size >= 512)
+      if (io_block_size >= 512)	/* FIXME: use a symbol */
 	in_buf_size = 2 * io_block_size;
       else
 	in_buf_size = 1024;
@@ -73,23 +72,20 @@ initialize_buffers (void)
     }
 
   input_buffer = (char *) xmalloc (in_buf_size);
-  in_buff = input_buffer;
+  input_buffer_cursor = input_buffer;
   input_buffer_size = in_buf_size;
-  input_size = 0;
+  input_buffer_remaining_size = 0;
   input_bytes = 0;
 
   output_buffer = (char *) xmalloc (out_buf_size);
-  out_buff = output_buffer;
-  output_size = 0;
+  output_buffer_cursor = output_buffer;
+  output_buffer_remaining_size = 0;
   output_bytes = 0;
-
-  /* Clear the block of zeros.  */
-  memset (zeros_512, 0, 512);
 }
 
 /*------------------------------------------------------------------------.
-| Write `output_size' bytes of `output_buffer' to file descriptor OUT_DES |
-| and reset `output_size' and `out_buff'.                                 |
+| Write `output_buffer_remaining_size' bytes of `output_buffer' to file descriptor OUT_DES |
+| and reset `output_buffer_remaining_size' and `output_buffer_cursor'.                                 |
 `------------------------------------------------------------------------*/
 
 void
@@ -105,18 +101,19 @@ tape_empty_output_buffer (int out_des)
      2Gb).  Doing an lseek (des, 0, SEEK_SET) seems to reset the seek pointer
      and prevent it from overflowing.  */
   if (output_is_special
-     && ( (output_bytes_before_lseek += output_size) >= 1073741824L) )
+     && (output_bytes_before_lseek += output_buffer_remaining_size,
+	 output_bytes_before_lseek >= 1073741824L))
     {
       lseek(out_des, 0L, SEEK_SET);
       output_bytes_before_lseek = 0;
     }
 #endif
 
-  bytes_written = rmtwrite (out_des, output_buffer, output_size);
-  if (bytes_written != output_size)
+  bytes_written = rmtwrite (out_des, output_buffer, output_buffer_remaining_size);
+  if (bytes_written != output_buffer_remaining_size)
     {
       int rest_bytes_written;
-      int rest_output_size;
+      int rest_output_buffer_remaining_size;
 
       if (output_is_special
 	  && (bytes_written >= 0
@@ -125,27 +122,27 @@ tape_empty_output_buffer (int out_des)
 	{
 	  get_next_reel (out_des);
 	  if (bytes_written > 0)
-	    rest_output_size = output_size - bytes_written;
+	    rest_output_buffer_remaining_size = output_buffer_remaining_size - bytes_written;
 	  else
-	    rest_output_size = output_size;
+	    rest_output_buffer_remaining_size = output_buffer_remaining_size;
 	  rest_bytes_written = rmtwrite (out_des, output_buffer,
-					 rest_output_size);
-	  if (rest_bytes_written != rest_output_size)
+					 rest_output_buffer_remaining_size);
+	  if (rest_bytes_written != rest_output_buffer_remaining_size)
 	    error (1, errno, _("write error"));
 	}
       else
 	error (1, errno, _("write error"));
     }
-  output_bytes += output_size;
-  out_buff = output_buffer;
-  output_size = 0;
+  output_bytes += output_buffer_remaining_size;
+  output_buffer_cursor = output_buffer;
+  output_buffer_remaining_size = 0;
 }
 
 /*--------------------------------------------------------------------------.
-| Write `output_size' bytes of `output_buffer' to file descriptor OUT_DES   |
-| and reset `output_size' and `out_buff'.  If `swapping_halfwords' or       |
+| Write `output_buffer_remaining_size' bytes of `output_buffer' to file descriptor OUT_DES   |
+| and reset `output_buffer_remaining_size' and `output_buffer_cursor'.  If `swapping_halfwords' or       |
 | `swapping_bytes' is set, do the appropriate swapping first.  Our callers  |
-| have to make sure to only set these flags if `output_size' is appropriate |
+| have to make sure to only set these flags if `output_buffer_remaining_size' is appropriate |
 | (a multiple of 4 for `swapping_halfwords', 2 for `swapping_bytes').  The  |
 | fact that DISK_IO_BLOCK_SIZE must always be a multiple of 4 helps us (and |
 | our callers) insure this.                                                 |
@@ -161,7 +158,7 @@ disk_empty_output_buffer (int out_des)
       if (swapping_halfwords)
 	{
 	  int complete_words;
-	  complete_words = output_size / 4;
+	  complete_words = output_buffer_remaining_size / 4;
 	  swahw_array (output_buffer, complete_words);
 	  if (swapping_bytes)
 	    swab_array (output_buffer, 2 * complete_words);
@@ -169,23 +166,23 @@ disk_empty_output_buffer (int out_des)
       else
 	{
 	  int complete_halfwords;
-	  complete_halfwords = output_size /2;
+	  complete_halfwords = output_buffer_remaining_size /2;
 	  swab_array (output_buffer, complete_halfwords);
 	}
     }
 
-  if (sparse_flag)
-    bytes_written = sparse_write (out_des, output_buffer, output_size);
+  if (sparse_option)
+    bytes_written = sparse_write (out_des, output_buffer, output_buffer_remaining_size);
   else
-    bytes_written = write (out_des, output_buffer, output_size);
+    bytes_written = write (out_des, output_buffer, output_buffer_remaining_size);
 
-  if (bytes_written != output_size)
+  if (bytes_written != output_buffer_remaining_size)
     {
       error (1, errno, _("write error"));
     }
-  output_bytes += output_size;
-  out_buff = output_buffer;
-  output_size = 0;
+  output_bytes += output_buffer_remaining_size;
+  output_buffer_cursor = output_buffer;
+  output_buffer_remaining_size = 0;
 }
 
 /*-----------------------------------------------------------------------.
@@ -198,12 +195,12 @@ swahw_array (char *ptr, int count)
 {
   char tmp;
 
-  for (; count > 0; --count)
+  for (; count > 0; count--)
     {
       tmp = *ptr;
       *ptr = *(ptr + 2);
       *(ptr + 2) = tmp;
-      ++ptr;
+      ptr++;
       tmp = *ptr;
       *ptr = *(ptr + 2);
       *(ptr + 2) = tmp;
@@ -214,7 +211,7 @@ swahw_array (char *ptr, int count)
 /*-------------------------------------------------------------------------.
 | Read at most NUM_BYTES or `io_block_size' bytes, whichever is smaller,   |
 | into the start of `input_buffer' from file descriptor IN_DES.  Set       |
-| `input_size' to the number of bytes read and reset `in_buff'.  Exit with |
+| `input_buffer_remaining_size' to the number of bytes read and reset `input_buffer_cursor'.  Exit with |
 | an error if end of file is reached.                                      |
 `-------------------------------------------------------------------------*/
 
@@ -231,57 +228,58 @@ tape_fill_input_buffer (int in_des, int num_bytes)
      4Gb).  Doing an lseek (des, 0, SEEK_SET) seems to reset the seek pointer
      and prevent it from overflowing.  */
   if (input_is_special
-      && ( (input_bytes_before_lseek += num_bytes) >= 1073741824L) )
+      && (input_bytes_before_lseek += num_bytes,
+	  input_bytes_before_lseek >= 1073741824L))
     {
       lseek(in_des, 0L, SEEK_SET);
       input_bytes_before_lseek = 0;
     }
 #endif
-  in_buff = input_buffer;
+  input_buffer_cursor = input_buffer;
   num_bytes = (num_bytes < io_block_size) ? num_bytes : io_block_size;
-  input_size = rmtread (in_des, input_buffer, num_bytes);
-  if (input_size == 0 && input_is_special)
+  input_buffer_remaining_size = rmtread (in_des, input_buffer, num_bytes);
+  if (input_buffer_remaining_size == 0 && input_is_special)
     {
       get_next_reel (in_des);
-      input_size = rmtread (in_des, input_buffer, num_bytes);
+      input_buffer_remaining_size = rmtread (in_des, input_buffer, num_bytes);
     }
-  if (input_size < 0)
+  if (input_buffer_remaining_size < 0)
     error (1, errno, _("read error"));
-  if (input_size == 0)
+  if (input_buffer_remaining_size == 0)
     {
       error (0, 0, _("premature end of file"));
       exit (1);
     }
-  input_bytes += input_size;
+  input_bytes += input_buffer_remaining_size;
 }
 
 /*------------------------------------------------------------------------.
 | Read at most NUM_BYTES or `DISK_IO_BLOCK_SIZE' bytes, whichever is      |
 | smaller, into the start of `input_buffer' from file descriptor IN_DES.  |
-| Set `input_size' to the number of bytes read and reset `in_buff'.  Exit |
+| Set `input_buffer_remaining_size' to the number of bytes read and reset `input_buffer_cursor'.  Exit |
 | with an error if end of file is reached.                                |
 `------------------------------------------------------------------------*/
 
 static int
 disk_fill_input_buffer (int in_des, int num_bytes)
 {
-  in_buff = input_buffer;
+  input_buffer_cursor = input_buffer;
   num_bytes = (num_bytes < DISK_IO_BLOCK_SIZE) ? num_bytes : DISK_IO_BLOCK_SIZE;
-  input_size = read (in_des, input_buffer, num_bytes);
-  if (input_size < 0)
+  input_buffer_remaining_size = read (in_des, input_buffer, num_bytes);
+  if (input_buffer_remaining_size < 0)
     {
-      input_size = 0;
-      return (-1);
+      input_buffer_remaining_size = 0;
+      return -1;
     }
-  else if (input_size == 0)
-    return (1);
-  input_bytes += input_size;
-  return (0);
+  else if (input_buffer_remaining_size == 0)
+    return 1;
+  input_bytes += input_buffer_remaining_size;
+  return 0;
 }
 
 /*--------------------------------------------------------------------------.
-| Copy NUM_BYTES of buffer IN_BUF to `out_buff', which may be partly full.  |
-| When `out_buff' fills up, flush it to file descriptor OUT_DES.            |
+| Copy NUM_BYTES of buffer IN_BUF to `output_buffer_cursor', which may be partly full.  |
+| When `output_buffer_cursor' fills up, flush it to file descriptor OUT_DES.            |
 `--------------------------------------------------------------------------*/
 
 void
@@ -292,16 +290,16 @@ tape_buffered_write (char *in_buf, int out_des, long num_bytes)
 
   while (bytes_left > 0)
     {
-      space_left = io_block_size - output_size;
+      space_left = io_block_size - output_buffer_remaining_size;
       if (space_left == 0)
 	tape_empty_output_buffer (out_des);
       else
 	{
 	  if (bytes_left < space_left)
 	    space_left = bytes_left;
-	  memcpy (out_buff, in_buf, (unsigned) space_left);
-	  out_buff += space_left;
-	  output_size += space_left;
+	  memcpy (output_buffer_cursor, in_buf, (unsigned) space_left);
+	  output_buffer_cursor += space_left;
+	  output_buffer_remaining_size += space_left;
 	  in_buf += space_left;
 	  bytes_left -= space_left;
 	}
@@ -309,8 +307,8 @@ tape_buffered_write (char *in_buf, int out_des, long num_bytes)
 }
 
 /*--------------------------------------------------------------------------.
-| Copy NUM_BYTES of buffer IN_BUF to `out_buff', which may be partly full.  |
-| When `out_buff' fills up, flush it to file descriptor OUT_DES.            |
+| Copy NUM_BYTES of buffer IN_BUF to `output_buffer_cursor', which may be partly full.  |
+| When `output_buffer_cursor' fills up, flush it to file descriptor OUT_DES.            |
 `--------------------------------------------------------------------------*/
 
 void
@@ -321,53 +319,51 @@ disk_buffered_write (char *in_buf, int out_des, long num_bytes)
 
   while (bytes_left > 0)
     {
-      space_left = DISK_IO_BLOCK_SIZE - output_size;
+      space_left = DISK_IO_BLOCK_SIZE - output_buffer_remaining_size;
       if (space_left == 0)
 	disk_empty_output_buffer (out_des);
       else
 	{
 	  if (bytes_left < space_left)
 	    space_left = bytes_left;
-	  memcpy (out_buff, in_buf, (unsigned) space_left);
-	  out_buff += space_left;
-	  output_size += space_left;
+	  memcpy (output_buffer_cursor, in_buf, (unsigned) space_left);
+	  output_buffer_cursor += space_left;
+	  output_buffer_remaining_size += space_left;
 	  in_buf += space_left;
 	  bytes_left -= space_left;
 	}
     }
 }
 
-/*----------------------------------------------------------------------------.
-| Copy NUM_BYTES of buffer `in_buff' into IN_BUF.  `in_buff' may be partly    |
-| full.  When `in_buff' is exhausted, refill it from file descriptor IN_DES.  |
-`----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------.
+| Copy COUNT bytes of buffer `input_buffer_cursor' into BUFFER.           |
+| `input_buffer_cursor' may be partly full (whatever that means? FIXME).  |
+| When `input_buffer_cursor' is exhausted, refill it from file descriptor |
+| HANDLE.                                                                 |
+`------------------------------------------------------------------------*/
 
 void
-tape_buffered_read (char *in_buf, int in_des, long num_bytes)
+tape_buffered_read (char *buffer, int handle, long count)
 {
-  long bytes_left = num_bytes;	/* bytes needing to be copied */
   long space_left;		/* bytes to copy from input buffer */
 
-  while (bytes_left > 0)
+  while (count > 0)
     {
-      if (input_size == 0)
-	tape_fill_input_buffer (in_des, io_block_size);
-      if (bytes_left < input_size)
-	space_left = bytes_left;
-      else
-	space_left = input_size;
-      memcpy (in_buf, in_buff, (unsigned) space_left);
-      in_buff += space_left;
-      in_buf += space_left;
-      input_size -= space_left;
-      bytes_left -= space_left;
+      if (input_buffer_remaining_size == 0)
+	tape_fill_input_buffer (handle, io_block_size);
+      space_left = MINIMUM (count, input_buffer_remaining_size);
+      memcpy (buffer, input_buffer_cursor, (unsigned) space_left);
+      input_buffer_cursor += space_left;
+      buffer += space_left;
+      input_buffer_remaining_size -= space_left;
+      count -= space_left;
     }
 }
 
 /*-------------------------------------------------------------------------.
 | Copy the the next NUM_BYTES bytes of `input_buffer' into PEEK_BUF.  If   |
 | NUM_BYTES bytes are not available, read the next `io_block_size' bytes   |
-| into the end of `input_buffer' and update `input_size'.                  |
+| into the end of `input_buffer' and update `input_buffer_remaining_size'.                  |
 |                                                                          |
 | Return the number of bytes copied into PEEK_BUF.  If the number of bytes |
 | returned is less than NUM_BYTES, then EOF has been reached.              |
@@ -376,7 +372,7 @@ tape_buffered_read (char *in_buf, int in_des, long num_bytes)
 int
 tape_buffered_peek (char *peek_buf, int in_des, int num_bytes)
 {
-  long tmp_input_size;
+  long tmp_input_buffer_remaining_size;
   long got_bytes;
   char *append_buf;
 
@@ -386,17 +382,18 @@ tape_buffered_peek (char *peek_buf, int in_des, int num_bytes)
      4Gb).  Doing an lseek (des, 0, SEEK_SET) seems to reset the seek pointer
      and prevent it from overflowing.  */
   if (input_is_special
-      && ( (input_bytes_before_lseek += num_bytes) >= 1073741824L) )
+      && (input_bytes_before_lseek += num_bytes,
+	  input_bytes_before_lseek>= 1073741824L))
     {
       lseek(in_des, 0L, SEEK_SET);
       input_bytes_before_lseek = 0;
     }
 #endif
 
-  while (input_size < num_bytes)
+  while (input_buffer_remaining_size < num_bytes)
     {
-      append_buf = in_buff + input_size;
-      if ( (append_buf - input_buffer) >= input_buffer_size)
+      append_buf = input_buffer_cursor + input_buffer_remaining_size;
+      if (append_buf - input_buffer >= input_buffer_size)
 	{
 	  /* We can keep up to 2 "blocks" (either the physical block size
 	     or 512 bytes(the size of a tar record), which ever is
@@ -408,30 +405,28 @@ tape_buffered_peek (char *peek_buf, int in_des, int num_bytes)
 	  int half;
 	  half = input_buffer_size / 2;
 	  memcpy (input_buffer, input_buffer + half, half);
-	  in_buff = in_buff - half;
+	  input_buffer_cursor = input_buffer_cursor - half;
 	  append_buf = append_buf - half;
 	}
-      tmp_input_size = rmtread (in_des, append_buf, io_block_size);
-      if (tmp_input_size == 0)
-	{
-	  if (input_is_special)
-	    {
-	      get_next_reel (in_des);
-	      tmp_input_size = rmtread (in_des, append_buf, io_block_size);
-	    }
-	  else
-	    break;
-	}
-      if (tmp_input_size < 0)
+      tmp_input_buffer_remaining_size = rmtread (in_des, append_buf, io_block_size);
+      if (tmp_input_buffer_remaining_size == 0)
+	if (input_is_special)
+	  {
+	    get_next_reel (in_des);
+	    tmp_input_buffer_remaining_size = rmtread (in_des, append_buf, io_block_size);
+	  }
+	else
+	  break;
+      if (tmp_input_buffer_remaining_size < 0)
 	error (1, errno, _("read error"));
-      input_bytes += tmp_input_size;
-      input_size += tmp_input_size;
+      input_bytes += tmp_input_buffer_remaining_size;
+      input_buffer_remaining_size += tmp_input_buffer_remaining_size;
     }
-  if (num_bytes <= input_size)
+  if (num_bytes <= input_buffer_remaining_size)
     got_bytes = num_bytes;
   else
-    got_bytes = input_size;
-  memcpy (peek_buf, in_buff, (unsigned) got_bytes);
+    got_bytes = input_buffer_remaining_size;
+  memcpy (peek_buf, input_buffer_cursor, (unsigned) got_bytes);
   return got_bytes;
 }
 
@@ -447,22 +442,23 @@ tape_toss_input (int in_des, long num_bytes)
 
   while (bytes_left > 0)
     {
-      if (input_size == 0)
+      if (input_buffer_remaining_size == 0)
 	tape_fill_input_buffer (in_des, io_block_size);
-      if (bytes_left < input_size)
+      if (bytes_left < input_buffer_remaining_size)
 	space_left = bytes_left;
       else
-	space_left = input_size;
+	space_left = input_buffer_remaining_size;
 
-      if (crc_i_flag && only_verify_crc_flag)
+      if (crc_i_flag && only_verify_crc_option)
 	{
  	  int k;
-	  for (k = 0; k < space_left; ++k)
-	    crc += in_buff[k] & 0xff;
+
+	  for (k = 0; k < space_left; k++)
+	    crc += input_buffer_cursor[k] & 0xff;
 	}
 
-      in_buff += space_left;
-      input_size -= space_left;
+      input_buffer_cursor += space_left;
+      input_buffer_remaining_size -= space_left;
       bytes_left -= space_left;
     }
 }
@@ -484,18 +480,16 @@ copy_files_tape_to_disk (int in_des, int out_des, long num_bytes)
 
   while (num_bytes > 0)
     {
-      if (input_size == 0)
+      if (input_buffer_remaining_size == 0)
 	tape_fill_input_buffer (in_des, io_block_size);
-      size = (input_size < num_bytes) ? input_size : num_bytes;
+      size = (input_buffer_remaining_size < num_bytes) ? input_buffer_remaining_size : num_bytes;
       if (crc_i_flag)
-	{
-	  for (k = 0; k < size; ++k)
-	    crc += in_buff[k] & 0xff;
-	}
-      disk_buffered_write (in_buff, out_des, size);
+	for (k = 0; k < size; k++)
+	  crc += input_buffer_cursor[k] & 0xff;
+      disk_buffered_write (input_buffer_cursor, out_des, size);
       num_bytes -= size;
-      input_size -= size;
-      in_buff += size;
+      input_buffer_remaining_size -= size;
+      input_buffer_cursor += size;
     }
 }
 
@@ -521,8 +515,8 @@ copy_files_disk_to_tape (int in_des, int out_des, long num_bytes,
 
   while (num_bytes > 0)
     {
-      if (input_size == 0)
-	if ( (rc = disk_fill_input_buffer (in_des, DISK_IO_BLOCK_SIZE)) )
+      if (input_buffer_remaining_size == 0)
+	if (rc = disk_fill_input_buffer (in_des, DISK_IO_BLOCK_SIZE), rc)
 	  {
 	    if (rc > 0)
 	      error (0, 0,
@@ -535,16 +529,14 @@ copy_files_disk_to_tape (int in_des, int out_des, long num_bytes,
 	    write_nuls_to_file (num_bytes, out_des);
 	    break;
 	  }
-      size = (input_size < num_bytes) ? input_size : num_bytes;
+      size = (input_buffer_remaining_size < num_bytes) ? input_buffer_remaining_size : num_bytes;
       if (crc_i_flag)
-	{
-	  for (k = 0; k < size; ++k)
-	    crc += in_buff[k] & 0xff;
-	}
-      tape_buffered_write (in_buff, out_des, size);
+	for (k = 0; k < size; k++)
+	  crc += input_buffer_cursor[k] & 0xff;
+      tape_buffered_write (input_buffer_cursor, out_des, size);
       num_bytes -= size;
-      input_size -= size;
-      in_buff += size;
+      input_buffer_remaining_size -= size;
+      input_buffer_cursor += size;
     }
 }
 
@@ -569,8 +561,8 @@ copy_files_disk_to_disk (int in_des, int out_des, long num_bytes,
   original_num_bytes = num_bytes;
   while (num_bytes > 0)
     {
-      if (input_size == 0)
-	if ( (rc = disk_fill_input_buffer (in_des, DISK_IO_BLOCK_SIZE)) )
+      if (input_buffer_remaining_size == 0)
+	if (rc = disk_fill_input_buffer (in_des, DISK_IO_BLOCK_SIZE), rc)
 	  {
 	    if (rc > 0)
 	      error (0, 0,
@@ -583,16 +575,14 @@ copy_files_disk_to_disk (int in_des, int out_des, long num_bytes,
 	    write_nuls_to_file (num_bytes, out_des);
 	    break;
 	  }
-      size = (input_size < num_bytes) ? input_size : num_bytes;
+      size = (input_buffer_remaining_size < num_bytes) ? input_buffer_remaining_size : num_bytes;
       if (crc_i_flag)
-	{
-	  for (k = 0; k < size; ++k)
-	    crc += in_buff[k] & 0xff;
-	}
-      disk_buffered_write (in_buff, out_des, size);
+	for (k = 0; k < size; k++)
+	  crc += input_buffer_cursor[k] & 0xff;
+      disk_buffered_write (input_buffer_cursor, out_des, size);
       num_bytes -= size;
-      input_size -= size;
-      in_buff += size;
+      input_buffer_remaining_size -= size;
+      input_buffer_cursor += size;
     }
 }
 
@@ -605,16 +595,12 @@ void
 create_all_directories (char *name)
 {
   char *dir;
-  int   mode;
-#ifdef HPUX_CDF
-  int   cdf;
-#endif
+  int mode;
 
   dir = dir_name (name);
   mode = 0700;
 #ifdef HPUX_CDF
-  cdf = islastparentcdf (name);
-  if (cdf)
+  if (is_last_parent_cdf (name))
     {
       dir [strlen (dir) - 1] = '\0';	/* remove final + */
       mode = 04700;
@@ -673,9 +659,9 @@ prepare_append (int out_file_des)
 
   /* We are done reading the archive, so clear these since they will now be
      used for reading in files that we are appending to the archive.  */
-  input_size = 0;
+  input_buffer_remaining_size = 0;
   input_bytes = 0;
-  in_buff = input_buffer;
+  input_buffer_cursor = input_buffer;
 }
 
 /* Support for remembering inodes with multiple links.  Used in the
@@ -838,7 +824,7 @@ int
 open_archive (char *file)
 {
   int fd;
-  void (*copy_in) ();		/* Workaround for pcc bug.  */
+  void (*copy_in) ();		/* workaround for pcc bug */
 
 #define force_local_option false
 
@@ -846,14 +832,10 @@ open_archive (char *file)
 
   if (copy_function == copy_in)
     fd = rmtopen (file, O_RDONLY | O_BINARY, 0666, NULL);
+  else if (append_option)
+    fd = rmtopen (file, O_RDWR | O_BINARY, 0666, NULL);
   else
-    {
-      if (!append_flag)
-	fd = rmtopen (file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666,
-		      NULL);
-      else
-	fd = rmtopen (file, O_RDWR | O_BINARY, 0666, NULL);
-    }
+    fd = rmtopen (file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666, NULL);
 
 #undef force_local_option
 
@@ -915,7 +897,7 @@ get_next_reel (int tape_des)
 
   /* Give message and wait for carrage return.  User should hit carrage return
      only after loading the next tape.  */
-  ++reel_number;
+  reel_number++;
   if (new_media_message)
     fprintf (tty_out, "%s", new_media_message);
   else if (new_media_message_with_number)
@@ -1002,7 +984,7 @@ set_new_media_message (char *message)
       if (*p == 'd' && prev_was_percent)
 	break;
       prev_was_percent = (*p == '%');
-      ++p;
+      p++;
     }
   if (*p == '\0')
     {
@@ -1097,23 +1079,19 @@ utime (char *filename, struct utimbuf *utb)
 }
 #endif
 
-#define DISKBLOCKSIZE	(512)
+#define DISKBLOCKSIZE 512
 
 enum sparse_write_states { begin, in_zeros, not_in_zeros };
 
-
-static int
-buf_all_zeros (buf, bufsize)
-  char *buf;
-  int bufsize;
+static bool
+buf_all_zeros (char *buf, int bufsize)
 {
-  int	i;
-  for (i = 0; i < bufsize; ++i)
-    {
-      if (*buf++ != '\0')
-	return 0;
-    }
-  return 1;
+  int i;
+
+  for (i = 0; i < bufsize; i++)
+    if (*buf++ != '\0')
+      return false;
+  return true;
 }
 
 int delayed_seek_count = 0;
@@ -1146,7 +1124,7 @@ sparse_write (int fildes, char *buf, unsigned int nbyte)
 
   seek_count = delayed_seek_count;
 
-  for (i = 0; i < complete_block_count; ++i)
+  for (i = 0; i < complete_block_count; i++)
     {
       switch (state)
 	{
@@ -1166,9 +1144,7 @@ sparse_write (int fildes, char *buf, unsigned int nbyte)
 	    break;
 	  case in_zeros :
 	    if (buf_all_zeros (buf, DISKBLOCKSIZE))
-	      {
-		seek_count += DISKBLOCKSIZE;
-	      }
+	      seek_count += DISKBLOCKSIZE;
 	    else
 	      {
 		lseek (fildes, seek_count, SEEK_CUR);
@@ -1186,9 +1162,7 @@ sparse_write (int fildes, char *buf, unsigned int nbyte)
 		state = in_zeros;
 	      }
 	    else
-	      {
-		write_count += DISKBLOCKSIZE;
-	      }
+	      write_count += DISKBLOCKSIZE;
 	    buf += DISKBLOCKSIZE;
 	    break;
 	}
@@ -1219,26 +1193,20 @@ sparse_write (int fildes, char *buf, unsigned int nbyte)
 }
 
 static void
-write_nuls_to_file (num_bytes, out_des)
-    long	num_bytes;
-    int		out_des;
+write_nuls_to_file (long num_bytes, int out_des)
 {
   long	blocks;
   long	extra_bytes;
   long	i;
 
-  blocks = num_bytes / 512;
-  extra_bytes = num_bytes % 512;
-  for (i = 0; i < extra_bytes; ++i)
-    {
-      if (write (out_des, zeros_512, 512) != 512)
-	error (1, errno, "error writing NUL's");
-    }
+  blocks = num_bytes / BLOCKSIZE;
+  extra_bytes = num_bytes % BLOCKSIZE;
+  for (i = 0; i < blocks; i++)
+    if (write (out_des, zero_block, BLOCKSIZE) != BLOCKSIZE)
+      error (1, errno, "error writing NUL's");
   if (extra_bytes != 0)
-    {
-      if (write (out_des, zeros_512, extra_bytes) != extra_bytes)
-	error (1, errno, "error writing NUL's");
-    }
+    if (write (out_des, zero_block, extra_bytes) != extra_bytes)
+      error (1, errno, "error writing NUL's");
 }
 
 #if DOSWIN
@@ -1405,19 +1373,3 @@ maybe_rename_file (char *original_name)
 }
 
 #endif /* DOSWIN */
-
-/*-------------------------------------------------------------------------.
-| Returns non-zero if p is `.' or `..'.  This could be a macro for speed.  |
-`-------------------------------------------------------------------------*/
-
-int
-is_dot_or_dotdot (char *p)
-{
-  /* Early Solaris 2.4 readdir may return d->d_name as `' in NFS-mounted
-     directories.  The workaround here skips `' just like `.'.  Without it, we
-     would then treat `' much like `.' and loop endlessly.  */
-  return (p[0] == '\0'
-	  || (p[0] == '.' && (p[1] == '\0'
-			      || (p[1] == '.' && p[2] == '\0'))));
-}
-

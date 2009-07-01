@@ -1,0 +1,26 @@
+# List of source files containing translatable strings.
+# Copyright (C) 1995 Free Software Foundation, Inc.
+
+# Common library files.
+lib/getopt.c
+lib/makepath.c
+lib/regex.c
+lib/rx.c
+lib/userspec.c
+lib/xmalloc.c
+
+# cpio source files.
+src/argmatch.c
+src/copyin.c
+src/copyout.c
+src/copypass.c
+src/cpio.c
+src/fmtcpio.c
+src/fmttar.c
+src/format.c
+src/main.c
+src/mt.c
+src/pax.c
+src/rename.c
+src/rtapelib.c
+src/util.c

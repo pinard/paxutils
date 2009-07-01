@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -49,7 +49,7 @@ other tools.  We expect that such things might tend to reequilibrate
 themselves, as time and maintenance goes, as the tools in `pax'
 utilities will influence each other.
 
-   This manual documents the release 2.4h of `pax' utilities.
+   This manual documents the release 2.4i of `pax' utilities.
 
 * Menu:
 
@@ -69,7 +69,7 @@ utilities will influence each other.
 * Archive format::              Format of archive files
 * Index::                       Index
 
- -- The Detailed Node Listing --
+ --- The Detailed Node Listing ---
 
 Introduction
 
@@ -96,16 +96,16 @@ Tutorial Introduction to `tar'
 
 Three Frequently Used Options
 
-* file tutorial::               The `--file' option
-* verbose tutorial::            The `--verbose' option
-* help tutorial::               Getting help: Using the `--help' option
+* file tutorial::               The --file option
+* verbose tutorial::            The --verbose option
+* help tutorial::               Getting help: Using the --help option
 
 How to Create Archives
 
 * prepare for examples::        Preparing a practice directory for examples
 * Creating the archive tutorial::  Creating the archive
-* create verbose::              Running `--create' with `--verbose'
-* Short create::                Short forms with `--create'
+* create verbose::              Running --create with --verbose
+* Short create::                Short forms with --create
 * create dir tutorial::         Archiving directories
 
 How to List Archives
@@ -146,8 +146,8 @@ The Three Option Styles
 Documentation and Troubleshooting
 
 * version::                     Knowing the `tar' version
-* help::                        Getting help: Using the `--help' option
-* verbose::                     The `--verbose' option
+* help::                        Getting help: Using the --help option
+* verbose::                     The --verbose option
 * checkpoint::                  Being warned of all directories
 * show-omitted-dirs::           Being warned of skipped directories
 * totals::                      Sizeing the amount of data written
@@ -244,7 +244,7 @@ Choosing Files and Names for `tar'
 
 Choosing and Naming Archive Files
 
-* Using file::                  Using the `--file' option
+* Using file::                  Using the --file option
 * Standard archive::            Archive on standard input or output
 * lmh::                         Abbreviating drive and density
 * Remote::                      Accessing a remote drive
@@ -497,7 +497,7 @@ is often thought of as "printing" them to the standard output, or the
 command line), or "append" members to a pre-existing archive.  All of
 these tasks can be performed using `tar' subcommands.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) In addition, archives record access permissions, user and group,
 size in bytes, and last modification time.  Some archives also record
@@ -649,7 +649,7 @@ do so in 1988-09, the FSF published a forked, copylefted version named
 `gnutar' in 1990-01.  While `PD TAR' continued to evolve in parallel,
 unidentified derivatives were distributed separately without sources,
 to the point that John decided in 1992-01, as a maintainer, that the
-public domain status of `PD TAR' was *unfortunate*.  In 1992-05, John
+public domain status of `PD TAR' was _unfortunate_.  In 1992-05, John
 wrote that it had been a mistake.  Later, in 1994-11, John suggested
 that we merge `PD TAR' definitively into `gnutar'.
 
@@ -695,10 +695,10 @@ including the `cpio' tutorial, have been written by Robert Carleton.
 in 1995-10, and was brought into `paxutils' together with `cpio' and
 `mt'.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) In 1988-03, Jay Fenlason was notified of the impending existence
-of this `prefix' field.  As J"org Schilling (the `star' author) once
+of this `prefix' field.  As Jo"rg Schilling (the `star' author) once
 put it: `I would call this a hard violation of the standard.'
 
    (2) In 1992, an enthusiastic teacher and his students promised a new
@@ -750,20 +750,20 @@ tell you which version you have.  The canonical distribution points for
 the version documented in this manual, and the main GNU copy of this
 distribution, are:
 
-     ftp://ftp.iro.umontreal.ca/pub/tar/tar-2.4h.tar.gz
-     ftp://ftp.gnu.org/pub/gnu/tar-2.4h.tar.gz
+     ftp://ftp.iro.umontreal.ca/pub/tar/tar-2.4i.tar.gz
+     ftp://ftp.gnu.org/pub/gnu/tar-2.4i.tar.gz
 
 You can also get `tar' from the numerous GNU mirrors around the world.
 At the canonical distribution point, you might sometimes stumble on
 prereleases (which should normally not have a GNU copy).  Pretest
 releases always have a letter suffixing the version numbers.  Please do
-*not* redistribute these, as they are meant for pretesting only.  You
+_not_ redistribute these, as they are meant for pretesting only.  You
 ought to understand that prereleases might not be as stable as true
 releases, and that problems may be expected with them.  You may fetch
 pretest releases, of course, but then, you should understand the
 collaborative spirit of pretesting.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Even though John Gilmore is the original author of `tar', as he
 is no longer actively involved in its maintenance, he now prefers to be
@@ -803,7 +803,7 @@ can provide the file list to `cpio':
    This will take all the files in the current directory, the
 directories below and place them in the archive `tree.cpio'.  Again the
 `-o' creates an archive, and the `-v' option shows you the name of the
-files as they are archived.  *Note Copy-out mode::.  Using the `.'  in
+files as they are archived.  *Note Copy-out mode::.  Using the `.' in
 the `find' statement will give you more flexibility when doing
 restores, as it will save file names with a relative path vice a hard
 wired, absolute path.  The `-depth' option forces `find' to print of
@@ -916,6 +916,7 @@ manual, and the hardware you will be using:
      tutorial does not cover working with tape drives.  *Note Media::,
      for complete information on using `tar' archives with tape drives.
 
+
 
 File: paxutils.info,  Node: Simplified invokation,  Next: Basic tar options,  Prev: Assumptions,  Up: tar Tutorial
 
@@ -946,7 +947,7 @@ argument always provides options, even if it does not start with a dash.
 
    Some options fall into a class called "subcommands"; exactly one of
 these is both allowed and required for any instance of using `tar'; you
-may *not* specify more than one.  People sometimes speak of them as
+may _not_ specify more than one.  People sometimes speak of them as
 "operating modes".  You are in a particular operating mode when you
 have specified the subcommand which calls for that mode; there are eight
 subcommands in total, and thus there are eight operating modes.
@@ -987,7 +988,7 @@ discussions in the text, when we name an option by its long form, we
 also give the corresponding short option in parentheses.
 
    The term "option" can be confusing at times, since "subcommands" are
-often lumped in with the actual, *optional* "options" in certain
+often lumped in with the actual, _optional_ "options" in certain
 general class statements.  For example, we just talked about "short and
 long forms of options and subcommands".  However, experienced `tar'
 users often refer to these by shorthand terms such as "short and long
@@ -997,10 +998,10 @@ included as well.  Context will help you determine which definition of
 
    Similarly, the term "command" can be confusing, as it is often used
 in two different ways.  People sometimes refer to `tar' "commands".
-The term, `tar' "commands", refers to the various *subcommands*.
+The term, `tar' "commands", refers to the various _subcommands_.
 However, you will also sometimes hear the term "the `tar' command".
 When the word "command" is used specifically like this, a person is
-usually referring to the whole line, not the `tar' *subcommand*.
+usually referring to the whole line, not the `tar' _subcommand_.
 Again, use context to figure out which of the meanings the speaker
 intends.
 
@@ -1034,7 +1035,7 @@ Three frequently used options
 previously, you also need to understand how to use two of the options to
 `tar': `--file=ARCHIVE-NAME' (`-f ARCHIVE-NAME') (which takes an
 archive file as an argument) and `--verbose' (`-v').  (You are usually
-not *required* to specify either of these options when you run `tar',
+not _required_ to specify either of these options when you run `tar',
 but they can be very useful in making things more clear and helping you
 avoid errors.)  A third option, `--help', gives a brief list of
 subcommands and options.  Unlike other `tar' options, `--help' is not
@@ -1043,9 +1044,9 @@ subcommand, except that it does not act on any `tar' archive.
 
 * Menu:
 
-* file tutorial::               The `--file' option
-* verbose tutorial::            The `--verbose' option
-* help tutorial::               Getting help: Using the `--help' option
+* file tutorial::               The --file option
+* verbose tutorial::            The --verbose option
+* help tutorial::               Getting help: Using the --help option
 
 
 File: paxutils.info,  Node: file tutorial,  Next: verbose tutorial,  Prev: file verbose help,  Up: file verbose help

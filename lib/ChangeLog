@@ -1,20 +1,25 @@
-1999-04-17  François Pinard  <pinard@iro.umontreal.ca>
+1999-07-01  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
+
+	* popen.c: Corrected typo in copyright block.
+	Reported by Paul Eggert.
+
+1999-04-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* tcflush.c: New file.
 	Reported by Brendan O'Dea, Eli Zaretskii, Jim Meyering, Steven
 	Sargent and Ulrich Drepper.
 
-1999-03-15  François Pinard  <pinard@iro.umontreal.ca>
+1999-03-15  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* hash.c, hash.h: New versions.
 	Reported by Jim Meyering.
-
-1998-12-10  François Pinard  <pinard@iro.umontreal.ca>
+
+1998-12-10  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* gettext.c: Remove duplicate definition of stpcpy.
 	Reported by Hirofumi Yamaki, Lorenzo Di Gregorio and Igor Schein.
 
-1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+1998-11-10  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* getversion.c: Deleted.
 	* Makefile.am (libpu_a_SOURCES): Adjusted.
@@ -29,7 +34,7 @@
 	* Makefile.am (libpu_a_SOURCES): Add full-read.c and
 	full-write.c.
 
-1998-10-12  François Pinard  <pinard@iro.umontreal.ca>
+1998-10-12  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* getopt.c, regex.c, xmalloc.c: Include <gettext.h>, not <libintl.h>.
 
@@ -37,12 +42,12 @@
 
 	* userspec.c: Don't declare strdup if it is defined as a macro.
 
-1998-10-09  François Pinard  <pinard@iro.umontreal.ca>
+1998-10-09  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* regex.h, regex.c: New files, from elsewhere.
 	* Makefile.am: Adjusted.
 
-1998-06-22  François Pinard  <pinard@iro.umontreal.ca>
+1998-06-22  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* dstring.h: Remove ds_ prefix to field names.
 	Remove protection about multiple inclusions, that's useless overkill.
@@ -52,7 +57,7 @@
 	(struct dynamic_string):
 	* dstring.c: Adjusted.
 
-1998-05-24  François Pinard  <pinard@iro.umontreal.ca>
+1998-05-24  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* dstring.c, dstring.h, filemode.c, filetypes.h, makepath.c,
 	makepath.h, octal.c, save-cwd.c, save-cwd.h, stripslash.c: New
@@ -61,7 +66,7 @@
 	* Makefile.am: Adjusted.  Prepare libpu.a instead of libtar.a.
 	* ChangeLog: Integrate entries from cpio.
 
-1998-04-22  François Pinard  <pinard@iro.umontreal.ca>
+1998-04-22  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* gettext.c, gettext.h: New files, from elsewhere.
 	(localedir): Defined.
@@ -70,38 +75,38 @@
 	* malloc.c, realloc.c, xalloc.h: New files, from elsewhere.
 	* Makefile.am: Adjusted.
 
-1998-04-01  François Pinard  <pinard@iro.umontreal.ca>
+1998-04-01  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* hash.c, hash.h: New files, from elsewhere.
 	* Makefile.am: Adjusted.
 
-1998-03-13  François Pinard  <pinard@iro.umontreal.ca>
+1998-03-13  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* popen.c: Replace MSDOS by DOSWIN.
 
-1998-03-09  François Pinard  <pinard@iro.umontreal.ca>
+1998-03-09  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* addext.c: New file, from elsewhere.
 	* Makefile.am: Adjusted.  Also, unconditionally compile basename.c.
 
-1998-03-04  François Pinard  <pinard@iro.umontreal.ca>
+1998-03-04  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* getdate.h: New file, to replace wrong getdate.h.
 	* Makefile.am: Adjusted.
-	Reported by Dieter Nützel, Ed DeRivas, Eli Zaretskii, Erick
+	Reported by Dieter NÃ¼tzel, Ed DeRivas, Eli Zaretskii, Erick
 	Branderhorst, Greg Herman, Jim Meyering and John David Anglin.
 
-1998-02-11  François Pinard  <pinard@iro.umontreal.ca>
+1998-02-11  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* getdate.y: New versions, to correct a few problems.
 	Reported by David Liu, Ishikawa Chiaki and William Bader.
 
-1997-06-06  François Pinard  <pinard@iro.umontreal.ca>
+1997-06-06  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* full-read.c, full-write.c: New files, from elsewhere.
 	* Makefile.am: Adjusted.
 
-1997-06-03  François Pinard  <pinard@iro.umontreal.ca>
+1997-06-03  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* stpncpy.c: New file, from elsewhere.
 	* Makefile.am: Adjusted.
@@ -109,16 +114,16 @@
 	* popen.c, popen.h: New files, adapted from an old GNU awk copy.
 	* Makefile.am: Adjusted.
 
-1997-06-02  François Pinard  <pinard@iro.umontreal.ca>
+1997-06-02  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* userspec.c: New file, from elsewhere.
 	* Makefile.am (libtar_a_SOURCES): Adjusted.
 
-1997-04-25  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-25  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release tar 1.12.
 
-1997-04-16  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-16  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	The distribution did not have getdate.c updated:
 	* Makefile.am (libtar_a_SOURCES): Use getdate.y, not getdate.c.
@@ -126,22 +131,22 @@
 	* getdate.c: Specify $(srcdir)/, to silence GNU make.
 	Reported by Bruno Haible.
 
-1997-04-15  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-15  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (getdate.c): Announce 13 conflicts, not 10.
 	Reported by Bruno Haible, Bryant Fujimoto and Wolfram Wagner.
 
-1997-04-11  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-11  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* getdate.h: New file.
 	* Makefile.am: Adjusted.
 
-1997-04-10  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-10  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* modechange.c, modechange.h: New files.
 	* Makefile.am: Adjusted.
 
-1997-02-25  François Pinard  <pinard@iro.umontreal.ca>
+1997-02-25  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Adapt library name to Automake 1.1l.
 
@@ -151,39 +156,39 @@
 	(libcpio_a_SOURCES): Changed name.
 	(cpio_LIBADD): Ditto.
 
-1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
+1996-11-09  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* basename.c: New file.
 
-1996-11-09  François Pinard  <pinard@iro.umontreal.ca>
+1996-11-09  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Use tar_DEPENDENCIES.  Avoid BUILT_SOURCES,
 	put getdate.c instead of getdate.y in tar_SOURCES and keep
 	getdate.c in EXTRA_DIST.
 
-1996-11-06  François Pinard  <pinard@iro.umontreal.ca>
+1996-11-06  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* argmatch.c, argmatch.h, backupfile.c, backupfile.h, dirname.c,
 	getversion.c: New files.
 	* Makefile.am: Adjusted.
 	Reported by Marty Leisner.
 
-1996-10-31  François Pinard  <pinard@iro.umontreal.ca>
+1996-10-31  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* safe-stat.h: Deleted.
 	* Makefile.am (noinst_HEADERS): Adjusted.
 	Reported by Jim Meyering.
 
-1996-09-20  François Pinard  <pinard@iro.umontreal.ca>
+1996-09-20  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* regex.c, regex.h, rx.c, rx.h: Deleted.
 	* Makefile.am: Adjusted.
 
-1996-09-19  François Pinard  <pinard@iro.umontreal.ca>
+1996-09-19  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* execlp.c: Include stdio.h, not only stdio!
 
-1996-09-16  François Pinard  <pinard@iro.umontreal.ca>
+1996-09-16  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* open3.h: File deleted after being merged into system.h.
 	* open3.c: File deleted, moved back into src/.
@@ -194,26 +199,26 @@
 
 	* Makefile.am (cpio_SOURCES): Don't mention rx.h, regex.h.
 
-1996-08-24  François Pinard  <pinard@iro.umontreal.ca>
+1996-08-24  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): $(BUILT_SOURCES) is no longer
 	necessary, as Automake now handles it automatically.
 
-1996-07-16  François Pinard  <pinard@iro.umontreal.ca>
+1996-07-16  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Move stpcpy.c there, from tar_SOURCES.
 	Reported by Ulrich Drepper.
 
-1996-04-17  François Pinard  <pinard@iro.umontreal.ca>
+1996-04-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): New name for DIST_OTHER.
 
-1996-02-28  François Pinard  <pinard@iro.umontreal.ca>
+1996-02-28  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* msleep.c: New file, from elsewhere.
 	* Makefile.am: Adjusted.
 
-1996-02-12  François Pinard  <pinard@iro.umontreal.ca>
+1996-02-12  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Remove CONFIG_HEADER, not required by Automake 0.29.
 
@@ -221,15 +226,15 @@
 
 	* Makefile.am (noinst_HEADERS): Removed.
 
-1996-01-14  François Pinard  <pinard@iro.umontreal.ca>
+1996-01-14  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (AUTOMAKE_OPTIONS): Select gnits.
 
-1996-01-07  François Pinard  <pinard@iro.umontreal.ca>
+1996-01-07  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Add parts of previous Makefile.in as FIXME comments.
 
-1996-01-01  François Pinard  <pinard@iro.umontreal.ca>
+1996-01-01  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* error.h: New file, from elsewhere.
 	* Makefile.am: Add error.h to HEADERS.
@@ -241,13 +246,13 @@
 	* makepath.c: Use "error.h".
 	* error.h: New file.
 
-1995-12-30  François Pinard  <pinard@iro.umontreal.ca>
+1995-12-30  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (INCLUDES): Add -I../intl to get libintl.h.
-	Reported by Daniel S. Barclay, Göran Uddeborg, Jonathan Thornburg
+	Reported by Daniel S. Barclay, GÃ¶ran Uddeborg, Jonathan Thornburg
 	and Minh Tran-Le.
 
-1995-12-29  François Pinard  <pinard@iro.umontreal.ca>
+1995-12-29  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: New file.
 
@@ -255,7 +260,7 @@
 
 	* Makefile.am (cpio_LIBADD): Defined.
 
-1995-11-22  François Pinard  <pinard@iro.umontreal.ca>
+1995-11-22  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Distribute ChangeLog.
 	* ChangeLog: New, extracted from the top-level ChangeLog.
@@ -314,7 +319,7 @@
 	* Started ChangeLog; see ../src/ChangeLog for prior changes to
 	this source.
 
-1995-06-18  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-18  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* execlp.c (execlp): New, extracted from src/port.c.
 	* Makefile.in: Adjusted.
@@ -327,56 +332,56 @@
 	* insremque.h, insremque.c: Deleted.
 	* Makefile.in: Adjusted.
 
-1995-06-17  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (DISTFILES): Remove COPYING.LIB.
 	* COPYING.LIB: Deleted.
 
-1995-06-15  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-15  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (dist): Do not hide copying rule.
 
-1995-06-07  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-07  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Use subdir and distdir.
 
 	* stpcpy.c, xgetcwd.c: New functions needed by gettext.
 	* Makefile.in: Adjusted to always compile these.
 
-1995-05-16  François Pinard  <pinard@iro.umontreal.ca>
+1995-05-16  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* insremque.h, insremque.c: New files, from GNU gettext.
 	* Makefile.in: Take care of insremque.[hc].
 
-1995-03-19  François Pinard  <pinard@iro.umontreal.ca>
+1995-03-19  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Remove GLOCALE, add LINGUAS, use fp_WITH_CATALOGS.
 
-1995-02-19  François Pinard  <pinard@iro.umontreal.ca>
+1995-02-19  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Support ID files.  Do not distribute TAGS.
 
-1995-02-05  François Pinard  <pinard@iro.umontreal.ca>
+1995-02-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (maintainer-clean): New name for realclean.
 
-1994-12-18  François Pinard  <pinard@iro.umontreal.ca>
+1994-12-18  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* safe-stat.h: New, from elsewhere.  This solves the fact that
 	mkdir.c, rmdir.c and rename.c were needing it.
 	* Makefile.in (Makefile): Distribute it.
 	Reported by Bruno Haible and Sherwood Botsford.
 
-1994-12-11  François Pinard  <pinard@iro.umontreal.ca>
+1994-12-11  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* rx.c, rx.h: New, from elsewhere.
 	* Makefile.in: Adjust accordingly.
 
-1994-12-03  François Pinard  <pinard@iro.umontreal.ca>
+1994-12-03  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Localize, adapting from how it is done in sharutils.
 
-1994-09-14  François Pinard  <pinard@iro.umontreal.ca>
+1994-09-14  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Cleanup...
 	(DISTFILES): Distribute TAGS.
@@ -386,12 +391,12 @@
 	(realclean): Remove TAGS.
 	(Makefile): Have ./config.status create this Makefile only.
 
-1994-08-22  François Pinard  <pinard@iro.umontreal.ca>
+1994-08-22  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	Little cleanup in installation:
 	* Makefile.in (install, check): Depend on all.
 
-1994-08-21  François Pinard  <pinard@iro.umontreal.ca>
+1994-08-21  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Correct for when a different build directory.
 
@@ -399,18 +404,18 @@
 	* Makefile.in: Distribute it.
 	Reported by Greg Black.
 
-1994-08-17  François Pinard  <pinard@iro.umontreal.ca>
+1994-08-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* ftruncate.c: Revised, because there is no ftruncate
 	capability whatsoever in Interactive Unix.
 	Reported by Peder Chr. Norgaard.
 
-1994-08-08  François Pinard  <pinard@iro.umontreal.ca>
+1994-08-08  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 	* memset.c, mkdir.c, rename.c, strstr.c and
 	ftruncate.c: New, from elsewhere.
 	* Makefile.in: Distribute them.
 
-1994-08-05  François Pinard  <pinard@iro.umontreal.ca>
+1994-08-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (getdate.c): Tell the installer to expect 10
 	shift/reduce conflicts instead of 9.
@@ -419,16 +424,16 @@
 	* fileblocks.c: New, from elsewhere.
 	* Makefile.in: Distribute it.
 
-1994-08-02  François Pinard  <pinard@iro.umontreal.ca>
+1994-08-02  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* xstrdup.c: New, from elsewhere.
 	* Makefile.in: Adjusted.
 
-1994-07-29  François Pinard  <pinard@iro.umontreal.ca>
+1994-07-29  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* error.c: Add error_print_progname virtual routine.
 
-1994-07-24  François Pinard  <pinard@iro.umontreal.ca>
+1994-07-24  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* gmalloc.c: New, from elsewhere.  This renames and updates
 	what was previously malloc.c.  This also solves __const vs const.
@@ -436,7 +441,7 @@
 	Reported by Cliff Krumvieda, Francois Pinard, Henrik Bakman,
 	J.T. Conklin, Nelson H.F. Beebe and Tilman Schmidt.
 
-1994-07-22  François Pinard  <pinard@iro.umontreal.ca>
+1994-07-22  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (LIBOBJS): Get configured list of replacements.
 	* fnmatch.h: Undefine FNM_PATHNAME and FNM_PERIOD, for HP-UX
@@ -449,12 +454,12 @@
 	Chr. Norgaard, Sarah Quady, Tarang Kumar Patel and Thomas
 	Koenig.
 
-1994-07-02  François Pinard  <pinard@iro.umontreal.ca>
+1994-07-02  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* xmalloc.c: New file, from elsewhere.
 	* error.c: New, from elsewhere.
 	* Makefile.in: Adjusted.
 
-1994-06-30  François Pinard  <pinard@iro.umontreal.ca>
+1994-06-30  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: New file.

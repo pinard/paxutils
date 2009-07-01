@@ -1,10 +1,10 @@
 /* Special definitions for paxutils, processed by autoheader.
-   Copyright © 1994, 1997, 1998, 1999 Free Software Foundation, Inc.
-   François Pinard <pinard@iro.umontreal.ca>, 1993.
+   Copyright Â© 1994, 1997, 1998, 1999 Free Software Foundation, Inc.
+   FranÃ§ois Pinard <pinard@iro.umontreal.ca>, 1993.
 */
 
-/* Define if tar format support should be included.  (It doesn't work) */
-#undef CPIO_USE_OLDGNU
+/* Define if old GNU tar format support should be included.  (Doesn't work) */
+#undef CPIO_USE_GNUTAR
 
 /* Define if internal debugging code should be enabled.  */
 #undef DEBUG_CPIO
@@ -70,6 +70,9 @@
 
 /* Define to mt_model (v.g., for DG/UX), else to mt_type.  */
 #undef MTIO_CHECK_FIELD
+
+/* Define to the installation directory for locales.  */
+#undef LOCALEDIR
 
 /* Define to the name of the distribution.  */
 #undef PACKAGE

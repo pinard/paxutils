@@ -16,11 +16,9 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "system.h"
-
 #include <assert.h>
 #include "filetypes.h"
-#include "cpiohdr.h"
-#include "extern.h"
+#include "common.h"
 
 static void copy_pass_one_file PARAMS ((dynamic_string *, dynamic_string *,
 					struct stat *));
@@ -36,18 +34,18 @@ verbosely_copy_file (dynamic_string *input_name, dynamic_string *output_name,
   /* FIXME: supposedly pax wants to print the file name sans \n before
      processing, and add the \n after processing.  Verify that this is true.
      */
-  if (verbose_flag)
+  if (verbose_option)
     fprintf (stderr, "%s\n", input_name->string);
 
   copy_pass_one_file (input_name, output_name, stat_info);
 
-  /* Doesn't really make sense to have dot_flag and verbose_flag set at the
+  /* Doesn't really make sense to have dot_option and verbose_option set at the
      same time.  Must check for this.  */
 #if 0
-  assert (!dot_flag || !verbose_flag);
+  assert (!dot_option || !verbose_option);
 #endif
 
-  if (dot_flag)
+  if (dot_option)
     fputc ('.', stderr);
 }
 
@@ -169,7 +167,7 @@ copy_pass_maybe_recurse (int top_level, dynamic_string *input_name,
 
 /*-------------------------------------------------------------.
 | Read list of file names and copy each file into directory    |
-| `directory_name'.  If `link_flag', link instead of copying.  |
+| `directory_name'.  If `link_option', link instead of copying.  |
 `-------------------------------------------------------------*/
 
 void
@@ -191,10 +189,10 @@ process_copy_pass (void)
     copy_pass_maybe_recurse (1, &input_name, &output_name,
 			     dirname_len, directory_name);
 
-  if (dot_flag)
+  if (dot_option)
     fputc ('\n', stderr);
 
-  if (! no_block_message_flag)
+  if (! quiet_option)
     {
       int res = (output_bytes + io_block_size - 1) / io_block_size;
       if (res == 1)
@@ -237,7 +235,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	     we are trying to create, don't complain about it.  */
 	  existing_dir = true;
 	}
-      else if (!unconditional_flag
+      else if (!unconditional_option
 	       && stat_info->st_mtime <= out_file_stat.st_mtime)
 	{
 	  error (0, 0,
@@ -267,13 +265,13 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 #ifndef __MSDOS__
       /* Can the current file be linked to a another file?
 	 Set link_name to the original file name.  */
-      if (link_flag)
+      if (link_option)
 	/* User said to link it if possible.  Try and link to
 	   the original copy.  If that fails we'll still try
 	   and link to a copy we've already made.  */
 	link_res = link_to_name (output_name->string,
 				 input_name->string);
-      if ( (link_res < 0) && (stat_info->st_nlink > 1) )
+      if (link_res < 0 && stat_info->st_nlink > 1)
 	link_res = link_to_maj_min_ino (output_name->string,
 					major (stat_info->st_dev),
 					minor (stat_info->st_dev),
@@ -292,7 +290,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	    }
 	  out_file_des = open (output_name->string,
 			       O_CREAT | O_WRONLY | O_BINARY, 0600);
-	  if (out_file_des < 0 && create_dir_flag)
+	  if (out_file_des < 0 && make_directories_option)
 	    {
 	      create_all_directories (output_name->string);
 	      out_file_des = open (output_name->string,
@@ -302,7 +300,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	    {
 	      /* If we aren't allowed to create intermediate directories, make
 		 the error message mention the parent directory.  */
-	      if (!create_dir_flag)
+	      if (!make_directories_option)
 		{
 		  char *dirpart = dir_name (output_name->string);
 		  struct stat dirpart_stat;
@@ -327,7 +325,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	    error (0, errno, "%s", output_name->string);
 
 	  /* Set the attributes of the new file.  */
-	  if (!no_chown_flag)
+	  if (!no_preserve_owner_option)
 	    if ((chown (output_name->string,
 			set_owner_flag ? set_owner : stat_info->st_uid,
 			set_group_flag ? set_group : stat_info->st_gid) < 0)
@@ -336,18 +334,20 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	  /* chown may have turned off some permissions we wanted. */
 	  if (chmod (output_name->string, stat_info->st_mode) < 0)
 	    error (0, errno, "%s", output_name->string);
-	  if (reset_time_flag)
+	  if (reset_access_time_option)
 	    {
 	      times.actime = stat_info->st_atime;
 	      times.modtime = stat_info->st_mtime;
-	      if (utime (input_name->string, &times) < 0)
+	      /* Silently ignore EROFS because reading the file won't have
+		 upset its timestamp if it's on a read-only filesystem.  */
+	      if (utime (input_name->string, &times) < 0 && errno != EROFS)
 		error (0, errno, _("%s: error resetting file access time"),
 		       input_name->string);
-	      if (utime (output_name->string, &times) < 0)
+	      if (utime (output_name->string, &times) < 0 && errno != EROFS)
 		error (0, errno, _("%s: error resetting file access time"),
 		       output_name->string);
 	    }
-	  if (retain_time_flag)
+	  if (preserve_modification_time_option)
 	    {
 	      times.actime = times.modtime = stat_info->st_mtime;
 	      if (utime (output_name->string, &times) < 0)
@@ -367,9 +367,9 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	     then it is a CDF.  Strip the trailing + from the name
 	     before creating it.  */
 	  cdf_char = strlen (output_name->string) - 1;
-	  if ( (cdf_char > 0) &&
-	       (stat_info->st_mode & 04000) &&
-	       (output_name->string [cdf_char] == '+') )
+	  if (cdf_char > 0
+	      && stat_info->st_mode & 04000
+	      && output_name->string [cdf_char] == '+')
 	    {
 	      output_name->string [cdf_char] = '\0';
 	      cdf_flag = 1;
@@ -380,7 +380,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	}
       else
 	res = 0;
-      if (res < 0 && create_dir_flag)
+      if (res < 0 && make_directories_option)
 	{
 	  create_all_directories (output_name->string);
 	  res = mkdir (output_name->string, stat_info->st_mode);
@@ -389,7 +389,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	{
 	  /* If we aren't allowed to create intermediate directories, make the
 	     error message mention the parent directory.  */
-	  if (!create_dir_flag)
+	  if (!make_directories_option)
 	    {
 	      char *dirpart = dir_name (output_name->string);
 	      struct stat dirpart_stat;
@@ -405,15 +405,15 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	     create_all_directories(), so the mkdir will fail because the
 	     directory exists.  If that's the case, don't complain about it.
 	     */
-	  if ( (errno != EEXIST) ||
-	       (lstat (output_name->string, &out_file_stat) != 0) ||
-	       !(S_ISDIR (out_file_stat.st_mode) ) )
+	  if (errno != EEXIST
+	      || lstat (output_name->string, &out_file_stat) != 0
+	      || !S_ISDIR (out_file_stat.st_mode))
 	    {
 	      error (0, errno, "%s", output_name->string);
 	      return;
 	    }
 	}
-      if (!no_chown_flag)
+      if (!no_preserve_owner_option)
 	if ((chown (output_name->string,
 		    set_owner_flag ? set_owner : stat_info->st_uid,
 		    set_group_flag ? set_group : stat_info->st_gid) < 0)
@@ -428,7 +428,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	   we have to refer to it using name+ instead of name.  */
 	output_name->string [cdf_char] = '+';
 #endif
-      if (retain_time_flag)
+      if (preserve_modification_time_option)
 	{
 	  times.actime = times.modtime = stat_info->st_mtime;
 	  if (utime (output_name->string, &times) < 0)
@@ -456,11 +456,11 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
     {
       /* Can the current file be linked to a another file?
 	 Set link_name to the original file name.  */
-      if (link_flag)
+      if (link_option)
 	/* User said to link it if possible.  */
 	link_res = link_to_name (output_name->string,
 				 input_name->string);
-      if ( (link_res < 0) && (stat_info->st_nlink > 1) )
+      if (link_res < 0 && stat_info->st_nlink > 1)
 	link_res = link_to_maj_min_ino (output_name->string,
 					major (stat_info->st_dev),
 					minor (stat_info->st_dev),
@@ -470,7 +470,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	{
 	  res = mknod (output_name->string, stat_info->st_mode,
 		       stat_info->st_rdev);
-	  if (res < 0 && create_dir_flag)
+	  if (res < 0 && make_directories_option)
 	    {
 	      create_all_directories (output_name->string);
 	      res = mknod (output_name->string, stat_info->st_mode,
@@ -480,7 +480,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	    {
 	      /* If we aren't allowed to create intermediate directories, make
 		 the error message mention the parent directory.  */
-	      if (!create_dir_flag)
+	      if (!make_directories_option)
 		{
 		  char *dirpart = dir_name (output_name->string);
 		  struct stat dirpart_stat;
@@ -493,7 +493,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 		error (0, errno, "%s", output_name->string);
 	      return;
 	    }
-	  if (!no_chown_flag)
+	  if (!no_preserve_owner_option)
 	    if ((chown (output_name->string,
 			set_owner_flag ? set_owner : stat_info->st_uid,
 			set_group_flag ? set_group : stat_info->st_gid) < 0)
@@ -502,7 +502,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	  /* chown may have turned off some permissions we wanted. */
 	  if (chmod (output_name->string, stat_info->st_mode) < 0)
 	    error (0, errno, "%s", output_name->string);
-	  if (retain_time_flag)
+	  if (preserve_modification_time_option)
 	    {
 	      times.actime = times.modtime = stat_info->st_mtime;
 	      if (utime (output_name->string, &times) < 0)
@@ -531,7 +531,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 
       res = UMASKED_SYMLINK (link_name, output_name->string,
 			     stat_info->st_mode);
-      if (res < 0 && create_dir_flag)
+      if (res < 0 && make_directories_option)
 	{
 	  create_all_directories (output_name->string);
 	  res = UMASKED_SYMLINK (link_name, output_name->string,
@@ -541,7 +541,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 	{
 	  /* If we aren't allowed to create intermediate directories, make the
 	     error message mention the parent directory.  */
-	  if (!create_dir_flag)
+	  if (!make_directories_option)
 	    {
 	      char *dirpart = dir_name (output_name->string);
 	      struct stat dirpart_stat;
@@ -558,7 +558,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
 
 #ifdef HAVE_LCHOWN
       /* Set the attributes of the new link.  */
-      if (!no_chown_flag)
+      if (!no_preserve_owner_option)
 	if ((lchown (output_name->string,
 		     set_owner_flag ? set_owner : stat_info->st_uid,
 		     set_group_flag ? set_group : stat_info->st_gid) < 0)
@@ -580,7 +580,7 @@ copy_pass_one_file (dynamic_string *input_name, dynamic_string *output_name,
    to the list of known files and associated major/minor/inode numbers
    and return -1.  If another file with the same major/minor/inode
    numbers is found, try and create another link to it using
-   link_to_name, and return 0 for success and -1 for failure.  */
+   link_to_name, and return 0 for success and -1 for failure.  FIXME! */
 
 int
 link_to_maj_min_ino (file_name, st_dev_maj, st_dev_min, st_ino)
@@ -608,10 +608,10 @@ link_to_maj_min_ino (file_name, st_dev_maj, st_dev_min, st_ino)
 }
 
 /* Try and create a hard link from LINK_NAME to LINK_TARGET.  If
-   `create_dir_flag' is set, any non-existent (parent) directories
+   `make_directories_option' is set, any non-existent (parent) directories
    needed by LINK_NAME will be created.  If the link is successfully
-   created and `verbose_flag' is set, print "LINK_TARGET linked to LINK_NAME\n".
-   If the link can not be created and `link_flag' is set, print
+   created and `verbose_option' is set, print "LINK_TARGET linked to LINK_NAME\n".
+   If the link can not be created and `link_option' is set, print
    "cannot link LINK_TARGET to LINK_NAME\n".  Return 0 if the link
    is created, -1 otherwise.  */
 
@@ -625,18 +625,18 @@ link_to_name (link_name, link_target)
   res = -1;
 #else /* not __MSDOS__ */
   res = link (link_target, link_name);
-  if (res < 0 && create_dir_flag)
+  if (res < 0 && make_directories_option)
     {
       create_all_directories (link_name);
       res = link (link_target, link_name);
     }
   if (res == 0)
     {
-      if (verbose_flag)
+      if (verbose_option)
 	error (0, 0, _("%s linked to %s"),
 	       link_target, link_name);
     }
-  else if (link_flag)
+  else if (link_option)
     {
       error (0, errno, _("cannot link %s to %s"),
 	     link_target, link_name);

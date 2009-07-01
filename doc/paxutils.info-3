@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -45,7 +45,7 @@ presented below, from the most recent to the oldest.
 file as an argument.  If you do not supply an archive file name, `tar'
 will use a default which may vary from site to site; thus, we recommend
 that you always supply a specific archive file name in your portable
-scripts.)  Where you *place* the arguments generally depends on which
+scripts.)  Where you _place_ the arguments generally depends on which
 style of options you choose.  We will detail specific information
 relevant to each option style in the sections on the different option
 styles, below.  The differences are subtle, yet can often be very
@@ -96,7 +96,7 @@ tells the name of the `tar' archive) is given a file such as
 `archive.tar' as argument by using the notation `--file=archive.tar'
 for the long option.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Be aware that if you run `tar' with a unique abbreviation for
 the long name of an option you didn't want to use, you are stuck; `tar'
@@ -140,7 +140,7 @@ programs.  For example:
 arguments that belong to them.  If you do not move the arguments
 properly, you may end up overwriting files.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Clustering many options, the last of which has an argument, is a
 rather opaque way to write options.  Some wonder if GNU `getopt' should
@@ -207,7 +207,7 @@ following are equivalent:
 many people are used to them.  Old options have their own virtues, like
 inter-operability in portable scripts, and concise writing.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Beware that if you precede options with a dash, you are
 announcing the short option style instead of the old option style;
@@ -255,7 +255,7 @@ illustrate the many combinations and orderings of option styles.
      $ tar f archive.tar -c
      $ tar fc archive.tar
 
-   On the other hand, the following commands are *not* equivalent to
+   On the other hand, the following commands are _not_ equivalent to
 the previous set:
 
      $ tar -f -c archive.tar
@@ -274,7 +274,7 @@ also specify a single non-option, NAME argument having the value
 (repeating option `c' twice), not all of which are meaningful (for
 example, `.', `h', or `i'), with no argument value.
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Before `tar' version 1.11.6, a bug prevented intermixing
 old-style options with long options in some cases.
@@ -309,7 +309,7 @@ number to the standard output, then immediately exits successfully,
 without doing anything else, ignoring all other options.  For example,
 `tar --version' might return:
 
-     tar (Free paxutils) 2.4h
+     tar (Free paxutils) 2.4i
 
 The first occurrence of `tar' in the result above is the program name
 in the package (for example, `rmt' is another program), while the
@@ -317,7 +317,7 @@ second occurrence of `tar' is the name of the package itself,
 containing possibly many programs.  The package is currently named
 `tar', after the name of the main program it contains.(1)
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) There are plans to merge the `cpio' and `tar' packages into a
 single one which would be called `paxutils'.  So, who knows if, one of
@@ -363,7 +363,7 @@ manual is available in printed form, as a kind of small book.  It may
 be printed out of the `tar' distribution, provided you have TeX already
 installed somewhere, and a laser printer around.  Just configure the
 distribution, execute the command `make dvi', then print `doc/tar.dvi'
-the usual way (contact your local *guru* to know how).  If `tar' has
+the usual way (contact your local _guru_ to know how).  If `tar' has
 been conveniently installed at your site, this manual is also available
 in interactive, hypertextual form as an Info file.  Just call
 `info tar' or, if you do not have the `info' program handy, use the Info
@@ -374,7 +374,7 @@ menu (with `m tar <RET>').
 provided.  Currently, it doesn't tell much more than `tar --help' does.
 Other `man' pages exist for `tar', written at the time `tar' did not
 install any `man' pages on its own.  The string `tar (Free paxutils)
-2.4h' appears in the title of the *normal* `man' page.
+2.4i' appears in the title of the _normal_ `man' page.
 
 
 File: paxutils.info,  Node: verbose,  Next: checkpoint,  Prev: help,  Up: Documentation and help
@@ -567,7 +567,7 @@ ones.
 * create::                      How to create archives
 * Applications::                Other uses for `tar'
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) Currently, `--update' (`-u') might be seen as either a
 subcommand or a fine-tuning option, depending on how it is used.
@@ -626,7 +626,7 @@ names to `tar' that you give the exact member names.  For example,
 `tar --list --file=bfiles birds' would produce an error message
 something like `tar: birds: Not found in archive', because there is no
 member named `birds', only one named `./birds'.  While the names
-`birds' and `./birds' name the same file, *member* names are compared
+`birds' and `./birds' name the same file, _member_ names are compared
 using a simplistic name comparison, in which an exact match is
 necessary.  *Note absolute-names::.
 
@@ -671,7 +671,7 @@ detailed explanation of the ISO 8601 standard.
 * Reading::                     Options to help read archives
 * compare::                     Comparing members with the file system
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) You can revert to the old behavior by defining `USE_OLD_CTIME'
 in `src/list.c' before reinstalling `tar'.
@@ -804,10 +804,10 @@ The `--ignore-failed-read' more or less means to not return an error
 and continue processing even when file integrity is known to be lost,
 as long as the archive integrity is preserved.
 
-   The {No Value For "-ignore-failed-read"} also inhibits an error exit
-also for failed opening of directories, files for which dumping type is
-not known, or with the `--remove-files' option, failed removal of files
-after dump.
+   The {Aucune Valeur Pour «-ignore-failed-read»} also inhibits an
+error exit also for failed opening of directories, files for which
+dumping type is not known, or with the `--remove-files' option, failed
+removal of files after dump.
 
 
 File: paxutils.info,  Node: compare,  Prev: Reading,  Up: list
@@ -818,7 +818,7 @@ Comparing members with the file system
    The `--compare' (`--diff', `-d') subcommand compares specified
 archive members against files with the same names, and then reports
 differences in file size, mode, owner, modification date and contents.
-You should *only* specify archive member names, not file names.  If you
+You should _only_ specify archive member names, not file names.  If you
 do not name any members, then `tar' will compare the entire archive.
 If a file is represented in the archive but does not exist in the file
 system, `tar' reports a difference.
@@ -987,7 +987,7 @@ stating the name of the file in conflict instead of overwriting the
 file with the corresponding extracted archive member.
 
    The `--unlink-first' (`-U') option removes existing files, symbolic
-links, empty directories, devices, and so forth, *prior* to extracting
+links, empty directories, devices, and so forth, _prior_ to extracting
 over them.  This could take care of several situations where
 overwriting files is undesirable.
 
@@ -998,19 +998,19 @@ symbolic link points by the contents of an extracted file, since the
 link itself is removed prior to the extraction.
 
    Another situation is with overwriting a running program's executable
-file.  On some systems, the backing store for the executable *is* the
+file.  On some systems, the backing store for the executable _is_ the
 original program file; overwriting it while the program runs could lead
 to segmentation violation and other crashes.  You could use the
 `--unlink-first' (`-U') option to prevent such woes when extracting
 arbitrary executables over currently running copies.  Note that if
-something goes wrong with the extraction and you *did* use this option,
+something goes wrong with the extraction and you _did_ use this option,
 you might end up with no file at all.  Without this option, if
 something goes wrong with the extraction, the existing file is not
 overwritten, and is preserved.  (If you want to be safe either way, use
 both `--unlink-first' (`-U') and `--backup'[=METHOD]; *Note backup::.)
 
    If you specify the `--recursive-unlink' option, `tar' removes
-*anything* that keeps you from extracting a file as far as current
+_anything_ that keeps you from extracting a file as far as current
 permissions will allow it.  This could include removal of the contents
 of a full directory hierarchy.  For example, someone using this feature
 may be very surprised at the results when extracting something over a
@@ -1030,7 +1030,7 @@ directory which has nothing to do with the extracted file, simply
 because their names are the same after truncation.  We recommend that
 you not use these two options on such filesystems.  In fact, we
 recommend that if you unpack on MS-DOS archives which were created on
-Unix, you *always* use either `--keep-old-files' (`-k') or
+Unix, you _always_ use either `--keep-old-files' (`-k') or
 `--backup'[=METHOD], to prevent the overwriting of existing files due
 to file name truncation.  *Note backup::.
 

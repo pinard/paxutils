@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 # Generate a short man page from --help and --version output.
-# Copyright © 1997, 98 Free Software Foundation, Inc.
+# Copyright Â© 1997, 98 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 # Written by Brendan O'Dea <bod@compusol.com.au>
-#        and François Pinard <pinard@IRO.UMontreal.CA>
+#        and FranÃ§ois Pinard <pinard@IRO.UMontreal.CA>
 
 require 5.003;
 

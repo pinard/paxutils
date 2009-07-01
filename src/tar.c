@@ -14,23 +14,19 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
+#include "common.h"
+
+/* This "ustar.h" comes from GNU libc. All its definitions are redundant with
+   those in "tar.h", which gets included through "common.h" above.  We include
+   "ustar.h" below, in this module only, as a mean for cross-validation.  */
+#include "ustar.h"
 
 #include <getopt.h>
 
-/* The following causes "common.h" to produce definitions of all the global
-   variables, rather than just "extern" declarations of them.  tar does depend
-   on the system loader to preset all GLOBAL variables to neutral (or zero)
-   values, explicit initialisation is usually not done.  */
-#define GLOBAL
-#include "common.h"
-
 time_t get_date ();
-
-const char *parse_user_spec PARAMS((const char *, uid_t *, gid_t *,
-				    char **, char **));
 
 #if ENABLE_DALE_CODE
 # if !MSDOS
@@ -108,7 +104,7 @@ get_reply (const char *message, char *reply, size_t length)
   /* Write out the prompt.  */
 
   if (checkpoint_option)
-    flush_checkpoint_line ();
+    flush_progress_dots ();
 
   fputs (message, stdlis);
   fflush (stdlis);
@@ -138,7 +134,7 @@ confirm (const char *format, const char *argument)
     }
 
   if (checkpoint_option)
-    flush_checkpoint_line ();
+    flush_progress_dots ();
 
   fprintf (stdlis, format, argument);
   fflush (stdlis);
@@ -160,7 +156,7 @@ confirm (const char *format, const char *argument)
 static void
 flush_checkpoint_print_progname (void)
 {
-  flush_checkpoint_line ();
+  flush_progress_dots ();
   fprintf (stderr, "%s: ", program_name);
 }
 
@@ -613,7 +609,7 @@ decode_options (int argc, char *const *argv)
   /* Set some default option values.  */
 
   subcommand_option = UNKNOWN_SUBCOMMAND;
-  archive_format = DEFAULT_FORMAT;
+  archive_format = UNKNOWN_FORMAT;
   blocking_factor = DEFAULT_BLOCKING;
   record_size = DEFAULT_BLOCKING * BLOCKSIZE;
 
@@ -862,7 +858,7 @@ decode_options (int argc, char *const *argv)
 	break;
 
       case 'o':
-	if (archive_format == DEFAULT_FORMAT)
+	if (archive_format == UNKNOWN_FORMAT)
 	  archive_format = V7_FORMAT;
 	else if (archive_format != V7_FORMAT)
 	  USAGE_ERROR ((0, 0, _("Conflicting archive format options")));
@@ -914,7 +910,8 @@ decode_options (int argc, char *const *argv)
 
       case 't':
 	set_subcommand_option (LIST_SUBCOMMAND);
-	verbose_option++;
+	verbose_option = true;
+	verbose_option_count++;
 	break;
 
       case 'T':
@@ -945,7 +942,8 @@ decode_options (int argc, char *const *argv)
 	break;
 
       case 'v':
-	verbose_option++;
+	verbose_option = true;
+	verbose_option_count++;
 	break;
 
       case 'V':
@@ -1094,13 +1092,13 @@ decode_options (int argc, char *const *argv)
 	}
 
       case POSIX_OPTION:
-#if OLDGNU_COMPATIBILITY
-	if (archive_format == DEFAULT_FORMAT)
-	  archive_format = FREE_FORMAT;
-	else if (archive_format != FREE_FORMAT)
+#if GNUTAR_COMPATIBILITY
+	if (archive_format == UNKNOWN_FORMAT)
+	  archive_format = PAXUTILS_FORMAT;
+	else if (archive_format != PAXUTILS_FORMAT)
 	  USAGE_ERROR ((0, 0, _("Conflicting archive format options")));
 #else
-	if (archive_format == DEFAULT_FORMAT)
+	if (archive_format == UNKNOWN_FORMAT)
 	  archive_format = POSIX_FORMAT;
 	else if (archive_format != POSIX_FORMAT)
 	  USAGE_ERROR ((0, 0, _("Conflicting archive format options")));
@@ -1254,21 +1252,21 @@ Written by John Gilmore and Jay Fenlason.\n"),
 
   /* Derive option values and check option consistency.  */
 
-  if (archive_format == DEFAULT_FORMAT)
+  if (archive_format == UNKNOWN_FORMAT)
     {
-#if OLDGNU_COMPATIBILITY
-      archive_format = OLDGNU_FORMAT;
+#if GNUTAR_COMPATIBILITY
+      archive_format = GNUTAR_FORMAT;
 #else
-      archive_format = FREE_FORMAT;
+      archive_format = PAXUTILS_FORMAT;
 #endif
     }
 
-  if (archive_format == FREE_FORMAT && getenv ("POSIXLY_CORRECT"))
+  if (archive_format == PAXUTILS_FORMAT && getenv ("POSIXLY_CORRECT"))
     archive_format = POSIX_FORMAT;
 
   if ((volume_label_option != NULL
        || incremental_option || multi_volume_option || sparse_option)
-      && archive_format != OLDGNU_FORMAT && archive_format != FREE_FORMAT)
+      && archive_format != GNUTAR_FORMAT && archive_format != PAXUTILS_FORMAT)
     USAGE_ERROR ((0, 0,
 		  _("Features wanted on incompatible archive format")));
 
@@ -1399,6 +1397,7 @@ Written by John Gilmore and Jay Fenlason.\n"),
 int
 main (int argc, char *const *argv)
 {
+  reset_global_variables ();
 #if DOSWIN
   program_name = get_program_base_name (argv[0]);
 #else
@@ -1419,7 +1418,7 @@ main (int argc, char *const *argv)
   {
     char *p = (char *) program_name, *b = p, *e = p;
 
-    for ( ; *p; p++)
+    for (; *p; p++)
       {
 	if (*p == '/' || *p == '\\' || *p == ':')
 	  b = p + 1;

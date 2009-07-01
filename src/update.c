@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 /* Implement the 'r', 'u' and 'A' options for tar.  'A' means that the
    file names are tar files, and they should simply be appended to the end
@@ -111,7 +111,7 @@ update_archive (void)
   if (subcommand_option == UPDATE_SUBCOMMAND)
     name_expand ();
 #endif
-  open_archive (ACCESS_UPDATE);
+  open_tar_archive (ACCESS_UPDATE);
 
   while (!found_end)
     {
@@ -140,7 +140,7 @@ update_archive (void)
 		  name->match_found = true;
 	      }
 	    set_next_block_after (current.block);
-	    if (current.block->oldgnu_header.isextended)
+	    if (current.block->gnutar_header.isextended)
 	      skip_extended_headers ();
 	    skip_file (current.stat.st_size);
 	    break;
@@ -199,6 +199,6 @@ update_archive (void)
   }
 
   write_eot ();
-  close_archive ();
+  close_tar_archive ();
   report_unprocessed_names ();
 }

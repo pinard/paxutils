@@ -1,6 +1,6 @@
 ## ------------------------------------------- ##
 ## Check if --with-included-malloc was given.  ##
-## From François Pinard                        ##
+## From FranÃ§ois Pinard                        ##
 ## ------------------------------------------- ##
 
 # In 1992, Michael Bushnell (now Thomas Bushnell <thomas@gnu.org>)

@@ -1,0 +1,799 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 1997-10-10 00:17-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: ENCODING\n"
+
+#: lib/getopt.c:628
+#, c-format
+msgid "%s: option `%s' is ambiguous\n"
+msgstr ""
+
+#: lib/getopt.c:652
+#, c-format
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr ""
+
+#: lib/getopt.c:657
+#, c-format
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr ""
+
+#: lib/getopt.c:674 lib/getopt.c:847
+#, c-format
+msgid "%s: option `%s' requires an argument\n"
+msgstr ""
+
+#. --option
+#: lib/getopt.c:703
+#, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr ""
+
+#. +option or -option
+#: lib/getopt.c:707
+#, c-format
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr ""
+
+#. 1003.2 specifies the format of this message.
+#: lib/getopt.c:733
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr ""
+
+#: lib/getopt.c:736
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr ""
+
+#. 1003.2 specifies the format of this message.
+#: lib/getopt.c:766 lib/getopt.c:896
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr ""
+
+#: lib/getopt.c:813
+#, c-format
+msgid "%s: option `-W %s' is ambiguous\n"
+msgstr ""
+
+#: lib/getopt.c:831
+#, c-format
+msgid "%s: option `-W %s' doesn't allow an argument\n"
+msgstr ""
+
+#: lib/makepath.c:168 lib/makepath.c:235
+#, c-format
+msgid "cannot make directory `%s'"
+msgstr ""
+
+#: lib/makepath.c:210 lib/makepath.c:288
+#, c-format
+msgid "`%s' exists but is not a directory"
+msgstr ""
+
+#: lib/regex.c:959
+msgid "Success"
+msgstr ""
+
+#. REG_NOERROR
+#: lib/regex.c:960
+msgid "No match"
+msgstr ""
+
+#. REG_NOMATCH
+#: lib/regex.c:961
+msgid "Invalid regular expression"
+msgstr ""
+
+#. REG_BADPAT
+#: lib/regex.c:962
+msgid "Invalid collation character"
+msgstr ""
+
+#. REG_ECOLLATE
+#: lib/regex.c:963
+msgid "Invalid character class name"
+msgstr ""
+
+#. REG_ECTYPE
+#: lib/regex.c:964
+msgid "Trailing backslash"
+msgstr ""
+
+#. REG_EESCAPE
+#: lib/regex.c:965
+msgid "Invalid back reference"
+msgstr ""
+
+#. REG_ESUBREG
+#: lib/regex.c:966
+msgid "Unmatched [ or [^"
+msgstr ""
+
+#. REG_EBRACK
+#: lib/regex.c:967
+msgid "Unmatched ( or \\("
+msgstr ""
+
+#. REG_EPAREN
+#: lib/regex.c:968
+msgid "Unmatched \\{"
+msgstr ""
+
+#. REG_EBRACE
+#: lib/regex.c:969
+msgid "Invalid content of \\{\\}"
+msgstr ""
+
+#. REG_BADBR
+#: lib/regex.c:970
+msgid "Invalid range end"
+msgstr ""
+
+#. REG_ERANGE
+#: lib/regex.c:971 lib/xmalloc.c:82
+msgid "Memory exhausted"
+msgstr ""
+
+#. REG_ESPACE
+#: lib/regex.c:972
+msgid "Invalid preceding regular expression"
+msgstr ""
+
+#. REG_BADRPT
+#: lib/regex.c:973
+msgid "Premature end of regular expression"
+msgstr ""
+
+#. REG_EEND
+#: lib/regex.c:974
+msgid "Regular expression too big"
+msgstr ""
+
+#. REG_ESIZE
+#: lib/regex.c:975
+msgid "Unmatched ) or \\)"
+msgstr ""
+
+#: lib/regex.c:5367
+msgid "No previous regular expression"
+msgstr ""
+
+#: lib/userspec.c:136 src/util.c:641
+msgid "virtual memory exhausted"
+msgstr ""
+
+#: lib/userspec.c:162
+msgid "can not omit both user and group"
+msgstr ""
+
+#: lib/userspec.c:171
+msgid "invalid user"
+msgstr ""
+
+#: lib/userspec.c:177
+msgid "cannot get the login group of a numeric UID"
+msgstr ""
+
+#: lib/userspec.c:217
+msgid "invalid group"
+msgstr ""
+
+#: src/copyin.c:61
+msgid "premature end of archive"
+msgstr ""
+
+#: src/copyin.c:100 src/copyin.c:117 src/copyin.c:126 src/copyin.c:135
+#: src/copyin.c:146 src/fmttar.c:369
+#, c-format
+msgid "warning: skipped %ld bytes of junk"
+msgstr ""
+
+#: src/copyin.c:207
+msgid "standard input is closed"
+msgstr ""
+
+#: src/copyin.c:345 src/copyin.c:371 src/copyin.c:553
+#, c-format
+msgid "%s: checksum error (0x%x, should be 0x%x)"
+msgstr ""
+
+#: src/copyin.c:403 src/copypass.c:236
+#, c-format
+msgid "%s not created: newer or same age version exists"
+msgstr ""
+
+#. Can't overwrite.  So just skip.
+#: src/copyin.c:412 src/copypass.c:243
+#, c-format
+msgid "%s already exists; not created"
+msgstr ""
+
+#: src/copyin.c:421 src/copypass.c:250
+#, c-format
+msgid "cannot remove current %s"
+msgstr ""
+
+#: src/copyin.c:501 src/copyin.c:694 src/copyin.c:1065 src/copypass.c:576
+#, c-format
+msgid "cannot link %s to %s"
+msgstr ""
+
+#: src/copyin.c:534
+#, c-format
+msgid "cannot swap halfwords of %s: odd number of halfwords"
+msgstr ""
+
+#: src/copyin.c:542
+#, c-format
+msgid "cannot swap bytes of %s: odd number of bytes"
+msgstr ""
+
+#: src/copyin.c:785 src/copyout.c:497 src/copypass.c:508
+#, c-format
+msgid "%s: unknown file type"
+msgstr ""
+
+#: src/copyin.c:815 src/copyout.c:256 src/copypass.c:194
+msgid "1 block\n"
+msgstr ""
+
+#: src/copyin.c:817 src/copyout.c:258 src/copypass.c:196
+#, c-format
+msgid "%d blocks\n"
+msgstr ""
+
+#: src/copyout.c:119 src/copypass.c:134
+#, c-format
+msgid "cannot open directory %s"
+msgstr ""
+
+#: src/copyout.c:182 src/copypass.c:72
+msgid "blank line ignored"
+msgstr ""
+
+#: src/copyout.c:222
+msgid "standard output is closed"
+msgstr ""
+
+#: src/copyout.c:327
+#, c-format
+msgid "%s: file name too long"
+msgstr ""
+
+#: src/copyout.c:406 src/copyout.c:772 src/copypass.c:324 src/copypass.c:327
+#, c-format
+msgid "%s: error resetting file access time"
+msgstr ""
+
+#: src/copyout.c:427
+#, c-format
+msgid "%s not dumped: not a regular file"
+msgstr ""
+
+#: src/copyout.c:475
+#, c-format
+msgid "%s: symbolic link too long"
+msgstr ""
+
+#: src/copyout.c:527 src/copyout.c:534
+#, c-format
+msgid "cannot read checksum for %s"
+msgstr ""
+
+#: src/copypass.c:571
+#, c-format
+msgid "%s linked to %s"
+msgstr ""
+
+#: src/cpio.c:96
+msgid "Usage: cpio [OPTION]... [EXTRA]...\n"
+msgstr ""
+
+#: src/cpio.c:98 src/pax.c:76
+msgid ""
+"Mandatory or optional arguments to long options are mandatory or optional\n"
+"for short options too.\n"
+msgstr ""
+
+#: src/cpio.c:103
+msgid ""
+"\n"
+"Main operation mode:\n"
+" -o, --create             create a new archive (copy-out)\n"
+"                           archive on stdout unless specified\n"
+"                           list of filenames on stdin\n"
+" -i, --extract            extract files from an archive (copy-in)\n"
+"                           archive on stdin unless specified\n"
+"                           EXTRA argumentss are list of patterns to match\n"
+" -p, --pass-through       copy files (copy-pass)\n"
+"                           list of filenames on stdin\n"
+"                           EXTRA argument is destination directory\n"
+msgstr ""
+
+#: src/cpio.c:117 src/pax.c:90
+msgid ""
+"\n"
+"Other options:\n"
+msgstr ""
+
+#: src/cpio.c:118 src/pax.c:91
+msgid " -0, --null               read null-terminated names\n"
+msgstr ""
+
+#: src/cpio.c:120
+msgid " -a, --reset-access-time  reset access time after reading file\n"
+msgstr ""
+
+#: src/cpio.c:122
+msgid " -A, --append             append to existing archive (copy-out)\n"
+msgstr ""
+
+#: src/cpio.c:124
+msgid " -b, --swap               swap both words and bytes of data\n"
+msgstr ""
+
+#: src/cpio.c:126
+msgid " -B                       set block size to 5120 bytes\n"
+msgstr ""
+
+#: src/cpio.c:128
+msgid " --block-size=SIZE        set block size to 512 * SIZE bytes\n"
+msgstr ""
+
+#: src/cpio.c:130
+msgid " -c                       use old portable (ASCII) format\n"
+msgstr ""
+
+#: src/cpio.c:132
+msgid " -C SIZE, --io-size=SIZE  set block size to SIZE bytes\n"
+msgstr ""
+
+#: src/cpio.c:134
+msgid " -d, --make-directories   make directories as needed\n"
+msgstr ""
+
+#: src/cpio.c:136
+msgid ""
+" -E FILE, --pattern-file=FILE\n"
+"                          read filename patterns from FILE\n"
+msgstr ""
+
+#: src/cpio.c:139
+msgid " -f, --nonmatching        only copy files that do not match a pattern\n"
+msgstr ""
+
+#: src/cpio.c:141
+msgid " -F FILE, --file=FILE     use FILE for archive\n"
+msgstr ""
+
+#: src/cpio.c:143
+msgid " --force-local            archive file is local even if has a colon\n"
+msgstr ""
+
+#: src/cpio.c:145
+msgid ""
+" -H FORMAT, --format=FORMAT\n"
+"                          use archive format FORMAT\n"
+msgstr ""
+
+#: src/cpio.c:148 src/pax.c:108
+msgid " --help                   print this help and exit\n"
+msgstr ""
+
+#: src/cpio.c:150
+msgid " -I FILE                  use FILE as input archive (copy-in)\n"
+msgstr ""
+
+#: src/cpio.c:152 src/pax.c:114
+msgid " -l, --link               link files instead of copying\n"
+msgstr ""
+
+#: src/cpio.c:154 src/pax.c:116
+msgid ""
+" -L, --dereference        don't dump symlinks; dump the files they point to\n"
+msgstr ""
+
+#: src/cpio.c:157
+msgid ""
+" -m, --preserve-modification-time\n"
+"                          retain modification time when creating files\n"
+msgstr ""
+
+#: src/cpio.c:161
+msgid ""
+" -M MESSAGE, --message=MESSAGE\n"
+"                          print message when end of volume reached\n"
+msgstr ""
+
+#: src/cpio.c:164
+msgid " -n, --numeric-uid-gid    show numeric uid and gid\n"
+msgstr ""
+
+#: src/cpio.c:166
+msgid " --no-absolute-filenames  create all files relative to cwd (copy-in)\n"
+msgstr ""
+
+#: src/cpio.c:169
+msgid " --no-preserve-owner      do not change ownership of files\n"
+msgstr ""
+
+#: src/cpio.c:171
+msgid " -O FILE                  use FILE as output archive (copy-out)\n"
+msgstr ""
+
+#: src/cpio.c:173
+msgid " --only-verify-crc        verify CRCs but do not extract (copy-out)\n"
+msgstr ""
+
+#: src/cpio.c:176
+msgid " --quiet, --silent        do not print number of blocks copied\n"
+msgstr ""
+
+#: src/cpio.c:178
+msgid " -r, --rename             interactively rename files\n"
+msgstr ""
+
+#: src/cpio.c:180
+msgid ""
+" -R [USER][:.][GROUP], --owner=[USER][:.][GROUP]\n"
+"                          set ownership of new files to USER, GROUP\n"
+msgstr ""
+
+#: src/cpio.c:183
+msgid ""
+" -s, --swap-bytes         swap bytes of each halfword in files (copy-in)\n"
+msgstr ""
+
+#: src/cpio.c:186
+msgid ""
+" -S, --swap-halfwords     swap halfwords of each word in files (copy-in)\n"
+msgstr ""
+
+#: src/cpio.c:189
+msgid " --sparse                 write sparse files (copy-out, copy-pass)\n"
+msgstr ""
+
+#: src/cpio.c:191
+msgid " -t, --list               print table of contents of input\n"
+msgstr ""
+
+#: src/cpio.c:193
+msgid " -u, --unconditional      replace all files, even if older\n"
+msgstr ""
+
+#: src/cpio.c:195
+msgid " -v, --verbose            list files processed\n"
+msgstr ""
+
+#: src/cpio.c:197
+msgid " -V, --dot                print a `.' for each file processed\n"
+msgstr ""
+
+#: src/cpio.c:199 src/pax.c:132
+msgid " --version                print version information and exit\n"
+msgstr ""
+
+#: src/cpio.c:202 src/pax.c:140
+msgid ""
+"\n"
+"Report bugs to <bug-gnu-utils@prep.ai.mit.edu>\n"
+msgstr ""
+
+#: src/cpio.c:259 src/cpio.c:276 src/pax.c:246
+msgid "invalid block size"
+msgstr ""
+
+#: src/cpio.c:265 src/cpio.c:297
+msgid "archive format specified twice"
+msgstr ""
+
+#: src/cpio.c:306 src/cpio.c:347 src/cpio.c:361
+msgid "only one of -o, -i, -p allowed"
+msgstr ""
+
+#: src/cpio.c:341 src/cpio.c:379
+msgid "only one of --no-preserve-owner and -R allowed"
+msgstr ""
+
+#: src/cpio.c:426
+#, c-format
+msgid "cpio (GNU %s) %s\n"
+msgstr ""
+
+#: src/cpio.c:439 src/pax.c:385
+#, c-format
+msgid "unrecognized option -- `%c'"
+msgstr ""
+
+#: src/cpio.c:450
+msgid "one of -o, -i, -p must be specified"
+msgstr ""
+
+#: src/cpio.c:454
+msgid "-n only makes sense with -t and -v"
+msgstr ""
+
+#: src/cpio.c:468
+msgid "option conflicts with -i"
+msgstr ""
+
+#: src/cpio.c:487
+msgid "option conflicts with -o"
+msgstr ""
+
+#: src/cpio.c:503
+msgid "option conflicts with -p"
+msgstr ""
+
+#: src/cpio.c:510
+msgid "can't specify archive name with -p"
+msgstr ""
+
+#: src/fmtcpio.c:172
+msgid "warning: archive header has reverse byte-order"
+msgstr ""
+
+#: src/fmtcpio.c:325 src/fmtcpio.c:355
+#, c-format
+msgid "%s: truncating inode number"
+msgstr ""
+
+#: src/fmttar.c:265
+msgid "invalid header: checksum error"
+msgstr ""
+
+#: src/format.c:80
+#, c-format
+msgid ""
+"invalid archive format `%s'; valid formats are:\n"
+"crc, newc, odc, bin, ustar, tar, hpodc, hpbin"
+msgstr ""
+
+#: src/main.c:60
+msgid "error closing archive"
+msgstr ""
+
+#: src/mt.c:216
+msgid "tape operation"
+msgstr ""
+
+#: src/mt.c:233
+msgid "no tape device specified"
+msgstr ""
+
+#: src/mt.c:276
+#, c-format
+msgid "%s is not a character special file"
+msgstr ""
+
+#: src/mt.c:304
+#, c-format
+msgid "drive type = %d\n"
+msgstr ""
+
+#: src/mt.c:306
+#, c-format
+msgid "drive status (high) = %d\n"
+msgstr ""
+
+#: src/mt.c:307
+#, c-format
+msgid "drive status (low) = %d\n"
+msgstr ""
+
+#: src/mt.c:309
+#, c-format
+msgid "drive status = %d\n"
+msgstr ""
+
+#: src/mt.c:311
+#, c-format
+msgid "sense key error = %d\n"
+msgstr ""
+
+#: src/mt.c:312
+#, c-format
+msgid "residue count = %d\n"
+msgstr ""
+
+#: src/mt.c:314
+#, c-format
+msgid "file number = %d\n"
+msgstr ""
+
+#: src/mt.c:315
+#, c-format
+msgid "block number = %d\n"
+msgstr ""
+
+#: src/mt.c:324
+#, c-format
+msgid ""
+"Usage: %s [-V] [-f device] [--file=device] [--help] [--version] operation "
+"[count]\n"
+msgstr ""
+
+#: src/pax.c:74
+msgid "Usage: pax [OPTION]... [FILE]... [DIRECTORY]\n"
+msgstr ""
+
+#: src/pax.c:81
+msgid ""
+"\n"
+"Main operation mode:\n"
+" -r, --read               extract files from an archive\n"
+" -w, --write              create a new archive\n"
+" with neither -r nor -w   list contents of archive\n"
+" with both -r and -w      copy files\n"
+msgstr ""
+
+#: src/pax.c:93
+msgid " -a, --append             append to archive\n"
+msgstr ""
+
+#: src/pax.c:95
+msgid " -b N, --block-size=N     set block size to N\n"
+msgstr ""
+
+#: src/pax.c:97
+msgid " -c, --nonmatching        only copy files that do not match a pattern\n"
+msgstr ""
+
+#: src/pax.c:100
+msgid " --debug                  turn on debugging statements\n"
+msgstr ""
+
+#: src/pax.c:103
+msgid ""
+" -d, --directories-only   don't recurse into directories while writing\n"
+msgstr ""
+
+#: src/pax.c:106
+msgid " -f FILE, --file=FILE     input or output file\n"
+msgstr ""
+
+#: src/pax.c:110
+msgid " -i, --rename             interactively rename\n"
+msgstr ""
+
+#: src/pax.c:112
+msgid " -k, --no-overwrite       don't overwrite existing file on extraction\n"
+msgstr ""
+
+#: src/pax.c:119
+msgid " -n, --first-pattern      allow each pattern to match only once\n"
+msgstr ""
+
+#: src/pax.c:121
+msgid " -p, --privileges         preserve permissions on extraction\n"
+msgstr ""
+
+#: src/pax.c:123
+msgid ""
+" -s REPLACEMENT, --replace=REPLACEMENT\n"
+"                          rename files according to REPLACEMENT\n"
+msgstr ""
+
+#: src/pax.c:126
+msgid " -t, --reset-access-time  reset access time on extraction\n"
+msgstr ""
+
+#: src/pax.c:128
+msgid " -u, --keep-old-files     only replace file if replacement is newer\n"
+msgstr ""
+
+#: src/pax.c:130
+msgid " -v, --verbose            be verbose\n"
+msgstr ""
+
+#: src/pax.c:134
+msgid ""
+" -x FORMAT, --format=FORMAT\n"
+"                          set input or output format\n"
+msgstr ""
+
+#: src/pax.c:137
+msgid " -X, --one-file-system    don't cross file systems\n"
+msgstr ""
+
+#: src/pax.c:165 src/pax.c:172
+msgid "parse error in blocksize"
+msgstr ""
+
+#: src/pax.c:180
+msgid "block size cannot be 0"
+msgstr ""
+
+#: src/pax.c:321
+#, c-format
+msgid "unrecognized flag `%c' for -p; recognized flags are `aemop'"
+msgstr ""
+
+#. FIXME for pax we must print more info here.
+#: src/rename.c:258
+#, c-format
+msgid "rename %s -> "
+msgstr ""
+
+#: src/rename.c:353
+msgid "missing regexp"
+msgstr ""
+
+#: src/rename.c:358
+msgid "null regexp"
+msgstr ""
+
+#: src/rename.c:372
+#, c-format
+msgid "%s while compiling pattern"
+msgstr ""
+
+#: src/rename.c:393
+#, c-format
+msgid "invalid regexp modifier `%c'"
+msgstr ""
+
+#: src/rtapelib.c:243
+msgid "exec/tcp: service not available"
+msgstr ""
+
+#. Bad problems if we get here.
+#: src/rtapelib.c:406
+msgid "cannot execute remote shell"
+msgstr ""
+
+#: src/util.c:140 src/util.c:143 src/util.c:191
+msgid "write error"
+msgstr ""
+
+#: src/util.c:257 src/util.c:440
+msgid "read error"
+msgstr ""
+
+#: src/util.c:260
+msgid "premature end of file"
+msgstr ""
+
+#: src/util.c:546 src/util.c:594
+#, c-format
+msgid "File %s shrunk by %ld bytes, padding with zeros"
+msgstr ""
+
+#: src/util.c:549 src/util.c:597
+#, c-format
+msgid "Read error at byte %ld in file %s, padding with zeros"
+msgstr ""
+
+#: src/util.c:678 src/util.c:684
+msgid "cannot seek on output"
+msgstr ""
+
+#: src/util.c:936
+msgid "Found end of tape.  Load next tape and press RETURN. "
+msgstr ""
+
+#: src/util.c:939
+msgid "Found end of tape.  To continue, type device/file name when ready.\n"
+msgstr ""
+
+#: src/util.c:962
+msgid "To continue, type device/file name when ready.\n"
+msgstr ""
+
+#: src/util.c:987
+#, c-format
+msgid "internal error: tape descriptor changed from %d to %d"
+msgstr ""

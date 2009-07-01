@@ -195,7 +195,7 @@ except that this permission notice may be stated in a translation approved
 by the Free Software Foundation.
 @end titlepage
 
-@ifinfo
+@c @ifinfo
 
 @node Top, Introduction, (dir), (dir)
 @top
@@ -572,7 +572,7 @@ Format of Archive Files
 @end detailmenu
 @end menu
 
-@end ifinfo
+@c @end ifinfo
 
 @node Introduction, cpio Tutorial, Top, Top
 @chapter Introduction
@@ -4283,7 +4283,7 @@ updating it.
 (The reason @code{tar} does not overwrite the older file when updating
 it is because writing to the middle of a section of tape is a difficult
 process.  Tapes are not designed to get data inserted in their middle;
-doing so would destroy any data after the place you write.  @xref{Media}
+doing so would destroy any data after the place you write.  @xref{Media},
 for more information about tapes.)
 
 @value{update} is not suitable for performing backups for two
@@ -4948,10 +4948,10 @@ archive.  If you specify any subcommand other than one of these three,
 @code{tar} does nothing.
 
 By default, @code{tar} takes file names from the command line.  However,
-there are other ways to specify file or member names, or to modify the
-manner in which @code{tar} selects the files or members upon which to
-operate.  @xref{files-from}; see @ref{exclude}.  In general, these methods
-work for specifying the names of both files and archive members.
+there are other ways to specify file or member names, or to modify the manner
+in which @code{tar} selects the files or members upon which to operate.
+@xref{files-from}.  @xref{exclude}.  In general, these methods work for
+specifying the names of both files and archive members.
 
 @menu
 * files-from::                  Reading names from a file
@@ -9335,7 +9335,7 @@ The extended format specifies additional values in the @code{typeflag}
 field to describe new types of files in an archive.  These are listed below.
 
 @table @code
-@item OLDGNU_DUMPDIR
+@item GNUTAR_DUMPDIR
 @itemx 'D'
 This represents a directory and a list of files created by the
 @value{incremental} option.  The @code{size} field gives the total size
@@ -9344,7 +9344,7 @@ of the associated list of files.  Each file name is preceded by either a
 a directory, or is not stored in the archive.)  Each file name is terminated
 by @code{NUL}.  There is an additional @code{NUL} after the last file name.
 
-@item OLDGNU_MULTIVOL
+@item GNUTAR_MULTIVOL
 @itemx 'M'
 This represents a file continued from another volume of a multi-volume
 archive created with the @value{multi-volume} option.  The original type
@@ -9354,14 +9354,14 @@ file is written out).  The @code{offset} field gives the offset from the
 beginning of the file where this part of the file begins.  Thus @code{size}
 plus @code{offset} should equal the original size of the file.
 
-@item OLDGNU_SPARSE
+@item GNUTAR_SPARSE
 @itemx 'S'
 This flag indicates that we are dealing with a sparse file.  Note that
 archiving a sparse file requires special subcommands to find holes in the
 file, which mark the positions of these holes, along with the number of
 bytes of data to be found after the hole.
 
-@item OLDGNU_VOLHDR
+@item GNUTAR_VOLHDR
 @itemx 'V'
 This file type is used to mark the volume header that was given with the
 @value{label} option when the archive was created.  The @code{name}

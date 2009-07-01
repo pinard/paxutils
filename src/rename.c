@@ -24,7 +24,7 @@
 #include <ctype.h>
 #include <regex.h>
 
-#include "extern.h"
+#include "common.h"
 
 
 /* Interactive file for rename operation.  */
@@ -66,14 +66,14 @@ setup_interactive_renaming (void)
   if (rename_batch_file)
     {
       /* Can't have both.  */
-      assert (!rename_flag);
+      assert (!rename_option);
       rename_in = fopen (rename_batch_file, "r");
       if (rename_in == NULL)
 	error (2, errno, "%s", CONSOLE);
     }
 
   /* Open interactive file pair for rename operation.  */
-  if (rename_flag)
+  if (rename_option)
     {
       tty_in = fopen (CONSOLE, "r");
       if (tty_in == NULL)
@@ -109,14 +109,14 @@ match_and_substitute (struct re_pattern_buffer *regex, char *string,
 	  /* No match.  If we've never had a match, just return
 	     failure.  */
 	  if (!found_one)
-	    return (0);
+	    return 0;
 	  /* Otherwise, we must copy some trailing info.  */
 	  break;
 	}
       else if (match == -2)
 	{
 	  /* Some error.  Just bail.  */
-	  return (-1);
+	  return -1;
 	}
       else
 	{
@@ -132,11 +132,11 @@ match_and_substitute (struct re_pattern_buffer *regex, char *string,
 	  size = ds_strlen (outstr) + strlen (subst) + 1;
 	  ds_resize (outstr, size);
 	  xx[1] = '\0';
-	  for (p = subst; *p; ++p)
+	  for (p = subst; *p; p++)
 	    {
 	      if (*p == '\\')
 		{
-		  ++p;
+		  p++;
 		  if (isdigit (*p) || *p == '&')
 		    {
 		      int dig;
@@ -176,7 +176,7 @@ match_and_substitute (struct re_pattern_buffer *regex, char *string,
   /* Copy last part of string into result buffer.  */
   ds_strcat (outstr, string);
 
-  return (1);
+  return 1;
 }
 
 /*-----------------------------------------------------------------.
@@ -199,7 +199,7 @@ possibly_rename_file (char *name)
      renames aren't attempted.  */
   if (rename_batch_file != NULL)
     {
-      assert (!rename_flag);
+      assert (!rename_option);
 
       if (rename_in == NULL)
 	setup_interactive_renaming ();
@@ -212,7 +212,7 @@ possibly_rename_file (char *name)
 	}
 
       /* NOTE: `outname' not unconditionally destroyed here on purpose.  */
-      return (result);
+      return result;
     }
 
   /* Apply all renaming regexps, until a success.  */
@@ -236,7 +236,7 @@ possibly_rename_file (char *name)
     strcpy (outname.string, name);
 
   /* Now interactively rename.  */
-  if (rename_flag)
+  if (rename_option)
     {
       dynamic_string new_name;
       char *str_res;
@@ -253,7 +253,7 @@ possibly_rename_file (char *name)
       fflush (tty_out);
       str_res = ds_fgets (tty_in, &new_name);
 
-      if (pax_rename_flag)
+      if (pax_rename_option)
 	{
 	  /* In a pax-style rename, the following hold:
 	     1. EOF causes an immediate exit.
@@ -289,7 +289,7 @@ possibly_rename_file (char *name)
 
   ds_destroy (&outname);
 
-  return (result);
+  return result;
 }
 
 /*---------------------------------------------------------------------------.
@@ -307,7 +307,7 @@ scan_separators (char *name)
   char *copyto = name;
   int quoted = false;
 
-  for (++name; *name != '\0'; ++name)
+  for (name++; *name != '\0'; name++)
     {
       if (quoted)
 	{
@@ -376,7 +376,7 @@ add_rename_regexp (char *str)
   renbuf->regex = patbuf;
 
   /* Scan flag string and set flags.  */
-  ++sub;
+  sub++;
   while (*sub)
     {
       switch (*sub)
@@ -391,7 +391,7 @@ add_rename_regexp (char *str)
 	  error (2, 0, _("invalid regexp modifier `%c'"), *sub);
 	  break;
 	}
-      ++sub;
+      sub++;
     }
 
   renbuf->next = rename_list;

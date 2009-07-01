@@ -1,5 +1,5 @@
 # Makefile for PO directories.
-# François Pinard <pinard@iro.umontreal.ca>, 1998.
+# FranÃ§ois Pinard <pinard@iro.umontreal.ca>, 1998.
 
 AUTOMAKE_OPTIONS = gnits
 

@@ -1,5 +1,5 @@
 /* cdf.c - Functions to handle HP CDF files.
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,8 +17,7 @@
 
 #include "system.h"
 
-#include "extern.h"
-#include "cpiohdr.h"
+#include "common.h"
 
 /*----.
 | ??  |
@@ -28,16 +27,16 @@ void
 possibly_munge_cdf_directory_name (char *name, struct new_cpio_header *file_hdr)
 {
   /* Strip leading `./' from the filename.  */
-  while (*name == '.' && *(name + 1) == '/')
+  while (name[0] == '.' && name[1] == '/')
     {
-      ++name;
+      name++;
       while (*name == '/')
-	++name;
+	name++;
     }
 
 #ifdef HPUX_CDF
-  if ((archive_format != arf_tar) && (archive_format != arf_ustar)
-      && (archive_format != arf_oldgnu))
+  if ((archive_format != V7_FORMAT) && (archive_format != POSIX_FORMAT)
+      && (archive_format != GNUTAR_FORMAT))
     {
       /* We mark CDF's in cpio files by adding a 2nd `/' after the
 	 "hidden" directory name.  We need to do this so we can
@@ -59,6 +58,7 @@ possibly_munge_cdf_directory_name (char *name, struct new_cpio_header *file_hdr)
 }
 
 #ifdef HPUX_CDF
+
 /* When we create a cpio archive we mark CDF's by putting an extra `/'
    after their component name so we can distinguish the CDF's when we
    extract the archive (in case the "hidden" directory's files appear
@@ -88,9 +88,9 @@ add_cdf_double_slashes (char *input_name)
 
   /*  Search for a `/' preceeded by a `+'.  */
 
-  for (p = input_name; *p != '\0'; ++p)
+  for (p = input_name; *p != '\0'; p++)
     {
-      if ( (*p == '+') && (*(p + 1) == '/') )
+      if (*p == '+' && *(p + 1) == '/')
 	break;
     }
 
@@ -119,7 +119,7 @@ add_cdf_double_slashes (char *input_name)
 
   /* Clear the `/' after this component, so we can stat the pathname up to and
      including this component.  */
-  ++p;
+  p++;
   *p = '\0';
   if ((*xstat) (input_name, &stat_info) < 0)
     {
@@ -141,7 +141,7 @@ add_cdf_double_slashes (char *input_name)
      buffer, and adding an extra `/' after each CDF.  */
   while (*p != '\0')
     {
-      if ( (*p == '+') && (*(p + 1) == '/') )
+      if (p[0] == '+' && p[1] == '/')
 	{
 	  *q++ = *p++;
 
@@ -170,29 +170,28 @@ add_cdf_double_slashes (char *input_name)
 | because tar always has the directory before its files (or else we lose).   |
 `---------------------------------------------------------------------------*/
 
-int
-islastparentcdf (char *path)
+bool
+is_last_parent_cdf (char *path)
 {
   char *newpath;
   char *slash;
   int slash_count;
 
   slash = rindex (path, '/');
-  if (slash == 0)
-    return 0;
+  if (slash == NULL)
+    return false;
   else
     {
       slash_count = 0;
       while (slash > path && *slash == '/')
 	{
-	  ++slash_count;
-	  --slash;
+	  slash_count++;
+	  slash--;
 	}
-
-
-      if ( (*slash == '+') && (slash_count >= 2) )
-	return 1;
+      if (*slash == '+' && slash_count >= 2)
+	return true;
     }
-  return 0;
+  return false;
 }
-#endif
+
+#endif /* HPUX_CDF */

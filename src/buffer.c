@@ -1,5 +1,5 @@
 /* Buffer management for tar.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
+   Copyright (C) 1988,92,93,94,96,97,98,99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-25.
 
    This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -74,10 +74,6 @@ static struct stat archive_stat; /* stat block for archive file */
    blocks, not bytes.  */
 static off_t record_start_block; /* block ordinal at record_start */
 
-/* Where we write list messages (not errors, not interactions) to.  Stdout
-   unless we're writing a pipe, in which case stderr.  */
-FILE *stdlis;
-
 static void backspace_output PARAMS ((void));
 static bool new_volume PARAMS ((enum access_mode));
 static void write_error PARAMS ((ssize_t));
@@ -96,10 +92,6 @@ static int read_error_count;
 
 /* Have we hit EOF yet?  */
 static bool hit_eof;
-
-/* Checkpointing counter; flag to know if an incomplete line is pending.  */
-static int checkpoint = 0;
-static bool checkpoint_dots = false;
 
 int file_to_switch_to = -1;	/* if remote update, close archive, and use
 				   this descriptor to write to */
@@ -194,53 +186,6 @@ off_t
 current_block_ordinal (void)
 {
   return record_start_block + (current_block - record_start);
-}
-
-/*------------------------.
-| Checkpoint processing.  |
-`------------------------*/
-
-void
-flush_checkpoint_line (void)
-{
-  if (checkpoint_dots)
-    {
-#if 0
-      /* FIXME: Also see the comment in output_checkpoint_mark, below.  It
-	 does not mean much to print dot counts unless each dot represents
-	 something precise, which experimentation does not grant yet.  */
-      fprintf (stderr, " [%d]\n", checkpoint);
-#else
-      fputc ('\n', stderr);
-#endif
-      checkpoint_dots = false;
-    }
-}
-
-static void
-output_checkpoint_mark (void)
-{
-  if (!checkpoint_dots)
-    {
-#if 0
-      /* FIXME: Each dot stands for 10 records, yet apparently not when using
-	 -z, even with -B forces reblocking.  Some exploration is needed
-	 before it really makes sense to print the record size.  */
-      fprintf (stderr, "[%d] x ", record_size);
-#endif
-      checkpoint_dots = true;
-    }
-
-  fputc ('.', stderr);
-  if (checkpoint % 100 == 0)
-    {
-      if (checkpoint % 500 == 0)
-	flush_checkpoint_line ();
-      else
-	fputc (' ', stderr);
-    }
-
-  fflush (stderr);
 }
 
 /*------------------------------------------------------------------.
@@ -412,7 +357,8 @@ child_open_for_compress (void)
 
   program_name = _("tar (child)");
 
-  xdup2 (parent_pipe[PREAD], STDIN, _("(child) Pipe to stdin"));
+  xdup2 (parent_pipe[PREAD], STDIN,
+	 _("Cannot redirect stdin from (child) pipe"));
   xclose (parent_pipe[PWRITE]);
 
   /* Check if we need a grandchild tar.  This happens only if either:
@@ -440,7 +386,7 @@ child_open_for_compress (void)
 	  FATAL_ERROR ((0, saved_errno, _("Cannot open archive %s"),
 			archive_name_array[0]));
 	}
-      xdup2 (archive, STDOUT, _("Archive to stdout"));
+      xdup2 (archive, STDOUT, _("Cannot redirect stdout into archive"));
       execlp (use_compress_program_option, use_compress_program_option,
 	      (char *) 0);
       FATAL_ERROR ((0, errno, _("Cannot exec %s"),
@@ -460,7 +406,8 @@ child_open_for_compress (void)
     {
       /* The child tar is still here!  Launch the compressor.  */
 
-      xdup2 (child_pipe[PWRITE], STDOUT, _("((child)) Pipe to stdout"));
+      xdup2 (child_pipe[PWRITE], STDOUT,
+	     _("Cannot redirect stdout into ((child)) pipe"));
       xclose (child_pipe[PREAD]);
       execlp (use_compress_program_option, use_compress_program_option,
 	      (char *) 0);
@@ -474,7 +421,8 @@ child_open_for_compress (void)
 
   /* Prepare for reblocking the data from the compressor into the archive.  */
 
-  xdup2 (child_pipe[PREAD], STDIN, _("(grandchild) Pipe to stdin"));
+  xdup2 (child_pipe[PREAD], STDIN,
+	 _("Cannot redirect stdin from (grandchild) pipe"));
   xclose (child_pipe[PWRITE]);
 
   if (strcmp (archive_name_array[0], "-") == 0)
@@ -539,7 +487,7 @@ child_open_for_compress (void)
     }
 
 #  if 0
-  close_archive ();
+  close_tar_archive ();
 #  endif
   exit (exit_status);
 
@@ -610,7 +558,7 @@ child_open_for_uncompress (void)
 
       /* Let's read the archive and pipe it into temporary file.  */
 
-      while (1)
+      while (true)
 	{
 	  char *cursor;
 	  int maximum;
@@ -699,7 +647,8 @@ Write to compression program short %d bytes"),
 
   program_name = _("tar (child)");
 
-  xdup2 (parent_pipe[PWRITE], STDOUT, _("(child) Pipe to stdout"));
+  xdup2 (parent_pipe[PWRITE], STDOUT,
+	 _("Cannot redirect stdout into (child) pipe"));
   xclose (parent_pipe[PREAD]);
 
   /* Check if we need a grandchild tar.  This happens only if either:
@@ -719,7 +668,7 @@ Write to compression program short %d bytes"),
       if (archive < 0)
 	FATAL_ERROR ((0, errno, _("Cannot open archive %s"),
 		      archive_name_array[0]));
-      xdup2 (archive, STDIN, _("Archive from stdin"));
+      xdup2 (archive, STDIN, _("Cannot redirect stdin from archive"));
       execlp (use_compress_program_option, use_compress_program_option,
 	      "-d", (char *) 0);
       FATAL_ERROR ((0, errno, _("Cannot exec %s"),
@@ -739,7 +688,8 @@ Write to compression program short %d bytes"),
     {
       /* The child tar is still here!  Launch the uncompressor.  */
 
-      xdup2 (child_pipe[PREAD], STDIN, _("((child)) Pipe to stdin"));
+      xdup2 (child_pipe[PREAD], STDIN,
+	     _("Cannot redirect stdin from ((child)) pipe"));
       xclose (child_pipe[PWRITE]);
       execlp (use_compress_program_option, use_compress_program_option,
 	      "-d", (char *) 0);
@@ -753,7 +703,8 @@ Write to compression program short %d bytes"),
 
   /* Prepare for unblocking the data from the archive into the uncompressor.  */
 
-  xdup2 (child_pipe[PWRITE], STDOUT, _("(grandchild) Pipe to stdout"));
+  xdup2 (child_pipe[PWRITE], STDOUT,
+	 _("Cannot redirect stdout to (grandchild) pipe"));
   xclose (child_pipe[PREAD]);
 
   if (strcmp (archive_name_array[0], "-") == 0)
@@ -804,7 +755,7 @@ Write to compression program short %d bytes"),
     }
 
 #  if 0
-  close_archive ();
+  close_tar_archive ();
 #  endif
   exit (exit_status);
 
@@ -863,7 +814,7 @@ check_label_pattern (union block *label)
 `------------------------------------------------------------------------*/
 
 void
-open_archive (enum access_mode wanted_access)
+open_tar_archive (enum access_mode wanted_access)
 {
   bool backed_up_flag = false;
 
@@ -914,8 +865,7 @@ open_archive (enum access_mode wanted_access)
   access_mode = wanted_access == ACCESS_UPDATE ? ACCESS_READ : wanted_access;
 
   stdlis = to_stdout_option ? stderr : stdout;
-  checkpoint = 0;
-  checkpoint_dots = false;
+  init_progress_dots (10);
 
   if (
 #if ENABLE_DALE_CODE
@@ -1102,7 +1052,7 @@ open_archive (enum access_mode wanted_access)
 
 	  assign_string (&current.name, record_start->header.name);
 
-	  record_start->header.typeflag = OLDGNU_VOLHDR;
+	  record_start->header.typeflag = GNUTAR_VOLHDR;
 	  set_header_mtime (record_start, time (0));
 	  finish_header (record_start);
 #if 0
@@ -1123,8 +1073,8 @@ flush_write (void)
   int copy_back;
   ssize_t size_written;
 
-  if (checkpoint_option && ++checkpoint % 10 == 0)
-    output_checkpoint_mark ();
+  if (checkpoint_option)
+    output_progress_dot ();
 
   if (!zerop_tarlong (tape_length_option)
       && !lessp_tarlong (bytes_written, tape_length_option))
@@ -1207,13 +1157,14 @@ flush_write (void)
       sprintf (record_start->header.name, "%s Volume %d",
 	       volume_label_option, volno);
       set_header_mtime (record_start, time (0));
-      record_start->header.typeflag = OLDGNU_VOLHDR;
+      record_start->header.typeflag = GNUTAR_VOLHDR;
       finish_header (record_start);
     }
 
   if (real_s_name[0])
     {
-      int saved_verbose_option;
+      bool saved_verbose_option;
+      int saved_verbose_option_count;
 
       if (volume_label_option)
 	record_start++;
@@ -1225,13 +1176,16 @@ flush_write (void)
 	 being preserved in real_s_name, though.  */
 
       strcpy (record_start->header.name, real_s_name);
-      record_start->header.typeflag = OLDGNU_MULTIVOL;
+      record_start->header.typeflag = GNUTAR_MULTIVOL;
       set_header_size (record_start, real_s_sizeleft);
       set_header_offset (record_start, real_s_totsize - real_s_sizeleft);
       saved_verbose_option = verbose_option;
-      verbose_option = 0;
+      saved_verbose_option_count = verbose_option_count;
+      verbose_option = false;
+      verbose_option_count = 0;
       finish_header (record_start);
       verbose_option = saved_verbose_option;
+      verbose_option_count = saved_verbose_option_count;
 
       if (volume_label_option)
 	record_start--;
@@ -1318,7 +1272,6 @@ read_error (void)
 
   if (read_error_count++ > READ_ERROR_MAX)
     FATAL_ERROR ((0, 0, _("Too many errors, quitting")));
-  return;
 }
 
 /*-------------------------------------.
@@ -1333,8 +1286,8 @@ flush_read (void)
   ssize_t size_written;
   char *buffer_cursor;			/* pointer to next byte to read */
 
-  if (checkpoint_option && ++checkpoint % 10 == 0)
-    output_checkpoint_mark ();
+  if (checkpoint_option)
+    output_progress_dot ();
 
   /* Clear the count of errors.  This only applies to a single call to
      flush_read.  */
@@ -1411,7 +1364,7 @@ error_loop:
 
       cursor = record_start;
 
-      if (cursor->header.typeflag == OLDGNU_VOLHDR)
+      if (cursor->header.typeflag == GNUTAR_VOLHDR)
 	{
 	  if (volume_label_option)
 	    {
@@ -1427,7 +1380,7 @@ error_loop:
 	  if (verbose_option)
 	    {
 	      if (checkpoint_option)
-		flush_checkpoint_line ();
+		flush_progress_dots ();
 	      fprintf (stdlis, _("Reading %s\n"), cursor->header.name);
 	    }
 	  cursor++;
@@ -1437,7 +1390,7 @@ error_loop:
 
       if (real_s_name[0])
 	{
-	  if (cursor->header.typeflag != OLDGNU_MULTIVOL
+	  if (cursor->header.typeflag != GNUTAR_MULTIVOL
 	      || strcmp (cursor->header.name, real_s_name))
 	    {
 	      WARN ((0, 0, _("%s is not continued on this volume"),
@@ -1618,10 +1571,10 @@ Could not backspace archive file; it may be unreadable without -i")));
 `-------------------------*/
 
 void
-close_archive (void)
+close_tar_archive (void)
 {
   if (checkpoint_option)
-    flush_checkpoint_line ();
+    flush_progress_dots ();
 
   if (time_to_start_writing || access_mode == ACCESS_WRITE)
     flush_archive ();
@@ -1682,7 +1635,7 @@ close_archive (void)
 	    FATAL_ERROR ((0, errno, _("Cannot open archive %s"),
 			  archive_name_array[0]));
 
-	  while (1)
+	  while (true)
 	    {
 	      char *cursor;
 	      int length;

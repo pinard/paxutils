@@ -1,5 +1,5 @@
 /* Extract files from a tar archive.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
+   Copyright (C) 1988,92,93,94,96,97,98,99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-11-19.
 
    This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -170,7 +170,8 @@ set_stat (char *file_name, struct stat *stat_info, bool symlink_flag)
       if (symlink_flag)
 	{
 	  if (lchown (file_name, stat_info->st_uid, stat_info->st_gid) < 0)
-	    ERROR ((0, errno, _("%s: Cannot lchown to uid %lu gid %lu"),
+	    ERROR ((0, errno,
+		    _("%s: Cannot change link owner to uid %lu gid %lu"),
 		    file_name,
 		    (unsigned long) stat_info->st_uid,
 		    (unsigned long) stat_info->st_gid));
@@ -178,7 +179,7 @@ set_stat (char *file_name, struct stat *stat_info, bool symlink_flag)
       else
 	{
 	  if (chown (file_name, stat_info->st_uid, stat_info->st_gid) < 0)
-	    ERROR ((0, errno, _("%s: Cannot chown to uid %lu gid %lu"),
+	    ERROR ((0, errno, _("%s: Cannot change owner to uid %lu gid %lu"),
 		    file_name,
 		    (unsigned long) stat_info->st_uid,
 		    (unsigned long) stat_info->st_gid));
@@ -539,7 +540,7 @@ rename_if_dos_device_name (char *file_name)
       if (++i > 2)
 	{
 	  ERROR ((0, EACCES, _("%s: Could not create file"), file_name));
-	  if (current.block->oldgnu_header.isextended)
+	  if (current.block->gnutar_header.isextended)
 	    skip_extended_headers ();
 	  skip_file ((long) current.stat.st_size);
 	  return file_name;
@@ -619,11 +620,11 @@ extract_compressed_file (int fd, long *sizeleft, long totalsize, char *name,
       close (pipe1w);
       close (pipe2r);
       /* Close standard input.  Dup pipe 1 as standard input.  */
-      xdup2 (pipe1r, STDIN,
-	     _("archive data pipe to stdin for file decompression"));
+      xdup2 (pipe1r, STDIN, _("\
+Cannot redirect stdin from archive data pipe for file decompression"));
       /* Close standard output.  Dup pipe 2 as standard output.  */
-      xdup2 (pipe2w, STDOUT,
-	     _("file write pipe to stdout for file decompression"));
+      xdup2 (pipe2w, STDOUT, _("\
+Cannot redirect stdout into file write pipe for file decompression"));
 
       /* Execute the uncompression program.  */
       execlp (use_compress_program_option, use_compress_program_option,
@@ -662,7 +663,7 @@ extract_compressed_file (int fd, long *sizeleft, long totalsize, char *name,
       close (pipe2w);
 
       /* Read data from pipe 2 in BLOCKSIZE chunks and write it out.  */
-      while (1)
+      while (true)
 	{
 	  int bytes_read, i;
 
@@ -698,7 +699,7 @@ extract_compressed_file (int fd, long *sizeleft, long totalsize, char *name,
 	     BLOCKSIZE bytes, or the partial block at the end of the file.
 	     If this is a sparse compressed file, write it only if it
 	     contains non-zero bytes.  Otherwise, always write it.  */
-	  if (typeflag != OLDGNU_SPARSE_COMPRESSED)
+	  if (typeflag != GNUTAR_SPARSE_COMPRESSED)
 	    goto write_block;
 	  for (i = 0; i < bytes_read; i++)
 	    if (buffer[i] != 0)
@@ -824,7 +825,7 @@ extract_compressed_file (int fd, long *sizeleft, long totalsize, char *name,
      ensure the system isn't filled with zombie processes.  */
  finish_children:
   /* Wait for child processes to finish.  */
-  while (1)
+  while (true)
     {
       /* Wait for a child to finish, or for no more children.  */
       while (child = wait (&wait_status),
@@ -899,7 +900,7 @@ extract_archive (void)
 
   if (interactive_option && !confirm (_("extract %s?"), current.name))
     {
-      if (current.block->oldgnu_header.isextended)
+      if (current.block->gnutar_header.isextended)
 	skip_extended_headers ();
       skip_file (current.stat.st_size);
       return;
@@ -946,7 +947,7 @@ Removing leading `/' from absolute path names in the archive")));
       skipcrud += name_prefix_length;
     else
       {
-	if (current.block->oldgnu_header.isextended)
+	if (current.block->gnutar_header.isextended)
 	  skip_extended_headers ();
 	skip_file (current.stat.st_size);
 	return;
@@ -959,7 +960,7 @@ Removing leading `/' from absolute path names in the archive")));
       {
 	ERROR ((0, errno, _("%s: Was unable to backup this file"),
 		CURRENT_FILE_NAME));
-	if (current.block->oldgnu_header.isextended)
+	if (current.block->gnutar_header.isextended)
 	  skip_extended_headers ();
 	skip_file (current.stat.st_size);
 	return;
@@ -983,12 +984,12 @@ Removing leading `/' from absolute path names in the archive")));
 	 file.  If so, we read in the extended headers and continue to
 	 store their contents into the sparsearray.  */
 
-    case OLDGNU_SPARSE:
+    case GNUTAR_SPARSE:
       sp_array_size = 10;
       sparsearray = (struct sp_array *)
 	xmalloc (sp_array_size * sizeof (struct sp_array));
 
-      for (counter = 0; counter < SPARSES_IN_OLDGNU_HEADER; counter++)
+      for (counter = 0; counter < SPARSES_IN_GNUTAR_HEADER; counter++)
 	{
 	  sparsearray[counter].offset =
 	    get_initial_header_offset (current.block, counter);
@@ -999,12 +1000,12 @@ Removing leading `/' from absolute path names in the archive")));
 	    break;
 	}
 
-      if (current.block->oldgnu_header.isextended)
+      if (current.block->gnutar_header.isextended)
 	{
 	  /* Read in the list of extended headers and translate them into
 	     the sparsearray as before.  */
 
-	  /* static */ int ind = SPARSES_IN_OLDGNU_HEADER;
+	  /* static */ int ind = SPARSES_IN_GNUTAR_HEADER;
 
 	  while (true)
 	    {
@@ -1047,9 +1048,9 @@ Removing leading `/' from absolute path names in the archive")));
     case AREGTYPE:
     case REGTYPE:
     case CONTTYPE:
-    case OLDGNU_REGULAR_COMPRESSED:
-    case OLDGNU_SPARSE_COMPRESSED:
-    case OLDGNU_CONTIG_COMPRESSED:
+    case GNUTAR_REGULAR_COMPRESSED:
+    case GNUTAR_SPARSE_COMPRESSED:
+    case GNUTAR_CONTIG_COMPRESSED:
 
       /* Appears to be a file.  But BSD tar uses the convention that a slash
 	 suffix means a directory.  */
@@ -1065,8 +1066,8 @@ Removing leading `/' from absolute path names in the archive")));
 	((keep_old_files_option ?
 	  O_BINARY | O_NDELAY | O_WRONLY | O_CREAT | O_EXCL :
 	  O_BINARY | O_NDELAY | O_WRONLY | O_CREAT | O_TRUNC)
-	 | ((current.block->header.typeflag == OLDGNU_SPARSE
-	     || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED)
+	 | ((current.block->header.typeflag == GNUTAR_SPARSE
+	     || current.block->header.typeflag == GNUTAR_SPARSE_COMPRESSED)
 	    ? 0 : O_APPEND));
 
       /* JK - The last | is a kludge to solve the problem the O_APPEND
@@ -1102,12 +1103,12 @@ Removing leading `/' from absolute path names in the archive")));
 	 the open call that creates them.  */
 
       if (current.block->header.typeflag == CONTTYPE
-	  || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+	  || current.block->header.typeflag == GNUTAR_CONTIG_COMPRESSED)
 	fd = open (CURRENT_FILE_NAME, open_flags | O_CTG,
 		   current.stat.st_mode,
 # if ENABLE_DALE_CODE
-		   (current_header->header.typeflag == OLDGNU_CONTIG_COMPRESSED
-		    ? strtol (current.block->oldgnu_header.realsize, NULL, 8)
+		   (current_header->header.typeflag == GNUTAR_CONTIG_COMPRESSED
+		    ? strtol (current.block->gnutar_header.realsize, NULL, 8)
 		    : current_stat.st_size);
 # else
 		   current.stat.st_size
@@ -1119,7 +1120,7 @@ Removing leading `/' from absolute path names in the archive")));
 #else /* not O_CTG */
 
       if (current.block->header.typeflag == CONTTYPE
-	  || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+	  || current.block->header.typeflag == GNUTAR_CONTIG_COMPRESSED)
 	{
 	  static bool conttype_diagnosed = false;
 
@@ -1140,7 +1141,7 @@ Removing leading `/' from absolute path names in the archive")));
 
 	  ERROR ((0, errno, _("%s: Could not create file"),
 		  CURRENT_FILE_NAME));
-	  if (current.block->oldgnu_header.isextended)
+	  if (current.block->gnutar_header.isextended)
 	    skip_extended_headers ();
 	  skip_file (current.stat.st_size);
 	  if (backup_option)
@@ -1149,7 +1150,7 @@ Removing leading `/' from absolute path names in the archive")));
 	}
 
     extract_file:
-      if (current.block->header.typeflag == OLDGNU_SPARSE)
+      if (current.block->header.typeflag == GNUTAR_SPARSE)
 	{
 	  size_t name_length_bis = strlen (CURRENT_FILE_NAME) + 1;
 	  char *name = (char *) xmalloc (name_length_bis);
@@ -1165,9 +1166,9 @@ Removing leading `/' from absolute path names in the archive")));
 	  extract_sparse_file (fd, &size, current.stat.st_size, name);
 	}
 #if ENABLE_DALE_CODE
-      else if (current.block->header.typeflag == OLDGNU_REGULAR_COMPRESSED
-	       || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED
-	       || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+      else if (current.block->header.typeflag == GNUTAR_REGULAR_COMPRESSED
+	       || current.block->header.typeflag == GNUTAR_SPARSE_COMPRESSED
+	       || current.block->header.typeflag == GNUTAR_CONTIG_COMPRESSED)
 	{
 	  char *name;
 	  int name_length_bis;
@@ -1216,7 +1217,7 @@ Removing leading `/' from absolute path names in the archive")));
 	       before to lseek into the new file the proper amount, and to
 	       see how many bytes we want to write at that position.  */
 
-	    if (current.block->header.typeflag == OLDGNU_SPARSE)
+	    if (current.block->header.typeflag == GNUTAR_SPARSE)
 	      {
 		off_t pos;
 
@@ -1451,7 +1452,7 @@ Attempting extraction of symbolic links as hard links")));
 #endif
 
     case DIRTYPE:
-    case OLDGNU_DUMPDIR:
+    case GNUTAR_DUMPDIR:
       name_length = strlen (CURRENT_FILE_NAME) - 1;
 
     really_dir:
@@ -1470,7 +1471,7 @@ Attempting extraction of symbolic links as hard links")));
 
 	  incremental_restore (skipcrud);
 	}
-      else if (current.block->header.typeflag == OLDGNU_DUMPDIR)
+      else if (current.block->header.typeflag == GNUTAR_DUMPDIR)
 	skip_file (current.stat.st_size);
 
       if (to_stdout_option)
@@ -1493,8 +1494,8 @@ Attempting extraction of symbolic links as hard links")));
 	     away.  We only hope we will be able to adjust its permissions
 	     adequately, later.
 
-	     2) Removing the directory might fail if it is not empty.  By
-	     exception, this real error is traditionally not reported.
+	     2) Removing the directory might fail if it is not empty.  This
+	     error is real, yet by tradition, it is not reported.
 
 	     3) Let's suppose `DIR' already exists and we are about to
 	     extract `DIR/../DIR'.  This would fail because the directory
@@ -1584,20 +1585,20 @@ Attempting extraction of symbolic links as hard links")));
 #endif /* !DOSWIN */
       break;
 
-    case OLDGNU_VOLHDR:
+    case GNUTAR_VOLHDR:
       if (verbose_option)
 	{
 	  if (checkpoint_option)
-	    flush_checkpoint_line ();
+	    flush_progress_dots ();
 	  fprintf (stdlis, _("Reading %s\n"), current.name);
 	}
       break;
 
-    case OLDGNU_NAMES:
+    case GNUTAR_NAMES:
       extract_mangle ();
       break;
 
-    case OLDGNU_MULTIVOL:
+    case GNUTAR_MULTIVOL:
       ERROR ((0, 0, _("\
 Cannot extract `%s' -- file is continued from another volume"),
 	      current.name));
@@ -1606,8 +1607,8 @@ Cannot extract `%s' -- file is continued from another volume"),
 	undo_last_backup ();
       break;
 
-    case OLDGNU_LONGNAME:
-    case OLDGNU_LONGLINK:
+    case GNUTAR_LONGNAME:
+    case GNUTAR_LONGLINK:
       ERROR ((0, 0, _("Long name has no introducing header")));
       skip_file (current.stat.st_size);
       if (backup_option)

@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -42,7 +42,7 @@ find it useful to have an archive available to practice on.
 
    To make this as easy as possible, you will first create a directory
 containing three files (eventually you will create more practice files).
-Then, we will show you how to create an *archive* (inside the new
+Then, we will show you how to create an _archive_ (inside the new
 directory).  Both the directory and the archive are specifically for
 you to practice on.  The rest of this chapter and the next chapter will
 show many examples using this directory and the files you will create:
@@ -61,8 +61,8 @@ slowly so that novice users can begin to understand how `tar' works.
 
 * prepare for examples::        Preparing a practice directory for examples
 * Creating the archive tutorial::  Creating the archive
-* create verbose::              Running `--create' with `--verbose'
-* Short create::                Short forms with `--create'
+* create verbose::              Running --create with --verbose
+* Short create::                Short forms with --create
 * create dir tutorial::         Archiving directories
 
 
@@ -79,7 +79,7 @@ lengths.  Our examples assume that `practice' is a subdirectory of your
 home directory.
 
    Now `cd' to the directory named `practice'; `practice' is now your
-"working directory".  (*Please note*: Although the full path name of
+"working directory".  (_Please note_: Although the full path name of
 this directory is `/HOMEDIR/practice', in our examples we will refer to
 this directory as `practice'; the HOMEDIR is presumed.)
 
@@ -111,8 +111,8 @@ Creating the archive
 
      $ tar --create --file=collection.tar blues folk jazz
 
-   The order of the arguments is not very important, *when using long
-option forms*.  You could also say:
+   The order of the arguments is not very important, _when using long
+option forms_.  You could also say:
 
      $ tar blues --create folk --file=collection.tar jazz
 
@@ -122,7 +122,7 @@ easiest to understand (and we encourage you to do the same when you use
 `tar', to avoid errors).
 
    Note that the part of the command that says `--file=collection.tar'
-is considered to be *one* argument.  If you substituted any other
+is considered to be _one_ argument.  If you substituted any other
 string of characters for ``collection.tar'',  then that string would
 become the name of the archive file you create.
 
@@ -140,9 +140,9 @@ the option which lets you give it the name you chose.  The files
 `blues', `folk', and `jazz' are now members of the archive
 `collection.tar' (they are "file name arguments" to the `--create'
 (`-c') subcommand).    Now that they are are in the archive, they are
-called *archive members*, not files .
+called _archive members_, not files .
 
-   When you create an archive, you *must* specify which files you want
+   When you create an archive, you _must_ specify which files you want
 placed in the archive.  If you do not specify any archive members,
 `tar' will complain.
 
@@ -161,7 +161,7 @@ not run and will prompt you for one.  If you don't name any files, `tar'
 will complain.  You must have write access to the working directory, or
 else you will not be able to create an archive in that directory.
 
-   *Caution*: Do not attempt to use `--create' (`-c') to add files to
+   _Caution_: Do not attempt to use `--create' (`-c') to add files to
 an existing archive; it will delete the archive and write a new one.
 Use `--append' (`-r') instead.  *Note append::.
 
@@ -233,7 +233,7 @@ will report an error indicating that this file does not exist.  If the
 file `collection.tar' does already exist (e.g., from a previous command
 you may have run), then `tar' will add this file to the archive.
 Because the `-v' option did not get registered, `tar' will not run
-under *verbose* mode, and will not report its progress.
+under _verbose_ mode, and will not report its progress.
 
    The end result is that you may be quite confused about what happened,
 and possibly overwrite a file.  To illustrate this further, we will show
@@ -317,13 +317,13 @@ to add all the files in the directory `.' to the archive, it notices
 that the file `foo.tar' is the same as the archive, and skips it.  (It
 makes no sense to put an archive into itself.)  `tar' will continue in
 this case, and create the archive normally, except for the exclusion of
-that one file.  (*Please note:* Some other versions of `tar' are not so
+that one file.  (_Please note:_ Some other versions of `tar' are not so
 clever; they might enter an infinite loop when this happens.  It is
 safer, in general, not to depend on `tar' behavior, by making sure that
 the archive is not created inside a directory that is itself being
 dumped.)  Some MS-Windows file systems (notably, Windows 95 VFAT disks)
 don't support the feature which is used by `tar' to detect that the
-archive is included in itself, so the archive *will* be included on
+archive is included in itself, so the archive _will_ be included on
 those file systems.
 
 
@@ -388,7 +388,7 @@ names to `tar' that you give the exact member names.  For example,
 `tar --list --file=bfiles birds' would produce an error message
 something like `tar: birds: Not found in archive', because there is no
 member named `birds', only one named `./birds'.  While the names
-`birds' and `./birds' name the same file, *member* names are compared
+`birds' and `./birds' name the same file, _member_ names are compared
 using a simplistic name comparison, in which an exact match is
 necessary.  *Note absolute-names::.
 
@@ -505,7 +505,7 @@ If you list the files in the directory again, you will see that the file
 time, and owner.  These parameters will be identical to those which the
 file had when you originally placed it in the archive; any changes you
 may have made before deleting the file from the file system, however,
-will *not* have been made to the archive member.  (If the restoring
+will _not_ have been made to the archive member.  (If the restoring
 user was not also the owner of the archived members, and if the current
 `umask' is compatible with original permissions, the various
 permissions would probably be different.)  The archive file
@@ -580,7 +580,7 @@ you will get the following response:
      tar: jazz: Not found in archive
      $
 
-This is because these files were not originally *in* the parent
+This is because these files were not originally _in_ the parent
 directory `..' where the archive is located; they were in the
 `practice' directory, and their file names reflect this:
 
@@ -943,7 +943,7 @@ Options for `cpio'
      Set the ownership of all files created to the specified user
      and/or group in copy-in and copy-pass modes.  Either the user, the
      group, or both, must be present.  If the group is omitted but the
-     `:' or `.'  separator is given, use the given user's login group.
+     `:' or `.' separator is given, use the given user's login group.
      Only the super-user can change files' ownership.
 
      (On MS-DOS and MS-Windows, any user can use this option, since
@@ -1120,7 +1120,7 @@ ending message is undoubtly useful.
    Some errors are such that it would not be meaningful, or at least
 would be risky, to continue processing: `tar' then aborts processing
 immediately, and says so.  All abnormal exits, whether immediate or
-delayed, should *always* be clearly diagnosed on `stderr', after a line
+delayed, should _always_ be clearly diagnosed on `stderr', after a line
 stating the nature of the error.  When an error is recoverable, `tar'
 attempts to continue processing as much as possible.  It will then exit
 with an error (nonzero) status, which is in fact delayed from the time
@@ -1140,13 +1140,13 @@ errors.
 exit status of `tar' is less easy to obtain, as the error exit of the
 whole pipe is the error exit of the last program in the pipeline.  If
 you are using `bash', check the `PIPESTATUS' array for `tar''s exit
-status.  Otherwise, it *is* possible with `sh' or `ksh' to fetch the
+status.  Otherwise, it _is_ possible with `sh' or `ksh' to fetch the
 exit status of a process in the middle of a pipeline, just ugly:(3)
 
      $ exec 3>&1
      $ status=`((tar ...; echo $? >&4) | tee ... >&3) 4>&1`
 
-   ---------- Footnotes ----------
+   --------- Notes en bas de page ---------
 
    (1) The message used to be "Error exit delayed from previous
 errors", but many users complained they did not understand what this

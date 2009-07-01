@@ -1,5 +1,5 @@
-/* Common declarations for the tar program.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
+/* Common declarations for paxutils archiving programs.
+   Copyright (C) 1988,90,91,92,93,94,96,97,98,99 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -13,22 +13,23 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* Declare the tar archive format.  */
+/* Declare various archive formats and constants.  */
+#include "cpio.h"
 #include "tar.h"
 
-/* The checksum field is filled with this while the checksum is computed.  */
+/* [tar] Value of the checksum field while the checksum is being computed.  */
 #define CHKBLANKS	"        "	/* 8 blanks, no null */
 
-/* Some constants from POSIX are given names.  */
+/* [tar] Some constants from POSIX are given names.  */
 #define NAME_FIELD_SIZE 100
 #define LINKNAME_FIELD_SIZE 100
 #define PREFIX_FIELD_SIZE 155
 #define UNAME_FIELD_SIZE 32
 #define GNAME_FIELD_SIZE 32
 
-/* POSIX specified symbols currently unused are undefined here.  */
+/* [tar] POSIX specified symbols currently unused are undefined here.  */
 #undef TSUID
 #undef TSGID
 #undef TSVTX
@@ -42,7 +43,7 @@
 #undef TOWRITE
 #undef TOEXEC
 
-/* Format of a tar entry in memory.  */
+/* [tar] Format of a tar entry in memory.  */
 
 struct tar_entry
 {
@@ -61,27 +62,29 @@ struct tar_entry
 
 /* Some various global definitions.  */
 
+#define MINIMUM(One, Two) \
+  ((One) < (Two) ? (One) : (Two))
+#define MAXIMUM(One, Two) \
+  ((One) > (Two) ? (One) : (Two))
+/* For rounding up, V+D-1-(V+D-1)%D, V>=0, uses only one multiplying operator,
+   and lets good compilers do better CSE than with V+D-1-(V-1)%D, V>0.  I like
+   it more than either V%D?V+D-V%D:V, (V+D-1)/D*D or V+(D-V%D)%D.  */
+#define ROUNDUP(Value, Divisor) \
+  ((Value) + (Divisor) - 1 - ((Value) + (Divisor) - 1) % (Divisor))
+/* Equivalent of ROUNDUP (Value, Divisor) - Value.  */
+#define PADDING(Value, Divisor) \
+  (((Divisor) - (Value % Divisor)) % (Divisor))
+
+/* [tar] */
+
 #define	STDIN 0			/* file descriptor for standard input */
 #define	STDOUT 1		/* file descriptor for standard output */
-
-/* GLOBAL is defined to empty in `tar.c' only, and left alone in other
-   modules.  Set it to "extern" if it is not already set.  `tar' depends on
-   the system loader to preset all GLOBAL variables to neutral (zero or
-   false) values: GLOBAL initialisations are not explicitly done.  */
-#ifndef GLOBAL
-# define GLOBAL extern
-#endif
-
-/* Exit status for tar.  Let's try to keep this list as simple as possible.
-   -d option strongly invites a status different for unequal comparison and
-   other errors.  */
-GLOBAL int exit_status;
 
 #define TAREXIT_SUCCESS 0
 #define TAREXIT_DIFFERS 1
 #define TAREXIT_FAILURE 2
 
-/* Both WARN and ERROR write a message on stderr and continue processing,
+/* [tar] Both WARN and ERROR write a message on stderr and continue processing,
    however ERROR manages so tar will exit unsuccessfully.  FATAL_ERROR
    writes a message on stderr and aborts immediately, with another message
    line telling so.  USAGE_ERROR works like FATAL_ERROR except that the
@@ -105,10 +108,7 @@ GLOBAL int exit_status;
 #include "backupfile.h"
 #include "modechange.h"
 
-/* Name of this program.  */
-GLOBAL const char *program_name;
-
-/* Main command option.  */
+/* [tar] Main command option.  */
 
 enum subcommand
 {
@@ -123,218 +123,7 @@ enum subcommand
   UPDATE_SUBCOMMAND		/* -u with -c (implied or explicit) */
 };
 
-GLOBAL enum subcommand subcommand_option;
-
-/* Selected format for output archive.  */
-GLOBAL enum archive_format archive_format;
-
-/* Size of each record, once in blocks, once in bytes.  Those two variables
-   are always related, the second being BLOCKSIZE times the first.  They do
-   not have _option in their name, even if their values is derived from
-   option decoding, as these are especially important in tar.  */
-GLOBAL int blocking_factor;
-GLOBAL size_t record_size;
-
-/* Respect slash prefixes.  */
-GLOBAL bool absolute_names_option;
-
-/* Restore atime after access.  */
-GLOBAL bool atime_preserve_option;
-
-/* Backup files before overwriting them.  */
-GLOBAL bool backup_option;
-
-/* Add block number to verbose messages.  This is sometimes useful to debug
-   bad tar archives.  */
-GLOBAL bool block_number_option;
-
-/* Write a progress message every ten records.  */
-GLOBAL bool checkpoint_option;
-
-/* Specified name of compression program, or "gzip" as implied by -z.  */
-GLOBAL const char *use_compress_program_option;
-
-/* Do not consider symlinks themselves as objects, but rather only what they
-   point to.  In a word, follow symbolic links.  */
-GLOBAL bool dereference_option;
-
-/* There were exclude options, so trigger exclude processing.  */
-GLOBAL bool exclude_option;
-
-/* If files may be obtained in files rather than as command arguments.  */
-GLOBAL bool files_from_option;
-
-/* Do not consider remote file syntax.  */
-GLOBAL bool force_local_option;
-
-/* Specified value to be put into tar file in place of stat () results, or
-   just -1 if such an override should not take place.  */
-GLOBAL gid_t group_option;
-
-/* Do not reflect failed reads into the exit status.  */
-GLOBAL bool ignore_failed_read_option;
-
-/* Merely skip zero blocks, do not consider them as possible end of files.
-   This cannot be the default, because Unix tar writes two blocks of zeros,
-   then pads out the record with garbage.  */
-GLOBAL bool ignore_zeros_option;
-
-/* Use incremental mode while dumping or restoring, whether listed or not.
-   When making a dump, save directories at the beginning of the archive, and
-   include in each directory its contents.  */
-GLOBAL bool incremental_option;
-
-/* Specified name of script to run at end of each tape change.  */
-GLOBAL const char *info_script_option;
-
-/* Ask confirmation before acting on archive entries.  */
-GLOBAL bool interactive_option;
-
-/* Don't overwrite existing files.  */
-GLOBAL bool keep_old_files_option;
-
-/* Specified file name for incremental list.  */
-GLOBAL const char *listed_incremental_option;
-
-/* Specified mode change string.  */
-GLOBAL struct mode_change *mode_option;
-
-/* Make multivolume archive.  When we cannot write any more into the
-   archive, re-open it, and continue writing.  */
-GLOBAL bool multi_volume_option;
-
-/* Set if --after-date was given.  See the description for
-   time_option_threshold, which this variable qualifies.  */
-GLOBAL bool newer_ctime_option;
-
-/* Set if either --newer-mtime or --after-date was given.  See the description
-   for time_option_threshold, which this variable qualifies.  */
-GLOBAL bool newer_mtime_option;
-
-/* Do not restore any file attribute.  */
-GLOBAL bool no_attributes_option;
-
-/* Do not dump directories contents recursively.  */
-GLOBAL bool no_recurse_option;
-
-/* Use NUL instead of NL, when reading or producing file lists.  */
-GLOBAL bool null_option;
-
-/* Use numeric ids directly, do not translate symbolic ids to numbers.  */
-GLOBAL bool numeric_owner_option;
-
-/* Do not traverse filesystem boundaries while dumping.  */
-GLOBAL bool one_file_system_option;
-
-/* Specified value to be put into tar file in place of stat () results, or
-   just -1 if such an override should not take place.  */
-GLOBAL uid_t owner_option;
-
-#if ENABLE_DALE_CODE
-/* If file compression (-y) has been selected.  */
-GLOBAL bool per_file_compress_option;
-#endif
-
-/* Assume the archive has no duplicate members.  */
-GLOBAL bool quick_option;
-
-/* When deleting directories in the way, recursively delete their contents.  */
-GLOBAL bool recursive_unlink_option;
-
-/* Try to reblock input records, like when reading 4.2BSD pipes.  */
-GLOBAL bool read_full_records_option;
-
-/* Delete files after having dumped them.  */
-GLOBAL bool remove_files_option;
-
-/* Specified remote shell command.  */
-GLOBAL const char *rsh_command_option;
-
-/* The list of names to extract are already sorted in the archive order, so
-   this list does not have to be swallowed in memory in advance.  */
-GLOBAL bool same_order_option;
-
-/* Restore the owner and group attributes as per the archive.  */
-GLOBAL bool same_owner_option;
-
-/* Restore the permission attributes as per the archive, disobeying the
-   current umask.  */
-GLOBAL bool same_permissions_option;
-
-/* Warn about each skipped directory, while reading an archive.  */
-GLOBAL bool show_omitted_dirs_option;
-
-/* Attempt to handle files having big zeroed holes in them.  */
-GLOBAL bool sparse_option;
-
-/* Resume work at a given entry, usually after a previous run which failed.  */
-GLOBAL bool starting_file_option;
-
-/* Specified maximum byte length of each tape volume (multiple of 1024).  */
-GLOBAL tarlong tape_length_option;
-
-/* Extract entries on standard output, instead of on disk.  */
-GLOBAL bool to_stdout_option;
-
-/* Echo the total size of the created archive.  */
-GLOBAL bool totals_option;
-
-/* Do not restore timestamps from the archive, let extracted files be new.  */
-GLOBAL bool touch_option;
-
-/* Delete files before extracting over them, loose previous file nature and
-   attributes.  This flag is also set when recursively deleting directory
-   hierarchies, as the most implies the least.  */
-GLOBAL bool unlink_first_option;
-
-/* With create subcommand, rather update entries in preexisting archive only
-   from newer files.  With extract subcommand, only replace files if archive
-   entry is newer.  */
-GLOBAL bool update_option;
-
-/* Count how many times the option has been set, multiple setting yields
-   more verbose behavior.  Value 0 means no verbosity, 1 means file name
-   only, 2 means file name and all attributes.  More than 2 is just like 2.  */
-GLOBAL int verbose_option;
-
-/* Read after write for media checking purposes.  */
-GLOBAL bool verify_option;
-
-/* Specified name of file containing the volume number.  */
-GLOBAL const char *volno_file_option;
-
-/* Specified value or pattern.  */
-GLOBAL const char *volume_label_option;
-
-/* Other global definitions.  */
-
-/* File descriptor for archive file.  */
-GLOBAL int archive;
-
-#if ENABLE_DALE_CODE
-/* If archive compression (-z or -Z) has been selected.  */
-GLOBAL bool compress_whole_archive;
-
-/* File descriptor for per file compression temporary file.  */
-GLOBAL int compress_work_file;
-#endif
-
-/* True when outputting to /dev/null.  */
-GLOBAL bool dev_null_output;
-
-/* Name prefix to apply to all files in created archive, and to require for
-   all files before extracting them.  */
-GLOBAL const char *name_prefix_option;
-GLOBAL size_t name_prefix_length;
-
-/* List of tape drive names, number of such tape drives, allocated number,
-   and current cursor in list.  */
-GLOBAL const char **archive_name_array;
-GLOBAL int archive_names;
-GLOBAL int allocated_archive_names;
-GLOBAL const char **archive_name_cursor;
-
-/* Structure for keeping track of filenames and lists thereof.  */
+/* [tar] Structure for keeping track of filenames and lists thereof.  */
 struct name
   {
     struct name *next;		/* for chaining of name entries */
@@ -348,29 +137,17 @@ struct name
     char name[1];		/* varylength string holding the name */
   };
 
-/* Pointer to the start of the scratch space.  */
+/* [tar] Pointer to the start of the scratch space.  */
 struct sp_array
   {
     off_t offset;
     size_t numbytes;
   };
-GLOBAL struct sp_array *sparsearray;
 
-/* Initial size of the sparsearray.  */
-GLOBAL int sp_array_size;
-
-/* If both newer_ctime_option and newer_mtime_option are false, then
-   time_option_threshold is irrelevant.  If newer_ctime_option is false and
-   newer_mtime_option is true, then files get archived if their mtime is
-   greater than time_option_threshold.  If newer_ctime_option is true, then
-   newer_mtime_option always gets selected, so files get archived if *either*
-   their ctime or mtime is greater than time_option_threshold.  */
-GLOBAL time_t time_option_threshold;
-
-/* A file is new enough for backup if its ctime or its mtime is more recent
-   than --after-date (-N) value, or else, if the option is just not used.  If
-   --newer-mtime is used instead, then ctime is not tested.  Note that
-   newer_mtime_option is always implied by newer_ctime_option, yet this
+/* [tar] A file is new enough for backup if its ctime or its mtime is more
+   recent than --after-date (-N) value, or else, if the option is just not
+   used.  If --newer-mtime is used instead, then ctime is not tested.  Note
+   that newer_mtime_option is always implied by newer_ctime_option, yet this
    implication is not used in the definition for FILE_IS_NEW_ENOUGH, below.
 
    Dave Coffin reports that his CMOS clock once got set to the year 2097
@@ -399,14 +176,28 @@ GLOBAL time_t time_option_threshold;
        || time_compare ((Stat)->st_ctime, time_option_threshold) >= 0))
 
 #if ENABLE_DALE_CODE
-/* Shortest and longest files that will be file-compressed.  */
+/* [tar] Shortest and longest files that will be file-compressed.  */
 #define MINIMUM_FILE_COMPRESS_SIZE (BLOCKSIZE + 1)
 #define MAXIMUM_FILE_COMPRESS_SIZE 100000000
 #endif
 
 /* Declarations for each module.  */
 
-/* FIXME: compare.c should not directly handle the following variable,
+/* [cpio] Some globals that need the PARAMS macro.  */
+struct new_cpio_header;
+extern void (*header_writer) PARAMS ((struct new_cpio_header *, int));
+extern void (*eof_writer) PARAMS ((int));
+extern bool (*name_too_long) PARAMS ((char *));
+
+/* [cpio] These functions are from the application-dependent file.  IE
+   "cpio.c" for cpio, "pax.c" for pax.  */
+void process_args PARAMS ((int, char *[]));
+
+/* [cpio] Module main.c.  */
+void process_args PARAMS ((int, char *[]));
+void initialize_buffers PARAMS ((void));
+
+/* [tar] FIXME: compare.c should not directly handle the following variable,
    instead, this should be done in buffer.c only.  */
 
 enum access_mode
@@ -417,7 +208,7 @@ enum access_mode
 };
 extern enum access_mode access_mode;
 
-/* Module buffer.c.  */
+/* [tar] Module buffer.c.  */
 
 extern FILE *stdlis;
 extern char *save_name;
@@ -427,28 +218,52 @@ extern bool write_archive_to_stdout;
 
 size_t available_space_after PARAMS ((union block *));
 off_t current_block_ordinal PARAMS ((void));
-void close_archive PARAMS ((void));
+void close_tar_archive PARAMS ((void));
 void closeout_volume_number PARAMS ((void));
 union block *find_next_block PARAMS ((void));
-void flush_checkpoint_line PARAMS ((void));
 void flush_read PARAMS ((void));
 void flush_write PARAMS ((void));
 void flush_archive PARAMS ((void));
 void init_total_written PARAMS ((void));
 void init_volume_number PARAMS ((void));
-void open_archive PARAMS ((enum access_mode));
+void open_tar_archive PARAMS ((enum access_mode));
 void print_total_written PARAMS ((void));
 void reset_eof PARAMS ((void));
 void set_next_block_after PARAMS ((union block *));
 
-/* Module create.c.  */
+/* [cpio] Module cdf.c.  */
+void possibly_munge_cdf_directory_name  PARAMS ((char *,
+						 struct new_cpio_header *));
+#ifdef HPUX_CDF
+char *add_cdf_double_slashes PARAMS ((char *));
+#endif
+
+/* [cpio] Module copyin.c.  */
+struct new_cpio_header;
+void read_in_header PARAMS ((struct new_cpio_header *, int));
+void process_copy_in PARAMS ((void));
+void long_format PARAMS ((struct new_cpio_header *, char *));
+void print_name_with_quoting PARAMS ((char *));
+void tape_skip_padding PARAMS ((int, int));
+
+/* [cpio] Module copyout.c.  */
+void write_out_header PARAMS ((struct new_cpio_header *, int));
+void tape_pad_output PARAMS ((int, int));
+void process_copy_out PARAMS ((void));
+
+/* [cpio] Module copypass.c.  */
+void process_copy_pass PARAMS ((void));
+int link_to_maj_min_ino PARAMS ((char *, int, int, int));
+int link_to_name PARAMS ((char *, char *));
+
+/* [tar] Module create.c.  */
 
 void create_archive PARAMS ((void));
 void dump_file PARAMS ((char *, dev_t, bool));
 void finish_header PARAMS ((union block *));
 void write_eot PARAMS ((void));
 
-/* Module diffarch.c.  */
+/* [tar] Module diffarch.c.  */
 
 extern bool now_verifying;
 
@@ -456,17 +271,49 @@ void diff_archive PARAMS ((void));
 void diff_init PARAMS ((void));
 void verify_volume PARAMS ((void));
 
-/* Module extract.c.  */
+/* [tar] Module extract.c.  */
 
 void extr_init PARAMS ((void));
 void extract_archive PARAMS ((void));
 void apply_delayed_set_stat PARAMS ((void));
 
-/* Module delete.c.  */
+/* [tar] Module delete.c.  */
 
 void delete_archive_members PARAMS ((void));
 
-/* Module header.c.  */
+/* [cpio] Module fmtcpio.c.  */
+void read_in_old_ascii PARAMS ((struct new_cpio_header *, int));
+void read_in_new_ascii PARAMS ((struct new_cpio_header *, int));
+void read_in_binary PARAMS ((struct new_cpio_header *, int));
+void swab_array PARAMS ((char *, int));
+void write_out_cpioascii_header PARAMS ((struct new_cpio_header *, int));
+void write_out_oldascii_header PARAMS ((struct new_cpio_header *, int));
+void write_out_oldcpio_header PARAMS ((struct new_cpio_header *, int));
+void write_cpio_eof PARAMS ((int));
+bool is_cpio_filename_too_long PARAMS ((char *));
+
+/* [cpio] Module fmttar.c.  */
+void write_out_tar_header PARAMS ((struct new_cpio_header *, int));
+void read_in_tar_header PARAMS ((struct new_cpio_header *, int));
+enum archive_format is_tar_header PARAMS ((char *));
+bool is_tar_filename_too_long PARAMS ((char *));
+void write_tar_eof PARAMS ((int));
+
+/* [cpio] Module format.c.  */
+enum archive_format find_format PARAMS ((char *));
+void format_error PARAMS ((char *));
+void set_write_pointers_from_format PARAMS ((enum archive_format));
+char *format_name PARAMS ((enum archive_format));
+
+/* [cpio] Module getfile.c.  */
+bool get_next_file_name PARAMS ((dynamic_string *));
+
+/* Module global.c.  */
+
+#include "global.h"
+extern char zero_block[BLOCKSIZE];
+
+/* [tar] Module header.c.  */
 
 size_t get_extended_header_numbytes PARAMS ((union block *, int));
 off_t get_extended_header_offset PARAMS ((union block *, int));
@@ -501,7 +348,7 @@ void set_header_uid PARAMS ((union block *, uid_t));
 void set_initial_header_numbytes PARAMS ((union block *, int, size_t));
 void set_initial_header_offset PARAMS ((union block *, int, off_t));
 
-/* Module incremen.c.  */
+/* [tar] Module incremen.c.  */
 
 void collect_and_sort_names PARAMS ((void));
 char *get_directory_contents PARAMS ((char *, dev_t));
@@ -509,17 +356,17 @@ void write_dir_file PARAMS ((void));
 void incremental_restore PARAMS ((int));
 void write_directory_file PARAMS ((void));
 
-/* Module list.c.  */
+/* [tar] Module list.c.  */
 
 void list_archive PARAMS ((void));
 void print_for_mkdir PARAMS ((char *, int, mode_t));
 void print_header PARAMS ((struct tar_entry *));
 
-/* Module mangle.c.  */
+/* [tar] Module mangle.c.  */
 
 void extract_mangle PARAMS ((void));
 
-/* Module misc.c.  */
+/* [tar] Module misc.c.  */
 
 extern enum backup_type backup_type;
 
@@ -550,7 +397,11 @@ bool remove_any_file PARAMS ((const char *, bool));
 bool maybe_backup_file PARAMS ((const char *, bool));
 void undo_last_backup PARAMS ((void));
 
-/* Module names.c.  */
+void init_progress_dots PARAMS ((unsigned));
+void flush_progress_dots PARAMS ((void));
+void output_progress_dot PARAMS ((void));
+
+/* [tar] Module names.c.  */
 
 extern struct name *name_list_head;
 extern struct name *name_list_current;
@@ -572,7 +423,7 @@ void add_exclude PARAMS ((char *));
 void add_exclude_file PARAMS ((const char *));
 bool check_exclude PARAMS ((const char *));
 
-/* Module reading.c.  */
+/* [tar] Module reading.c.  */
 
 extern struct tar_entry current;
 
@@ -591,14 +442,48 @@ enum read_header read_header PARAMS ((struct tar_entry *));
 void skip_extended_headers PARAMS ((void));
 void skip_file PARAMS ((off_t));
 
-/* Module tar.c.  */
+/* [cpio] Module rename.c.  */
+char *possibly_rename_file PARAMS ((char *));
+void add_rename_regexp PARAMS ((char *));
+
+/* [tar] Module tar.c.  */
 
 bool confirm PARAMS ((const char *, const char *));
 char *get_reply PARAMS ((const char *, char *, size_t));
 
-/* Module update.c.  */
+/* [tar] Module update.c.  */
 
 extern char *output_start;
 extern bool time_to_start_writing;
 
 void update_archive PARAMS ((void));
+
+/* [cpio] Module util.c.  */
+void initialize_buffers PARAMS ((void));
+void tape_empty_output_buffer PARAMS ((int));
+void disk_empty_output_buffer PARAMS ((int));
+void swahw_array PARAMS ((char *, int));
+void tape_buffered_write PARAMS ((char *, int, long));
+void tape_buffered_read PARAMS ((char *, int, long));
+int tape_buffered_peek PARAMS ((char *, int, int));
+void tape_toss_input PARAMS ((int, long));
+void copy_files_tape_to_disk PARAMS ((int, int, long));
+void copy_files_disk_to_tape PARAMS ((int, int, long, char *));
+void copy_files_disk_to_disk PARAMS ((int, int, long, char *));
+void create_all_directories PARAMS ((char *));
+void prepare_append PARAMS ((int));
+char *find_inode_file PARAMS ((unsigned long, unsigned long, unsigned long));
+void add_inode PARAMS ((unsigned long, char *, unsigned long, unsigned long));
+int open_archive PARAMS ((char *));
+void tape_offline PARAMS ((int));
+void get_next_reel PARAMS ((int));
+void set_new_media_message PARAMS ((char *));
+#if defined(__MSDOS__) && !defined(__GNUC__)
+int chown PARAMS ((char *, int, int));
+#endif
+#ifdef __TURBOC__
+int utime PARAMS ((char *, struct utimbuf *));
+#endif
+
+/* [cpio] ?? */
+#define DISK_IO_BLOCK_SIZE 512

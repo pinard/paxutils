@@ -1,13 +1,21 @@
-1998-11-10  François Pinard  <pinard@iro.umontreal.ca>
+1999-06-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
+
+	* atconfig.m4: Let an empty argument yield empty instead of `.'.
+
+1999-06-11  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
+
+	* gettext.m4: Declare LOCALEDIR.
+
+1998-11-10  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* gettext.m4: Use our own included gettext by default.
-	Reported by Jörg Schilling.
+	Reported by JÃ¶rg Schilling.
 
-1998-10-28  François Pinard  <pinard@iro.umontreal.ca>
+1998-10-28  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): Include atconfig.m4, delete echo.m4.
 
-1998-10-18  François Pinard  <pinard@iro.umontreal.ca>
+1998-10-18  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* atconfig.m4: New file, also subsuming echo.m4.
 	* echo.m4: Deleted.
@@ -18,11 +26,11 @@
 
 	* printllu.m4: Check tar_cv_have_printf_llu even if it is cached.
 
-1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
+1998-10-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* gettext.m4: Much adjusted to match changed or new Makefiles.
 
-1998-04-21  François Pinard  <pinard@iro.umontreal.ca>
+1998-04-21  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* malloc.m4, realloc.m4: New files, from elsewhere.
 	* echo.m4, gettext.m4, imalloc.m4, microsoft.m4, printllu.m4: New,

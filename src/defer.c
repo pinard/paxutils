@@ -1,5 +1,5 @@
 /* defer.c - handle "defered" links in newc and crc archives
-   Copyright (C) 1993 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -19,8 +19,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include "system.h"
-#include "cpiohdr.h"
-#include "extern.h"
+#include "common.h"
 #include "defer.h"
 
 struct deferment *

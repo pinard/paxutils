@@ -96,8 +96,8 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef uid_t
 
-/* Define if tar format support should be included.  (It doesn't work) */
-#undef CPIO_USE_OLDGNU
+/* Define if old GNU tar format support should be included.  (Doesn't work) */
+#undef CPIO_USE_GNUTAR
 
 /* Define if internal debugging code should be enabled.  */
 #undef DEBUG_CPIO
@@ -148,6 +148,9 @@
 
 /* Define to mt_model (v.g., for DG/UX), else to mt_type.  */
 #undef MTIO_CHECK_FIELD
+
+/* Define to the installation directory for locales.  */
+#undef LOCALEDIR
 
 /* Define to the full path of your rsh, if any.  */
 #undef REMOTE_SHELL

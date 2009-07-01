@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -258,7 +258,7 @@ get_directory_contents (char *path, dev_t device)
 
 		   Devices having the high bit set usually are NFS devices.  */
 
-		/* FIXME: Göran Uddeborg <goeran@uddeborg.pp.se> says, on
+		/* FIXME: GÃ¶ran Uddeborg <goeran@uddeborg.pp.se> says, on
 		   1996-09-20, that SunOS 5/Solaris 2 uses unsigned long for
 		   the device number type.  */
 
@@ -421,7 +421,7 @@ read_directory_file (void)
 {
   char *strp;
   FILE *fp;
-  char buf[512];
+  char buf[512];		/* FIXME: use a symbol */
   static char *path = NULL;
 
   if (path == NULL)
@@ -701,7 +701,7 @@ incremental_restore (int skipcrud)
 	  if (verbose_option)
 	    {
 	      if (checkpoint_option)
-		flush_checkpoint_line ();
+		flush_progress_dots ();
 	      fprintf (stdlis, _("%s: Deleting %s\n"), program_name, p);
 	    }
 	  if (!remove_any_file (p, true))

@@ -1,0 +1,177 @@
+tar 1.11.2
+
+--- 1.1	1994/01/30 11:59:40
++++ ./buffer.c	1994/01/30 12:00:09
+@@ -1564,6 +1564,8 @@
+   char *data;
+   long data_size;
+ 
++  if (f_multivol)
++    save_sizeleft = size;
+   while (size)
+     {
+       data = findrec ()->charptr;
+@@ -1579,6 +1581,8 @@
+ 	func = no_op;
+       userec ((union record *) (data + data_size - 1));
+       size -= data_size;
++      if (f_multivol)
++	save_sizeleft -= data_size;
+     }
+   return 0;
+ }
+--- 1.1	1994/01/30 11:53:30
++++ ./diffarch.c	1994/01/30 12:00:09
+@@ -57,6 +57,9 @@
+ extern struct stat hstat;	/* Stat struct corresponding */
+ extern int head_standard;	/* Tape header is in ANSI format */
+ 
++extern char *save_name;
++extern long save_totsize;
++
+ void decode_header ();
+ void diff_sparse_files ();
+ void fill_in_sparse_array ();
+@@ -218,7 +221,16 @@
+       if (head->header.linkflag == LF_SPARSE)
+ 	diff_sparse_files (hstat.st_size);
+       else
+-	wantbytes ((long) (hstat.st_size), compare_chunk);
++	{
++	  if (f_multivol)
++	    {
++	      save_name = current_file_name;
++	      save_totsize = hstat.st_size;
++	    }
++	  wantbytes ((long) (hstat.st_size), compare_chunk);
++	  if (f_multivol)
++	    save_name = 0;
++	}
+ 
+       check = close (diff_fd);
+       if (check < 0)
+@@ -336,6 +348,11 @@
+ 
+     case LF_DUMPDIR:
+       data = diff_dir = get_dir_contents (current_file_name, 0);
++      if (f_multivol)
++	{
++	  save_name = current_file_name;
++	  save_totsize = hstat.st_size;
++	}
+       if (data)
+ 	{
+ 	  wantbytes ((long) (hstat.st_size), compare_dir);
+@@ -343,6 +360,8 @@
+ 	}
+       else
+ 	wantbytes ((long) (hstat.st_size), no_op);
++      if (f_multivol)
++	save_name = 0;
+       /* FALL THROUGH */
+ 
+     case LF_DIR:
+@@ -411,7 +430,15 @@
+ 	  break;
+ 	}
+ 
++
++      if (f_multivol)
++	{
++	  save_name = current_file_name;
++	  save_totsize = filestat.st_size;
++	}
+       wantbytes ((long) (hstat.st_size), compare_chunk);
++      if (f_multivol)
++	save_name = 0;
+ 
+       check = close (diff_fd);
+       if (check < 0)
+@@ -491,6 +518,11 @@
+   struct mtop t;
+   int er;
+ #endif
++
++  /* hack */
++  current_file_name = 0;
++  current_link_name = 0;
++  /* end hack */
+ 
+   if (!diff_buf)
+     diff_init ();
+--- 1.1	1994/01/30 12:08:28
++++ ./list.c	1994/01/30 12:20:42
+@@ -312,6 +312,7 @@
+   char *bp, *data;
+   int size, written;
+   static char *next_long_name, *next_long_link;
++  static char *local_curr_name, *local_curr_link; 
+   char *name;
+ 
+ recurse:
+@@ -402,19 +403,21 @@
+       name = (next_long_name
+ 	      ? next_long_name
+ 	      : head->header.arch_name);
+-      if (current_file_name)
+-	free (current_file_name);
+-      current_file_name = ck_malloc (strlen (name) + 1);
+-      strcpy (current_file_name, name);
++      if (local_curr_name)
++	  free (local_curr_name);
++      local_curr_name = ck_malloc (strlen (name) + 1);
++      strcpy (local_curr_name, name);
++      current_file_name = local_curr_name;
+ 
+       name = (next_long_link
+ 	      ? next_long_link
+ 	      : head->header.arch_linkname);
+-      if (current_link_name)
+-	free (current_link_name);
+-      current_link_name = ck_malloc (strlen (name) + 1);
+-      strcpy (current_link_name, name);
+-
++      if (local_curr_link)
++	  free (local_curr_link);
++      local_curr_link = ck_malloc (strlen (name) + 1);
++      strcpy (local_curr_link, name);
++      current_link_name = local_curr_link;
++      
+       next_long_link = next_long_name = 0;
+       return 1;
+     }
+--- 1.1	1994/01/30 12:06:07
++++ ./malloc.c	1994/01/30 12:06:28
+@@ -253,8 +253,8 @@
+ extern struct mstats mstats __P ((void));
+ 
+ /* Call WARNFUN with a warning message when memory usage is high.  */
+-extern void memory_warnings __P ((__ptr_t __start,
+-				  void (*__warnfun) __P ((__const char *))));
++/* extern void memory_warnings __P ((__ptr_t __start,
++				  void (*__warnfun) __P ((__const char *)))); */
+ 
+ 
+ /* Relocating allocator.  */
+--- 1.1	1994/01/30 12:06:07
++++ ./tar.c	1994/01/30 12:06:27
+@@ -911,7 +911,8 @@
+       if (f_exclude && check_exclude (p))
+ 	goto tryagain;
+ #endif
+-      return un_quote_string (p);
++/*    return un_quote_string (p); */
++      return p;
+     }
+   while (p = read_name_from_file (buffer, &buffer_siz, namef))
+     {
+@@ -938,7 +939,8 @@
+       if (f_exclude && check_exclude (p))
+ 	goto tryagain;
+ #endif
+-      return un_quote_string (p);
++/*    return un_quote_string (p); */
++      return p;
+     }
+   return NULL;
+ }

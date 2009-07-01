@@ -1,5 +1,5 @@
 /* Main program and argument processing for pax.
-   Copyright (C) 1995, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 
 /* Written by Tom Tromey <tromey@drip.colorado.edu>.  */
 
+#include "system.h"
+#include "common.h"
+
 #include <config.h>
 #include <stdio.h>
 #include <getopt.h>
@@ -26,42 +29,40 @@
 #include <ctype.h>
 
 #include "filetypes.h"
-#include "system.h"
-#include "extern.h"
 #include "rmt.h"
 
-#define OPTION_HELP	130
-#define OPTION_VERSION	131
+#define HELP_OPTION	130
+#define VERSION_OPTION	131
 
 static struct option long_opts[] =
 {
   {"null", 0, 0, '0'},
-  {"append", no_argument, &append_flag, true},
+  {"append", no_argument, (int *) &append_option, true},
   {"block-size", required_argument, 0, 'b'},
-  {"nonmatching", no_argument, &copy_matching_files, true},
+  {"nonmatching", no_argument, (int *) &copy_matching_files, true},
   {"directories-only", no_argument, 0, 'd'},
   {"file", required_argument, 0, 'f'},
-  {"rename", no_argument, &rename_flag, true},
+  {"rename", no_argument, (int *) &rename_option, true},
   {"no-overwrite", no_argument, 0, 'k'},
-  {"link", no_argument, &link_flag, true},
+  {"link", no_argument, (int *) &link_option, true},
   {"dereference", 0, 0, 'L'},
   {"first-pattern", no_argument, 0, 'n'},
   {"privileges", required_argument, 0, 'p'},
   {"read", no_argument, 0, 'r'},
   {"replace", required_argument, 0, 's'},
-  {"reset-access-time", no_argument, &reset_time_flag, true},
-  {"keep-old-files", no_argument, &unconditional_flag, false},
-  {"verbose", no_argument, &verbose_flag, true},
+  {"reset-access-time", no_argument, (int *) &reset_access_time_option, true},
+  {"keep-old-files", no_argument, (int *) &unconditional_option, false},
+  {"verbose", no_argument, (int *) &verbose_option, true},
   {"write", no_argument, 0, 'w'},
   {"format", required_argument, 0, 'x'},
   /* I like this, but maybe tar compatibility is better?  */
   /* {"xdev", no_argument, 0, 'X'}, */
   {"one-file-system", required_argument, 0, 'X'},
 #ifdef DEBUG_CPIO
-  {"debug", 0, &debug_flag, true},
+  {"debug", 0, &debug_option, true},
 #endif
-  {"help", 0, 0, OPTION_HELP},
-  {"version", 0, 0, OPTION_VERSION},
+  {"help", 0, 0, HELP_OPTION},
+  {"version", 0, 0, VERSION_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -158,13 +159,13 @@ parse_buffer_size (char *str)
       str = num;
 
       /* Extract one number.  */
-      while (1)
+      while (true)
 	{
 	  if (!isascii (*num))
 	    error (2, 0, _("parse error in blocksize"));
 
 	  if (isdigit (*num))
-	    ++num;
+	    num++;
 	  else if (!*num || *num == 'k' || *num == 'b' || *num == 'x')
 	    break;
 	  else
@@ -182,18 +183,18 @@ parse_buffer_size (char *str)
       if (save == 'k')
 	{
 	  product *= 1024;
-	  ++num;
+	  num++;
 	}
       else if (save == 'b')
 	{
-	  product *= 512;
-	  ++num;
+	  product *= 512;	/* FIXME: use a symbol */
+	  num++;
 	}
       else if (save == 'x')
-	++num;
+	num++;
     }
 
-  return (product);
+  return product;
 }
 
 void
@@ -206,13 +207,13 @@ process_args (int argc, char *argv[])
 
   /* Set up pax defaults.  */
   xstat = lstat;
-  unconditional_flag = true;
-  no_block_message_flag = true;
+  unconditional_option = true;
+  quiet_option = true;
   directory_recurse_flag = true;
-  reset_time_flag = true;
-  retain_time_flag = true;
+  reset_access_time_option = true;
+  preserve_modification_time_option = true;
   preserve_mode_flag = false;
-  pax_rename_flag = true;
+  pax_rename_option = true;
 
   /* Work around for pcc bug.  */
   copy_in = process_copy_in;
@@ -234,7 +235,7 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'a':		/* Append to the archive.  */
-	  append_flag = true;
+	  append_option = true;
 	  break;
 
 	case 'b':		/* Block size.  */
@@ -256,7 +257,7 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'i':
-	  rename_flag = true;
+	  rename_option = true;
 	  break;
 
 	case 'k':
@@ -264,7 +265,7 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'l':
-	  link_flag = true;
+	  link_option = true;
 	  break;
 
 	case 'L':
@@ -282,31 +283,31 @@ process_args (int argc, char *argv[])
 
 	case 'p':
 	  /* Process 1-char flags.  */
-	  for (; *optarg; ++optarg)
+	  for (; *optarg; optarg++)
 	    {
 	      switch (*optarg)
 		{
 		case 'a':
-		  reset_time_flag = false;
+		  reset_access_time_option = false;
 		  break;
 
 		case 'e':
-		  reset_time_flag = true;
-		  retain_time_flag = true;
+		  reset_access_time_option = true;
+		  preserve_modification_time_option = true;
 		  set_owner_flag = false;
 		  set_group_flag = false;
-		  no_chown_flag = false;
+		  no_preserve_owner_option = false;
 		  preserve_mode_flag = true;
 		  break;
 
 		case 'm':
-		  retain_time_flag = false;
+		  preserve_modification_time_option = false;
 		  break;
 
 		case 'o':
 		  set_owner_flag = false;
 		  set_group_flag = false;
-		  no_chown_flag = false;
+		  no_preserve_owner_option = false;
 		  break;
 
 		case 'p':
@@ -314,8 +315,8 @@ process_args (int argc, char *argv[])
 		  break;
 
 		default:
-		  error (2, 0,
-			 _("unrecognized flag `%c' for -p; recognized flags are `aemop'"),
+		  error (2, 0, _("\
+unrecognized flag `%c' for -p; recognized flags are `aemop'"),
 			 *optarg);
 		  break;
 		}
@@ -336,15 +337,15 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 't':
-	  reset_time_flag = true;
+	  reset_access_time_option = true;
 	  break;
 
 	case 'u':
-	  unconditional_flag = false;
+	  unconditional_option = false;
 	  break;
 
 	case 'v':
-	  verbose_flag = true;
+	  verbose_option = true;
 	  break;
 
 	case 'w':
@@ -357,11 +358,11 @@ process_args (int argc, char *argv[])
 	  break;
 
 	case 'x':
-	  if (archive_format != arf_unknown)
+	  if (archive_format != UNKNOWN_FORMAT)
 	    usage (stderr, 2);
 
 	  archive_format = find_format (optarg);
-	  if (archive_format == arf_unknown)
+	  if (archive_format == UNKNOWN_FORMAT)
 	    format_error (optarg);
 	  break;
 
@@ -369,11 +370,11 @@ process_args (int argc, char *argv[])
 	  cross_device_flag = false;
 	  break;
 
-	case OPTION_HELP:
+	case HELP_OPTION:
 	  usage (stdout, 0);
 	  break;
 
-	case OPTION_VERSION:
+	case VERSION_OPTION:
 	  printf ("pax (Free %s) %s\n", PACKAGE, VERSION);
 	  exit (0);
 	  break;
@@ -387,25 +388,25 @@ process_args (int argc, char *argv[])
   if (copy_function == 0)
     {
       /* FIXME we don't check for all illegal options here.  */
-      if (name_end == '\0' || append_flag || rename_flag || link_flag)
+      if (name_end == '\0' || append_option || rename_option || link_option)
 	usage (stderr, 2);
 
-      table_flag = true;
+      list_option = true;
       copy_function = copy_in;
       num_patterns = argc - optind;
       save_patterns = &argv[optind];
-      if (archive_format == arf_crcascii)
+      if (archive_format == CRC_ASCII_FORMAT)
 	crc_i_flag = true;
     }
   else if (copy_function == copy_in)
     {
       /* -r */
       archive_des = 0;
-      if (link_flag || xstat != lstat || append_flag)
+      if (link_option || xstat != lstat || append_option)
 	usage (stderr, 2);
       num_patterns = argc - optind;
       save_patterns = &argv[optind];
-      if (archive_format == arf_crcascii)
+      if (archive_format == CRC_ASCII_FORMAT)
 	crc_i_flag = true;
     }
   else if (copy_function == copy_out)
@@ -414,8 +415,8 @@ process_args (int argc, char *argv[])
       archive_des = 1;
       if (0)
 	usage (stderr, 2);
-      if (archive_format == arf_unknown)
-	archive_format = arf_ustar;
+      if (archive_format == UNKNOWN_FORMAT)
+	archive_format = POSIX_FORMAT;
       if (argc > optind)
 	{
 	  num_pax_file_names = argc - optind;
@@ -429,7 +430,7 @@ process_args (int argc, char *argv[])
       assert (copy_function == copy_pass);
 
       archive_des = -1;
-      if (optind == argc || archive_format != arf_unknown || append_flag)
+      if (optind == argc || archive_format != UNKNOWN_FORMAT || append_option)
 	usage (stderr, 2);
       directory_name = argv[argc - 1];
       if (argc > optind + 1)
@@ -452,13 +453,14 @@ process_args (int argc, char *argv[])
   /* Prevent SysV non-root users from giving away files inadvertantly.  This
      happens automatically on BSD, where only root can give away files.  */
   if (set_owner_flag == false && set_group_flag == false && geteuid ())
-    no_chown_flag = true;
+    no_preserve_owner_option = true;
 #endif
 }
 
 int
 main (int argc, char *argv[])
 {
+  reset_global_variables ();
 #if DOSWIN
   program_name = get_program_base_name (argv[0]);
 #else

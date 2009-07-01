@@ -1,5 +1,5 @@
 /* Create a tar archive.
-   Copyright (C) 1985, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
+   Copyright (C) 1985,92,93,94,96,97,98,99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1985-08-25.
 
    This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -108,7 +108,7 @@ write_eot (void)
 }
 
 /*-----------------------------------------------------.
-| Write a OLDGNU_LONGLINK or OLDGNU_LONGNAME block.  |
+| Write a GNUTAR_LONGLINK or GNUTAR_LONGNAME block.  |
 `-----------------------------------------------------*/
 
 /* FIXME: Cross recursion between start_header and write_long!  */
@@ -208,7 +208,7 @@ Removing leading `/' from absolute path names in the archive")));
   /* Check the file name and put it in the block.  */
 
   if (strlen (name) >= (size_t) NAME_FIELD_SIZE)
-    write_long (name, OLDGNU_LONGNAME);
+    write_long (name, GNUTAR_LONGNAME);
   header = find_next_block ();
   memset (header->buffer, 0, sizeof (union block));
 
@@ -257,7 +257,7 @@ Removing leading `/' from absolute path names in the archive")));
   set_header_mtime (header, stat_info->st_mtime);
 
   if (incremental_option)
-    if (archive_format == OLDGNU_FORMAT)
+    if (archive_format == GNUTAR_FORMAT)
       {
 	set_header_atime (header, stat_info->st_atime);
 	set_header_ctime (header, stat_info->st_ctime);
@@ -267,17 +267,17 @@ Removing leading `/' from absolute path names in the archive")));
 
   switch (archive_format)
     {
-    case DEFAULT_FORMAT:
+    case UNKNOWN_FORMAT:
     case V7_FORMAT:
       break;
 
-    case OLDGNU_FORMAT:
+    case GNUTAR_FORMAT:
       /* Overwrite header->header.magic and header.version in one blow.  */
-      strcpy (header->header.magic, OLDGNU_MAGIC);
+      strcpy (header->header.magic, GNUTAR_MAGIC);
       break;
 
     case POSIX_FORMAT:
-    case FREE_FORMAT:
+    case PAXUTILS_FORMAT:
       strncpy (header->header.magic, TMAGIC, TMAGLEN);
       strncpy (header->header.version, TVERSION, TVERSLEN);
       break;
@@ -329,8 +329,8 @@ finish_header (union block *header)
   set_next_block_after (header);
 
   if (verbose_option
-      && header->header.typeflag != OLDGNU_LONGLINK
-      && header->header.typeflag != OLDGNU_LONGNAME)
+      && header->header.typeflag != GNUTAR_LONGLINK
+      && header->header.typeflag != GNUTAR_LONGNAME)
     {
       current.block = header;
       current.format = archive_format;
@@ -418,8 +418,8 @@ deal_with_sparse (char *name, union block *header)
   ssize_t size_read;
   char buffer[BLOCKSIZE];
 
-  if (archive_format == OLDGNU_FORMAT)
-    header->oldgnu_header.isextended = 0;
+  if (archive_format == GNUTAR_FORMAT)
+    header->gnutar_header.isextended = 0;
 
   if (file = open (name, O_RDONLY), file < 0)
     /* This problem will be caught later on, so just return.  */
@@ -633,7 +633,7 @@ create_archive (void)
 {
   char *p;
 
-  open_archive (ACCESS_WRITE);
+  open_tar_archive (ACCESS_WRITE);
 
   if (incremental_option)
     {
@@ -673,7 +673,7 @@ create_archive (void)
     }
 
   write_eot ();
-  close_archive ();
+  close_tar_archive ();
 
   if (listed_incremental_option && !dev_null_output)
     write_dir_file ();
@@ -765,7 +765,7 @@ dump_file (char *p, dev_t parent_device, bool top_level)
 
 #if ENABLE_DALE_CODE
 
-  /* See if we are trying to dump the compression temporary file.  */
+  /* See if we are trying to dump the compression work file.  */
 
   if (per_file_compress_option
       && current.stat.st_dev == fct_dev
@@ -843,7 +843,7 @@ Removing leading `/' from absolute links")));
 	      linkname++;
 	    }
 	  if (strlen (linkname) >= NAME_FIELD_SIZE)
-	    write_long (linkname, OLDGNU_LONGLINK);
+	    write_long (linkname, GNUTAR_LONGLINK);
 	  assign_string (&current.linkname, linkname);
 
 	  current.stat.st_size = 0;
@@ -928,7 +928,12 @@ Removing leading `/' from absolute links")));
 	     is done by spawning a subprocess to compress the file into a
 	     temporary file.  */
 
-	  int child_process_no, ret, input_file, child, child_pid, new_typeflag;
+	  int child_process_no;
+	  int ret;
+	  int input_file;
+	  int child;
+	  int child_pid;
+	  int new_typeflag;
 	  struct stat statbuf;
 	  WAIT_T wait_status;
 	  unsigned char input_buffer[4];
@@ -996,12 +1001,12 @@ Cannot ftruncate() work file during compression of %s - written uncompressed"),
 	    {
 	      /* Child process.  Close standard input.  Dup the input file as
 		 standard input.  */
-	      xdup2 (input_file, STDIN,
-		     _("input file to stdin for file compression"));
+	      xdup2 (input_file, STDIN, _("\
+Cannot redirect stdin from input file for file compression"));
 	      /* Close standard output.  Dup the temporary file as standard
 		 output.  */
-	      xdup2 (compress_work_file, STDOUT,
-		     _("file compression temporary file to stdout"));
+	      xdup2 (compress_work_file, STDOUT, _("\
+Cannot redirect stdout into compression work file"));
 	      /* Execute the compression program.  */
 	      execlp (use_compress_program_option, use_compress_program_option,
 		      (char *) 0);
@@ -1074,7 +1079,7 @@ Child returned status %d - written uncompressed"),
 	  /* FIXME: But, would it allow proper skipping of entries?  */
 
 	  to_oct ((long) current.stat.st_size, 1 + 12,
-		  header->oldgnu_header.realsize);
+		  header->gnutar_header.realsize);
 
 	  /* Determine the new typeflage here, but don't install it until
 	     later, since certain errors may cause the handling of this file
@@ -1085,7 +1090,7 @@ Child returned status %d - written uncompressed"),
 	  new_typeflag =
 	    (sparse_option
 	     && (current.stat.st_size > ST_NBLOCKS (current.stat) * BLOCKSIZE
-		 ? OLDGNU_SPARSE_COMPRESSED : OLDGNU_REGULAR_COMPRESSED));
+		 ? GNUTAR_SPARSE_COMPRESSED : GNUTAR_REGULAR_COMPRESSED));
 
 	  /* This will be the new "size" of the file, i.e., the size of the
 	     file minus the blocks of holes that we're skipping over.  */
@@ -1121,7 +1126,7 @@ Cannot fstat() work file during compression of %s - written uncompressed"),
 
 	     This variable may need to be set here to simulate the sparse == 0
 	     case.  The handling of this variable may need fixing.  */
-	  upperbound = SPARSES_IN_OLDGNU_HEADER - 1;
+	  upperbound = SPARSES_IN_GNUTAR_HEADER - 1;
 	  goto skip_sparse_test;
 	}
 
@@ -1178,7 +1183,7 @@ Cannot fstat() work file during compression of %s - written uncompressed"),
 		  exit_status = TAREXIT_FAILURE;
 		  return;
 		}
-	      header->header.typeflag = OLDGNU_SPARSE;
+	      header->header.typeflag = GNUTAR_SPARSE;
 	      header_moved = true;
 
 	      /* Call the routine that figures out the layout of the
@@ -1190,8 +1195,8 @@ Cannot fstat() work file during compression of %s - written uncompressed"),
 
 	      /* See if we'll need an extended header later.  */
 
-	      if (upperbound > SPARSES_IN_OLDGNU_HEADER - 1)
-		header->oldgnu_header.isextended = 1;
+	      if (upperbound > SPARSES_IN_GNUTAR_HEADER - 1)
+		header->gnutar_header.isextended = 1;
 
 	      /* We store the "real" file size so we can show that in
 		 case someone wants to list the archive, i.e., tar tvf
@@ -1208,7 +1213,7 @@ Cannot fstat() work file during compression of %s - written uncompressed"),
 	      current.stat.st_size = file_size;
 	      set_header_size (header, file_size);
 
-	      for (counter = 0; counter < SPARSES_IN_OLDGNU_HEADER; counter++)
+	      for (counter = 0; counter < SPARSES_IN_GNUTAR_HEADER; counter++)
 		{
 		  if (!sparsearray[counter].numbytes)
 		    break;
@@ -1221,7 +1226,7 @@ Cannot fstat() work file during compression of %s - written uncompressed"),
 	    }
 	}
       else
-	upperbound = SPARSES_IN_OLDGNU_HEADER - 1;
+	upperbound = SPARSES_IN_GNUTAR_HEADER - 1;
 
 #if ENABLE_DALE_CODE
       /* Processing resumes here after a file has been successfully
@@ -1240,16 +1245,16 @@ Cannot fstat() work file during compression of %s - written uncompressed"),
 #if ENABLE_DALE_CODE
       /* Test if this is a file to be compressed.  */
       else if (header_moved
-	       && (header->header.typeflag == OLDGNU_REGULAR_COMPRESSED
-		   || header->header.typeflag == OLDGNU_SPARSE_COMPRESSED
-		   || header->header.typeflag == OLDGNU_CONTIG_COMPRESSED))
+	       && (header->header.typeflag == GNUTAR_REGULAR_COMPRESSED
+		   || header->header.typeflag == GNUTAR_SPARSE_COMPRESSED
+		   || header->header.typeflag == GNUTAR_CONTIG_COMPRESSED))
 	{
 	  /* If so, dup() the descriptor of the temporary file.  (The dup() is
 	     necessary, since the new descriptor will be closed later.)  */
 	  handle = dup (compress_work_file);
 	  if (handle < 0)
 	    FATAL_ERROR ((0, errno, _("\
-Cannot properly duplicate file compression work file")));
+Cannot properly duplicate compression work file")));
 	  /* Now position the file to the beginning.  */
 	  if (lseek(handle, 0, SEEK_SET) < 0)
 	      FATAL_ERROR ((0, errno, _("\
@@ -1289,16 +1294,16 @@ Cannot seek to beginning of compression work file")));
 	{
 # if ENABLE_DALE_CODE
 	  /* If we are going to compress the file, use
-	     OLDGNU_CONTIG_COMPRESSED, otherwise use CONTTYPE.  */
+	     GNUTAR_CONTIG_COMPRESSED, otherwise use CONTTYPE.  */
 	  header->header.typeflag =
-	    (header->header.typeflag == OLDGNU_REGULAR_COMPRESSED
+	    (header->header.typeflag == GNUTAR_REGULAR_COMPRESSED
 	     ? GNUTYPE_FILE_COMPARESSED_CONTIG : CONTTYPE);
 # else
 	header->header.typeflag = CONTTYPE;
 # endif
 	}
 #endif
-      is_extended = header->oldgnu_header.isextended != 0;
+      is_extended = header->gnutar_header.isextended != 0;
       save_typeflag = header->header.typeflag;
       finish_header (header);
       if (is_extended)
@@ -1308,7 +1313,7 @@ Cannot seek to beginning of compression work file")));
 	  union block *exhdr;
 	  int arraybound = SPARSES_IN_SPARSE_HEADER;
 #endif
-	  /* static */ int index_offset = SPARSES_IN_OLDGNU_HEADER;
+	  /* static */ int index_offset = SPARSES_IN_GNUTAR_HEADER;
 
 	  while (true)
 	    {
@@ -1342,7 +1347,7 @@ Cannot seek to beginning of compression work file")));
 	    }
 	}
 
-      if (save_typeflag == OLDGNU_SPARSE)
+      if (save_typeflag == GNUTAR_SPARSE)
 	{
 	  if (handle < 0 || finish_sparse_file (handle, &sizeleft,
 						current.stat.st_size, p))
@@ -1469,7 +1474,7 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 	}
       buffer[size] = '\0';
       if (size >= NAME_FIELD_SIZE)
-	write_long (buffer, OLDGNU_LONGLINK);
+	write_long (buffer, GNUTAR_LONGLINK);
       assign_string (&current.linkname, buffer);
 
       current.stat.st_size = 0;	/* force zero size on symlink */
@@ -1561,7 +1566,7 @@ Read error at byte %lu, reading %lu bytes, in file %s"),
 	    }
 
 	  if (incremental_option)
-	    header->header.typeflag = OLDGNU_DUMPDIR;
+	    header->header.typeflag = GNUTAR_DUMPDIR;
 	  else /* if (standard_option) */
 	    header->header.typeflag = DIRTYPE;
 

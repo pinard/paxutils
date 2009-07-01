@@ -1,0 +1,617 @@
+# Dutch messages for GNU cpio.
+# Copyright (C) 1996 Free Software Foundation, Inc.
+# Erick Branderhorst <branderh@debian.org>, 1996.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: cpio 2.3.911\n"
+"PO-Revision-Date: 1996-08-29 14:51 MET DST\n"
+"Last-Translator: Erick Branderhorst <branderh@debian.org>\n"
+"Language-Team: Dutch <nl@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#. REG_ERANGE
+#.
+#. REG_ERANGE
+#.
+#. REG_ERANGE
+#.
+#: lib/regex.c:933 lib/rx.c:3942 lib/rx.c:6209 lib/xmalloc.c:70
+msgid "Memory exhausted"
+msgstr "Geen geheugen meer beschikbaar"
+
+#: src/mt.c:260
+msgid "%s is not a character special file"
+msgstr "%s is geen karakter speciaal bestand"
+
+#: src/copyout.c:104
+msgid "cannot open directory %s"
+msgstr "kan directory %s niet openen"
+
+#: src/pax.c:130
+msgid "block size cannot be 0"
+msgstr "blok grootte mag niet gelijk zijn aan 0"
+
+#: src/mt.c:184
+msgid "GNU mt version %s\n"
+msgstr "GNU mt versie %s\n"
+
+#: src/copyin.c:65
+msgid "premature end of archive"
+msgstr "voorbarig einde van archief"
+
+#: lib/getopt.c:519
+msgid "%s: option `%s' is ambiguous\n"
+msgstr "%s: optie `%s' is niet eenduidig\n"
+
+#: lib/regex.c:921 lib/rx.c:7153
+msgid "Success"
+msgstr "Succes"
+
+#: src/pax.c:115 src/pax.c:122
+msgid "parse error in blocksize"
+msgstr "parse fout in blokgrootte"
+
+#. REG_EEND
+#.
+#. REG_EEND
+#.
+#. REG_EEND
+#.
+#: lib/regex.c:936 lib/rx.c:3945 lib/rx.c:6212
+msgid "Regular expression too big"
+msgstr "Reguliere expressie is te groot"
+
+#: src/cpio.c:96
+msgid ""
+"Usage: %s {-o|--create} [-0acvABLV] [-C bytes] [-H format] [-M message]\n"
+"       [-O [[user@]host:]archive] [-F [[user@]host:]archive]\n"
+"       [--file=[[user@]host:]archive] [--format=format] [--message=message]\n"
+"       [--null] [--reset-access-time] [--verbose] [--dot] [--append]\n"
+"       [--block-size=blocks] [--dereference] [--io-size=bytes] [--quiet]\n"
+"       [--force-local] [--help] [--version] < name-list [> archive]\n"
+msgstr ""
+"Aanroep: %s {-o|--create} [-0acvABLV] [-C bytes] [-H formaat] [-M melding]\n"
+"       [-O [[user@]host:]archief] [-F [[user@]host:]archief]\n"
+"       [--file=[[user@]host:]archief] [--format=formaat] [--message=melding]\n"
+"       [--null] [--reset-access-time] [--verbose] [--dot] [--append]\n"
+"       [--block-size=blocks] [--dereference] [--io-size=bytes] [--quiet]\n"
+"       [--force-local] [--help] [--version] < name-list [> archief]\n"
+
+#. 1003.2 specifies the format of this message.
+#.
+#: lib/getopt.c:619
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: ongeldige optie -- %c\n"
+
+#: src/main.c:60
+msgid "error closing archive"
+msgstr "fout bij sluiten archief"
+
+#. REG_BADRPT
+#.
+#. REG_BADRPT
+#.
+#. REG_BADRPT
+#.
+#: lib/regex.c:935 lib/rx.c:3944 lib/rx.c:6211
+msgid "Premature end of regular expression"
+msgstr "Voorbarig einde van reguliere expressie"
+
+#: src/copyin.c:211
+msgid "standard input is closed"
+msgstr "standaard invoer is gesloten"
+
+#: src/copyout.c:414
+msgid "%s not dumped: not a regular file"
+msgstr "%s niet gedumpt: geen gewoon bestand"
+
+#: src/copyin.c:425 src/copypass.c:130
+msgid "cannot remove current %s"
+msgstr "kan huidige %s niet verwijderen"
+
+#: lib/getopt.c:547
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr "%s: optie `%c%s' staat geen argument toe\n"
+
+#: src/pax.c:86
+msgid ""
+"       %s {-r|--read} {-w|--write} [-cdnv] [-f archive] [-s replacement]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-r|--read} {-w|--write} [-cdnv] [-f archief] [-s vervanging]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=vervanging] [pattroon...] [< archief]\n"
+
+#: lib/userspec.c:217
+msgid "invalid group"
+msgstr "onjuiste groep"
+
+#: src/copyout.c:515 src/copyout.c:522
+msgid "cannot read checksum for %s"
+msgstr "kan kontrollesom niet lezen voor %s"
+
+#: src/mt.c:299
+msgid "block number = %d\n"
+msgstr "bloknummer = %d\n"
+
+#: src/copypass.c:460
+msgid "%s linked to %s"
+msgstr "%s gelinkt naar %s"
+
+#. +option or -option
+#.
+#: lib/getopt.c:594
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr "%s: onbekende optie `%c%s'\n"
+
+#: src/format.c:80
+msgid ""
+"invalid archive format `%s'; valid formats are:\n"
+"crc, newc, odc, bin, ustar, tar, hpodc, hpbin"
+msgstr ""
+"onjuist archief formaat `%s'; juiste formaten zijn:\n"
+"crc, newc, odc, bin, ustar, tar, hpodc, hpbin"
+
+#: lib/getopt.c:542
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr "%s: optie `--%s' staat geen argument toe\n"
+
+#. REG_ECOLLATE
+#.
+#. REG_ECOLLATE
+#.
+#. REG_ECOLLATE
+#.
+#: lib/regex.c:925 lib/rx.c:3934 lib/rx.c:6201
+msgid "Invalid character class name"
+msgstr "Onjuiste karakter klasse naam"
+
+#: src/copyin.c:816 src/copyout.c:243 src/copypass.c:397
+msgid "%d blocks\n"
+msgstr "%d blokken\n"
+
+#: src/mt.c:288
+msgid "drive type = %d\n"
+msgstr "drive type = %d\n"
+
+#: src/pax.c:267
+msgid "unrecognized flag `%c' for -p; recognized flags are `aemop'"
+msgstr "onbekende vlag `%c' voor -p; herkende vlaggen zijn `aemop'"
+
+#. Assume -2.
+#.
+#: src/argmatch.c:88
+msgid "ambiguous"
+msgstr "niet eenduidig"
+
+#: src/rename.c:353
+msgid "missing regexp"
+msgstr "ontbrekende regexp"
+
+#: src/copyin.c:814 src/copyout.c:241 src/copypass.c:395
+msgid "1 block\n"
+msgstr "1 blok\n"
+
+#: lib/userspec.c:136 src/util.c:638
+msgid "virtual memory exhausted"
+msgstr "geen virtueel geheugen meer beschikbaar"
+
+#: lib/makepath.c:168 lib/makepath.c:235
+msgid "cannot make directory `%s'"
+msgstr "kan directory `%s' niet aanmaken"
+
+#: lib/getopt.c:562
+msgid "%s: option `%s' requires an argument\n"
+msgstr "%s: optie `%s' vereist een argument\n"
+
+#: src/mt.c:308
+msgid "Usage: %s [-V] [-f device] [--file=device] [--help] [--version] operation [count]\n"
+msgstr ""
+"Aanroep: %s [-V] [-f apparaat] [--file=apparaat] [--help] [--version] \n"
+"aktie [aantal]\n"
+
+#. REG_NOERROR
+#.
+#. REG_NOUT
+#.
+#. REG_NOERROR
+#.
+#: lib/regex.c:922 lib/rx.c:3931 lib/rx.c:6198
+msgid "No match"
+msgstr "Geen overeenkomst"
+
+#: src/mt.c:296
+msgid "residue count = %d\n"
+msgstr "residu aantal = %d\n"
+
+#: src/cpio.c:116
+msgid ""
+"       %s {-p|--pass-through} [-0adlmuvLV] [-R [user][:.][group]]\n"
+"       [--null] [--reset-access-time] [--make-directories] [--link] [--quiet]\n"
+"       [--preserve-modification-time] [--unconditional] [--verbose] [--dot]\n"
+"       [--dereference] [--owner=[user][:.][group]] [--no-preserve-owner]\n"
+"       [--sparse] [--help] [--version] destination-directory < name-list\n"
+msgstr ""
+"       %s {-p|--pass-through} [-0adlmuvLV] [-R [gebruiker][:.][groep]]\n"
+"       [--null] [--reset-access-time] [--make-directories] [--link] [--quiet]\n"
+"       [--preserve-modification-time] [--unconditional] [--verbose] [--dot]\n"
+"       [--dereference] [--owner=[gebruiker][:.][groep]] [--no-preserve-owner]\n"
+"       [--sparse] [--help] [--version] bestemmings-directory < namenlijst\n"
+
+#: src/mt.c:293
+msgid "drive status = %d\n"
+msgstr "drive status = %d\n"
+
+#: src/fmttar.c:265
+msgid "invalid header: checksum error"
+msgstr "onjuiste header: kontrollesom fout"
+
+#. REG_ESUBREG
+#.
+#. REG_ESUBREG
+#.
+#. REG_ESUBREG
+#.
+#: lib/regex.c:928 lib/rx.c:3937 lib/rx.c:6204
+msgid "Unmatched [ or [^"
+msgstr "Niet overeenkomstige [ of [^"
+
+#: lib/getopt.c:658
+msgid "%s: option requires an argument -- %c\n"
+msgstr "%s: optie vereist een argument -- %c\n"
+
+#: lib/makepath.c:210 lib/makepath.c:288
+msgid "`%s' exists but is not a directory"
+msgstr "`%s' bestaat maar is geen directory"
+
+#: src/cpio.c:104
+msgid ""
+"       %s {-i|--extract} [-bcdfmnrtsuvBSV] [-C bytes] [-E file] [-H format]\n"
+"       [-M message] [-R [user][:.][group]] [-I [[user@]host:]archive]\n"
+"       [-F [[user@]host:]archive] [--file=[[user@]host:]archive]\n"
+"       [--make-directories] [--nonmatching] [--preserve-modification-time]\n"
+"       [--numeric-uid-gid] [--rename] [--list] [--swap-bytes] [--swap] [--dot]\n"
+"       [--unconditional] [--verbose] [--block-size=blocks] [--swap-halfwords]\n"
+"       [--io-size=bytes] [--pattern-file=file] [--format=format]\n"
+"       [--owner=[user][:.][group]] [--no-preserve-owner] [--message=message]\n"
+"       [--force-local] [--no-absolute-filenames] [--sparse] [--only-verify-crc]\n"
+"       [--quiet] [--help] [--version] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-i|--extract} [-bcdfmnrtsuvBSV] [-C bytes] [-E bestand] [-H formaat]\n"
+"       [-M melding] [-R [gebruiker][:.][groep]] [-I [[gebruiker@]host:]archief]\n"
+"       [-F [[gebruiker@]host:]archief] [--file=[[gebruiker@]host:]archief]\n"
+"       [--make-directories] [--nonmatching] [--preserve-modification-time]\n"
+"       [--numeric-uid-gid] [--rename] [--list] [--swap-bytes] [--swap] [--dot]\n"
+"       [--unconditional] [--verbose] [--block-size=blocks] [--swap-halfwords]\n"
+"       [--io-size=bytes] [--pattern-file=file] [--format=format]\n"
+"       [--owner=[gebruiker][:.][groep]] [--no-preserve-owner] \n"
+"       [--message=melding]\n"
+"       [--force-local] [--no-absolute-filenames] [--sparse] [--only-verify-crc]\n"
+"       [--quiet] [--help] [--version] [pattroon...] [< archief]\n"
+
+#: src/cpio.c:178 src/cpio.c:195 src/pax.c:196
+msgid "invalid block size"
+msgstr "onjuiste blokgrootte"
+
+#: src/mt.c:217
+msgid "no tape device specified"
+msgstr "geen tape apparaat beschikbaar"
+
+#: src/pax.c:76
+msgid ""
+"       %s {-r|--read} [-cdiknuv] [-f archive] [-s replacement]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-r|--read} [-cdiknuv] [-f archief] [-s vervanging]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=vervanging] [patroon...] [< archief]\n"
+
+#: src/copyin.c:785 src/copyout.c:481 src/copypass.c:380
+msgid "%s: unknown file type"
+msgstr "%s: onbekend bestandstype"
+
+#: lib/getopt.c:622
+msgid "%s: invalid option -- %c\n"
+msgstr "%s: onjuiste optie -- %c\n"
+
+#: src/copyin.c:505 src/copyin.c:698 src/copyin.c:1064 src/copypass.c:465
+msgid "cannot link %s to %s"
+msgstr "kan niet linken van %s naar %s"
+
+#: lib/userspec.c:177
+msgid "cannot get the login group of a numeric UID"
+msgstr "kan de login groep van numerieke UID niet krijgen"
+
+#: src/mt.c:291
+msgid "drive status (low) = %d\n"
+msgstr "drive status (laag) = %d\n"
+
+#: src/fmtcpio.c:169
+msgid "warning: archive header has reverse byte-order"
+msgstr "let op: archief header heeft omgekeerde byte-volgorde"
+
+#: src/mt.c:298
+msgid "file number = %d\n"
+msgstr "bestandsnummer = %d\n"
+
+#. REG_BADPAT
+#.
+#. REG_BADPAT
+#.
+#. REG_BADPAT
+#.
+#: lib/regex.c:924 lib/rx.c:3933 lib/rx.c:6200
+msgid "Invalid collation character"
+msgstr "Onjuist collation karakter"
+
+#: src/copyin.c:546
+msgid "cannot swap bytes of %s: odd number of bytes"
+msgstr "kan geen bytes swappen van %s: oneven aantal bytes"
+
+#. REG_EPAREN
+#.
+#. REG_EPAREN
+#.
+#. REG_EPAREN
+#.
+#: lib/regex.c:930 lib/rx.c:3939 lib/rx.c:6206
+msgid "Unmatched \\{"
+msgstr "Niet overeenkomstig \\{"
+
+#: src/copyout.c:459
+msgid "%s: symbolic link too long"
+msgstr "%s: symbolische verwijzing is te lang"
+
+#. REG_ESIZE
+#.
+#. REG_ESIZE
+#.
+#. REG_ESIZE
+#.
+#: lib/regex.c:937 lib/rx.c:3946 lib/rx.c:6213
+msgid "Unmatched ) or \\)"
+msgstr "Niet overeenkomstige ) of \\)"
+
+#. REG_ESPACE
+#.
+#. REG_ESPACE
+#.
+#. REG_ESPACE
+#.
+#: lib/regex.c:934 lib/rx.c:3943 lib/rx.c:6210
+msgid "Invalid preceding regular expression"
+msgstr "Onjuist voorafgaande reguliere expressie"
+
+#: src/copyin.c:104 src/copyin.c:121 src/copyin.c:130 src/copyin.c:139
+#: src/copyin.c:150 src/fmttar.c:369
+msgid "warning: skipped %ld bytes of junk"
+msgstr "let op: sla %ld junk-bytes over"
+
+#. --option
+#.
+#: lib/getopt.c:590
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s: onbekende optie `--%s'\n"
+
+#. FIXME for pax we must print more info here.
+#.
+#: src/rename.c:258
+msgid "rename %s -> "
+msgstr "hernoem %s -> "
+
+#: src/rename.c:358
+msgid "null regexp"
+msgstr "nul (null) regexp"
+
+#: src/copyout.c:207
+msgid "standard output is closed"
+msgstr "standaard uitvoer is gesloten"
+
+#. Can't overwrite.  So just skip.
+#.
+#. Can't overwrite, so just skip.
+#.
+#: src/copyin.c:416 src/copypass.c:123
+msgid "%s already exists; not created"
+msgstr "%s bestaat al; niet aangemaakt"
+
+#: src/copyin.c:349 src/copyin.c:375 src/copyin.c:557
+msgid "%s: checksum error (0x%x, should be 0x%x)"
+msgstr "%s: kontrollesom fout (0x%x, moet 0x%x zijn)"
+
+#: src/copyin.c:538
+msgid "cannot swap halfwords of %s: odd number of halfwords"
+msgstr "kan geen halfwoorden swappen van %s: oneven aantal halfwoorden"
+
+#. REG_EESCAPE
+#.
+#. REG_EESCAPE
+#.
+#. REG_EESCAPE
+#.
+#: lib/regex.c:927 lib/rx.c:3936 lib/rx.c:6203
+msgid "Invalid back reference"
+msgstr "Onjuiste back referentie"
+
+#: src/copyout.c:166 src/copypass.c:72
+msgid "blank line ignored"
+msgstr "lege regel genegeerd"
+
+#: src/pax.c:71
+msgid ""
+"Usage: %s [-cdnv] [-f archive] [-s replacement] [--nonmatching]\n"
+"       [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"Aanroep: %s [-cdnv] [-f archief] [-s vervanging] [--nonmatching]\n"
+"       [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=vervanging] [patroon...] [< archief]\n"
+
+#. REG_EBRACK
+#.
+#. REG_EBRACK
+#.
+#. REG_EBRACK
+#.
+#: lib/regex.c:929 lib/rx.c:3938 lib/rx.c:6205
+msgid "Unmatched ( or \\("
+msgstr "Niet overeenkomstig ( of \\("
+
+#: src/fmtcpio.c:321 src/fmtcpio.c:351
+msgid "%s: truncating inode number"
+msgstr "%s: inkorten inode nummer"
+
+#: src/copyout.c:315
+msgid "%s: file name too long"
+msgstr "%s: bestandsnaam te lang"
+
+#: src/cpio.c:345
+msgid "GNU cpio version %s\n"
+msgstr "GNU cpio versie %s\n"
+
+#: src/argmatch.c:86
+msgid "invalid"
+msgstr "onjuist"
+
+#: src/pax.c:326
+msgid "GNU pax version %s\n"
+msgstr "GNU pax versie %s\n"
+
+#. REG_EBRACE
+#.
+#. REG_EBRACE
+#.
+#. REG_EBRACE
+#.
+#: lib/regex.c:931 lib/rx.c:3940 lib/rx.c:6207
+msgid "Invalid content of \\{\\}"
+msgstr "Onjuiste inhoud van \\{\\}"
+
+#. REG_BADBR
+#.
+#. REG_BADBR
+#.
+#. REG_BADBR
+#.
+#: lib/regex.c:932 lib/rx.c:3941 lib/rx.c:6208
+msgid "Invalid range end"
+msgstr "Onjuist domein einde"
+
+#: src/mt.c:295
+msgid "sense key error = %d\n"
+msgstr "sense key fout = %d\n"
+
+#. REG_ECTYPE
+#.
+#. REG_ECTYPE
+#.
+#. REG_ECTYPE
+#.
+#: lib/regex.c:926 lib/rx.c:3935 lib/rx.c:6202
+msgid "Trailing backslash"
+msgstr "Aangeplakte backslash"
+
+#: lib/userspec.c:162
+msgid "can not omit both user and group"
+msgstr "kan niet en gebruiker en groep weglaten"
+
+#. REG_NOMATCH
+#.
+#. REG_NOMATCH
+#.
+#. REG_NOMATCH
+#.
+#: lib/regex.c:923 lib/rx.c:3932 lib/rx.c:6199
+msgid "Invalid regular expression"
+msgstr "Onjuiste reguliere expressie"
+
+#: src/mt.c:200
+msgid "tape operation"
+msgstr "tape aktie"
+
+#: lib/userspec.c:171
+msgid "invalid user"
+msgstr "onjuiste gebruiker"
+
+#: lib/regex.c:5114
+msgid "No previous regular expression"
+msgstr "Geen vorige reguliere expressie"
+
+#: src/pax.c:81
+msgid ""
+"       %s {-w|--write} [-cdnv] [-f archive] [-s replacement]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-w|--write} [-cdnv] [-f archief] [-s vervanging]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=vervanging] [patroon...] [< archief]\n"
+
+#: src/mt.c:290
+msgid "drive status (high) = %d\n"
+msgstr "drive status (hoog) = %d\n"
+
+#: src/copyin.c:407 src/copypass.c:116
+msgid "%s not created: newer or same age version exists"
+msgstr "%s niet aangemaakt: nieuwere of even oude versie bestaat"
+
+#: src/rename.c:372
+msgid "%s while compiling pattern"
+msgstr "%s tijdens compileren patroon"
+
+#: src/rename.c:393
+msgid "invalid regexp modifier `%c'"
+msgstr "onjuiste regexp wijziger `%c'"
+
+#: src/rtapelib.c:243
+msgid "exec/tcp: service not available"
+msgstr "exec/tcp: service niet beschikbaar"
+
+#: src/rtapelib.c:406
+msgid "cannot execute remote shell"
+msgstr "kan geen op afstand shell uitvoeren"
+
+#: src/util.c:140 src/util.c:143 src/util.c:191
+msgid "write error"
+msgstr "fout bij schrijven"
+
+#: src/util.c:257 src/util.c:437
+msgid "read error"
+msgstr "fout bij lezen"
+
+#: src/util.c:260
+msgid "premature end of file"
+msgstr "voorbarig einde van bestand"
+
+#: src/util.c:543 src/util.c:591
+msgid "File %s shrunk by %ld bytes, padding with zeros"
+msgstr "Bestand %s is %ld bytes gekrompen, opgevuld met nullen"
+
+#: src/util.c:546 src/util.c:594
+msgid "Read error at byte %ld in file %s, padding with zeros"
+msgstr "Leesfout bij byte %ld in bestand %s, opgevuld met nullen"
+
+#: src/util.c:675 src/util.c:681
+msgid "cannot seek on output"
+msgstr "kan niet `seeken' bij uitvoer"
+
+#: src/util.c:933
+msgid "Found end of tape.  Load next tape and press RETURN. "
+msgstr "Einde van band gevonden.  Laad volgende band en geef RETURN. "
+
+#: src/util.c:936
+msgid "Found end of tape.  To continue, type device/file name when ready.\n"
+msgstr "Einde van band gevonden.  Om door te gaan, type apparaat/bestandsnaam wanneer klaar. (fixme)\n"
+
+#: src/util.c:959
+msgid "To continue, type device/file name when ready.\n"
+msgstr "Doorgaan, type apparaat/bestandsnaam indien klaar.\n"
+
+#: src/util.c:984
+msgid "internal error: tape descriptor changed from %d to %d"
+msgstr "interne fout: band beschrijving verandert van %d naar %d"

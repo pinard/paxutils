@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -45,8 +45,8 @@ struct tar_entry current;	/* current tar entry */
 enum read_header
 read_header (struct tar_entry *entry)
 {
-  bool longname_flag = false;	/* if a OLDGNU_LONGNAME has been seen */
-  bool longlink_flag = false;	/* if a OLDGNU_LONGLINK has been seen */
+  bool longname_flag = false;	/* if a GNUTAR_LONGNAME has been seen */
+  bool longlink_flag = false;	/* if a GNUTAR_LONGLINK has been seen */
 
   while (true)
     {
@@ -120,13 +120,13 @@ read_header (struct tar_entry *entry)
       entry->stat.st_size = (block->header.typeflag == LNKTYPE ? 0
 			     : get_header_size (block));
 
-      if (block->header.typeflag == OLDGNU_LONGNAME
-	  || block->header.typeflag == OLDGNU_LONGLINK)
+      if (block->header.typeflag == GNUTAR_LONGNAME
+	  || block->header.typeflag == GNUTAR_LONGLINK)
 	{
 	  int size = entry->stat.st_size;
 	  char *cursor;
 
-	  if (block->header.typeflag == OLDGNU_LONGNAME)
+	  if (block->header.typeflag == GNUTAR_LONGNAME)
 	    {
 	      if (longname_flag)
 		ERROR ((0, 0, _("Two long file names for a single entry")));
@@ -189,8 +189,8 @@ read_header (struct tar_entry *entry)
 
       if (strcmp (block->header.magic, TMAGIC) == 0)
 	entry->format = POSIX_FORMAT;
-      else if (strcmp (block->header.magic, OLDGNU_MAGIC) == 0)
-	entry->format = OLDGNU_FORMAT;
+      else if (strcmp (block->header.magic, GNUTAR_MAGIC) == 0)
+	entry->format = GNUTAR_FORMAT;
       else
 	entry->format = V7_FORMAT;
 
@@ -253,7 +253,7 @@ decode_header (struct tar_entry *entry, bool decode_symbolic)
   entry->stat.st_mode &= 07777;
   entry->stat.st_mtime = get_header_mtime (block);
 
-  if (entry->format == OLDGNU_FORMAT && incremental_option)
+  if (entry->format == GNUTAR_FORMAT && incremental_option)
     {
       entry->stat.st_atime = get_header_atime (block);
       entry->stat.st_ctime = get_header_ctime (block);
@@ -373,7 +373,7 @@ read_and (void (*do_something) ())
   char saved_typeflag;
 
   name_gather ();
-  open_archive (ACCESS_READ);
+  open_tar_archive (ACCESS_READ);
 
   while (!quick_option || name_list_unmatched_count)
     {
@@ -399,9 +399,9 @@ read_and (void (*do_something) ())
 	    {
 	      bool is_extended = false;
 
-	      if (current.block->header.typeflag == OLDGNU_VOLHDR
-		  || current.block->header.typeflag == OLDGNU_MULTIVOL
-		  || current.block->header.typeflag == OLDGNU_NAMES)
+	      if (current.block->header.typeflag == GNUTAR_VOLHDR
+		  || current.block->header.typeflag == GNUTAR_MULTIVOL
+		  || current.block->header.typeflag == GNUTAR_NAMES)
 		{
 		  (*do_something) ();
 		  continue;
@@ -413,7 +413,7 @@ read_and (void (*do_something) ())
 
 	      /* Skip past it in the archive.  */
 
-	      if (current.block->oldgnu_header.isextended)
+	      if (current.block->gnutar_header.isextended)
 		is_extended = true;
 	      saved_typeflag = current.block->header.typeflag;
 	      set_next_block_after (current.block);
@@ -434,7 +434,7 @@ read_and (void (*do_something) ())
 	  if (block_number_option)
 	    {
 	      if (checkpoint_option)
-		flush_checkpoint_line ();
+		flush_progress_dots ();
 	      fprintf (stdlis, _("block %10ul: ** Block of NULs **\n"),
 		       (unsigned long) current_block_ordinal ());
 	    }
@@ -449,7 +449,7 @@ read_and (void (*do_something) ())
 	  if (block_number_option)
 	    {
 	      if (checkpoint_option)
-		flush_checkpoint_line ();
+		flush_progress_dots ();
 	      fprintf (stdlis, _("block %10ul: ** End of File **\n"),
 		       (unsigned long) current_block_ordinal ());
 	    }
@@ -481,6 +481,6 @@ read_and (void (*do_something) ())
     }
 
   apply_delayed_set_stat ();
-  close_archive ();
+  close_tar_archive ();
   report_unprocessed_names ();		/* print names not found */
 }

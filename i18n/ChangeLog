@@ -1,25 +1,25 @@
-1999-05-04  François Pinard  <pinard@iro.umontreal.ca>
+1999-05-04  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* sl.po: Updated.
 
-1999-04-17  François Pinard  <pinard@iro.umontreal.ca>
+1999-04-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* ru.po: Updated.
 
-1999-04-07  François Pinard  <pinard@iro.umontreal.ca>
+1999-04-07  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* cs.po: Updated.
 
-1998-12-30  François Pinard  <pinard@iro.umontreal.ca>
+1998-12-30  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* nl.po: Updated.
 
-1998-12-07  François Pinard  <pinard@iro.umontreal.ca>
+1998-12-07  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* de.po: Updated.
 	* it.po: Updated.
-
-1998-11-06  François Pinard  <pinard@iro.umontreal.ca>
+
+1998-11-06  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* ru.po: New file.
 
@@ -28,77 +28,77 @@
 	* Makefile.am (install-data-local): Use $(mkinstalldirs), not
 	$(MKINSTALLDIRS).  Find the files in $(srcdir).
 
-1998-10-05  François Pinard  <pinard@iro.umontreal.ca>
+1998-10-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: New file.
 	* POTFILES.in: Deleted.
 
-1998-08-12  François Pinard  <pinard@iro.umontreal.ca>
+1998-08-12  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* es.po: New file.
 
-1998-05-20  François Pinard  <pinard@iro.umontreal.ca>
+1998-05-20  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* cs.po: New file.
 
-1998-05-01  François Pinard  <pinard@iro.umontreal.ca>
+1998-05-01  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* cs.po: New file.
 
-1998-02-28  François Pinard  <pinard@iro.umontreal.ca>
+1998-02-28  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* no.po: Updated.
 
-1997-06-26  François Pinard  <pinard@iro.umontreal.ca>
+1997-06-26  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* ko.po: Updated.
 
-1997-05-10  François Pinard  <pinard@iro.umontreal.ca>
+1997-05-10  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* de.po: Updated.
 
-1997-05-05  François Pinard  <pinard@iro.umontreal.ca>
+1997-05-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* de.po: Updated.
 
-1997-05-04  François Pinard  <pinard@iro.umontreal.ca>
+1997-05-04  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* sv.po: Updated.
 
-1997-04-28  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-28  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* nl.po: Updated.
 
-1997-04-25  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-25  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release 1.12.
 
-1997-04-18  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-18  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* fr.po: Updated.
 
-1997-03-26  François Pinard  <pinard@iro.umontreal.ca>
+1997-03-26  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* it.po: New file.
 
-1997-02-14  François Pinard  <pinard@iro.umontreal.ca>
+1997-02-14  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* pl.po: Updated.
 
-1996-11-22  François Pinard  <pinard@iro.umontreal.ca>
+1996-11-22  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* POTFILES.in: Add src/common.h.
 	Reported by Christian Kirsch.
 
-1996-11-18  François Pinard  <pinard@iro.umontreal.ca>
+1996-11-18  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* POTFILES.in: Adjust for changes in src/.
 
-1996-09-05  François Pinard  <pinard@iro.umontreal.ca>
+1996-09-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* pl.po: New file.
 
-1995-06-17  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release 1.11.8.
 
@@ -118,7 +118,7 @@
 
 	* Makefile.in (install-data, uninstall): Avoid using basename.
 
-1995-06-15  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-15  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (dist): Comment out tupdate action for now, it
 	needs more tweeking before being distributed active.
@@ -135,7 +135,7 @@
 	* intl/Makefile.in, Makefile.in: Adjustments to NLS, so .sed
 	scripts may now all reside in intl/.
 
-1995-06-07  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-07  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* POTFILES: New file.
 	* Makefile.in: Use POTFILES instead of TRANSCSRCS, also use
@@ -144,7 +144,7 @@
 	* intl/linux-msg.sed, intl/po-to-tbl.sed, intl/xopen-msg.sed: New
 	files, all taken from gettext 0.6.
 
-1995-06-05  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* intl/*:  New from GNU gettext 0.6, replacing the previous
 	version of this directory.  This change should solve many problems.
@@ -155,26 +155,26 @@
 	Leisner, Minh Tran-Le, Stephen Saroff, Thomas Koenig, Thomas
 	Krebs and William Bader.
 
-1995-05-16  François Pinard  <pinard@iro.umontreal.ca>
+1995-05-16  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* intl/Makefile.in, Makefile.in: Many adjustments for GNU gettext.
 
-1995-05-09  François Pinard  <pinard@iro.umontreal.ca>
+1995-05-09  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: New file.
 	* de.po, fr.po, pt.po, sv.po: New files, adapted from
 	the corresponding .tt files in src/.
 
-1995-05-08  François Pinard  <pinard@iro.umontreal.ca>
+1995-05-08  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* intl/*: New, from nlsutils.
 
-1995-01-09  François Pinard  <pinard@iro.umontreal.ca>
+1995-01-09  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* src/de.tt: New file, for Swedish.
 	Reported by Jan Djarv.
 
-1994-12-10  François Pinard  <pinard@iro.umontreal.ca>
+1994-12-10  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* de.tt: New file, for German.
 	Reported by Ulrich Drepper.

@@ -1,64 +1,64 @@
-1997-04-24  François Pinard  <pinard@iro.umontreal.ca>
+1997-04-24  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release 1.12.
 
 	* level-1, level-0: Replace --block-size by --blocking.
 
-1996-04-17  François Pinard  <pinard@iro.umontreal.ca>
+1996-04-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (EXTRA_DIST): New name for DIST_OTHER.
 
-1996-01-14  François Pinard  <pinard@iro.umontreal.ca>
+1996-01-14  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (AUTOMAKE_OPTIONS): Select gnits.
 
-1996-01-08  François Pinard  <pinard@iro.umontreal.ca>
+1996-01-08  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: New file.
 
-1995-12-31  François Pinard  <pinard@iro.umontreal.ca>
+1995-12-31  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (check, dvi): New goals, doing nothing.
 	Reported by Cesar Romani and Ulrich Drepper.
 
-1995-06-21  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-21  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Distribute the ChangeLog, now recovered!
 	Reported by Andreas Schwab.
 
-1995-06-17  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-17  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release 1.11.8.
 
 	* WARNING: New file.
 	* Makefile.in (DISTFILES): Distribute it.
 
-1995-06-15  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-15  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* sripts/Makefile.in (dist): Do not hide copying rule.
 
-1995-06-07  François Pinard  <pinard@iro.umontreal.ca>
+1995-06-07  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Use subdir and distdir.
 
-1995-02-05  François Pinard  <pinard@iro.umontreal.ca>
+1995-02-05  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in (maintainer-clean): New name for realclean.
 
-1994-12-03  François Pinard  <pinard@iro.umontreal.ca>
+1994-12-03  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* ChangeLog: Replaced by a warning for now.  It has
 	seemingly been overwritten by the weekly script :-(.
 
 	* Makefile.in (dist): Correct .../examples to .../scripts.
 
-1994-09-14  François Pinard  <pinard@iro.umontreal.ca>
+1994-09-14  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.in: Cleanup...
 	(check): Deleted.
 	(Makefile): Have ./config.status create this Makefile only.
 
-1994-06-30  François Pinard  <pinard@iro.umontreal.ca>
+1994-06-30  FranÃ§ois Pinard  <pinard@iro.umontreal.ca>
 
 	* ChangeLog: Initialized by moving entries related to
 	scripts out of this ChangeLog.

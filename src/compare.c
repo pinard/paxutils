@@ -1,5 +1,5 @@
 /* Diff files from a tar archive.
-   Copyright (C) 1988, 92, 93, 94, 96, 97, 98, 99 Free Software Foundation, Inc.
+   Copyright (C) 1988,92,93,94,96,97,98,99 Free Software Foundation, Inc.
    Written by John Gilmore, on 1987-04-30.
 
    This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -63,7 +63,7 @@ report_difference (const char *message)
   if (message)
     {
       if (checkpoint_option)
-	flush_checkpoint_line ();
+	flush_progress_dots ();
       fprintf (stdlis, "%s: %s\n", current.name, message);
     }
 
@@ -124,7 +124,7 @@ process_rawdata (size_t size, char *buffer)
 | ?  |
 `---*/
 
-/* Directory contents, only for OLDGNU_DUMPDIR.  */
+/* Directory contents, only for GNUTAR_DUMPDIR.  */
 
 static char *dumpdir_cursor;
 
@@ -205,10 +205,10 @@ fill_in_sparse_array (void)
   /* There are at most five of these structures in the header itself; read
      these in first.  */
 
-  for (counter = 0; counter < SPARSES_IN_OLDGNU_HEADER; counter++)
+  for (counter = 0; counter < SPARSES_IN_GNUTAR_HEADER; counter++)
     {
       /* Compare to 0, or use !(int) EXPR, for Pyramid's dumb compiler.  */
-      if (current.block->oldgnu_header.sp[counter].numbytes == 0)
+      if (current.block->gnutar_header.sp[counter].numbytes == 0)
 	break;
 
       sparsearray[counter].offset =
@@ -219,10 +219,10 @@ fill_in_sparse_array (void)
 
   /* If the header's extended, we gotta read in exhdr's till we're done.  */
 
-  if (current.block->oldgnu_header.isextended)
+  if (current.block->gnutar_header.isextended)
     {
       /* How far into the sparsearray we are `so far'.  */
-      static int so_far_ind = SPARSES_IN_OLDGNU_HEADER;
+      static int so_far_ind = SPARSES_IN_GNUTAR_HEADER;
       union block *exhdr;
 
       while (true)
@@ -462,11 +462,11 @@ diff_compressed_file (size_t size_of_file, char *name)
       close (pipe1w);
       close (pipe2r);
       /* Close standard input.  Dup pipe 1 as standard input.  */
-      xdup2 (pipe1r, STDIN,
-	     _("archive data pipe to stdin for file decompression"));
+      xdup2 (pipe1r, STDIN, _("\
+Cannot redirect stdin from archive data pipe for file decompression"));
       /* Close standard output.  Dup pipe 2 as standard output.  */
-      xdup2 (pipe2w, STDOUT,
-	     _("file compare pipe to stdout for file decompression"));
+      xdup2 (pipe2w, STDOUT, _("\
+Cannot redirect stdout into file compare pipe for file decompression"));
 
       /* Execute the uncompression program.  */
       execlp (use_compress_program_option, use_compress_program_option,
@@ -503,7 +503,7 @@ diff_compressed_file (size_t size_of_file, char *name)
       close (pipe2w);
 
       /* Do the comparison. */
-      while (1)
+      while (true)
 	{
 	  /* Read data from pipe 2 in chunks and compare them.  */
 	  int bytes_read, i;
@@ -608,7 +608,7 @@ diff_compressed_file (size_t size_of_file, char *name)
      the system isn't filled with zombie processes.  */
  finish_children:
   /* Wait for child processes to finish.  */
-  while (1)
+  while (true)
     {
       /* Wait for a child to finish, or for no more children.  */
       while (child = wait (&wait_status),
@@ -845,7 +845,7 @@ diff_archive (void)
       if (now_verifying)
 	{
 	  if (checkpoint_option)
-	    flush_checkpoint_line ();
+	    flush_progress_dots ();
 	  fprintf (stdlis, _("Verify "));
 	}
       print_header (&current);
@@ -860,11 +860,11 @@ diff_archive (void)
 
     case AREGTYPE:
     case REGTYPE:
-    case OLDGNU_SPARSE:
+    case GNUTAR_SPARSE:
     case CONTTYPE:
-    case OLDGNU_REGULAR_COMPRESSED:
-    case OLDGNU_SPARSE_COMPRESSED:
-    case OLDGNU_CONTIG_COMPRESSED:
+    case GNUTAR_REGULAR_COMPRESSED:
+    case GNUTAR_SPARSE_COMPRESSED:
+    case GNUTAR_CONTIG_COMPRESSED:
 
       /* Appears to be a file.  See if it's really a directory.  */
 
@@ -874,7 +874,7 @@ diff_archive (void)
 
       if (!get_stat_info (&stat_info))
 	{
-	  if (current.block->oldgnu_header.isextended)
+	  if (current.block->gnutar_header.isextended)
 	    skip_extended_headers ();
 	  skip_file (current.stat.st_size);
 	  goto quit;
@@ -904,11 +904,11 @@ diff_archive (void)
 	 in the header size field, so we have to then compare with a "real
 	 size" file in the Gnu extensions part of the header.  */
       if (stat_info.st_size
-	  != ((current.block->header.typeflag == OLDGNU_SPARSE
-	       || current.block->header.typeflag == OLDGNU_REGULAR_COMPRESSED
-	       || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED
-	       || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
-	      ? strtol (current.block->oldgnu_header.realsize, NULL, 8)
+	  != ((current.block->header.typeflag == GNUTAR_SPARSE
+	       || current.block->header.typeflag == GNUTAR_REGULAR_COMPRESSED
+	       || current.block->header.typeflag == GNUTAR_SPARSE_COMPRESSED
+	       || current.block->header.typeflag == GNUTAR_CONTIG_COMPRESSED)
+	      ? strtol (current.block->gnutar_header.realsize, NULL, 8)
 	      : current.stat.st_size))
  	{
 	  report_difference (_("Size differs"));
@@ -916,7 +916,7 @@ diff_archive (void)
 	  goto quit;
 	}
 #else /* not ENABLE_DALE_CODE */
-      if (current.block->header.typeflag != OLDGNU_SPARSE
+      if (current.block->header.typeflag != GNUTAR_SPARSE
 	  && stat_info.st_size != current.stat.st_size)
 	{
 	  report_difference (_("Size differs"));
@@ -939,7 +939,7 @@ diff_archive (void)
       if (diff_handle < 0)
 	{
 	  ERROR ((0, errno, _("Cannot open %s"), current.name));
-	  if (current.block->oldgnu_header.isextended)
+	  if (current.block->gnutar_header.isextended)
 	    skip_extended_headers ();
 	  skip_file (current.stat.st_size);
 	  report_difference (NULL);
@@ -954,12 +954,12 @@ diff_archive (void)
       /* Need to treat sparse files completely differently here.  Similarly,
 	 compressed files need to be handle specially.  */
 
-      if (current.block->header.typeflag == OLDGNU_SPARSE)
+      if (current.block->header.typeflag == GNUTAR_SPARSE)
 	diff_sparse_files (current.stat.st_size);
 #if ENABLE_DALE_CODE
-      else if (current.block->header.typeflag == OLDGNU_REGULAR_COMPRESSED
-	       || current.block->header.typeflag == OLDGNU_SPARSE_COMPRESSED
-	       || current.block->header.typeflag == OLDGNU_CONTIG_COMPRESSED)
+      else if (current.block->header.typeflag == GNUTAR_REGULAR_COMPRESSED
+	       || current.block->header.typeflag == GNUTAR_SPARSE_COMPRESSED
+	       || current.block->header.typeflag == GNUTAR_CONTIG_COMPRESSED)
 	diff_compressed_file (current.stat.st_size, current.name);
 #endif
       else
@@ -1101,24 +1101,17 @@ diff_archive (void)
     case CHRTYPE:
       current.stat.st_mode |= S_IFCHR;
       goto check_node;
-#endif /* not S_IFCHR */
+#endif
 
 #ifdef S_IFBLK
-      /* If local system doesn't support block devices, use default case.  */
-
     case BLKTYPE:
       current.stat.st_mode |= S_IFBLK;
       goto check_node;
-#endif /* not S_IFBLK */
+#endif
 
 #ifdef S_ISFIFO
-      /* If local system doesn't support FIFOs, use default case.  */
-
     case FIFOTYPE:
-# ifdef S_IFIFO
       current.stat.st_mode |= S_IFIFO;
-# endif
-      current.stat.st_rdev = 0;	/* FIXME: do we need this? */
       goto check_node;
 #endif /* S_ISFIFO */
 
@@ -1128,11 +1121,14 @@ diff_archive (void)
       if (!get_stat_info (&stat_info))
 	break;
 
-      if (current.stat.st_rdev != stat_info.st_rdev)
-	{
-	  report_difference (_("Device numbers changed"));
-	  break;
-	}
+#ifdef S_ISFIFO
+      if ((current.stat.st_mode & S_IFIFO) == 0)
+#endif
+	if (current.stat.st_rdev != stat_info.st_rdev)
+	  {
+	    report_difference (_("Device numbers changed"));
+	    break;
+	  }
 
       if (
 #ifdef S_IFMT
@@ -1150,7 +1146,7 @@ diff_archive (void)
 
       break;
 
-    case OLDGNU_DUMPDIR:
+    case GNUTAR_DUMPDIR:
       {
 	char *dumpdir_buffer = get_directory_contents (current.name, (dev_t) 0);
 
@@ -1198,10 +1194,10 @@ diff_archive (void)
 	report_difference (_("Mode differs"));
       break;
 
-    case OLDGNU_VOLHDR:
+    case GNUTAR_VOLHDR:
       break;
 
-    case OLDGNU_MULTIVOL:
+    case GNUTAR_MULTIVOL:
       {
 	off_t offset;
 

@@ -16,13 +16,12 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "system.h"
+#include "common.h"
 
 #include "filetypes.h"
-#include "cpiohdr.h"
-#include "extern.h"
 #include "rmt.h"
-#include "tarhdr.h"
 
+static void to_oct ();
 static char *stash_tar_linkname ();
 static char *stash_tar_filename ();
 
@@ -32,23 +31,54 @@ static char *stash_tar_filename ();
 `--------------------------------------------------------------------------*/
 
 static unsigned long
-tar_checksum (struct tar_header *tar_hdr)
+tar_checksum (struct posix_header *tar_hdr)
 {
   unsigned long sum = 0;
   char *p = (char *) tar_hdr;
-  char *q = p + TARRECORDSIZE;
+  char *q = p + BLOCKSIZE;
   int i;
 
   while (p < tar_hdr->chksum)
     sum += *p++ & 0xff;
-  for (i = 0; i < 8; ++i)
+  for (i = 0; i < 8; i++)
     {
       sum += ' ';
-      ++p;
+      p++;
     }
   while (p < q)
     sum += *p++ & 0xff;
   return sum;
+}
+
+/*---------------------------------------------------------------------------.
+| Convert a number into a string of octal digits.  Convert long VALUE into a |
+| DIGITS-digit field at WHERE, including a trailing space and room for a     |
+| NUL.  DIGITS==3 means 1 digit, a space, and room for a NUL.                |
+|                                                                            |
+| We assume the trailing NUL is already there and don't fill it in.  This    |
+| fact is used by start_header and finish_header, so don't change it!        |
+|                                                                            |
+| This is be equivalent to: sprintf (where, "%*lo ", digits - 2, value);     |
+| except that sprintf fills in the trailing NUL and we don't.                |
+`---------------------------------------------------------------------------*/
+
+static void
+to_oct (long value, int digits, char *where)
+{
+  digits--;			/* leave the trailing NUL slot alone */
+  where[--digits] = ' ';	/* put in the space, though */
+
+  /* Produce the digits -- at least one.  */
+  do
+    {
+      where[--digits] = '0' + (char) (value & 7); /* One octal digit.  */
+      value >>= 3;
+    }
+  while (digits > 0 && value != 0);
+
+  /* Add leading spaces, if necessary.  */
+  while (digits > 0)
+    where[--digits] = ' ';
 }
 
 /*-----------------------------------------------------------------------.
@@ -60,30 +90,30 @@ void
 write_out_tar_header (struct new_cpio_header *file_hdr, int out_des)
 {
   int name_len;
-  union tar_record tar_rec;
-  struct tar_header *tar_hdr = (struct tar_header *) &tar_rec;
+  union block tar_rec;
+  struct posix_header *tar_hdr = (struct posix_header *) &tar_rec;
 
-  memset ((char *) &tar_rec, 0, TARRECORDSIZE);
+  memset ((char *) &tar_rec, 0, BLOCKSIZE);
 
   /* process_copy_out must ensure that file_hdr->c_name is short enough, or we
      will lose here.  */
 
   name_len = strlen (file_hdr->c_name);
-  if (name_len <= TARNAMESIZE)
+  if (name_len <= NAME_FIELD_SIZE)
     {
       strncpy (tar_hdr->name, file_hdr->c_name, name_len);
     }
   else
     {
       /* Fit as much as we can into `name', the rest into `prefix'.  */
-      char *suffix = file_hdr->c_name + name_len - TARNAMESIZE;
+      char *suffix = file_hdr->c_name + name_len - NAME_FIELD_SIZE;
 
       /* We have to put the boundary at a slash.  */
-      name_len = TARNAMESIZE;
+      name_len = NAME_FIELD_SIZE;
       while (*suffix != '/')
 	{
-	  --name_len;
-	  ++suffix;
+	  name_len--;
+	  suffix++;
 	}
       strncpy (tar_hdr->name, suffix + 1, name_len);
       strncpy (tar_hdr->prefix, file_hdr->c_name, suffix - file_hdr->c_name);
@@ -103,9 +133,9 @@ write_out_tar_header (struct new_cpio_header *file_hdr, int out_des)
       if (file_hdr->c_tar_linkname)
 	{
 	  /* process_copy_out makes sure that c_tar_linkname is shorter
-	     than TARLINKNAMESIZE.  */
+	     than LINKNAME_FIELD_SIZE.  */
 	  strncpy (tar_hdr->linkname, file_hdr->c_tar_linkname,
-		   TARLINKNAMESIZE);
+		   LINKNAME_FIELD_SIZE);
 	  tar_hdr->typeflag = LNKTYPE;
 	  to_oct (0, 12, tar_hdr->size);
 	}
@@ -131,22 +161,22 @@ write_out_tar_header (struct new_cpio_header *file_hdr, int out_des)
     case CP_IFLNK:
       tar_hdr->typeflag = SYMTYPE;
       /* process_copy_out makes sure that c_tar_linkname is shorter
-	 than TARLINKNAMESIZE.  */
+	 than LINKNAME_FIELD_SIZE.  */
       strncpy (tar_hdr->linkname, file_hdr->c_tar_linkname,
-	       TARLINKNAMESIZE);
+	       LINKNAME_FIELD_SIZE);
       to_oct (0, 12, tar_hdr->size);
       break;
 #endif /* CP_IFLNK */
 #endif /* !__MSDOS__ */
     }
 
-  if (archive_format == arf_ustar || archive_format == arf_oldgnu)
+  if (archive_format == POSIX_FORMAT || archive_format == GNUTAR_FORMAT)
     {
       char *name;
 
       strncpy (tar_hdr->magic, TMAGIC, TMAGLEN);
 
-      if (archive_format == arf_oldgnu)
+      if (archive_format == GNUTAR_FORMAT)
 	{
 	  tar_hdr->magic[TMAGLEN] = ' ';
 	  tar_hdr->version[0] = '\0';
@@ -170,7 +200,7 @@ write_out_tar_header (struct new_cpio_header *file_hdr, int out_des)
 
   to_oct (tar_checksum (tar_hdr), 8, tar_hdr->chksum);
 
-  tape_buffered_write ((char *) &tar_rec, out_des, TARRECORDSIZE);
+  tape_buffered_write ((char *) &tar_rec, out_des, BLOCKSIZE);
 }
 
 /*--------------------------------.
@@ -180,25 +210,49 @@ write_out_tar_header (struct new_cpio_header *file_hdr, int out_des)
 void
 write_tar_eof (int out_des)
 {
-  tape_buffered_write (zeros_512, out_des, TARRECORDSIZE);
-  tape_buffered_write (zeros_512, out_des, TARRECORDSIZE);
+  tape_buffered_write (zero_block, out_des, BLOCKSIZE);
+  tape_buffered_write (zero_block, out_des, BLOCKSIZE);
 }
 
-/*--------------------------------------------------------------------------.
-| Return nonzero iff all the bytes in BLOCK are NUL.  SIZE is the number of |
-| bytes to check in BLOCK; it must be a multiple of sizeof (long).          |
-`--------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------.
+| Says if all the bytes in BLOCK are NUL.  SIZE is the number of bytes to |
+| check in BLOCK; it must be a multiple of sizeof (long).                 |
+`------------------------------------------------------------------------*/
 
-static int
+static bool
 null_block (long *block, int size)
 {
-  register long *p = block;
-  register int i = size / sizeof (long);
+  long *p = block;
+  int i = size / sizeof (long);
 
   while (i--)
     if (*p++)
-      return 0;
-  return 1;
+      return false;
+
+  return true;
+}
+
+/*------------------------------------------------------------------------.
+| Convert the string of octal digits S into a number and store it in *N.  |
+| Return nonzero if the whole string was converted, zero if there was     |
+| something after the number.  Skip leading and trailing spaces.          |
+`------------------------------------------------------------------------*/
+
+static int
+otoa (s, n)
+     char *s;
+     unsigned long *n;
+{
+  unsigned long val = 0;
+
+  while (*s == ' ')
+    s++;
+  while (*s >= '0' && *s <= '7')
+    val = 8 * val + *s++ - '0';
+  while (*s == ' ')
+    s++;
+  *n = val;
+  return *s == '\0';
 }
 
 /*------------------------------------------------------------------------.
@@ -211,17 +265,17 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
 {
   long bytes_skipped = 0;
   int warned = false;
-  union tar_record tar_rec;
-  struct tar_header *tar_hdr = (struct tar_header *) &tar_rec;
+  union block tar_rec;
+  struct posix_header *tar_hdr = (struct posix_header *) &tar_rec;
 #ifndef __MSDOS__
   uid_t *uidp;
   gid_t *gidp;
 #endif
 
-  tape_buffered_read ((char *) &tar_rec, in_des, TARRECORDSIZE);
+  tape_buffered_read ((char *) &tar_rec, in_des, BLOCKSIZE);
 
   /* Check for a block of 0's.  */
-  if (null_block ((long *) &tar_rec, TARRECORDSIZE))
+  if (null_block ((long *) &tar_rec, BLOCKSIZE))
     {
 #if 0
       /* Found one block of 512 0's.  If the next block is also all 0's
@@ -231,19 +285,19 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
       /* Commented out because Free tar sometimes creates archives with
 	 only one block of 0's at the end.  This happened for the
 	 cpio 2.0 distribution!  */
-      tape_buffered_read ((char *) &tar_rec, in_des, TARRECORDSIZE);
-      if (null_block ((long *) &tar_rec, TARRECORDSIZE))
+      tape_buffered_read ((char *) &tar_rec, in_des, BLOCKSIZE);
+      if (null_block ((long *) &tar_rec, BLOCKSIZE))
 #endif
 	{
 	  file_hdr->c_name = "TRAILER!!!";
 	  return;
 	}
 #if 0
-      bytes_skipped = TARRECORDSIZE;
+      bytes_skipped = BLOCKSIZE;
 #endif
     }
 
-  while (1)
+  while (true)
     {
       otoa (tar_hdr->chksum, &file_hdr->c_chksum);
 
@@ -263,14 +317,14 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
 	      warned = true;
 	    }
 	  memcpy ((char *) &tar_rec, ((char *) &tar_rec) + 1,
-		 TARRECORDSIZE - 1);
-	  tape_buffered_read (((char *) &tar_rec) + (TARRECORDSIZE - 1), in_des, 1);
-	  ++bytes_skipped;
+		 BLOCKSIZE - 1);
+	  tape_buffered_read (((char *) &tar_rec) + (BLOCKSIZE - 1), in_des, 1);
+	  bytes_skipped++;
 	  continue;
 	}
 
       /* FIXME do Free tar magic here.  */
-      if (archive_format != arf_ustar)
+      if (archive_format != POSIX_FORMAT)
 	file_hdr->c_name = stash_tar_filename (NULL, tar_hdr->name);
       else
 	file_hdr->c_name = stash_tar_filename (tar_hdr->prefix, tar_hdr->name);
@@ -278,14 +332,14 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
       otoa (tar_hdr->mode, &file_hdr->c_mode);
       file_hdr->c_mode = file_hdr->c_mode & 07777;
 #ifndef __MSDOS__
-      if ((archive_format == arf_ustar || archive_format == arf_oldgnu)
+      if ((archive_format == POSIX_FORMAT || archive_format == GNUTAR_FORMAT)
 	  && (uidp = getuidbyname (tar_hdr->uname)))
 	file_hdr->c_uid = *uidp;
       else
 #endif
 	otoa (tar_hdr->uid, &file_hdr->c_uid);
 #ifndef __MSDOS__
-      if ((archive_format == arf_ustar || archive_format == arf_oldgnu)
+      if ((archive_format == POSIX_FORMAT || archive_format == GNUTAR_FORMAT)
 	  && (gidp = getgidbyname (tar_hdr->gname)))
 	file_hdr->c_gid = *gidp;
       else
@@ -379,10 +433,20 @@ read_in_tar_header (struct new_cpio_header *file_hdr, int in_des)
 static char *
 stash_tar_linkname (char *linkname)
 {
-  static char hold_tar_linkname[TARLINKNAMESIZE + 1];
+  static char hold_tar_linkname[LINKNAME_FIELD_SIZE + 2];
 
-  strncpy (hold_tar_linkname, linkname, TARLINKNAMESIZE);
-  hold_tar_linkname[TARLINKNAMESIZE] = '\0';
+  if (no_absolute_filenames_option && linkname && linkname [0] == '/')
+    {
+      strcpy (hold_tar_linkname, ".");
+      strncat (hold_tar_linkname, linkname, LINKNAME_FIELD_SIZE);
+      hold_tar_linkname[LINKNAME_FIELD_SIZE + 1] = '\0';
+    }
+  else
+    {
+      strncpy (hold_tar_linkname, linkname, LINKNAME_FIELD_SIZE);
+      hold_tar_linkname[LINKNAME_FIELD_SIZE] = '\0';
+    }
+
   return hold_tar_linkname;
 }
 
@@ -393,41 +457,60 @@ stash_tar_linkname (char *linkname)
 static char *
 stash_tar_filename (char *prefix, char *filename)
 {
-  static char hold_tar_filename[TARNAMESIZE + TARPREFIXSIZE + 2];
+  static char hold_tar_filename[NAME_FIELD_SIZE + PREFIX_FIELD_SIZE + 3];
   if (prefix == NULL || *prefix == '\0')
     {
-      strncpy (hold_tar_filename, filename, TARNAMESIZE);
-      hold_tar_filename[TARNAMESIZE] = '\0';
+      if (no_absolute_filenames_option && filename && filename [0] == '/')
+	{
+	  strcpy (hold_tar_filename, ".");
+	  strncat (hold_tar_filename, filename, NAME_FIELD_SIZE);
+	  hold_tar_filename[NAME_FIELD_SIZE+1] = '\0';
+	}
+      else
+	{
+	  strncpy (hold_tar_filename, filename, NAME_FIELD_SIZE);
+	  hold_tar_filename[NAME_FIELD_SIZE] = '\0';
+	}
+    }
+  else if (no_absolute_filenames_option && prefix [0] == '/')
+    {
+      strcpy (hold_tar_filename, ".");
+      strncat (hold_tar_filename, prefix, PREFIX_FIELD_SIZE);
+      hold_tar_filename[PREFIX_FIELD_SIZE + 1] = '\0';
+      strcat (hold_tar_filename, "/");
+      strncat (hold_tar_filename, filename, NAME_FIELD_SIZE);
+      hold_tar_filename[PREFIX_FIELD_SIZE + NAME_FIELD_SIZE + 2] = '\0';
     }
   else
     {
-      strncpy (hold_tar_filename, prefix, TARPREFIXSIZE);
-      hold_tar_filename[TARPREFIXSIZE] = '\0';
+      strncpy (hold_tar_filename, prefix, PREFIX_FIELD_SIZE);
+      hold_tar_filename[PREFIX_FIELD_SIZE] = '\0';
       strcat (hold_tar_filename, "/");
-      strncat (hold_tar_filename, filename, TARNAMESIZE);
-      hold_tar_filename[TARPREFIXSIZE + TARNAMESIZE] = '\0';
+      strncat (hold_tar_filename, filename, NAME_FIELD_SIZE);
+      hold_tar_filename[PREFIX_FIELD_SIZE + NAME_FIELD_SIZE + 1] = '\0';
     }
+
   return hold_tar_filename;
 }
 
 /*---------------------------------------------------------------------------.
-| Return arf_oldgnu if BUF is a valid Free tar header; arf_ustar if BUF is a |
+| Return GNUTAR_FORMAT if BUF is a valid Free tar header; POSIX_FORMAT if BUF is a |
 | valid POSIX tar header (the checksum is correct and it has the "ustar"     |
-| magic string); arf_tar if BUF is a valid old tar header (the checksum is   |
-| correct); arf_unknown otherwise.                                           |
+| magic string); V7_FORMAT if BUF is a valid old tar header (the checksum is   |
+| correct); UNKNOWN_FORMAT otherwise.                                           |
 `---------------------------------------------------------------------------*/
 
 enum archive_format
 is_tar_header (char *buf)
 {
-  struct tar_header *tar_hdr = (struct tar_header *) buf;
+  struct posix_header *tar_hdr = (struct posix_header *) buf;
   unsigned long chksum;
 
   /* FIXME if the checksum looks funny (not octal), should return here.  */
   otoa (tar_hdr->chksum, &chksum);
 
   if (chksum != tar_checksum (tar_hdr))
-    return arf_unknown;
+    return UNKNOWN_FORMAT;
 
   /* GNU tar 1.10 and previous set the magic field to be "ustar " instead of
      "ustar\0".  Only look at the first 5 characters of the magic field so we
@@ -438,24 +521,24 @@ is_tar_header (char *buf)
 
   if (!strncmp (tar_hdr->magic, TMAGIC, TMAGLEN - 1))
     {
-#ifdef CPIO_USE_OLDGNU
+#ifdef CPIO_USE_GNUTAR
       /* This is turned off by default.  We don't really handle all
 	 the cases yet.  */
       if (tar_hdr->magic[TMAGLEN] == ' ')
-	return arf_oldgnu;
-#endif /* CPIO_USE_OLDGNU */
+	return GNUTAR_FORMAT;
+#endif
 
       /* If we have what looks like a real ustar archive, we must
 	 check the version number.  We only understand version 00.  */
       if (tar_hdr->magic[TMAGLEN] == '\0'
 	  && (tar_hdr->version[0] != '0'
 	      || tar_hdr->version[1] != '0'))
-	return (arf_unknown);
+	return UNKNOWN_FORMAT;
 
-      return arf_ustar;
+      return POSIX_FORMAT;
     }
 
-  return arf_tar;
+  return V7_FORMAT;
 }
 
 /*-----------------------------------------------------------------.
@@ -474,7 +557,7 @@ is_tar_header (char *buf)
    the "name".  If it is not possible to break down the filename like this
    then it will not fit.  */
 
-int
+bool
 is_tar_filename_too_long (char *name)
 {
   int whole_name_len;
@@ -482,34 +565,34 @@ is_tar_filename_too_long (char *name)
   char *p;
 
   /* Free tar can handle any length.  */
-  if (archive_format == arf_oldgnu)
+  if (archive_format == GNUTAR_FORMAT)
     return false;
 
   whole_name_len = strlen (name);
-  if (whole_name_len <= TARNAMESIZE)
+  if (whole_name_len <= NAME_FIELD_SIZE)
     return false;
 
-  if (archive_format != arf_ustar)
+  if (archive_format != POSIX_FORMAT)
     return true;
 
-  if (whole_name_len > TARNAMESIZE + TARPREFIXSIZE + 1)
+  if (whole_name_len > NAME_FIELD_SIZE + PREFIX_FIELD_SIZE + 1)
     return true;
 
   /* See whether we can split up the name into acceptably-sized `prefix' and
      `name' (`p') pieces.  Start out by making `name' as big as possible, then
      shrink it by looking for the first '/'.  */
-  p = name + whole_name_len - TARNAMESIZE;
+  p = name + whole_name_len - NAME_FIELD_SIZE;
   while (*p != '/' && *p != '\0')
-    ++p;
+    p++;
   if (*p == '\0')
-    /* The last component of the path is longer than TARNAMESIZE.  */
+    /* The last component of the path is longer than NAME_FIELD_SIZE.  */
     return true;
 
   prefix_name_len = p - name - 1;
-  /* Interestingly, a name consisting of a slash followed by TARNAMESIZE
+  /* Interestingly, a name consisting of a slash followed by NAME_FIELD_SIZE
      characters can't be stored, because the prefix would be empty, and thus
      ignored.  */
-  if (prefix_name_len > TARPREFIXSIZE || prefix_name_len == 0)
+  if (prefix_name_len > PREFIX_FIELD_SIZE || prefix_name_len == 0)
     return true;
 
   return false;

@@ -16,23 +16,22 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "system.h"
+#include "common.h"
 
 #include <assert.h>
 #include "filetypes.h"
-#include "cpiohdr.h"
-#include "extern.h"
 #include "defer.h"
 #include "rmt.h"
 
 static unsigned long read_for_checksum PARAMS ((int, int, char *));
 static void tape_clear_rest_of_block PARAMS ((int));
-static int last_link PARAMS ((struct new_cpio_header *));
+static bool last_link PARAMS ((struct new_cpio_header *));
 static int count_defered_links_to_dev_ino PARAMS ((struct new_cpio_header *));
 static void add_link_defer PARAMS ((struct new_cpio_header *));
 static void writeout_other_defers PARAMS ((struct new_cpio_header *, int));
 static void writeout_final_defers PARAMS ((int));
 static void writeout_defered_file PARAMS ((struct new_cpio_header *, int));
-static void dump_file PARAMS ((int, int, dynamic_string *));
+static void dump_one_file PARAMS ((int, int, dynamic_string *));
 static void copy_out_one_file PARAMS ((int, dynamic_string *, struct stat *));
 
 /*--------------------------------------------------.
@@ -40,30 +39,30 @@ static void copy_out_one_file PARAMS ((int, dynamic_string *, struct stat *));
 `--------------------------------------------------*/
 
 static void
-verbosely_copy_out_file (int out_file_des, dynamic_string *input_name,
+verbosely_copy_out_file (int handle, dynamic_string *input_name,
 			 struct stat *stat_info)
 {
   /* NOTE: pax wants to print the file name sans \n before processing, and add
      the \n after processing.  We just do the same thing for cpio (I assume it
      is ok).  */
-  if (verbose_flag)
+  if (verbose_option)
     {
       fprintf (stderr, "%s", input_name->string);
       fflush (stderr);
     }
 
-  copy_out_one_file (out_file_des, input_name, stat_info);
+  copy_out_one_file (handle, input_name, stat_info);
 
-  /* Doesn't really make sense to have dot_flag and verbose_flag set at the
-     same time.  Must check for this.  */
+  /* Doesn't really make sense to have dot_option and verbose_option set at
+     the same time.  Must check for this.  */
 #if 0
-  assert (!dot_flag || !verbose_flag);
+  assert (!dot_option || !verbose_option);
 #endif
 
-  if (verbose_flag)
+  if (verbose_option)
     fputc ('\n', stderr);
 
-  if (dot_flag)
+  if (dot_option)
     fputc ('.', stderr);
 }
 
@@ -75,7 +74,7 @@ verbosely_copy_out_file (int out_file_des, dynamic_string *input_name,
 `----------------------------------------------------------------------------*/
 
 static void
-pax_copy_out_one_file (int top_level, int out_file_des,
+pax_copy_out_one_file (int top_level, int handle,
 		       dynamic_string *input_name, struct stat *stat_info)
 {
   int tar_flag = 0;
@@ -95,13 +94,13 @@ pax_copy_out_one_file (int top_level, int out_file_des,
      HPUX CDF somehow.  (The code might need fixing).  2) If the user types
      C-c, we might want to catch it and set the modes correctly (though we
      aren't required to).  */
-  if (archive_format == arf_tar
-      || archive_format == arf_ustar
-      || archive_format == arf_oldgnu)
+  if (archive_format == V7_FORMAT
+      || archive_format == POSIX_FORMAT
+      || archive_format == GNUTAR_FORMAT)
     {
       /* In tar, we dump directories first.  */
       tar_flag = 1;
-      verbosely_copy_out_file (out_file_des, input_name, stat_info);
+      verbosely_copy_out_file (handle, input_name, stat_info);
     }
 
   if (S_ISDIR (stat_info->st_mode))
@@ -121,16 +120,16 @@ pax_copy_out_one_file (int top_level, int out_file_des,
 
 	  len = ds_strlen (input_name);
 
-	  /* Big enough for directory, plus most files.  FIXME wish I
-	     could remember the actual statistic about typical
-	     filename lengths.  I recall reading that whoever
-	     developed the fast file system did such a study.  */
+	  /* Big enough for directory, plus most files.  FIXME wish I could
+	     remember the actual statistic about typical filename lengths.  I
+	     recall reading that whoever developed the fast file system did
+	     such a study.  */
 	  ds_init (&new_name, len + 32);
 	  strcpy (new_name.string, input_name->string);
 	  if (input_name->string[ds_strlen (input_name) - 1] != '/')
 	    {
 	      strcat (new_name.string, "/");
-	      ++len;
+	      len++;
 	    }
 
 	  /* Remove "./" from front of all file names.  */
@@ -148,7 +147,7 @@ pax_copy_out_one_file (int top_level, int out_file_des,
 	      strncpy (new_name.string + len, d->d_name, NAMLEN (d));
 	      new_name.string[len + NAMLEN (d)] = '\0';
 
-	      dump_file (0, out_file_des, &new_name);
+	      dump_one_file (0, handle, &new_name);
 	    }
 
 	  closedir (dirp);
@@ -157,10 +156,8 @@ pax_copy_out_one_file (int top_level, int out_file_des,
     }
 
   if (!tar_flag)
-    {
-      /* In cpio formats, we dump directories last.  */
-      verbosely_copy_out_file (out_file_des, input_name, stat_info);
-    }
+    /* In cpio formats, we dump directories last.  */
+    verbosely_copy_out_file (handle, input_name, stat_info);
 }
 
 /*----------------.
@@ -168,7 +165,7 @@ pax_copy_out_one_file (int top_level, int out_file_des,
 `----------------*/
 
 static void
-dump_file (int top_level, int out_file_des, dynamic_string *input_name)
+dump_one_file (int top_level, int handle, dynamic_string *input_name)
 {
   struct stat stat_info;	/* stat record for file */
 
@@ -178,10 +175,10 @@ dump_file (int top_level, int out_file_des, dynamic_string *input_name)
   else if ((*xstat) (input_name->string, &stat_info) < 0)
     error (0, errno, "%s", input_name->string);
   else if (directory_recurse_flag)
-    pax_copy_out_one_file (top_level, out_file_des, input_name,
+    pax_copy_out_one_file (top_level, handle, input_name,
 			   &stat_info);
   else
-    verbosely_copy_out_file (out_file_des, input_name, &stat_info);
+    verbosely_copy_out_file (handle, input_name, &stat_info);
 }
 
 /*-----------------------------------------------------------------------.
@@ -192,10 +189,10 @@ dump_file (int top_level, int out_file_des, dynamic_string *input_name)
 void
 process_copy_out (void)
 {
-  int res;			/* Result of functions.  */
-  dynamic_string input_name;	/* Name of file read from stdin.  */
-  int out_file_des;		/* Output file descriptor.  */
-  struct stat stat_info;	/* Temporary stat record.  */
+  int res;			/* result of functions */
+  dynamic_string input_name;	/* name of file read from stdin */
+  int handle;			/* output file descriptor */
+  struct stat stat_info;	/* temporary stat record */
 
   assert (header_writer != NULL);
   assert (eof_writer != NULL);
@@ -212,15 +209,15 @@ process_copy_out (void)
 #endif
 
   /* Check whether the output file might be a tape.  */
-  out_file_des = archive_des;
-  if (_isrmt (out_file_des))
+  handle = archive_des;
+  if (_isrmt (handle))
     {
       output_is_special = 1;
       output_is_seekable = 0;
     }
   else
     {
-      if (fstat (out_file_des, &stat_info))
+      if (fstat (handle, &stat_info))
 	error (1, errno, _("standard output is closed"));
       output_is_special = (
 #ifdef S_ISBLK
@@ -234,31 +231,31 @@ process_copy_out (void)
   /* We might as well give the user an opportunity to recover from "No space
      on device" even if they are writing to disk files.  It is specifically
      handy with floppies.  */
-  output_is_special = !isatty (out_file_des);
+  output_is_special = !isatty (handle);
 #endif
 
-  if (append_flag)
+  if (append_option)
     {
       process_copy_in ();
-      prepare_append (out_file_des);
+      prepare_append (handle);
     }
 
   /* Copy files with names read from stdin.  */
   while (get_next_file_name (&input_name))
-    dump_file (1, out_file_des, &input_name);
+    dump_one_file (1, handle, &input_name);
 
-  writeout_final_defers(out_file_des);
+  writeout_final_defers (handle);
 
   /* The collection is complete; append the trailer.  */
-  (*eof_writer) (out_file_des);
+  (*eof_writer) (handle);
 
   /* Fill up the output block.  */
-  tape_clear_rest_of_block (out_file_des);
-  tape_empty_output_buffer (out_file_des);
-  if (dot_flag)
+  tape_clear_rest_of_block (handle);
+  tape_empty_output_buffer (handle);
+  if (dot_option)
     fputc ('\n', stderr);
 
-  if (! no_block_message_flag)
+  if (! quiet_option)
     {
       res = (output_bytes + io_block_size - 1) / io_block_size;
       if (res == 1)
@@ -270,22 +267,22 @@ process_copy_out (void)
 
 /*------------------------------------------------------------------------.
 | Copy out one file, given its name and some other information.  Fills in |
-| file_hdr.                                                               |
+| header.                                                                 |
 `------------------------------------------------------------------------*/
 
 static void
-copy_out_one_file (int out_file_des, dynamic_string *input_name,
+copy_out_one_file (int handle, dynamic_string *input_name,
 		   struct stat *stat_info)
 {
-  struct new_cpio_header file_hdr;
-  int in_file_des;		/* source file descriptor */
+  struct new_cpio_header header;
+  int input_handle;		/* source file descriptor */
   char *p;
 
   /* Set values in output header.  */
-  file_hdr.c_magic = 070707;
-  file_hdr.c_dev_maj = major (stat_info->st_dev);
-  file_hdr.c_dev_min = minor (stat_info->st_dev);
-  file_hdr.c_ino = stat_info->st_ino;
+  header.c_magic = 070707;
+  header.c_dev_maj = major (stat_info->st_dev);
+  header.c_dev_min = minor (stat_info->st_dev);
+  header.c_ino = stat_info->st_ino;
 #if DOSWIN
   /* DJGPP doesn't support st_rdev.  Repair that.  */
   stat_info->st_rdev = stat_info->st_dev;
@@ -293,120 +290,118 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
   /* For POSIX systems that don't define the S_IF macros, we can't assume that
      S_ISfoo means the standard Unix S_IFfoo bit(s) are set.  So do it
      manually, with a different name.  Bleah.  */
-  file_hdr.c_mode = (stat_info->st_mode & 07777);
+  header.c_mode = (stat_info->st_mode & 07777);
   if (S_ISREG (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFREG;
+    header.c_mode |= CP_IFREG;
   else if (S_ISDIR (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFDIR;
+    header.c_mode |= CP_IFDIR;
 #ifdef S_ISBLK
   else if (S_ISBLK (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFBLK;
+    header.c_mode |= CP_IFBLK;
 #endif
 #ifdef S_ISCHR
   else if (S_ISCHR (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFCHR;
+    header.c_mode |= CP_IFCHR;
 #endif
 #ifdef S_ISFIFO
   else if (S_ISFIFO (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFIFO;
+    header.c_mode |= CP_IFIFO;
 #endif
 #ifdef S_ISLNK
   else if (S_ISLNK (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFLNK;
+    header.c_mode |= CP_IFLNK;
 #endif
 #ifdef S_ISSOCK
   else if (S_ISSOCK (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFSOCK;
+    header.c_mode |= CP_IFSOCK;
 #endif
 #ifdef S_ISNWK
   else if (S_ISNWK (stat_info->st_mode))
-    file_hdr.c_mode |= CP_IFNWK;
+    header.c_mode |= CP_IFNWK;
 #endif
-  file_hdr.c_uid = stat_info->st_uid;
-  file_hdr.c_gid = stat_info->st_gid;
-  file_hdr.c_nlink = stat_info->st_nlink;
-  file_hdr.c_rdev_maj = major (stat_info->st_rdev);
-  file_hdr.c_rdev_min = minor (stat_info->st_rdev);
-  file_hdr.c_mtime = (stat_info->st_mtime < 0) ? 0 :stat_info->st_mtime;
-  file_hdr.c_filesize = stat_info->st_size;
-  file_hdr.c_chksum = 0;
-  file_hdr.c_tar_linkname = NULL;
+  header.c_uid = stat_info->st_uid;
+  header.c_gid = stat_info->st_gid;
+  header.c_nlink = stat_info->st_nlink;
+  header.c_rdev_maj = major (stat_info->st_rdev);
+  header.c_rdev_min = minor (stat_info->st_rdev);
+  header.c_mtime = (stat_info->st_mtime < 0) ? 0 :stat_info->st_mtime;
+  header.c_filesize = stat_info->st_size;
+  header.c_chksum = 0;
+  header.c_tar_linkname = NULL;
 
   /* Handle HPUX CDF files.  */
-  possibly_munge_cdf_directory_name (input_name->string, &file_hdr);
+  possibly_munge_cdf_directory_name (input_name->string, &header);
 
-  if ((*name_too_long) (file_hdr.c_name))
+  if ((*name_too_long) (header.c_name))
     {
-      error (0, 0, _("%s: file name too long"), file_hdr.c_name);
+      error (0, 0, _("%s: file name too long"), header.c_name);
       return;
     }
 
-  /* FIXME there is a memory leak here, between this and the HPUX stuff above.
-     */
-  file_hdr.c_name = possibly_rename_file (file_hdr.c_name);
+  /* FIXME: there is a memory leak here, between this and the HPUX stuff
+     above.  */
+  header.c_name = possibly_rename_file (header.c_name);
 
   /* Copy the named file to the output.  */
-  switch (file_hdr.c_mode & CP_IFMT)
+  switch (header.c_mode & CP_IFMT)
     {
     case CP_IFREG:
 #ifndef __MSDOS__
-      if (archive_format == arf_tar || archive_format == arf_ustar
-	  || archive_format == arf_oldgnu)
+      if (archive_format == V7_FORMAT || archive_format == POSIX_FORMAT
+	  || archive_format == GNUTAR_FORMAT)
 	{
 	  char *otherfile;
-	  if ((otherfile = find_inode_file (file_hdr.c_ino,
-					    file_hdr.c_dev_maj,
-					    file_hdr.c_dev_min)))
+	  if ((otherfile = find_inode_file (header.c_ino,
+					    header.c_dev_maj,
+					    header.c_dev_min)))
 	    {
-	      file_hdr.c_tar_linkname = otherfile;
-	      (*header_writer) (&file_hdr, out_file_des);
+	      header.c_tar_linkname = otherfile;
+	      (*header_writer) (&header, handle);
 	      break;
 	    }
 	}
-      if ( (archive_format == arf_newascii || archive_format == arf_crcascii)
-	   && (file_hdr.c_nlink > 1) )
-	{
-	  if (last_link (&file_hdr) )
-	    {
-	      writeout_other_defers (&file_hdr, out_file_des);
-	    }
-	  else
-	    {
-	      add_link_defer (&file_hdr);
-	      break;
-	    }
-	}
+      if ((archive_format == NEW_ASCII_FORMAT
+	   || archive_format == CRC_ASCII_FORMAT)
+	  && header.c_nlink > 1)
+	if (last_link (&header) )
+	  writeout_other_defers (&header, handle);
+	else
+	  {
+	    add_link_defer (&header);
+	    break;
+	  }
 #endif
-      in_file_des = open (input_name->string,
+      input_handle = open (input_name->string,
 			  O_RDONLY | O_BINARY, 0);
-      if (in_file_des < 0)
+      if (input_handle < 0)
 	{
 	  error (0, errno, "%s", input_name->string);
 	  return;
 	}
 
-      if (archive_format == arf_crcascii)
-	file_hdr.c_chksum = read_for_checksum (in_file_des,
-					       file_hdr.c_filesize,
-					       input_name->string);
+      if (archive_format == CRC_ASCII_FORMAT)
+	header.c_chksum = read_for_checksum (input_handle,
+					     header.c_filesize,
+					     input_name->string);
 
-      (*header_writer) (&file_hdr, out_file_des);
-      copy_files_disk_to_tape (in_file_des, out_file_des,
-			       file_hdr.c_filesize,
+      (*header_writer) (&header, handle);
+      copy_files_disk_to_tape (input_handle, handle,
+			       header.c_filesize,
 			       input_name->string);
 
 #ifndef __MSDOS__
-      if (archive_format == arf_tar || archive_format == arf_ustar
-	  || archive_format == arf_oldgnu)
-	add_inode (file_hdr.c_ino, file_hdr.c_name, file_hdr.c_dev_maj,
-		   file_hdr.c_dev_min);
+      if (archive_format == V7_FORMAT
+	  || archive_format == POSIX_FORMAT
+	  || archive_format == GNUTAR_FORMAT)
+	add_inode (header.c_ino, header.c_name,
+		   header.c_dev_maj, header.c_dev_min);
 #endif
 
-      tape_pad_output (out_file_des, file_hdr.c_filesize);
+      tape_pad_output (handle, header.c_filesize);
 
-      if (close (in_file_des) < 0)
+      if (close (input_handle) < 0)
 	error (0, errno, "%s", input_name->string);
-      if (reset_time_flag)
+      if (reset_access_time_option)
 	{
 	  struct utimbuf times;
 
@@ -415,15 +410,17 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
 	  memset (&times, 0, sizeof (struct utimbuf));
 	  times.actime = stat_info->st_atime;
 	  times.modtime = stat_info->st_mtime;
-	  if (utime (file_hdr.c_name, &times) < 0)
+	  /* Silently ignore EROFS because reading the file won't have upset
+	     its timestamp if it's on a read-only filesystem.  */
+	  if (utime (header.c_name, &times) < 0 && errno != EROFS)
 	    error (0, errno, _("%s: error resetting file access time"),
-		   file_hdr.c_name);
+		   header.c_name);
 	}
       break;
 
     case CP_IFDIR:
-      file_hdr.c_filesize = 0;
-      (*header_writer) (&file_hdr, out_file_des);
+      header.c_filesize = 0;
+      (*header_writer) (&header, handle);
       break;
 
 #ifndef __MSDOS__
@@ -435,32 +432,33 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
 #ifdef CP_IFIFO
     case CP_IFIFO:
 #endif
-      if (archive_format == arf_tar)
+      if (archive_format == V7_FORMAT)
 	{
-	  error (0, 0, _("%s not dumped: not a regular file"),
-		 file_hdr.c_name);
+	  error (0, 0, _("%s not dumped: not a regular file"), header.c_name);
 	  return;
 	}
-      else if (archive_format == arf_ustar || archive_format == arf_oldgnu)
+      else if (archive_format == POSIX_FORMAT
+	       || archive_format == GNUTAR_FORMAT)
 	{
-	  char *otherfile;
-	  if ((otherfile = find_inode_file (file_hdr.c_ino,
-					    file_hdr.c_dev_maj,
-					    file_hdr.c_dev_min)))
+	  char *otherfile
+	    = find_inode_file (header.c_ino,
+			       header.c_dev_maj, header.c_dev_min);
+
+	  if (otherfile)
 	    {
-	      /* This file is linked to another file already in the
-		 archive, so write it out as a hard link. */
-	      file_hdr.c_mode = (stat_info->st_mode & 07777);
-	      file_hdr.c_mode |= CP_IFREG;
-	      file_hdr.c_tar_linkname = otherfile;
-	      (*header_writer) (&file_hdr, out_file_des);
+	      /* This file is linked to another file already in the archive,
+		 so write it out as a hard link.  */
+	      header.c_mode = (stat_info->st_mode & 07777);
+	      header.c_mode |= CP_IFREG;
+	      header.c_tar_linkname = otherfile;
+	      (*header_writer) (&header, handle);
 	      break;
 	    }
-	  add_inode (file_hdr.c_ino, file_hdr.c_name,
-		     file_hdr.c_dev_maj, file_hdr.c_dev_min);
+	  add_inode (header.c_ino, header.c_name,
+		     header.c_dev_maj, header.c_dev_min);
 	}
-      file_hdr.c_filesize = 0;
-      (*header_writer) (&file_hdr, out_file_des);
+      header.c_filesize = 0;
+      (*header_writer) (&header, handle);
       break;
 #endif
 
@@ -468,38 +466,36 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
     case CP_IFLNK:
       {
 	char *link_name = (char *) xmalloc (stat_info->st_size + 1);
-	int link_size;
+	int link_size = readlink (input_name->string, link_name,
+				  stat_info->st_size);
 
-	link_size = readlink (input_name->string, link_name,
-			      stat_info->st_size);
 	if (link_size < 0)
 	  {
 	    error (0, errno, "%s", input_name->string);
 	    free (link_name);
 	    return;
 	  }
-	file_hdr.c_filesize = link_size;
-	if (archive_format == arf_tar || archive_format == arf_ustar
-	    || archive_format == arf_oldgnu)
+	header.c_filesize = link_size;
+	if (archive_format == V7_FORMAT
+	    || archive_format == POSIX_FORMAT
+	    || archive_format == GNUTAR_FORMAT)
 	  {
-	    /* FIXME: gnu tar can do long symlinks.  */
+	    /* FIXME: tar can do long symlinks.  */
 	    if (link_size + 1 > 100)
-	      {
-		error (0, 0, _("%s: symbolic link too long"),
-		       file_hdr.c_name);
-	      }
+	      error (0, 0, _("%s: symbolic link too long"),
+		     header.c_name);
 	    else
 	      {
 		link_name[link_size] = '\0';
-		file_hdr.c_tar_linkname = link_name;
-		(*header_writer) (&file_hdr, out_file_des);
+		header.c_tar_linkname = link_name;
+		(*header_writer) (&header, handle);
 	      }
 	  }
 	else
 	  {
-	    (*header_writer) (&file_hdr, out_file_des);
-	    tape_buffered_write (link_name, out_file_des, link_size);
-	    tape_pad_output (out_file_des, link_size);
+	    (*header_writer) (&header, handle);
+	    tape_buffered_write (link_name, handle, link_size);
+	    tape_pad_output (handle, link_size);
 	  }
 	free (link_name);
       }
@@ -512,8 +508,8 @@ copy_out_one_file (int out_file_des, dynamic_string *input_name,
 
   /* FIXME shouldn't do this for each file.  Should maintain a dstring
      somewhere.  */
-  free (file_hdr.c_name);
-  file_hdr.c_name = NULL;
+  free (header.c_name);
+  header.c_name = NULL;
 }
 
 /*--------------------------------------------------------------------------.
@@ -539,7 +535,7 @@ read_for_checksum (int in_file_des, int file_size, char *file_name)
 	error (1, errno, _("cannot read checksum for %s"), file_name);
       if (bytes_read == 0)
 	break;
-      for (i = 0; i < bytes_read; ++i)
+      for (i = 0; i < bytes_read; i++)
 	crc += buf[i] & 0xff;
     }
   if (lseek (in_file_des, 0L, SEEK_SET))
@@ -553,14 +549,15 @@ read_for_checksum (int in_file_des, int file_size, char *file_name)
 `---------------------------------------------------------------------------*/
 
 static void
-tape_clear_rest_of_block (int out_file_des)
+tape_clear_rest_of_block (int handle)
 {
-  while (output_size < io_block_size)
+  while (output_buffer_remaining_size < io_block_size)
     {
-      if ((io_block_size - output_size) > 512)
-	tape_buffered_write (zeros_512, out_file_des, 512);
+      if ((io_block_size - output_buffer_remaining_size) > BLOCKSIZE)
+	tape_buffered_write (zero_block, handle, BLOCKSIZE);
       else
-	tape_buffered_write (zeros_512, out_file_des, io_block_size - output_size);
+	tape_buffered_write (zero_block, handle,
+			     io_block_size - output_buffer_remaining_size);
     }
 }
 
@@ -570,22 +567,35 @@ tape_clear_rest_of_block (int out_file_des)
 `-------------------------------------------------------------------------*/
 
 void
-tape_pad_output (int out_file_des, int offset)
+tape_pad_output (int handle, int offset)
 {
   int pad;
 
-  if (archive_format == arf_newascii || archive_format == arf_crcascii)
-    pad = (4 - (offset % 4)) % 4;
-  else if (archive_format == arf_tar || archive_format == arf_ustar
-	   || archive_format == arf_oldgnu)
-    pad = (512 - (offset % 512)) % 512;
-  else if (archive_format != arf_oldascii && archive_format != arf_hpoldascii)
-    pad = (2 - (offset % 2)) % 2;
-  else
-    pad = 0;
+  switch (archive_format)
+    {
+    case HPUX_OLD_ASCII_FORMAT:
+    case OLD_ASCII_FORMAT:
+      pad = 0;
+      break;
+
+    default:
+      pad = PADDING (offset, 2);
+      break;
+
+    case CRC_ASCII_FORMAT:
+    case NEW_ASCII_FORMAT:
+      pad = PADDING (offset, 4);
+      break;
+
+    case GNUTAR_FORMAT:
+    case POSIX_FORMAT:
+    case V7_FORMAT:
+      pad = PADDING (offset, BLOCKSIZE);
+      break;
+    }
 
   if (pad != 0)
-    tape_buffered_write (zeros_512, out_file_des, pad);
+    tape_buffered_write (zero_block, handle, pad);
 }
 
 /* When creating newc and crc archives if a file has multiple (hard)
@@ -597,29 +607,25 @@ tape_pad_output (int out_file_des, int offset)
 static struct deferment *deferouts = NULL;
 
 /*------------------------------------------------------------------------.
-| Is this file_hdr the last (hard) link to a file?  I.e., have we already |
+| Is this header the last (hard) link to a file?  I.e., have we already |
 | seen and defered all of the other links?                                |
 `------------------------------------------------------------------------*/
 
-static int
-last_link (struct new_cpio_header *file_hdr)
+static bool
+last_link (struct new_cpio_header *header)
 {
-  int other_files_sofar;
+  int other_files_sofar = count_defered_links_to_dev_ino (header);
 
-  other_files_sofar = count_defered_links_to_dev_ino (file_hdr);
-  if (file_hdr->c_nlink == (other_files_sofar + 1) )
-    {
-      return 1;
-    }
-  return 0;
+  return header->c_nlink == other_files_sofar + 1;
 }
 
-/* Count the number of other (hard) links to this file that have
-   already been defered.  */
+/*---------------------------------------------------------------------------.
+| Count the number of other (hard) links to this file that have already been |
+| defered.                                                                   |
+`---------------------------------------------------------------------------*/
 
 static int
-count_defered_links_to_dev_ino (file_hdr)
-  struct new_cpio_header *file_hdr;
+count_defered_links_to_dev_ino (struct new_cpio_header *header)
 {
   struct deferment *d;
   int ino;
@@ -627,57 +633,59 @@ count_defered_links_to_dev_ino (file_hdr)
   int min;
   int count;
 
-  ino = file_hdr->c_ino;
-  maj = file_hdr->c_dev_maj;
-  min = file_hdr->c_dev_min;
+  ino = header->c_ino;
+  maj = header->c_dev_maj;
+  min = header->c_dev_min;
   count = 0;
   for (d = deferouts; d != NULL; d = d->next)
     {
-      if ( (d->header.c_ino == ino) && (d->header.c_dev_maj == maj)
-	  && (d->header.c_dev_min == min) )
-	++count;
+      if (d->header.c_ino == ino
+	  && d->header.c_dev_maj == maj
+	  && d->header.c_dev_min == min)
+	count++;
     }
   return count;
 }
 
-/* Add the file header for a link that is being defered to the deferouts
-   list.  */
+/*----------------------------------------------------------------------.
+| Add the file header for a link that is being defered to the deferouts |
+| list.                                                                 |
+`----------------------------------------------------------------------*/
 
 static void
-add_link_defer (file_hdr)
-  struct new_cpio_header *file_hdr;
+add_link_defer (struct new_cpio_header *header)
 {
   struct deferment *d;
-  d = create_deferment (file_hdr);
+  d = create_deferment (header);
   d->next = deferouts;
   deferouts = d;
 }
 
-/* We are about to put a file into a newc or crc archive that is
-   multiply linked.  We have already seen and defered all of the
-   other links to the file but haven't written them into the archive.
-   Write the other links into the archive, and remove them from the
-   deferouts list.  */
+/*------------------------------------------------------------------------.
+| We are about to put a file into a newc or crc archive that is multiply  |
+| linked.  We have already seen and defered all of the other links to the |
+| file but haven't written them into the archive.  Write the other links  |
+| into the archive, and remove them from the deferouts list.              |
+`------------------------------------------------------------------------*/
 
 static void
-writeout_other_defers (file_hdr, out_des)
-  struct new_cpio_header *file_hdr;
-  int out_des;
+writeout_other_defers (struct new_cpio_header *header, int out_des)
 {
   struct deferment *d;
   struct deferment *d_prev;
   int	ino;
   int 	maj;
   int   min;
-  ino = file_hdr->c_ino;
-  maj = file_hdr->c_dev_maj;
-  min = file_hdr->c_dev_min;
+  ino = header->c_ino;
+  maj = header->c_dev_maj;
+  min = header->c_dev_min;
   d_prev = NULL;
   d = deferouts;
   while (d != NULL)
     {
-      if ( (d->header.c_ino == ino) && (d->header.c_dev_maj == maj)
-	  && (d->header.c_dev_min == min) )
+      if (d->header.c_ino == ino
+	  && d->header.c_dev_maj == maj
+	  && d->header.c_dev_min == min)
 	{
 	  struct deferment *d_free;
 	  d->header.c_filesize = 0;
@@ -696,17 +704,18 @@ writeout_other_defers (file_hdr, out_des)
 	  d = d->next;
 	}
     }
-  return;
 }
-/* When writing newc and crc format archives we defer multiply linked
-   files until we have seen all of the links to the file.  If a file
-   has links to it that aren't going into the archive, then we will
-   never see the "last" link to the file, so at the end we just write
-   all of the leftover defered files into the archive.  */
+
+/*--------------------------------------------------------------------------.
+| When writing newc and crc format archives we defer multiply linked files  |
+| until we have seen all of the links to the file.  If a file has links to  |
+| it that aren't going into the archive, then we will never see the "last"  |
+| link to the file, so at the end we just write all of the leftover defered |
+| files into the archive.                                                   |
+`--------------------------------------------------------------------------*/
 
 static void
-writeout_final_defers(out_des)
-  int out_des;
+writeout_final_defers (int out_des)
 {
   struct deferment *d;
   int other_count;
@@ -735,53 +744,54 @@ writeout_final_defers(out_des)
 `---------------------------------------------------------------------------*/
 
 static void
-writeout_defered_file (struct new_cpio_header *header,
-		       int out_file_des)
+writeout_defered_file (struct new_cpio_header *header_param,
+		       int handle)
 {
-  int in_file_des;
-  struct new_cpio_header file_hdr;
-  struct utimbuf times;		/* For setting file times.  */
+  int input_handle;
+  struct new_cpio_header header;
+  struct utimbuf times;		/* for setting file times */
+
   /* Initialize this in case it has members we don't know to set.  */
   memset (&times, 0, sizeof (struct utimbuf));
 
-  file_hdr = *header;
+  header = *header_param;
 
 
-  in_file_des = open (header->c_name,
-		      O_RDONLY | O_BINARY, 0);
-  if (in_file_des < 0)
+  input_handle = open (header_param->c_name, O_RDONLY | O_BINARY, 0);
+  if (input_handle < 0)
     {
-      error (0, errno, "%s", header->c_name);
+      error (0, errno, "%s", header_param->c_name);
       return;
     }
 
-  if (archive_format == arf_crcascii)
-    file_hdr.c_chksum = read_for_checksum (in_file_des,
-					   file_hdr.c_filesize,
-					   header->c_name);
+  if (archive_format == CRC_ASCII_FORMAT)
+    header.c_chksum = read_for_checksum (input_handle,
+					   header.c_filesize,
+					   header_param->c_name);
 
-  (*header_writer) (&file_hdr, out_file_des);
-  copy_files_disk_to_tape (in_file_des, out_file_des, file_hdr.c_filesize,
-			   header->c_name);
+  (*header_writer) (&header, handle);
+  copy_files_disk_to_tape (input_handle, handle, header.c_filesize,
+			   header_param->c_name);
 
 #ifndef __MSDOS__
-  if (archive_format == arf_tar || archive_format == arf_ustar
-      || archive_format == arf_oldgnu)
-    add_inode (file_hdr.c_ino, file_hdr.c_name, file_hdr.c_dev_maj,
-	       file_hdr.c_dev_min);
+  if (archive_format == V7_FORMAT || archive_format == POSIX_FORMAT
+      || archive_format == GNUTAR_FORMAT)
+    add_inode (header.c_ino, header.c_name, header.c_dev_maj,
+	       header.c_dev_min);
 #endif
 
-  tape_pad_output (out_file_des, file_hdr.c_filesize);
+  tape_pad_output (handle, header.c_filesize);
 
-  if (close (in_file_des) < 0)
-    error (0, errno, "%s", header->c_name);
-  if (reset_time_flag)
+  if (close (input_handle) < 0)
+    error (0, errno, "%s", header_param->c_name);
+  if (reset_access_time_option)
     {
-      times.actime = file_hdr.c_mtime;
-      times.modtime = file_hdr.c_mtime;
-      if (utime (file_hdr.c_name, &times) < 0)
+      times.actime = header.c_mtime;
+      times.modtime = header.c_mtime;
+      /* Silently ignore EROFS because reading the file won't have upset its
+	 timestamp if it's on a read-only filesystem.  */
+      if (utime (header.c_name, &times) < 0 && errno != EROFS)
 	error (0, errno, _("%s: error resetting file access time"),
-	       file_hdr.c_name);
+	       header.c_name);
     }
-  return;
 }

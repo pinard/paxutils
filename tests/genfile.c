@@ -1,6 +1,6 @@
 /* Generate a file containing some preset patterns.
-   Copyright © 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
-   François Pinard <pinard@iro.umontreal.ca>, 1995.
+   Copyright Â© 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   FranÃ§ois Pinard <pinard@iro.umontreal.ca>, 1995.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"),
 	     stdout);
       fputs (_("\
 \n\
-Written by François Pinard <pinard@iro.umontreal.ca>.\n"),
+Written by FranÃ§ois Pinard <pinard@iro.umontreal.ca>.\n"),
 	     stdout);
       exit (EXIT_SUCCESS);
     }

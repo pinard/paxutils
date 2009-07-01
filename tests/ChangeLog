@@ -1,36 +1,61 @@
-1999-06-11  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-06-30  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
+	* atconfig.in, atgeneral.m4, test-one: Add GPL comment, with
+	Autoconf-like exception.
+	* suite.m4: Add GPL comment.
+	Reported by Paul Eggert.
+
+1999-06-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Have debugging scripts to produce nicer banners.
+	This is done through (dNN(...)dNN) new generated sections.
+
+	* atgeneral.m4: Have -x to also trace group setup and cleanup.
+	Use at_traceon and at_traceoff instead of previous at_tracex, so
+	at least not trace tests of at_tracex, removing some of the bad.
+
+	* atconfig.in: Do not add AT_TESTPATH to PATH if empty.
+
+1999-06-14  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Invite installers to describe more than mere
+	failed numbers, and also, to send their problem analysis if any.
+	* suite.m4: Invite at not merely reporting cpio failures for now.
+
+1999-06-11  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
+
+	* atgeneral.m4: Be less verbose in skip mode.
+
 	* atlocal.in: Define check_cpio and check_pax.
 	* suite.m4: Validate version with tar instead of pax, as pax is
 	not always built.  Skip validating cpio if cpio is not built.
 	* atgeneral.m4: Implement at_skip_mode.
-
 	* atgeneral.m4: Implement --help and --version options.
 	* atconfig.in: Add a comment saying that --help is available.
 
-1999-04-12  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-04-12  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* t-create.m4: Add test for -C and -T compatibility.
 
-1999-01-04  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1999-01-04  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (clean-local): Delete debug-*.sh, not FAIL-*.sh.
 
-1998-11-30  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-30  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* atgeneral.m4: Use debug-NN.sh instead of FAIL-NN.sh.
 	Echo a few white lines for readability.
 
-1998-11-23  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-23  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* verify.c: Protoize, staticize, constify, boolify, etc.
 	(decode_int): New name for atoi, to avoid conflict with system one.
 
-1998-11-11  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-11  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* atgeneral.m4: Implement -n and -x options to scripts.
 
-1998-11-10  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-10  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* echotime.c: Include system.h.
 	* swapb.c, swaphw.c, wrsparse.c: Idem, also simplify declarations.
@@ -43,8 +68,8 @@
 	* t-create.m4 (status): Remove a possible parenthetical
 	explanation after Permission denied, as found under DOSWIN.
 	Reported by Eli Zaretskii.
-
-1998-11-09  FranÁois Pinard  <pinard@iro.umontreal.ca>
+
+1998-11-09  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* README, TODO, rediff.c: Deleted.
 	* Makefile.am (check_PROGRAMS): Adjusted.
@@ -73,7 +98,7 @@
 
 	* c-nopipe.m4, c-skip.m4, c-append.m4: Prepare for real life.
 
-1998-11-08  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-08  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* verify.c: Change --atime-gt to --atime-ge, --atime-lt to
 	--atime-le, --mtime-gt to --mtime-ge and --mtime-lt to --mtime-le.
@@ -94,7 +119,7 @@
 
 	* c-reset.m4, c-tar.m4, c-new.m4, c-crc.m4: Prepare for real life.
 
-1998-11-07  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-11-07  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* atgeneral.m4: Output more detailed check progress when -v.
 	Preset at_verbose in debugging scripts.  Add at_script_file.
@@ -102,17 +127,17 @@
 
 	* c-pass.m4: Prepare for real life.
 
-1998-10-28  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-28  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* testsuite.m4: Activate some mix of tests for prerelease.
 
-1998-10-27  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-27  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* create.m4: Include a check that -- does not prevent later files
 	from being collected.
 	Reported by Nick Cleaton.
 
-1998-10-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* atgeneral.m4: Save check line into file at-check-line, use it.
 
@@ -129,7 +154,7 @@
 
 	* testsuite.m4:  PREPARE and CPIO_FILTER macros.
 
-1998-10-21  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-21  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* make-structure: New file.
 	* atgeneral.m4 (AT_CHECK): Handle expout and experr.
@@ -141,7 +166,7 @@
 	* README2: Deleted, it only duplicates start of above files.
 	* Makefile.am: Adjusted.
 
-1998-10-18  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-18  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* testsuite.m4: Remove second argument to AT_INIT.
 	* atconfig.in: Use AT_TESTPATH, from configuration.
@@ -166,7 +191,7 @@
 	* atlocal.in: New file to handle cpio test defines, out of cpio.m4.
 	* Makefile.am (all-local, check-local): Depend on atlocal.
 
-1998-10-16  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-16  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* test-one: Renamed from test-one.in.
 	* Makefile.am (EXTRA_DIST): Distribute test-one.
@@ -180,7 +205,7 @@
 	* incremen.m4: Remove spurious action and test.
 	Reported by Jim Meyering.
 
-1998-10-12  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-12  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* exclude.m4: New file.
 	* Makefile.am, testsuite.m4: Adjusted.
@@ -191,7 +216,7 @@
 	* cpio.m4: Made out from regress.sh.
 	* cpiotest, defs.in, regress.sh: Deleted.
 
-1998-10-11  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-11  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* atgeneral.m4, testsuite.m4: New files.
 	* preset.in, before, after, none.sh: Deleted.
@@ -206,16 +231,16 @@
 	* All previous .sh tests: Deleted.
 	* Makefile.am: Revised.
 
-1998-10-05  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-05  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Inactivate all tests, for making the snapshot.
 	* none.sh: New file.
 
-1998-10-03  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-10-03  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* genfile.c, version.sh: Adjust for combined package name.
 
-1998-05-25  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-05-25  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* README, README2, TODO, cpiotest, defs.in,
 	echotime.c, rediff.c, regress.sh, swapb.c, swaphw.c, verify.c and
@@ -223,7 +248,7 @@
 	* Makefile.am: Merged the one from cpio/tests, and adjusted.
 	* ChangeLog: Integrate entries from cpio.
 
-1998-05-19  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-05-19  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (INCLUDES): Delete -I../intl.
 	(LDADD): Delete @INTLLIBS@.
@@ -238,39 +263,39 @@
 
 	* gzip.sh: Adjust the error messages to their new wording.
 
-1998-03-04  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-03-04  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* gzip.sh, volume.sh: Do not test /dev/null, as DJGPP has it.
 	Reported by Eli Zaretskii.
 
-1998-02-23  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-23  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am: Not all tests require genfile, list those who do.
 
-1998-02-19  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-19  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* extrac05.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
 
-1998-02-18  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-18  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* preset.in: Add some comments for those wanting to debug.
 	* before: Correct a relative top_srcdir.  Trigger shell trace if -d.
 
 	* ignfail.sh: Adjust for changed message.
 
-1998-02-17  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* extrac04.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
 	Reported by Graham Catchpole.
 
-1998-01-06  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-01-06  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* increm01.sh: New name for incremen.sh.
 	* increm02.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
-	Reported by Gˆran Uddeborg.
+	Reported by G√∂ran Uddeborg.
 
 1997-10-17  Eli Zaretskii  <eliz@is.elta.co.il>
 
@@ -280,7 +305,7 @@
 	* extrac02.sh: Test $COMSPEC, not COMMAND.COM.
 	* incremen.sh: Add a sleep.
 
-1997-06-07  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-06-07  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* version.sh: Skip the counting of the test, by exiting with 77.
 
@@ -291,21 +316,21 @@
 
 	* ignfail.sh: Skip test if we can write into directories having no
 	permissions.  Comment out the older check for root.
-	Reported by James Crawford Ralston and John Gatewood Ham.
+	Reported by James Ralston and John Gatewood Ham.
 
-1997-06-06  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-06-06  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* append01.sh: Renamed from append.sh.
 	* create01.sh: New file.
 	* Makefile.am: Adjusted.
 
-1997-04-28  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-28  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* preset.in (LC_ALL): New, defined to C.
 	(LANGUAGE, LANG): Defined to C instead of empty.
 	Reported by Ulrich Drepper.
 
-1997-04-25  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-25  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Release tar 1.12.
 
@@ -322,14 +347,14 @@
 	$TAPE is defined or the default archive has been overridden.
 	Reported by Andreas Schwab.
 
-1997-04-24  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-24  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* after: Unredirect stdout and stderr before removing the files.
 	If redirections are to NFS files, removing them while they are
 	still opened may have strange effects, failing almost all tests.
 	Reported by Kaveh R. Ghazi.
 
-1997-04-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* extrac03.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
@@ -353,57 +378,57 @@
 	the tests distributed, but not executed.  These flaky tests are to
 	be addressed only after 1.12 is released.
 
-1997-04-19  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-19  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am (AUTOMAKE_OPTIONS): Declare ../src/ansi2knr.
 	* (DEFS): New, for defining LOCALEDIR.
 	* (genfile.o): Deleted, will be implied from DEFS above.
 	Reported by Bruno Haible and Kaveh R. Ghazi.
 
-1997-04-17  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-17  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* genfile.c (usage): Add a program description.
 	(main): Output --version according to recent GNU standards.
 
-1997-04-15  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-15  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* ignfail.sh: Ensure the test does not fail if run as super-user.
 	Reported by John David Anglin.
 
-1997-04-12  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-04-12  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* genfile.c (pattern): Remove trailing comma for last enum item.
 	Reported by Bruno Haible.
 
-1997-03-29  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-03-29  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* ignfail.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
 	Reported by Ralph Schleicher.
 
-1997-03-24  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-03-24  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* genfile.c: Implement --pattern=default/zeros.
 
-1997-02-25  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-02-25  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* old.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
 	Reported by Daniel Trinkle.
 
-1997-01-21  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1997-01-21  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* extrac01.sh: New name for extract.sh.
 	* extrac02.sh: New file.
 	* Makefile.am (TESTS): Adjusted.
 	Reported by Axel Boldt.
 
-1996-11-25  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-11-25  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* genfile.c (usage): Typo in message.
 	Reported by Christian Kirsch.
 
-1996-11-22  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-11-22  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* incremen.sh: New file.
 	Reported by Wolfram Wagner.
@@ -431,17 +456,17 @@
 	(GCPIO): Define.
 	* defs.in: Allow GCPIO to be set externally.
 
-1996-11-06  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-11-06  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* childerr.sh, direxist.sh, volcheck.sh: Use sh, not bash.
 	Reported by John David Anglin.
 
-1996-09-20  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-09-20  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* volcheck.sh: New.
 	* Makefile.am (TESTS): Adjusted.
 
-1996-09-19  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-09-19  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* Makefile.am ($(TESTS)): Depend on preset.
 	* version.sh (PATH): Adjust for multi-line --version output.
@@ -487,12 +512,12 @@
 
 	* defs.in (GCPIO): Make definition absolute.
 
-1996-09-09  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-09-09  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* childerr.sh, direxist.sh, before, after: New files.
 	* Makefile.am: Adjusted.
 
-1996-09-04  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1996-09-04  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* ChangeLog, Makefile.am, pretest.in, version.sh: New files.
 	* checktar.sh, genfile.c: New files, moved from src/.

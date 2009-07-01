@@ -1,5 +1,5 @@
 /* Flush accumulated queues for a given file.
-   François Pinard <pinard@iro.umontreal.ca>, 1999.  */
+   FranÃ§ois Pinard <pinard@iro.umontreal.ca>, 1999.  */
 
 #if HAVE_CONFIG_H
 # include <config.h>

@@ -25,7 +25,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-cpio           install cpio even if not fully ready yet"
 ac_help="$ac_help
-  --enable-oldgnu         enable old GNU tar format (unfinished)"
+  --enable-gnutar         enable old GNU tar format in cpio (unfinished)"
 ac_help="$ac_help
   --enable-debug          enable internal debugging code"
 ac_help="$ac_help
@@ -716,7 +716,7 @@ fi
 
 PACKAGE=paxutils
 
-VERSION=2.4h
+VERSION=2.4i
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -4337,14 +4337,25 @@ echo "configure:4319: checking which translations to install" >&5
       echo "$ac_t""$ac_print" 1>&6
     fi
 
+    if test "x$prefix" = xNONE; then
+      cat >> confdefs.h <<EOF
+#define LOCALEDIR "$ac_default_prefix/share/locale"
+EOF
+
+    else
+      cat >> confdefs.h <<EOF
+#define LOCALEDIR "$prefix/share/locale"
+EOF
+
+    fi
   fi
 echo $ac_n "checking for vprintf""... $ac_c" 1>&6
-echo "configure:4343: checking for vprintf" >&5
+echo "configure:4354: checking for vprintf" >&5
 if eval "test \"`echo '$''{'ac_cv_func_vprintf'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4348 "configure"
+#line 4359 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char vprintf(); below.  */
@@ -4367,7 +4378,7 @@ vprintf();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4371: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4382: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_vprintf=yes"
 else
@@ -4391,12 +4402,12 @@ fi
 
 if test "$ac_cv_func_vprintf" != yes; then
 echo $ac_n "checking for _doprnt""... $ac_c" 1>&6
-echo "configure:4395: checking for _doprnt" >&5
+echo "configure:4406: checking for _doprnt" >&5
 if eval "test \"`echo '$''{'ac_cv_func__doprnt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4400 "configure"
+#line 4411 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char _doprnt(); below.  */
@@ -4419,7 +4430,7 @@ _doprnt();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4423: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4434: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func__doprnt=yes"
 else
@@ -4448,12 +4459,12 @@ fi
 # are easier to check for.
 
 echo $ac_n "checking for 3-argument open""... $ac_c" 1>&6
-echo "configure:4452: checking for 3-argument open" >&5
+echo "configure:4463: checking for 3-argument open" >&5
 if eval "test \"`echo '$''{'pu_cv_func_open3'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4457 "configure"
+#line 4468 "configure"
 #include "confdefs.h"
 
 #if HAVE_FCNTL_H
@@ -4465,7 +4476,7 @@ int main() {
 int x = O_RDONLY
 ; return 0; }
 EOF
-if { (eval echo configure:4469: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:4480: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   pu_cv_func_open3=yes
 else
@@ -4496,12 +4507,12 @@ fi
 # but fails when called on `union wait' variables.
 
 echo $ac_n "checking for union wait""... $ac_c" 1>&6
-echo "configure:4500: checking for union wait" >&5
+echo "configure:4511: checking for union wait" >&5
 if eval "test \"`echo '$''{'pu_cv_header_union_wait'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4505 "configure"
+#line 4516 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -4512,7 +4523,7 @@ int main() {
 int status; int pid; pid = wait (&status);
 ; return 0; }
 EOF
-if { (eval echo configure:4516: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:4527: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   pu_cv_header_union_wait=no
 else
@@ -4531,7 +4542,7 @@ EOF
 
 
 echo $ac_n "checking for remote shell""... $ac_c" 1>&6
-echo "configure:4535: checking for remote shell" >&5
+echo "configure:4546: checking for remote shell" >&5
 if eval "test \"`echo '$''{'pu_cv_path_RSH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4555,17 +4566,17 @@ if test $pu_cv_path_RSH = no; then
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:4559: checking for $ac_hdr" >&5
+echo "configure:4570: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4564 "configure"
+#line 4575 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:4569: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:4580: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -4599,7 +4610,7 @@ EOF
 fi
 
 echo $ac_n "checking for default archive""... $ac_c" 1>&6
-echo "configure:4603: checking for default archive" >&5
+echo "configure:4614: checking for default archive" >&5
 
 if test -z "$DEFAULT_ARCHIVE"; then
   DEFAULT_ARCHIVE=-
@@ -4638,7 +4649,7 @@ EOF
 echo "$ac_t""$DEFAULT_ARCHIVE" 1>&6
 
 echo $ac_n "checking for default blocking""... $ac_c" 1>&6
-echo "configure:4642: checking for default blocking" >&5
+echo "configure:4653: checking for default blocking" >&5
 DEFAULT_BLOCKING=${DEFAULT_BLOCKING-20}
 cat >> confdefs.h <<EOF
 #define DEFAULT_BLOCKING $DEFAULT_BLOCKING
@@ -4650,7 +4661,7 @@ echo "$ac_t""$DEFAULT_BLOCKING" 1>&6
 # CPIO specialities.
 
 echo $ac_n "checking whether cpio should be compiled and installed""... $ac_c" 1>&6
-echo "configure:4654: checking whether cpio should be compiled and installed" >&5
+echo "configure:4665: checking whether cpio should be compiled and installed" >&5
 # Check whether --enable-cpio or --disable-cpio was given.
 if test "${enable_cpio+set}" = set; then
   enableval="$enable_cpio"
@@ -4666,15 +4677,15 @@ if test "$enableval" = yes; then
 fi
 
 
-# Enable Free tar format.  (Unfinished)
-echo $ac_n "checking whether Free tar format should be enabled""... $ac_c" 1>&6
-echo "configure:4672: checking whether Free tar format should be enabled" >&5
-# Check whether --enable-oldgnu or --disable-oldgnu was given.
-if test "${enable_oldgnu+set}" = set; then
-  enableval="$enable_oldgnu"
+# Enable GNU tar format in `cpio'.  (Unfinished)
+echo $ac_n "checking whether cpio should support old GNU tar format""... $ac_c" 1>&6
+echo "configure:4683: checking whether cpio should support old GNU tar format" >&5
+# Check whether --enable-gnutar or --disable-gnutar was given.
+if test "${enable_gnutar+set}" = set; then
+  enableval="$enable_gnutar"
   echo "$ac_t""yes" 1>&6
 cat >> confdefs.h <<\EOF
-#define CPIO_USE_OLDGNU 1
+#define CPIO_USE_GNUTAR 1
 EOF
 
 else
@@ -4684,7 +4695,7 @@ fi
 
 # Enable debugging.
 echo $ac_n "checking whether internal debugging code should be enabled""... $ac_c" 1>&6
-echo "configure:4688: checking whether internal debugging code should be enabled" >&5
+echo "configure:4699: checking whether internal debugging code should be enabled" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
@@ -4703,7 +4714,7 @@ fi
 # CPIO test suite section.
 
 echo $ac_n "checking whether ln -s works""... $ac_c" 1>&6
-echo "configure:4707: checking whether ln -s works" >&5
+echo "configure:4718: checking whether ln -s works" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LN_S'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4733,7 +4744,7 @@ EMPTY=
 # Extract the first word of "cpio", so it can be a program name with args.
 set dummy cpio; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4737: checking for $ac_word" >&5
+echo "configure:4748: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TEST_CPIO'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4768,7 +4779,7 @@ fi
 # Extract the first word of "tar", so it can be a program name with args.
 set dummy tar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4772: checking for $ac_word" >&5
+echo "configure:4783: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TEST_TAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4803,7 +4814,7 @@ fi
 # Extract the first word of "mkfifo", so it can be a program name with args.
 set dummy mkfifo; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4807: checking for $ac_word" >&5
+echo "configure:4818: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TEST_MKFIFO'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4841,7 +4852,7 @@ fi
 # Extract the first word of "id", so it can be a program name with args.
 set dummy id; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4845: checking for $ac_word" >&5
+echo "configure:4856: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TEST_ID'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4912,7 +4923,7 @@ TEST_DEVFLAG=""
 # PAX specialities.
 
 echo $ac_n "checking whether pax should be compiled and installed""... $ac_c" 1>&6
-echo "configure:4916: checking whether pax should be compiled and installed" >&5
+echo "configure:4927: checking whether pax should be compiled and installed" >&5
 # Check whether --enable-pax or --disable-pax was given.
 if test "${enable_pax+set}" = set; then
   enableval="$enable_pax"
@@ -4932,7 +4943,7 @@ fi
 # TAR specialities.
 
 echo $ac_n "checking whether --per-file-compress should be compiled in""... $ac_c" 1>&6
-echo "configure:4936: checking whether --per-file-compress should be compiled in" >&5
+echo "configure:4947: checking whether --per-file-compress should be compiled in" >&5
 # Check whether --enable-dale-code or --disable-dale-code was given.
 if test "${enable_dale_code+set}" = set; then
   enableval="$enable_dale_code"

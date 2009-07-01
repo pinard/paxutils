@@ -617,3 +617,32 @@ char *dir_name PARAMS ((const char *));
 
 ssize_t full_read PARAMS ((int, char *, size_t));
 ssize_t full_write PARAMS ((int, const char *, size_t));
+
+/* [cpio] */
+#include "dstring.h"
+
+/* [cpio] Module dirname.c */
+char *dir_name PARAMS ((const char *));
+
+/* [cpio] Module filemode.c */
+void mode_string PARAMS ((unsigned int, char *));
+
+/* [cpio] Module idcache.c */
+#ifndef __MSDOS__
+char *getgroup ();
+char *getuser ();
+uid_t *getuidbyname ();
+gid_t *getgidbyname ();
+#endif
+
+/* [cpio] Module makepath.c */
+int make_path PARAMS ((char *, int, int, uid_t, gid_t, int, char *));
+
+/* [cpio] Module stripslash.c */
+void strip_trailing_slashes PARAMS ((char *));
+
+/* [cpio] Module userspec.c */
+#ifndef __MSDOS__
+const char *parse_user_spec PARAMS ((const char *, uid_t *, gid_t *,
+				     char **, char **));
+#endif

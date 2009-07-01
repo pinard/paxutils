@@ -1,5 +1,5 @@
-This is Info file paxutils.info, produced by Makeinfo version 1.68 from
-the input file paxutils.texi.
+This is paxutils.info, produced by makeinfo version 3.12i from
+paxutils.texi.
 
 START-INFO-DIR-ENTRY
 * pax utilities: (paxutils).	pax and other archiving utilities.
@@ -10,7 +10,7 @@ START-INFO-DIR-ENTRY
 * rmt: (paxutils)rmt invocation.		The remote tape facility.
 END-INFO-DIR-ENTRY
 
-   This file documents `paxutils' 2.4h.
+   This file documents `paxutils' 2.4i.
 
    Copyright (C) 1992, 1994, 1995, 1996, 1997, 1998 Free Software
 Foundation, Inc.
@@ -102,7 +102,7 @@ newline to indicate the end of the data.
    If the `--incremental' (`-G') option is used with `--extract'
 (`--get', `-x'), then when the entry for a directory is found, all
 files that currently exist in that directory but are not listed in the
-archive *are deleted from the directory*.
+archive _are deleted from the directory_.
 
    This behavior is convenient when you are restoring a damaged file
 system from a succession of incremental backups: it restores the entire
@@ -148,9 +148,9 @@ although a few more options will usually be needed.
 store files that have been modified since DATE.  DATE should be the
 date and time of the last full/incremental dump.  *Note after-date::.
 
-   A standard scheme is to do a *monthly* (full) dump once a month, a
-*weekly* dump once a week of everything since the last monthly, and a
-*daily* dump every day of everything since the last (weekly or monthly)
+   A standard scheme is to do a _monthly_ (full) dump once a month, a
+_weekly_ dump once a week of everything since the last monthly, and a
+_daily_ dump every day of everything since the last (weekly or monthly)
 dump.
 
    Here is a copy of the script used to dump the filesystems of the
@@ -160,7 +160,7 @@ machines.  This script dumps several filesystems from several machines
 at once (via NFS).  The operator is responsible for ensuring that all
 the machines will be up at the time the dump happens.  If a machine is
 not running, its files will not be dumped, and the next day's
-incremental dump will *not* store files that would have gone onto that
+incremental dump will _not_ store files that would have gone onto that
 dump.
 
      #!/bin/csh
@@ -350,7 +350,7 @@ File: paxutils.info,  Node: Scripted restoration,  Prev: Scripted backups,  Up: 
 Using the restore script
 ========================
 
-     *Warning:* The `tar' distribution does *not* provide any such
+     *Warning:* The `tar' distribution does _not_ provide any such
      `restore' script yet.  This section is only listed here for
      documentation maintenance purposes.  In any case, all contents are
      subject to change as things develop.
@@ -1065,7 +1065,7 @@ is a number between 0 and 59, and SECOND is a number between 0 and 59.
 Alternatively, `:SECOND' can be omitted, in which case it is taken to
 be zero.
 
-   If the time is followed by `am' or `pm' (or `a.m.'  or `p.m.'), HOUR
+   If the time is followed by `am' or `pm' (or `a.m.' or `p.m.'), HOUR
 is restricted to run from 1 to 12, and `:MINUTE' may be omitted (taken
 to be zero).  `am' indicates the first half of the day, `pm' indicates
 the second half of the day.  In this notation, 12 is the predecessor of

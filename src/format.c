@@ -1,5 +1,5 @@
 /* format.c - Deal with format names.
-   Copyright (C) 1990, 1991, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #include "system.h"
 
 #include <assert.h>
-#include "extern.h"
+#include "common.h"
 
 struct format_list
 {
@@ -28,35 +28,34 @@ struct format_list
   enum archive_format value;
 };
 
+/* Canonical names, which must come first so that format_name() will work.  */
 static struct format_list the_list[] =
 {
-  /* Canonical names.  These must come first so that format_name() will work.
-     */
-  {"crc", arf_crcascii},
-  {"newc", arf_newascii},
-  {"odc", arf_oldascii},
-  {"bin", arf_binary},
-  {"ustar", arf_ustar},
-  {"tar", arf_tar},
-#ifdef CPIO_USE_OLDGNU
-  {"oldgnu", arf_oldgnu},
-#endif /* CPIO_USE_OLDGNU */
-  {"hpodc", arf_hpoldascii},
-  {"hpbin", arf_hpbinary},
+  {"crc", CRC_ASCII_FORMAT},
+  {"newc", NEW_ASCII_FORMAT},
+  {"odc", OLD_ASCII_FORMAT},
+  {"bin", BINARY_FORMAT},
+  {"ustar", POSIX_FORMAT},
+  {"tar", V7_FORMAT},
+#ifdef CPIO_USE_GNUTAR
+  {"gnutar", GNUTAR_FORMAT},
+#endif
+  {"hpodc", HPUX_OLD_ASCII_FORMAT},
+  {"hpbin", HPUX_BINARY_FORMAT},
 
   /* Names for compatibility.  */
   /* These are from BSDI pax.  */
-  {"cpio", arf_oldascii},	/* FIXME?  */
-  {"bcpio", arf_binary},
-  {"sv4cpio", arf_newascii},
-  {"sv4crc", arf_crcascii},
+  {"cpio", OLD_ASCII_FORMAT},	/* FIXME?  */
+  {"bcpio", BINARY_FORMAT},
+  {"sv4cpio", NEW_ASCII_FORMAT},
+  {"sv4crc", CRC_ASCII_FORMAT},
 
-  {NULL, arf_unknown}
+  {NULL, UNKNOWN_FORMAT}
 };
 
 /*-------------------------------------------------------------------------.
 | Return format value given name of format.  If format isn't found, return |
-| arf_unknown.                                                             |
+| UNKNOWN_FORMAT.                                                          |
 `-------------------------------------------------------------------------*/
 
 enum archive_format
@@ -64,13 +63,13 @@ find_format (char *format)
 {
   struct format_list *fl;
 
-  for (fl = the_list; fl->name != NULL; ++fl)
+  for (fl = the_list; fl->name != NULL; fl++)
     {
       if (! strcasecmp (format, fl->name))
 	break;
     }
 
-  return (fl->value);
+  return fl->value;
 }
 
 /*------------------------------------------------.
@@ -95,36 +94,36 @@ set_write_pointers_from_format (enum archive_format format)
 {
   switch (format)
     {
-    case arf_binary:
-    case arf_hpbinary:
+    case BINARY_FORMAT:
+    case HPUX_BINARY_FORMAT:
       header_writer = write_out_oldcpio_header;
       eof_writer = write_cpio_eof;
       name_too_long = is_cpio_filename_too_long;
       break;
 
-    case arf_oldascii:
-    case arf_hpoldascii:
+    case OLD_ASCII_FORMAT:
+    case HPUX_OLD_ASCII_FORMAT:
       header_writer = write_out_oldascii_header;
       eof_writer = write_cpio_eof;
       name_too_long = is_cpio_filename_too_long;
       break;
 
-    case arf_newascii:
-    case arf_crcascii:
+    case NEW_ASCII_FORMAT:
+    case CRC_ASCII_FORMAT:
       header_writer = write_out_cpioascii_header;
       eof_writer = write_cpio_eof;
       name_too_long = is_cpio_filename_too_long;
       break;
 
-    case arf_tar:
-    case arf_ustar:
-    case arf_oldgnu:
+    case V7_FORMAT:
+    case POSIX_FORMAT:
+    case GNUTAR_FORMAT:
       header_writer = write_out_tar_header;
       eof_writer = write_tar_eof;
       name_too_long = is_tar_filename_too_long;
       break;
 
-    case arf_unknown:
+    case UNKNOWN_FORMAT:
     default:
       assert (0);
       break;
@@ -140,12 +139,12 @@ format_name (enum archive_format fmt)
 {
   struct format_list *fl;
 
-  for (fl = the_list; fl->name; ++fl)
+  for (fl = the_list; fl->name; fl++)
     {
       if (fl->value == fmt)
-	return (fl->name);
+	return fl->name;
     }
 
   assert (0);
-  return (NULL);		/* Placate compiler.  */
+  return NULL;			/* placate compiler */
 }

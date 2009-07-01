@@ -1,15 +1,15 @@
 /* tar archive format description.  */
 
-/* If OLDGNU_COMPATIBILITY is set, tar produces archives which, by default,
+/* If GNUTAR_COMPATIBILITY is set, tar produces archives which, by default,
    are readable by older versions of tar.  This can be overridden by using
    --posix; in this case, the environment variable POSIXLY_CORRECT can
-   be set to enforce stricter conformance.  If OLDGNU_COMPATIBILITY is zero or
+   be set to enforce stricter conformance.  If GNUTAR_COMPATIBILITY is zero or
    undefined, tar will eventually produces archives which, by default,
    will be POSIX compatible; then, either using --posix or defining
    POSIXLY_CORRECT will enforce stricter conformance.
 
    This #define will disappear in a few years.  FP, June 1995.  */
-#define OLDGNU_COMPATIBILITY 1
+#define GNUTAR_COMPATIBILITY 1
 
 /*---------------------------------------------.
 | `tar' Header Block, from POSIX 1003.1-1990.  |
@@ -79,10 +79,10 @@ struct posix_header
    not really have been `reserved' in the published standards.  */
 
 /* *BEWARE* that the following information is still in flux, and may change.
-   Even if the OLDGNU format description should be accurate, the so-called GNU
+   Even if the GNUTAR format description should be accurate, the so-called GNU
    format is not yet fully decided.  It is surely meant to use only extensions
    allowed by POSIX, but the sketch below repeats some ugliness from the
-   OLDGNU format, which should rather go away.  Sparse files should be saved
+   GNUTAR format, which should rather go away.  Sparse files should be saved
    in such a way that they do *not* require two passes at archive creation
    time.  Huge files cause some POSIX fields to overflow; alternate solutions
    have to be sought for this.  */
@@ -106,7 +106,7 @@ struct sparse
    each kind of header able to hold them.  */
 
 #define SPARSES_IN_EXTRA_HEADER  16
-#define SPARSES_IN_OLDGNU_HEADER 4
+#define SPARSES_IN_GNUTAR_HEADER 4
 #define SPARSES_IN_SPARSE_HEADER 21
 
 /* The extra header contains some information needed by tar, but not foreseen
@@ -148,7 +148,7 @@ struct sparse_header
    in an extra header.  With an old tar header, we never see any POSIX header
    nor extra header.  Supplementary sparse headers are allowed, however.  */
 
-struct oldgnu_header
+struct gnutar_header
 @{                               /* byte offset */
   char unused_pad1[345];        /*   0 */
   char atime[12];               /* 345 */
@@ -156,52 +156,52 @@ struct oldgnu_header
   char offset[12];              /* 369 */
   char longnames[4];            /* 381 */
   char unused_pad2;             /* 385 */
-  struct sparse sp[SPARSES_IN_OLDGNU_HEADER];
+  struct sparse sp[SPARSES_IN_GNUTAR_HEADER];
                                 /* 386 */
   char isextended;              /* 482 */
   char realsize[12];            /* 483 */
                                 /* 495 */
 @};
 
-/* OLDGNU_MAGIC uses both magic and version fields, which are contiguous.
+/* GNUTAR_MAGIC uses both magic and version fields, which are contiguous.
    Found in an archive, it indicates an old GNU header format, which will
-   hopefully have become obsolescent.  With OLDGNU_MAGIC, uname and gname are
+   hopefully have become obsolescent.  With GNUTAR_MAGIC, uname and gname are
    valid, though the header is not truly POSIX conformant.  */
-#define OLDGNU_MAGIC "ustar  "  /* 7 chars and a null */
+#define GNUTAR_MAGIC "ustar  "  /* 7 chars and a null */
 
 /* The standards committee allows only capital A through capital Z for
    user-defined expansion.  */
 
 /* This is a dir entry that contains the names of files that were in the dir
    at the time the dump was made.  */
-#define OLDGNU_DUMPDIR  'D'
+#define GNUTAR_DUMPDIR  'D'
 
 /* Identifies the *next* file on the tape as having a long linkname.  */
-#define OLDGNU_LONGLINK 'K'
+#define GNUTAR_LONGLINK 'K'
 
 /* Identifies the *next* file on the tape as having a long name.  */
-#define OLDGNU_LONGNAME 'L'
+#define GNUTAR_LONGNAME 'L'
 
 /* This is the continuation of a file that began on another volume.  */
-#define OLDGNU_MULTIVOL 'M'
+#define GNUTAR_MULTIVOL 'M'
 
 /* For storing filenames that do not fit into the main header.  */
-#define OLDGNU_NAMES 'N'
+#define GNUTAR_NAMES 'N'
 
 /* This is for sparse files.  */
-#define OLDGNU_SPARSE 'S'
+#define GNUTAR_SPARSE 'S'
 
 /* This file is a tape/volume header.  Ignore it on extraction.  */
-#define OLDGNU_VOLHDR 'V'
+#define GNUTAR_VOLHDR 'V'
 
 /* This file is a compressed contiguous regular file. */
-#define OLDGNU_CONTIG_COMPRESSED 'X'
+#define GNUTAR_CONTIG_COMPRESSED 'X'
 
 /* This file is a compressed sparse regular file. */
-#define OLDGNU_SPARSE_COMPRESSED 'Y'
+#define GNUTAR_SPARSE_COMPRESSED 'Y'
 
 /* This file is a compressed regular file. */
-#define OLDGNU_REGULAR_COMPRESSED 'Z'
+#define GNUTAR_REGULAR_COMPRESSED 'Z'
 
 /*--------------------------------------.
 | tar header block, overall structure.  |
@@ -212,11 +212,17 @@ struct oldgnu_header
 
 enum archive_format
 @{
-  DEFAULT_FORMAT,               /* format to be decided later */
+  UNKNOWN_FORMAT,               /* format unknown or to be decided later */
+  BINARY_FORMAT,                /* cpio format */
+  OLD_ASCII_FORMAT,             /* cpio format */
+  NEW_ASCII_FORMAT,             /* cpio format */
+  CRC_ASCII_FORMAT,             /* cpio format */
+  HPUX_OLD_ASCII_FORMAT,        /* cpio format */
+  HPUX_BINARY_FORMAT,           /* cpio format */
   V7_FORMAT,                    /* old V7 tar format */
-  OLDGNU_FORMAT,                /* GNU format as per before tar 2.0 */
-  POSIX_FORMAT,                 /* restricted, pure POSIX format */
-  FREE_FORMAT                   /* POSIX format with extensions */
+  GNUTAR_FORMAT,                /* GNU tar format as per before paxutils 3.0 */
+  POSIX_FORMAT,                 /* restricted, pure POSIX ustar format */
+  PAXUTILS_FORMAT               /* POSIX format with extensions (vaporware) */
 @};
 
 union block
@@ -224,7 +230,7 @@ union block
   char buffer[BLOCKSIZE];
   struct posix_header header;
   struct extra_header extra_header;
-  struct oldgnu_header oldgnu_header;
+  struct gnutar_header gnutar_header;
   struct sparse_header sparse_header;
 @};
 

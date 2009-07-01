@@ -1,5 +1,5 @@
 /* mt -- control magnetic tape drive operation
-   Copyright (C) 1991, 1992, 1995, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1992, 1995, 1998, 1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -249,11 +249,11 @@ main (int argc, char **argv)
 #endif
     }
 
-  if ( (operation == MTWEOF)
+  if (operation == MTWEOF
 #ifdef MTERASE
-       || (operation == MTERASE)
+      || operation == MTERASE
 #endif
-	)
+      )
     tapedesc = rmtopen (tapedev, O_WRONLY, 0, NULL);
   else
     tapedesc = rmtopen (tapedev, O_RDONLY, 0, NULL);

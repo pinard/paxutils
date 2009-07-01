@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 
@@ -57,11 +57,10 @@ octal_to_ulong (const char *buffer, int width)
   return value;
 }
 
-/*------------------------------------------------------------------------.
-| Converts VALUE into a WIDTH-digit field at BUFFER, including one        |
-| trailing space.  For example, 2 for WIDTH means one digit and a space.  |
-|                                                                         |
-`------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------.
+| Converts VALUE into a WIDTH-digit field at BUFFER, including one trailing |
+| space.  For example, 2 for WIDTH means one digit and a space.             |
+`--------------------------------------------------------------------------*/
 
 /* This is like: sprintf (BUFFER, "%*lo ", WIDTH - 1, VALUE); except that no
    trailing NUL is produced.  We assume the trailing NUL is already there,
@@ -275,7 +274,7 @@ set_header_devminor (union block *block, minor_t value)
 time_t
 get_header_atime (union block *block)
 {
-  unsigned long value = FROM_OCTAL (block->oldgnu_header.atime);
+  unsigned long value = FROM_OCTAL (block->gnutar_header.atime);
 
   return value;
 }
@@ -283,7 +282,7 @@ get_header_atime (union block *block)
 void
 set_header_atime (union block *block, time_t value)
 {
-  TO_OCTAL (block->oldgnu_header.atime, value);
+  TO_OCTAL (block->gnutar_header.atime, value);
 }
 
 /* ctime.  */
@@ -292,7 +291,7 @@ set_header_atime (union block *block, time_t value)
 time_t
 get_header_ctime (union block *block)
 {
-  unsigned long value = FROM_OCTAL (block->oldgnu_header.ctime);
+  unsigned long value = FROM_OCTAL (block->gnutar_header.ctime);
 
   return value;
 }
@@ -300,7 +299,7 @@ get_header_ctime (union block *block)
 void
 set_header_ctime (union block *block, time_t value)
 {
-  TO_OCTAL (block->oldgnu_header.ctime, value);
+  TO_OCTAL (block->gnutar_header.ctime, value);
 }
 
 /* offset.  */
@@ -309,7 +308,7 @@ set_header_ctime (union block *block, time_t value)
 off_t
 get_header_offset (union block *block)
 {
-  unsigned long value = FROM_OCTAL (block->oldgnu_header.offset);
+  unsigned long value = FROM_OCTAL (block->gnutar_header.offset);
 
   return value;
 }
@@ -317,7 +316,7 @@ get_header_offset (union block *block)
 void
 set_header_offset (union block *block, off_t value)
 {
-  TO_OCTAL (block->oldgnu_header.offset, value);
+  TO_OCTAL (block->gnutar_header.offset, value);
 }
 
 /* realsize.  */
@@ -326,7 +325,7 @@ set_header_offset (union block *block, off_t value)
 off_t
 get_header_realsize (union block *block)
 {
-  unsigned long value = FROM_OCTAL (block->oldgnu_header.realsize);
+  unsigned long value = FROM_OCTAL (block->gnutar_header.realsize);
 
   return value;
 }
@@ -334,7 +333,7 @@ get_header_realsize (union block *block)
 void
 set_header_realsize (union block *block, off_t value)
 {
-  TO_OCTAL (block->oldgnu_header.realsize, value);
+  TO_OCTAL (block->gnutar_header.realsize, value);
 }
 
 /*---------------------.
@@ -347,7 +346,7 @@ set_header_realsize (union block *block, off_t value)
 off_t
 get_initial_header_offset (union block *block, int ordinal)
 {
-  unsigned long value = FROM_OCTAL (block->oldgnu_header.sp[ordinal].offset);
+  unsigned long value = FROM_OCTAL (block->gnutar_header.sp[ordinal].offset);
 
   return value;
 }
@@ -355,7 +354,7 @@ get_initial_header_offset (union block *block, int ordinal)
 void
 set_initial_header_offset (union block *block, int ordinal, off_t value)
 {
-  TO_OCTAL (block->oldgnu_header.sp[ordinal].offset, value);
+  TO_OCTAL (block->gnutar_header.sp[ordinal].offset, value);
 }
 
 /* numbytes in old initial header.  */
@@ -364,7 +363,7 @@ set_initial_header_offset (union block *block, int ordinal, off_t value)
 size_t
 get_initial_header_numbytes (union block *block, int ordinal)
 {
-  unsigned long value = FROM_OCTAL (block->oldgnu_header.sp[ordinal].numbytes);
+  unsigned long value = FROM_OCTAL (block->gnutar_header.sp[ordinal].numbytes);
 
   return value;
 }
@@ -372,7 +371,7 @@ get_initial_header_numbytes (union block *block, int ordinal)
 void
 set_initial_header_numbytes (union block *block, int ordinal, size_t value)
 {
-  TO_OCTAL (block->oldgnu_header.sp[ordinal].numbytes, value);
+  TO_OCTAL (block->gnutar_header.sp[ordinal].numbytes, value);
 }
 
 /* offset in old extended headers.  */

@@ -1,0 +1,614 @@
+# GNU cpio$(C@G(B $(CGQ19>n(B $(C8^=CAv(B.
+# Copyright (C) 1997 Free Software Foundation, Inc.
+# Kim Seong-Jin <stmksjp@lgeds.lg.co.kr>, 1997.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: cpio 2.3.911\n"
+"PO-Revision-Date: 1997-10-31 19:25+0900\n"
+"Last-Translator: Kim Seong-Jin <stmksjp@lgeds.lg.co.kr>\n"
+"Language-Team: Korean <ko@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=EUC-KR\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#. REG_ERANGE
+#.
+#. REG_ERANGE
+#.
+#. REG_ERANGE
+#.
+#: lib/regex.c:933 lib/rx.c:3942 lib/rx.c:6209 lib/xmalloc.c:70
+msgid "Memory exhausted"
+msgstr "$(C8^8p8.0!(B $(C9Y4Z35=@4O4Y(B"
+
+#: src/mt.c:260
+msgid "%s is not a character special file"
+msgstr "%s$(C@:(B($(C4B(B) $(C9.@ZG|(B $(CF/<v(B $(CFD@O@L(B $(C>F4U4O4Y(B"
+
+#: src/copyout.c:104
+msgid "cannot open directory %s"
+msgstr "$(C5p7:Ed8.(B %s$(C@;(B($(C8&(B) $(C?-(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: src/pax.c:130
+msgid "block size cannot be 0"
+msgstr "$(C:m70(B $(CE)1b4B(B 0$(C@L(B $(C>F4O>n>_(B $(CGU4O4Y(B"
+
+#: src/mt.c:184
+msgid "GNU mt version %s\n"
+msgstr "GNU mt $(C9v@|(B %s\n"
+
+#: src/copyin.c:65
+msgid "premature end of archive"
+msgstr "$(C6'@L8%(B $(C>FD+@L:j@G(B $(C3!(B"
+
+#: lib/getopt.c:519
+msgid "%s: option `%s' is ambiguous\n"
+msgstr "%s: $(C?I<G(B `%s'$(C@L(B($(C0!(B) $(C>V8EGU4O4Y(B\n"
+
+#: lib/regex.c:921 lib/rx.c:7153
+msgid "Success"
+msgstr "$(C<:0x(B"
+
+#: src/pax.c:115 src/pax.c:122
+msgid "parse error in blocksize"
+msgstr "blocksize$(C?!<-(B $(C189.:P<.(B $(C?@7y(B"
+
+#. REG_EEND
+#.
+#. REG_EEND
+#.
+#. REG_EEND
+#.
+#: lib/regex.c:936 lib/rx.c:3945 lib/rx.c:6212
+msgid "Regular expression too big"
+msgstr "$(CA$1T=D@L(B $(C3J9+(B $(CE.4O4Y(B"
+
+#: src/cpio.c:96
+msgid ""
+"Usage: %s {-o|--create} [-0acvABLV] [-C bytes] [-H format] [-M message]\n"
+"       [-O [[user@]host:]archive] [-F [[user@]host:]archive]\n"
+"       [--file=[[user@]host:]archive] [--format=format] [--message=message]\n"
+"       [--null] [--reset-access-time] [--verbose] [--dot] [--append]\n"
+"       [--block-size=blocks] [--dereference] [--io-size=bytes] [--quiet]\n"
+"       [--force-local] [--help] [--version] < name-list [> archive]\n"
+msgstr ""
+"$(C;g?k9}(B: %s {-o|--create} [-0acvABLV] [-C $(C9Y@LF.(B] [-H $(CG|=D(B] [-M $(C8^=CAv(B]\n"
+"       [-O [[$(C;g?k@Z(B@]$(CH#=:F.(B:]$(C>FD+@L:j(B] [-F [[$(C;g?k@Z(B@]$(CH#=:F.(B:]$(C>FD+@L:j(B]\n"
+"       [--file=[[$(C;g?k@Z(B@]$(CH#=:F.(B:]$(C>FD+@L:j(B] [--format=$(CG|=D(B] [--message=$(C8^=CAv(B]\n"
+"       [--null] [--reset-access-time] [--verbose] [--dot] [--append]\n"
+"       [--block-size=$(C:m70(B] [--dereference] [--io-size=$(C9Y@LF.(B] [--quiet]\n"
+"       [--force-local] [--help] [--version] < $(C@L8'8q7O(B [> $(C>FD+@L:j(B]\n"
+
+#. 1003.2 specifies the format of this message.
+#.
+#: lib/getopt.c:619
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: $(C@_8x5H(B $(C?I<G(B -- %c\n"
+
+#: src/main.c:60
+msgid "error closing archive"
+msgstr "$(C>FD+@L:j(B $(C4]1b(B $(C?@7y(B"
+
+#. REG_BADRPT
+#.
+#. REG_BADRPT
+#.
+#. REG_BADRPT
+#.
+#: lib/regex.c:935 lib/rx.c:3944 lib/rx.c:6211
+msgid "Premature end of regular expression"
+msgstr "$(CA$1T=D@L(B $(C9L?O@N(B $(CC$7N(B $(C3!32(B"
+
+#: src/copyin.c:211
+msgid "standard input is closed"
+msgstr "$(CG%AX@T7B@L(B $(C4]G{=@4O4Y(B"
+
+#: src/copyout.c:414
+msgid "%s not dumped: not a regular file"
+msgstr "%s$(C@L(B($(C0!(B) $(C1b7O5GAv(B $(C>J@=(B: $(CA$1T(B $(CFD@O@L(B $(C>F4T(B"
+
+#: src/copyin.c:425 src/copypass.c:130
+msgid "cannot remove current %s"
+msgstr "$(CGv@g@G(B %s$(C@;(B($(C8&(B) $(C;hA&GR(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: lib/getopt.c:547
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr "%s: `%c%s' $(C?I<G?!4B(B $(C@N<v0!(B $(C?C(B $(C<v(B $(C>x=@4O4Y(B\n"
+
+#: src/pax.c:86
+msgid ""
+"       %s {-r|--read} {-w|--write} [-cdnv] [-f archive] [-s replacement]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-r|--read} {-w|--write} [-cdnv] [-f archive] [-s $(C4kC<90(B]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=$(C4kC<90(B] [$(CFPEO(B...] [< $(C>FD+@L:j(B]\n"
+
+#: lib/userspec.c:217
+msgid "invalid group"
+msgstr "$(C:N@{@}GQ(B $(C1W7l(B"
+
+#: src/copyout.c:515 src/copyout.c:522
+msgid "cannot read checksum for %s"
+msgstr "%s$(C@G(B $(CC<E)<6@;(B $(C@P@;(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: src/mt.c:299
+msgid "block number = %d\n"
+msgstr "$(C:m70(B $(C9xH#(B = %d\n"
+
+#: src/copypass.c:460
+msgid "%s linked to %s"
+msgstr "%s$(C@:(B($(C4B(B) %s$(C?!(B $(C85E)5J(B"
+
+#. +option or -option
+#.
+#: lib/getopt.c:594
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr "%s: $(C@N=DGR(B $(C<v(B $(C>x4B(B $(C?I<G(B `%c%s'\n"
+
+#: src/format.c:80
+msgid ""
+"invalid archive format `%s'; valid formats are:\n"
+"crc, newc, odc, bin, ustar, tar, hpodc, hpbin"
+msgstr ""
+"`%s'$(C@:(B($(C4B(B) $(C:N@{@}GQ(B $(C>FD+@L:j(B $(CG|=D@S(B; $(C?G@:(B $(CG|=D@:(B:\n"
+"crc, newc, odc, bin, ustar, tar, hpodc, hpbin$(C@T4O4Y(B"
+
+#: lib/getopt.c:542
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr "%s: `--%s' $(C?I<G?!4B(B $(C@N<v0!(B $(C?C(B $(C<v(B $(C>x=@4O4Y(B\n"
+
+#. REG_ECOLLATE
+#.
+#. REG_ECOLLATE
+#.
+#. REG_ECOLLATE
+#.
+#: lib/regex.c:925 lib/rx.c:3934 lib/rx.c:6201
+msgid "Invalid character class name"
+msgstr "$(C:N@{@}GQ(B $(C9.@Z7y(B $(C@L8'(B"
+
+#: src/copyin.c:816 src/copyout.c:243 src/copypass.c:397
+msgid "%d blocks\n"
+msgstr "%d$(C:m70(B\n"
+
+#: src/mt.c:288
+msgid "drive type = %d\n"
+msgstr "$(C5e6s@L:j(B $(C@/G|(B = %d\n"
+
+#: src/pax.c:267
+msgid "unrecognized flag `%c' for -p; recognized flags are `aemop'"
+msgstr "-p$(C?!(B $(C4kGQ(B, $(C@N=DGR(B $(C<v(B $(C>x4B(B $(CGC7!1W(B `%c'; $(C@N=DGR(B $(C<v(B $(C@V4B(B $(CGC7!1W5i@:(B `aemop'$(C@T4O4Y(B"
+
+#. Assume -2.
+#.
+#: src/argmatch.c:88
+msgid "ambiguous"
+msgstr "$(C>V8EGU4O4Y(B"
+
+#: src/rename.c:353
+msgid "missing regexp"
+msgstr "$(CA$1T=D@L(B $(C:|A3=@4O4Y(B"
+
+#: src/copyin.c:814 src/copyout.c:241 src/copypass.c:395
+msgid "1 block\n"
+msgstr "1$(C:m70(B\n"
+
+#: lib/userspec.c:136 src/util.c:638
+msgid "virtual memory exhausted"
+msgstr "$(C0!;s(B $(C8^8p8.0!(B $(C9Y4Z35=@4O4Y(B"
+
+#: lib/makepath.c:168 lib/makepath.c:235
+msgid "cannot make directory `%s'"
+msgstr "$(C5p7:Ed8.(B `%s'$(C@;(B($(C8&(B) $(C885i(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: lib/getopt.c:562
+msgid "%s: option `%s' requires an argument\n"
+msgstr "%s: `%s' $(C?I<G?!4B(B $(C@N<v0!(B $(CGJ?dGU4O4Y(B\n"
+
+#: src/mt.c:308
+msgid "Usage: %s [-V] [-f device] [--file=device] [--help] [--version] operation [count]\n"
+msgstr "$(C;g?k9}(B: %s [-V] [-f $(C@eD!(B] [--file=$(C@eD!(B] [--help] [--version] $(C8m7I(B [$(C09<v(B]\n"
+
+#. REG_NOERROR
+#.
+#. REG_NOUT
+#.
+#. REG_NOERROR
+#.
+#: lib/regex.c:922 lib/rx.c:3931 lib/rx.c:6198
+msgid "No match"
+msgstr "$(C4k@@5G4B(B $(C0M@L(B $(C>x=@4O4Y(B"
+
+#: src/mt.c:296
+msgid "residue count = %d\n"
+msgstr "$(C32@:(B $(C09<v(B = %d\n"
+
+#: src/cpio.c:116
+msgid ""
+"       %s {-p|--pass-through} [-0adlmuvLV] [-R [user][:.][group]]\n"
+"       [--null] [--reset-access-time] [--make-directories] [--link] [--quiet]\n"
+"       [--preserve-modification-time] [--unconditional] [--verbose] [--dot]\n"
+"       [--dereference] [--owner=[user][:.][group]] [--no-preserve-owner]\n"
+"       [--sparse] [--help] [--version] destination-directory < name-list\n"
+msgstr ""
+"       %s {-p|--pass-through} [-0adlmuvLV] [-R [$(C;g?k@Z(B][:.][$(C1W7l(B]]\n"
+"       [--null] [--reset-access-time] [--make-directories] [--link] [--quiet]\n"
+"       [--preserve-modification-time] [--unconditional] [--verbose] [--dot]\n"
+"       [--dereference] [--owner=[$(C;g?k@Z(B][:.][$(C1W7l(B]] [--no-preserve-owner]\n"
+"       [--sparse] [--help] [--version] $(C8q@{5p7:Ed8.(B < $(C@L8'8q7O(B\n"
+
+#: src/mt.c:293
+msgid "drive status = %d\n"
+msgstr "$(C5e6s@L:j(B $(C;sEB(B = %d\n"
+
+#: src/fmttar.c:265
+msgid "invalid header: checksum error"
+msgstr "$(C:N@{@}GQ(B $(CGl4u(B: $(CC<E)<6(B $(C?@7y(B"
+
+#. REG_ESUBREG
+#.
+#. REG_ESUBREG
+#.
+#. REG_ESUBREG
+#.
+#: lib/regex.c:928 lib/rx.c:3937 lib/rx.c:6204
+msgid "Unmatched [ or [^"
+msgstr "$(CB&@L(B $(C8BAv(B $(C>J4B(B [$(C3*(B [^"
+
+#: lib/getopt.c:658
+msgid "%s: option requires an argument -- %c\n"
+msgstr "%s: $(C@L(B $(C?I<G@:(B $(C@N<v(B %c$(C@;(B($(C8&(B) $(CGJ?d7N(B $(CGU4O4Y(B\n"
+
+#: lib/makepath.c:210 lib/makepath.c:288
+msgid "`%s' exists but is not a directory"
+msgstr "`%s'$(C@L(B($(C0!(B) $(CA8@gGOAv88(B $(C5p7:Ed8.4B(B $(C>F4U4O4Y(B"
+
+#: src/cpio.c:104
+msgid ""
+"       %s {-i|--extract} [-bcdfmnrtsuvBSV] [-C bytes] [-E file] [-H format]\n"
+"       [-M message] [-R [user][:.][group]] [-I [[user@]host:]archive]\n"
+"       [-F [[user@]host:]archive] [--file=[[user@]host:]archive]\n"
+"       [--make-directories] [--nonmatching] [--preserve-modification-time]\n"
+"       [--numeric-uid-gid] [--rename] [--list] [--swap-bytes] [--swap] [--dot]\n"
+"       [--unconditional] [--verbose] [--block-size=blocks] [--swap-halfwords]\n"
+"       [--io-size=bytes] [--pattern-file=file] [--format=format]\n"
+"       [--owner=[user][:.][group]] [--no-preserve-owner] [--message=message]\n"
+"       [--force-local] [--no-absolute-filenames] [--sparse] [--only-verify-crc]\n"
+"       [--quiet] [--help] [--version] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-i|--extract} [-bcdfmnrtsuvBSV] [-C $(C9Y>FF.(B] [-E $(CFD@O(B] [-H $(CG|=D(B]\n"
+"       [-M $(C8^=CAv(B] [-R [$(C;g?k@Z(B][:.][$(C1W7l(B]] [-I [[$(C;g?k@Z(B@]$(CH#=:F.(B:]$(C>FD+@L:j(B]\n"
+"       [-F [[$(C;g?k@Z(B@]$(CH#=:F.(B:]$(C>FD+@L:j(B] [--file=[[$(C;g?k@Z(B@]$(CH#=:F.(B:]$(C>FD+@L:j(B]\n"
+"       [--make-directories] [--nonmatching] [--preserve-modification-time]\n"
+"       [--numeric-uid-gid] [--rename] [--list] [--swap-bytes] [--swap] [--dot]\n"
+"       [--unconditional] [--verbose] [--block-size=$(C:m70(B] [--swap-halfwords]\n"
+"       [--io-size=$(C9Y@LF.(B] [--pattern-file=$(CFD@O(B] [--format=$(CG|=D(B]\n"
+"       [--owner=[$(C;g?k@Z(B][:.][$(C1W7l(B]] [--no-preserve-owner] [--message=$(C8^=CAv(B]\n"
+"       [--force-local] [--no-absolute-filenames] [--sparse] [--only-verify-crc]\n"
+"       [--quiet] [--help] [--version] [$(CFPEO(B...] [< $(C>FD+@L:j(B]\n"
+
+#: src/cpio.c:178 src/cpio.c:195 src/pax.c:196
+msgid "invalid block size"
+msgstr "$(C:N@{@}GQ(B $(C:m70E)1b(B"
+
+#: src/mt.c:217
+msgid "no tape device specified"
+msgstr "$(CEW@LGA(B $(C@eD!0!(B $(CAvA$5GAv(B $(C>J>R=@4O4Y(B"
+
+#: src/pax.c:76
+msgid ""
+"       %s {-r|--read} [-cdiknuv] [-f archive] [-s replacement]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-r|--read} [-cdiknuv] [-f $(C>FD+@L:j(B] [-s $(C4kC<90(B]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=$(C4kC<90(B] [$(CFPEO(B...] [< $(C>FD+@L:j(B]\n"
+
+#: src/copyin.c:785 src/copyout.c:481 src/copypass.c:380
+msgid "%s: unknown file type"
+msgstr "%s: $(C>K(B $(C<v(B $(C>x4B(B $(CFD@O(B $(C@/G|(B"
+
+#: lib/getopt.c:622
+msgid "%s: invalid option -- %c\n"
+msgstr "%s: $(C:N@{@}GQ(B $(C?I<G(B -- %c\n"
+
+#: src/copyin.c:505 src/copyin.c:698 src/copyin.c:1064 src/copypass.c:465
+msgid "cannot link %s to %s"
+msgstr "%s$(C@;(B($(C8&(B) %s$(C?!(B $(C85E)GR(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: lib/userspec.c:177
+msgid "cannot get the login group of a numeric UID"
+msgstr "$(C<vD!G|(B UID$(C@G(B $(C7N1W@N(B $(C1W7l@;(B $(C>K(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: src/mt.c:291
+msgid "drive status (low) = %d\n"
+msgstr "$(C5e6s@L:j(B $(C;sEB(B ($(CCVGO@'(B $(C:qF.(B) = %d\n"
+
+#: src/fmtcpio.c:169
+msgid "warning: archive header has reverse byte-order"
+msgstr "$(C0f0m(B: $(C>FD+@L:j(B $(CGl4u?!(B $(C0E2Y7N(B $(C5H(B $(C9Y@LF.(B-$(C<x<-0!(B $(C@V=@4O4Y(B"
+
+#: src/mt.c:298
+msgid "file number = %d\n"
+msgstr "$(CFD@O(B $(C9xH#(B = %d\n"
+
+#. REG_BADPAT
+#.
+#. REG_BADPAT
+#.
+#. REG_BADPAT
+#.
+#: lib/regex.c:924 lib/rx.c:3933 lib/rx.c:6200
+msgid "Invalid collation character"
+msgstr "$(C:N@{@}GQ(B $(CA$7D<x<-(B $(C9.@Z(B"
+
+#: src/copyin.c:546
+msgid "cannot swap bytes of %s: odd number of bytes"
+msgstr "$(CH&<v03(B $(C9Y@LF.?)<-(B %s$(C@G(B $(C9Y@LF.5i@;(B $(C@Z8.9Y2^GR(B $(C<v(B $(C>x=@4O4Y(B"
+
+#. REG_EPAREN
+#.
+#. REG_EPAREN
+#.
+#. REG_EPAREN
+#.
+#: lib/regex.c:930 lib/rx.c:3939 lib/rx.c:6206
+msgid "Unmatched \\{"
+msgstr "$(CB&@L(B $(C8BAv(B $(C>J4B(B \\{"
+
+#: src/copyout.c:459
+msgid "%s: symbolic link too long"
+msgstr "%s: $(C3J9+(B $(C1d(B $(C=I:<8/(B $(C85E)(B"
+
+#. REG_ESIZE
+#.
+#. REG_ESIZE
+#.
+#. REG_ESIZE
+#.
+#: lib/regex.c:937 lib/rx.c:3946 lib/rx.c:6213
+msgid "Unmatched ) or \\)"
+msgstr "$(CB&@L(B $(C8BAv(B $(C>J4B(B )$(C3*(B \\)"
+
+#. REG_ESPACE
+#.
+#. REG_ESPACE
+#.
+#. REG_ESPACE
+#.
+#: lib/regex.c:934 lib/rx.c:3943 lib/rx.c:6210
+msgid "Invalid preceding regular expression"
+msgstr "$(C:N@{@}GQ(B $(C<1G`(B $(CA$1T=D(B"
+
+#: src/copyin.c:104 src/copyin.c:121 src/copyin.c:130 src/copyin.c:139
+#: src/copyin.c:150 src/fmttar.c:369
+msgid "warning: skipped %ld bytes of junk"
+msgstr "$(C0f0m(B: %ld$(C9Y@LF.8&(B $(C0G3J6Y>z=@4O4Y(B"
+
+#. --option
+#.
+#: lib/getopt.c:590
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s: $(C@N=DGR(B $(C<v(B $(C>x4B(B $(C?I<G(B `--%s'\n"
+
+#. FIXME for pax we must print more info here.
+#.
+#: src/rename.c:258
+msgid "rename %s -> "
+msgstr "$(C@L8'(B $(C9Y2Y1b(B %s -> "
+
+#: src/rename.c:358
+msgid "null regexp"
+msgstr "$(C3N(B $(CA$1T=D(B"
+
+#: src/copyout.c:207
+msgid "standard output is closed"
+msgstr "$(CG%AXCb7B@L(B $(C4]G{=@4O4Y(B"
+
+#. Can't overwrite.  So just skip.
+#.
+#. Can't overwrite, so just skip.
+#.
+#: src/copyin.c:416 src/copypass.c:123
+msgid "%s already exists; not created"
+msgstr "%s$(C@L(B($(C0!(B) $(C@L9L(B $(CA8@gGO9G7N(B $(C;}<:GOAv(B $(C>J>R=@4O4Y(B"
+
+#: src/copyin.c:349 src/copyin.c:375 src/copyin.c:557
+msgid "%s: checksum error (0x%x, should be 0x%x)"
+msgstr "%s: $(CC<E)<6(B $(C?@7y(B (0x%x$(C@N5%(B, 0x%x$(C@L>n>_(B $(CGT(B)"
+
+#: src/copyin.c:538
+msgid "cannot swap halfwords of %s: odd number of halfwords"
+msgstr "%s$(C@G(B $(C9](B $(C?v5e8&(B $(C@Z8.9Y2^GR(B $(C<v(B $(C>x@=(B: $(CH&<v03@G(B $(C9](B $(C?v5e(B"
+
+#. REG_EESCAPE
+#.
+#. REG_EESCAPE
+#.
+#. REG_EESCAPE
+#.
+#: lib/regex.c:927 lib/rx.c:3936 lib/rx.c:6203
+msgid "Invalid back reference"
+msgstr "$(C:N@{@}GQ(B $(CHD9f(B $(CB|A6(B"
+
+#: src/copyout.c:166 src/copypass.c:72
+msgid "blank line ignored"
+msgstr "$(C0x9iG`@:(B $(C9+=C5K4O4Y(B"
+
+#: src/pax.c:71
+msgid ""
+"Usage: %s [-cdnv] [-f archive] [-s replacement] [--nonmatching]\n"
+"       [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"$(C;g?k9}(B: %s [-cdnv] [-f $(C>FD+@L:j(B] [-s $(C4kC<90(B] [--nonmatching]\n"
+"       [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=$(C4kC<90(B] [$(CFPEO(B...] [< $(C>FD+@L:j(B]\n"
+
+#. REG_EBRACK
+#.
+#. REG_EBRACK
+#.
+#. REG_EBRACK
+#.
+#: lib/regex.c:929 lib/rx.c:3938 lib/rx.c:6205
+msgid "Unmatched ( or \\("
+msgstr "$(CB&@L(B $(C8BAv(B $(C>J4B(B ($(C3*(B \\("
+
+#: src/fmtcpio.c:321 src/fmtcpio.c:351
+msgid "%s: truncating inode number"
+msgstr "%s: $(C>F@L3k5e(B $(C9xH#8&(B $(C@}4\\GU4O4Y(B"
+
+#: src/copyout.c:315
+msgid "%s: file name too long"
+msgstr "%s: $(C3J9+(B $(C1d(B $(CFD@O(B $(C@L8'(B"
+
+#: src/cpio.c:345
+msgid "GNU cpio version %s\n"
+msgstr "GNU cpio $(C9v@|(B %s\n"
+
+#: src/argmatch.c:86
+msgid "invalid"
+msgstr "$(C:N@{@}(B"
+
+#: src/pax.c:326
+msgid "GNU pax version %s\n"
+msgstr "GNU pax $(C9v@|(B %s\n"
+
+#. REG_EBRACE
+#.
+#. REG_EBRACE
+#.
+#. REG_EBRACE
+#.
+#: lib/regex.c:931 lib/rx.c:3940 lib/rx.c:6207
+msgid "Invalid content of \\{\\}"
+msgstr "\\{\\}$(C@G(B $(C3;?k@L(B $(C:N@{@}GU4O4Y(B"
+
+#. REG_BADBR
+#.
+#. REG_BADBR
+#.
+#. REG_BADBR
+#.
+#: lib/regex.c:932 lib/rx.c:3941 lib/rx.c:6208
+msgid "Invalid range end"
+msgstr "$(C:N@{@}GQ(B, $(C9|@'@G(B $(C3!(B"
+
+#: src/mt.c:295
+msgid "sense key error = %d\n"
+msgstr "$(C9fGbE0(B $(C?@7y(B = %d\n"
+
+#. REG_ECTYPE
+#.
+#. REG_ECTYPE
+#.
+#. REG_ECTYPE
+#.
+#: lib/regex.c:926 lib/rx.c:3935 lib/rx.c:6202
+msgid "Trailing backslash"
+msgstr "$(C2?8.?!(B $(C:Y@:(B $(C9i==7!=,(B"
+
+#: lib/userspec.c:162
+msgid "can not omit both user and group"
+msgstr "$(C;g?k@Z?M(B $(C1W7l(B $(C5Q(B $(C4Y8&(B $(C;}7+GR(B $(C<v4B(B $(C>x=@4O4Y(B"
+
+#. REG_NOMATCH
+#.
+#. REG_NOMATCH
+#.
+#. REG_NOMATCH
+#.
+#: lib/regex.c:923 lib/rx.c:3932 lib/rx.c:6199
+msgid "Invalid regular expression"
+msgstr "$(C:N@{@}GQ(B $(CA$1T=D(B"
+
+#: src/mt.c:200
+msgid "tape operation"
+msgstr "$(CEW@LGA(B $(C5?@[(B"
+
+#: lib/userspec.c:171
+msgid "invalid user"
+msgstr "$(C:N@{@}GQ(B $(C;g?k@Z(B"
+
+#: lib/regex.c:5114
+msgid "No previous regular expression"
+msgstr "$(C@L@|(B $(CA$1T=D@L(B $(C>x=@4O4Y(B"
+
+#: src/pax.c:81
+msgid ""
+"       %s {-w|--write} [-cdnv] [-f archive] [-s replacement]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=replacement] [pattern...] [< archive]\n"
+msgstr ""
+"       %s {-w|--write} [-cdnv] [-f $(C>FD+@L:j(B] [-s $(C4kC<90(B]\n"
+"       [--nonmatching] [--directories-only] [--first-pattern] [--verbose]\n"
+"       [--replace=$(C4kC<90(B] [$(CFPEO(B...] [< $(C>FD+@L:j(B]\n"
+
+#: src/mt.c:290
+msgid "drive status (high) = %d\n"
+msgstr "$(C5e6s@L:j(B $(C;sEB(B ($(CCV;s@'(B $(C:qF.(B) = %d\n"
+
+#: src/copyin.c:407 src/copypass.c:116
+msgid "%s not created: newer or same age version exists"
+msgstr "%s $(C;}<:>H5J(B: $(C4u(B $(C;u7N?n(B $(C9v@|@L3*(B $(C5?@O(B $(C9v@|@L(B $(CA8@gGU4O4Y(B"
+
+#: src/rename.c:372
+msgid "%s while compiling pattern"
+msgstr "$(CFPEO@;(B $(CDDFD@OGO4x(B $(CA_(B %s"
+
+#: src/rename.c:393
+msgid "invalid regexp modifier `%c'"
+msgstr "$(C:N@{@}GQ(B $(CA$1T=D(B $(C<v=D>n(B `%c'"
+
+#: src/rtapelib.c:243
+msgid "exec/tcp: service not available"
+msgstr "exec/tcp: $(C;g?kGR(B $(C<v(B $(C>x4B(B $(C<-:q=:(B"
+
+#: src/rtapelib.c:406
+msgid "cannot execute remote shell"
+msgstr "$(C?x0]=)@;(B $(C=GG`GR(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: src/util.c:140 src/util.c:143 src/util.c:191
+msgid "write error"
+msgstr "$(C>21b(B $(C?@7y(B"
+
+#: src/util.c:257 src/util.c:437
+msgid "read error"
+msgstr "$(C@P1b(B $(C?@7y(B"
+
+#: src/util.c:260
+msgid "premature end of file"
+msgstr "$(C6'@L8%(B $(CH-@O@G(B $(C3!(B"
+
+#: src/util.c:543 src/util.c:591
+msgid "File %s shrunk by %ld bytes, padding with zeros"
+msgstr "$(CFD@O(B %s$(C@;(B($(C8&(B) %ld$(C9Y@LF.(B $(CC`<R=CE00m(B, $(CAY>n5g(B $(C88E-(B 0$(C@87N(B $(C8^?v(B $(C3V=@4O4Y(B"
+
+#: src/util.c:546 src/util.c:594
+msgid "Read error at byte %ld in file %s, padding with zeros"
+msgstr "$(CFD@O(B %s$(C@G(B %ld$(C9xB0(B $(C9Y@LF.?!<-(B $(C@P1b(B $(C?@7y@T4O4Y(B. $(C8x@P@:(B $(C:N:P@:(B 0$(C@87N(B $(C8^?s4O4Y(B"
+
+#: src/util.c:675 src/util.c:681
+msgid "cannot seek on output"
+msgstr "$(CCb7B?!(B $(C4kGX<-4B(B seek$(CGR(B $(C<v(B $(C>x=@4O4Y(B"
+
+#: src/util.c:933
+msgid "Found end of tape.  Load next tape and press RETURN. "
+msgstr "$(CEW@LGA@G(B $(C3!@T4O4Y(B. $(C4Y@=(B $(CEW@LGA8&(B $(C@{@gGQ(B $(CHD(B $(C8.EO@;(B $(C4)8#=J=C?@(B. "
+
+#: src/util.c:936
+msgid "Found end of tape.  To continue, type device/file name when ready.\n"
+msgstr "$(CEW@LGA@G(B $(C3!@T4O4Y(B. $(C0h<SGO7A8i(B, $(CAX:q5H(B $(C@eD!(B/$(CFD@O(B $(C@L8'@;(B $(C@T7BGO=J=C?@(B.\n"
+
+#: src/util.c:959
+msgid "To continue, type device/file name when ready.\n"
+msgstr "$(C0h<SGO7A8i(B, $(CAX:q5H(B $(C@eD!(B/$(CFD@O(B $(C@L8'@;(B $(C@T7BGO=J=C?@(B.\n"
+
+#: src/util.c:984
+msgid "internal error: tape descriptor changed from %d to %d"
+msgstr "$(C3;:N(B $(C?@7y(B: $(CEW@LGA(B $(C1b<z@Z0!(B %d$(C?!<-(B %d($(C@8(B)$(C7N(B $(C9Y2n>z=@4O4Y(B"

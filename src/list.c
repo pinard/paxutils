@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License along
    with this program; if not, write to the Free Software Foundation, Inc.,
-   59 Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 #include <time.h>
@@ -36,12 +36,12 @@ list_archive (void)
 
   if (verbose_option)
     {
-      if (verbose_option > 1)
+      if (verbose_option_count > 1)
 	decode_header (&current, false);
       print_header (&current);
     }
 
-  if (incremental_option && current.block->header.typeflag == OLDGNU_DUMPDIR)
+  if (incremental_option && current.block->header.typeflag == GNUTAR_DUMPDIR)
     {
       size_t size;
       size_t size_to_write;
@@ -90,7 +90,7 @@ list_archive (void)
 
   /* Check to see if we have an extended header to skip over also.  */
 
-  if (current.block->oldgnu_header.isextended)
+  if (current.block->gnutar_header.isextended)
     is_extended = true;
 
   /* Skip past the header in the archive.  */
@@ -221,13 +221,13 @@ print_header (struct tar_entry *entry)
   char *name;
 
   if (checkpoint_option)
-    flush_checkpoint_line ();
+    flush_progress_dots ();
 
   if (block_number_option)
     fprintf (stdlis, _("block %10lu: "),
 	     (unsigned long) current_block_ordinal ());
 
-  if (verbose_option <= 1)
+  if (verbose_option_count <= 1)
     if (null_option)
       {
 	fputs (entry->name, stdlis);
@@ -254,24 +254,24 @@ print_header (struct tar_entry *entry)
       modes[0] = '?';
       switch (entry->block->header.typeflag)
 	{
-	case OLDGNU_VOLHDR:
+	case GNUTAR_VOLHDR:
 	  modes[0] = 'V';
 	  break;
 
-	case OLDGNU_MULTIVOL:
+	case GNUTAR_MULTIVOL:
 	  modes[0] = 'M';
 	  break;
 
-	case OLDGNU_NAMES:
+	case GNUTAR_NAMES:
 	  modes[0] = 'N';
 	  break;
 
-	case OLDGNU_LONGNAME:
-	case OLDGNU_LONGLINK:
+	case GNUTAR_LONGNAME:
+	case GNUTAR_LONGLINK:
 	  ERROR ((0, 0, _("Long name has no introducing header")));
 	  break;
 
-	case OLDGNU_SPARSE:
+	case GNUTAR_SPARSE:
 	case REGTYPE:
 	case AREGTYPE:
 	case LNKTYPE:
@@ -279,7 +279,7 @@ print_header (struct tar_entry *entry)
 	  if (entry->name[strlen (entry->name) - 1] == '/')
 	    modes[0] = 'd';
 	  break;
-	case OLDGNU_DUMPDIR:
+	case GNUTAR_DUMPDIR:
 	  modes[0] = 'd';
 	  break;
 	case DIRTYPE:
@@ -349,7 +349,7 @@ print_header (struct tar_entry *entry)
 	  break;
 #endif
 
-	case OLDGNU_SPARSE:
+	case GNUTAR_SPARSE:
 	  sprintf (size, "%lu",
 		   (unsigned long) get_header_realsize (entry->block));
 	  break;
@@ -413,26 +413,26 @@ print_header (struct tar_entry *entry)
 
 	case AREGTYPE:
 	case REGTYPE:
-	case OLDGNU_SPARSE:
+	case GNUTAR_SPARSE:
 	case CHRTYPE:
 	case BLKTYPE:
 	case DIRTYPE:
 	case FIFOTYPE:
 	case CONTTYPE:
-	case OLDGNU_DUMPDIR:
+	case GNUTAR_DUMPDIR:
 	  putc ('\n', stdlis);
 	  break;
 
-	case OLDGNU_VOLHDR:
+	case GNUTAR_VOLHDR:
 	  fprintf (stdlis, _("--Volume Header--\n"));
 	  break;
 
-	case OLDGNU_MULTIVOL:
+	case GNUTAR_MULTIVOL:
 	  fprintf (stdlis, _("--Continued at byte %lu--\n"),
 		   (unsigned long) get_header_offset (entry->block));
 	  break;
 
-	case OLDGNU_NAMES:
+	case GNUTAR_NAMES:
 	  fprintf (stdlis, _("--Mangled file names--\n"));
 	  break;
 	}
@@ -450,7 +450,7 @@ print_for_mkdir (char *pathname, int length, mode_t mode)
   char modes[11];
   char *name;
 
-  if (verbose_option > 1)
+  if (verbose_option_count > 1)
     {
       /* File type and modes.  */
 
@@ -458,7 +458,7 @@ print_for_mkdir (char *pathname, int length, mode_t mode)
       decode_mode (mode, modes + 1);
 
       if (checkpoint_option)
-	flush_checkpoint_line ();
+	flush_progress_dots ();
 
       if (block_number_option)
 	fprintf (stdlis, _("block %10lu: "),
