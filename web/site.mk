@@ -6,6 +6,6 @@ caption_color = "\#f0f0f0"
 
 SITE_ROOT = 1
 
-GOALS += archives dist
+GOALS += archives
 
 TEMPLATE = $(HOME)/entretien/mes-sites/gabarit.html
