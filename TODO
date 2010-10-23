@@ -1,154 +1,178 @@
-* TODO file for paxutils			allout	-*- outline -*-
+======================
+TODO file for paxutils
+======================
 
-Tell <paxutils-bugs@iro.umontreal.ca> if you feel like volunteering for
+Tell paxutils-bugs@iro.umontreal.ca if you feel like volunteering for
 any of these ideas, listed more or less in decreasing order of priority.
-Some TODO items are implicit from received email.  See file BACKLOG.
+Some TODO items are implicit from received email.  See file ``BACKLOG``.
 Significant contributions require written assignments and disclaimers.
 
-.* Notes particulières
+Notes particulières
+===================
 
-. + cpio-tests
-. @ ~/libit/rmail/m4
-. @ ~/libit/rmail/gettext
+cpio-tests
+----------
 
-.* paxutils matters
++ ~/libit/rmail/m4
++ ~/libit/rmail/gettext
 
-. + Packaging
-.  - Design bulky test suite assembled with m4.
-.  - Merge PO files from cpio and tar.
-.  - Check various intl configurations.
-.  - Compile with all warnings, with traditional, etc.
+paxutils matters
+----------------
 
-. + cpio history
-.  - Use newest autoconf
-.  - Internationalize
-.  - Update all Makefiles to GNU standards.  Test.  Consider allowing
-     rewriting of program names.  [ automake handles all this ]
++ Packaging
 
-. + Documentation
-.  - Add a note about setting ROOT during testing to avoid spurious
-     failures on some systems.
-.  - Write to cpio.texi maintainer with suggestions:
-.  - Need to handle pax.
-.  - Merge all 'invoking cpio' sub-nodes into one node.
+  + Design bulky test suite assembled with m4.
+  + Merge PO files from cpio and tar.
+  + Check various intl configurations.
+  + Compile with all warnings, with traditional, etc.
 
-. + Merging
-.  - Headers.
-.  - Incorporate all tar features & extensions.
-.  - 4 interfaces to cpio code: cpio, pax, tar, backup (last 2 come
-     later).
-.  - 'copy-archive' mode (rewrite archive into archive).  Should be able
-     to do this with multiple archives at once.
-     This might require separating input and output buffers.  Certainly
-     requires spliting archive_format variable into two.
-.  - Convert all code into better style.  Should use function pointers
-     for everything; no explicit cases.  Make it much easier to add a new
-     format as desired.
-.  - Write "farf" (Free ARchive Format).  Why?  Because an extensible
-     archiving format is a win.  We want to handle Mac, NT, etc files.
-     Or, consider using extended ustar format as suggested in pax
-     discussion.
++ cpio history
 
-. + Extensions
-.  - StuffIt format?
-.  - Ability to write shar files?
+  + Use newest autoconf
+  + Internationalize
+  + Update all Makefiles to GNU standards.  Test.  Consider allowing
+    rewriting of program names.  [ automake handles all this ]
 
-.* cpio matters
++ Documentation
 
-. + Test:
-.  - Add check for bug on DEC Alphas from John Heller.
-.  - Write test for bug fixed by Han Holl.
+  + Add a note about setting ROOT during testing to avoid spurious
+    failures on some systems.
+  + Write to cpio.texi maintainer with suggestions:
+  + Need to handle pax.
+  + Merge all 'invoking cpio' sub-nodes into one node.
 
-. + Requests:
-.  - Option --backup.
-.  - Option --verify-after-write.
-.  - Option --what-if.
++ Merging
+
+  + Headers.
+  + Incorporate all tar features & extensions.
+  + 4 interfaces to cpio code: cpio, pax, tar, backup (last 2 come
+    later).
+  + 'copy-archive' mode (rewrite archive into archive).  Should be able
+    to do this with multiple archives at once.
+    This might require separating input and output buffers.  Certainly
+    requires spliting archive_format variable into two.
+  + Convert all code into better style.  Should use function pointers
+    for everything; no explicit cases.  Make it much easier to add a new
+    format as desired.
+  + Write "farf" (Free ARchive Format).  Why?  Because an extensible
+    archiving format is a win.  We want to handle Mac, NT, etc files.
+    Or, consider using extended ustar format as suggested in pax
+    discussion.
+
++ Extensions
+
+  + StuffIt format?
+  + Ability to write shar files?
+
+cpio matters
+------------
+
++ Test:
+
+  + Add check for bug on DEC Alphas from John Heller.
+  + Write test for bug fixed by Han Holl.
+
++ Requests:
+
+  + Option --backup.
+  + Option --verify-after-write.
+  + Option --what-if.
+
      This would let you see which files would actually be extracted.
      Code for this exists already.
 
-. + Changes:
-.  - How to handle fact that corrupt archives are generated if files
-     change as cpio runs?  one idea is to just punt, but provide a
-     --volatile (?) flag that first reads the entire file into memory
-     before dumping.  Obviously this could fail if the file is
-     excessively large.
-.  - Probably should always dump directories first, even in cpio format
-     (for pax?  Or cpio too?)  We could get around current cpio
-     restrictions by storing deferments for directories, and changing the
-     permissions (&c) after the archive has been fully read.
-.  - Another good (?) idea here is to notice when the directory changes,
-     and set the permissions then.  If a file comes along later that
-     belongs in that dir, temporarily change the perms back.  This relies
-     on the fact that most archives are in "canonical" order.
-.  - Generate ls-style listings so we can browse with dired?  Look at how
-     tar-mode works and see if changes could be made so that a generic
-     archiving mode would be easy to write.
++ Changes:
 
-. + Questions:
-.  - In copyin.c, how does append_flag interact with save_patterns?
-.  - How do renaming options (eg, "-s" for pax) interact with links?
-.  - In copyout.c: how does only-verify-crc mode interact with tar format?
-.  - How does -s really interact with copy-pass?
-.  - Make sure no-abs-path code works in all relevant cases.
-.  - Why not merge recursion processing in copypass and copyout?  The
-     filesystem should be treated as just another back end.
-.  - Does copy-pass handle sparse files?
-.  - Is it faster to compile a glob pattern into a regexp and then apply
-     that?
+  + How to handle fact that corrupt archives are generated if files
+    change as cpio runs?  one idea is to just punt, but provide a
+    --volatile (?) flag that first reads the entire file into memory
+    before dumping.  Obviously this could fail if the file is
+    excessively large.
+  + Probably should always dump directories first, even in cpio format
+    (for pax?  Or cpio too?)  We could get around current cpio
+    restrictions by storing deferments for directories, and changing the
+    permissions (&c) after the archive has been fully read.
+  + Another good (?) idea here is to notice when the directory changes,
+    and set the permissions then.  If a file comes along later that
+    belongs in that dir, temporarily change the perms back.  This relies
+    on the fact that most archives are in "canonical" order.
+  + Generate ls-style listings so we can browse with dired?  Look at how
+    tar-mode works and see if changes could be made so that a generic
+    archiving mode would be easy to write.
 
-. + Backup:
-.  - keep dumpdates-style database
-.  - optionally keep index database
-.  - way to estimate data to dump (how does Amanda handle this?)
-.  - filesystem mode -- don't dump across FS boundaries [done]
-.  - ensure integration with Amanda is simple
-.   : Option --xdev
++ Questions:
+
+  + In copyin.c, how does append_flag interact with save_patterns?
+  + How do renaming options (eg, "-s" for pax) interact with links?
+  + In copyout.c: how does only-verify-crc mode interact with tar format?
+  + How does -s really interact with copy-pass?
+  + Make sure no-abs-path code works in all relevant cases.
+  + Why not merge recursion processing in copypass and copyout?  The
+    filesystem should be treated as just another back end.
+  + Does copy-pass handle sparse files?
+  + Is it faster to compile a glob pattern into a regexp and then apply
+    that?
+
++ Backup:
+
+  + keep dumpdates-style database
+  + optionally keep index database
+  + way to estimate data to dump (how does Amanda handle this?)
+  + filesystem mode -- don't dump across FS boundaries [done]
+  + ensure integration with Amanda is simple
+
+    + Option --xdev
       don't cross fs boundary
-.   : Option --index
+    + Option --index
       generate dump index file; put dump level in index file
-.   : Option --dumpdates=file
+    + Option --dumpdates=file
       set dumpdates file
-.   : Option --indexfile=file
+    + Option --indexfile=file
       set index file
-.   : Option --restore
+    + Option --restore
       Restore mode.
-.   : Option --level=n
+    + Option --level=n
       Only for dump mode; specifies dump level
-.   : By default indexfile is ".gnudumpindex" at top level of each
+    + By default indexfile is ".gnudumpindex" at top level of each
       directory.  (Should this file be dumped??)
-.  - How to handle archive splits?  (Higher level tool)
 
-.* pax matters
+  + How to handle archive splits?  (Higher level tool)
 
-. + Option -c might need some work where directories are concerned (?).
-. + Option -d needs work where directories are concerned.
-. + Option -n is completely unimplemented.
-. + Preserve_mode_flag is unimplemented.
+pax matters
+-----------
 
-. + Question: do pax patterns really not act like cpio patterns?  That
-    is, they do strict "fnmatch" style matching, not "ignore '/'
-    matching".  Test.
++ Option -c might need some work where directories are concerned (?).
++ Option -d needs work where directories are concerned.
++ Option -n is completely unimplemented.
++ Preserve_mode_flag is unimplemented.
 
-. + Add "delete after copying" flag to pax.  Then you can batch rename
-    files using: pax -r -w -l -<deleteflag> ...
-    [ this is probably a bad idea ]
++ Question: do pax patterns really not act like cpio patterns?  That
+  is, they do strict "fnmatch" style matching, not "ignore '/'
+  matching".  Test.
 
-.* tar matters
++ Add "delete after copying" flag to pax.  Then you can batch rename
+  files using: pax -r -w -l -<deleteflag> ...
+  [ this is probably a bad idea ]
 
-. + { Prepare gettext.[ch], zlib.[ch], aclocal.m4 from m4/*.m4, dmalloc }.
+tar matters
+-----------
 
-. + create.c: diagnostics missing when `goto badfile'.
-. + compare.c: confusion between stderr and stdlis, WARN and ERROR.
-. + --ignore-failed-read might have been defeated.
-. + Better clean sources for list.c, extract.c, create.c and buffer.c.
-. + revise all NAMSIZ references, too often related to short buffers.
-. + current_link_name, current_file_name not always quoted when printed.
-. + Take over script maintenance, implement a `restore' script.
-. + Make a debugging feature out of all `#if 0'.
-. + In version 1.14, remove obsolete option names (record .vs. block).
++ { Prepare gettext.[ch], zlib.[ch], aclocal.m4 from m4/*.m4, dmalloc }.
 
-.* mt matters
++ create.c: diagnostics missing when `goto badfile'.
++ compare.c: confusion between stderr and stdlis, WARN and ERROR.
++ --ignore-failed-read might have been defeated.
++ Better clean sources for list.c, extract.c, create.c and buffer.c.
++ revise all NAMSIZ references, too often related to short buffers.
++ current_link_name, current_file_name not always quoted when printed.
++ Take over script maintenance, implement a `restore' script.
++ Make a debugging feature out of all `#if 0'.
++ In version 1.14, remove obsolete option names (record .vs. block).
 
-.* rmt matters
+mt matters
+----------
 
-. + Does rmt need --help and --version?
+rmt matters
+-----------
+
++ Does rmt need --help and --version?
