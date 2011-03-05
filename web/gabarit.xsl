@@ -7,23 +7,6 @@
   <template match="/">
     <call-template name="gabarit-entretien">
       <with-param name="long-package-name" select="'Free pax utilities'"/>
-      <with-param name="entries">
-
-        <fp:section title="Documentation">
-          <fp:entry text="NEWS" href="/NEWS.html"/>
-        </fp:section>
-
-        <fp:section title="Source files">
-          <fp:entry text="Browse" href="http://github.com/pinard/paxutils"/>
-          <fp:entry text="Download" href="/achives"/>
-        </fp:section>
-
-        <fp:section title="Development">
-          <fp:entry text="TODO" href="/TODO.html"/>
-          <fp:entry text="Contributors" href="/THANKS.html"/>
-        </fp:section>
-
-      </with-param>
     </call-template>
   </template>
 </stylesheet>
