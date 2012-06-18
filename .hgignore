@@ -1,0 +1,6 @@
+syntax: glob
+*~
+admin/*
+archives/*
+html-*
+web/notes/*
