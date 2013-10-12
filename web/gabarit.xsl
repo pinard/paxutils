@@ -2,7 +2,7 @@
 <stylesheet version="1.0"
             xmlns="http://www.w3.org/1999/XSL/Transform"
             xmlns:fp="http://pinard.progiciels-bpi.ca">
-  <import href="/home/pinard/entretien/mes-sites/commun.xsl"/>
+  <import href="/home/pinard/etc/mes-sites/commun.xsl"/>
   <output method="html" encoding="UTF-8"/>
   <template match="/">
     <call-template name="gabarit-entretien">
