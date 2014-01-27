@@ -79,11 +79,8 @@ ifneq "$(wildcard ~/etc/mes-sites/site.mk)" ""
 site: site-all
 
 package_name = paxutils
-rootdir = $(HOME)/GitHub/paxutils/web
 margin_color = "\#cccccc"
 caption_color = "\#f0f0f0"
-
-SITE_ROOT = 1
 
 include ~/etc/mes-sites/site.mk
 
